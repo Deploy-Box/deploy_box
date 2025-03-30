@@ -200,7 +200,7 @@ def download_stack(request: Request, stack_id: str = None) -> Response:
         )
     
 
-def update_database_storage_billing(request: Request):
+def update_database_storage_billing(request: Request) -> Response:
     data = request.data
 
     for stack_id, usage in data.items():
