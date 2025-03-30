@@ -1,14 +1,7 @@
-{% load static %} {% load static tailwind_tags %}
-<!DOCTYPE html>
+{% extends 'base.html' %}
+{% load static %} 
 
-<html>
-  {% tailwind_css %}
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Django + Stripe Checkout</title>
-  </head>
-  <body>
+{% block content%}
 <!-- component -->
 <div class="bg-white h-screen">
   <div class="bg-white p-6  md:mx-auto">
@@ -29,4 +22,4 @@
     </div>
 </div>
 </div>
-</html>
+{% endblock %}
