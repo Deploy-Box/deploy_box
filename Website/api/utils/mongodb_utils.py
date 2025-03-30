@@ -4,8 +4,6 @@ import hashlib
 from pymongo import MongoClient
 from django.conf import settings
 
-# client = MongoClient(MONGODB_CONNECTION_STRING)
-
 mongo_db_token = None
 
 
@@ -101,10 +99,6 @@ def deploy_mongodb_database(stack_id: str) -> str:
 
     return connection_string
 
-    # db = client[database_name]
 
-    # Get the database stats
-    # stats = db.command("dbstats")
 
-    # Print the stats
-    # print(stats.get("storageSize"))
+

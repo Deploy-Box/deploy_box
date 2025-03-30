@@ -12,7 +12,7 @@ from google.cloud import monitoring_v3
 
 # Set paths and credentials
 current_working_dir = os.getcwd()
-GCP_KEY_PATH = settings.GCP_KEY_PATH
+GCP_KEY_PATH = settings.GCP.get("KEY_PATH")
 PROJECT_ID = "deploy-box"
 REGION = "us-central1"
 name = f"projects/{PROJECT_ID}"

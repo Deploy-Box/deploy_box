@@ -47,6 +47,8 @@ class StackDatabases(models.Model):
     stack = models.ForeignKey(Stacks, on_delete=models.CASCADE)
     uri = models.URLField()
     created_at = models.DateTimeField(auto_now_add=True)
+    current_usage = models.IntegerField(default=0)
+    pending_billed = models.IntegerField(default=0)
 
     def __str__(self):
         return self.url

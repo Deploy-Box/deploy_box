@@ -76,8 +76,8 @@ def login_view(request):
             request.session["next"] = request.POST.get("next", "/")
 
             # Redirect to the OAuth2 authorization page after login
-            client_id = settings.OAUTH2_FRONTEND_SETTINGS["client_id"]
-            redirect_uri = settings.OAUTH2_FRONTEND_SETTINGS["redirect_uri"]
+            client_id = settings.OAUTH2_AUTHORIZATION_CODE["client_id"]
+            redirect_uri = settings.OAUTH2_AUTHORIZATION_CODE["redirect_uri"]
 
             oauth_url = (
                 reverse("accounts:oauth2_provider:authorize")
@@ -94,64 +94,96 @@ def login_view(request):
     return render(request, "accounts-login.html", {"next": next})
 
 
-@login_required
-def oauth2_callback(request):
-    code = request.GET.get("code")
-    code_verifier = request.session.get("code_verifier")
-    next = request.session.get("next", "/")
-
-    if not code or not code_verifier:
-        logger.error("Missing code or code_verifier.")
-        return redirect("accounts:login")  # Redirect to login if anything is missing
-
-    # Prepare data for token exchange
-    token_url = (
-        f"{settings.HOST}/accounts/o/token/"  # Ensure this is the correct token URL
-    )
+def exchange_authorization_code_for_token(code, code_verifier):
+    """Exchanges the authorization code for an access token."""
     data = {
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": settings.OAUTH2_FRONTEND_SETTINGS["redirect_uri"],
-        "client_id": settings.OAUTH2_FRONTEND_SETTINGS["client_id"],
+        "redirect_uri": settings.OAUTH2_AUTHORIZATION_CODE["redirect_uri"],
+        "client_id": settings.OAUTH2_AUTHORIZATION_CODE["client_id"],
+        "client_secret": settings.OAUTH2_AUTHORIZATION_CODE["client_secret"],
         "code_verifier": code_verifier,
     }
 
     try:
-        # Exchange the authorization code for an access token
-        response = post(token_url, data=data)
+        response = post(settings.OAUTH2_AUTHORIZATION_CODE["token_url"], data=data)
 
         if response.status_code != 200:
             logger.error(f"Error exchanging code for token: {response.text}")
-            return JsonResponse(
-                {"error": "Failed to exchange code for token"}, status=400
-            )
+            return None
 
-        # Get the access token from the response
-        response_data = response.json()
-        access_token = response_data.get("access_token")
+        return response.json()  # Contains the access token and refresh token
+
+    except Exception as e:
+        logger.error(f"Error during token exchange: {str(e)}")
+        return None
+
+
+def exchange_client_credentials_for_token():
+    """Exchanges client credentials for an access token."""
+    data = {
+        "grant_type": "client_credentials",
+        "client_id": settings.OAUTH2_CLIENT_CREDENTIALS["client_id"],
+        "client_secret": settings.OAUTH2_CLIENT_CREDENTIALS["client_secret"],
+    }
+
+    try:
+        response = post(settings.OAUTH2_CLIENT_CREDENTIALS["token_url"], data=data)
+
+        if response.status_code != 200:
+            logger.error(f"Error obtaining client credentials token: {response.text}")
+            return None
+
+        return response.json()  # Contains the access token
+
+    except Exception as e:
+        logger.error(f"Error during client credentials token exchange: {str(e)}")
+        return None
+
+
+def oauth2_callback(request):
+    """Handle both Authorization Code Flow and Client Credentials Flow."""
+    # Check if we're dealing with an authorization code flow or client credentials flow
+    code = request.GET.get("code")
+    code_verifier = request.session.get("code_verifier")
+    client_credentials_flow = request.GET.get("client_credentials", False)
+
+    logger.info(f"Received OAuth2 callback with code: {code}, client_credentials_flow: {client_credentials_flow}")
+
+    if client_credentials_flow:
+        # Client Credentials Flow
+        token_data = exchange_client_credentials_for_token()
+    elif code and code_verifier:
+        # Authorization Code Flow
+        token_data = exchange_authorization_code_for_token(code, code_verifier)
+    else:
+        logger.error("Missing code, code_verifier, or client_credentials flag.")
+        return JsonResponse({"error": "Invalid request parameters"}, status=400)
+
+    if token_data:
+        # Successfully obtained an access token
+        access_token = token_data.get("access_token")
+        refresh_token = token_data.get("refresh_token")
+        expires_in = token_data.get("expires_in", 3600)
 
         if access_token:
-            # Store the access token securely in the session
+            # Store access token and refresh token in the session
             request.session["access_token"] = access_token
-            request.session["expires_at"] = (
-                response_data.get("expires_in") + time.time()
-            )
+            request.session["expires_at"] = time.time() + expires_in
 
-            # Optionally, you can store the refresh_token for refreshing the access token later
-            refresh_token = response_data.get("refresh_token")
             if refresh_token:
                 request.session["refresh_token"] = refresh_token
 
-            return redirect(
-                next or "/"
-            )  # Redirect to the home page after successful login
+            next_url = request.session.get("next", "/")
+            return redirect(next_url)
+
         else:
-            logger.error("No access token returned in the response.")
+            logger.error("Access token not returned in the response.")
             return JsonResponse({"error": "No access token returned"}, status=400)
 
-    except Exception as e:
-        logger.error(f"Error occurred during token exchange: {str(e)}")
-        return JsonResponse({"error": "Error during token exchange"}, status=500)
+    else:
+        logger.error("Failed to exchange code for token or obtain client credentials token.")
+        return JsonResponse({"error": "Failed to obtain token"}, status=400)
     
     
 def logout_view(request):

@@ -13,7 +13,9 @@ from accounts.decorators.oauth_required import oauth_required
 from django.shortcuts import render
 from api.services.stack_services import deploy_stack
 
-stripe.api_key = settings.STRIPE_SECRET_KEY
+stripe.api_key = settings.STRIPE.get("SECRET_KEY")
+stripe.publishable_key = settings.STRIPE.get("PUBLISHABLE_KEY")
+stripe.endpoint_secret = settings.STRIPE.get("ENDPOINT_SECRET")
 
 
 @oauth_required
@@ -26,7 +28,7 @@ def add_card_view(request):
     return render(
         request,
         "payments-add-card.html",
-        {"stripe_publishable_key": settings.STRIPE_PUBLISHABLE_KEY},
+        {"stripe_publishable_key": settings.STRIPE.get("PUBLISHABLE_KEY")},
     )
 
 
@@ -43,7 +45,7 @@ def cancelled_view(request):
 @csrf_exempt
 def stripe_config(request):
     if request.method == "GET":
-        stripe_config = {"publicKey": settings.STRIPE_PUBLISHABLE_KEY}
+        stripe_config = {"publicKey": settings.STRIPE.get("PUBLISHABLE_KEY")}
         return JsonResponse(stripe_config, safe=False)
 
 
@@ -107,7 +109,7 @@ def save_payment_method(request):
 def create_checkout_session(request):
     if request.method == "POST":
         domain_url = settings.HOST
-        stripe.api_key = settings.STRIPE_SECRET_KEY
+        stripe.api_key = settings.STRIPE.get("SECRET_KEY")
         data = json.loads(request.body)
         stack_id = data.get("stackId")
         try:
@@ -185,8 +187,8 @@ def record_usage(subscription_item_id, quantity):
 @csrf_exempt
 def stripe_webhook(request):
     # Use `stripe listen --forward-to http://127.0.0.1:8000/payments/webhook` to listen for events
-    stripe.api_key = settings.STRIPE_SECRET_KEY
-    endpoint_secret = settings.STRIPE_ENDPOINT_SECRET
+    stripe.api_key = settings.STRIPE.get("SECRET_KEY")
+    endpoint_secret = settings.STRIPE.get("ENDPOINT_SECRET")
     payload = request.body
     sig_header = request.headers.get("Stripe-Signature")
     event = None

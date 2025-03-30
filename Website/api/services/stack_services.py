@@ -1,7 +1,7 @@
 from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework import status
-from api.serializers.stacks_serializer import StacksSerializer
+from api.serializers.stacks_serializer import StacksSerializer, StackDatabasesSerializer
 import requests
 from django.http import FileResponse
 from google.cloud import storage
@@ -13,6 +13,8 @@ from django.conf import settings
 import api.utils.gcp_utils as gcp_utils
 import api.utils.mongodb_utils as mongodb_utils
 from api.models import StackDatabases, StackBackends, Stacks, StackFrontends
+from django.db.models import F
+
 
 logger = logging.getLogger(__name__)
 
@@ -32,6 +34,35 @@ def get_stacks(request: Request, stack_id: str = None) -> Response:
         stacks = Stacks.objects.filter(user=user)
         stacks = StacksSerializer(stacks, many=True).data
         return Response({"data": stacks}, status.HTTP_200_OK)
+    
+#TODO change to get all database stacks
+def get_all_stacks(request: Request):
+    stacks = StackDatabases.objects.all()
+    stacks = StackDatabasesSerializer(stacks, many=True).data
+    print(stacks)
+
+
+    stacks_dict = {}
+    for stack in stacks:
+        uri = stack.get("uri")
+        temp = stack.get("stack")
+
+        if temp == None:
+            stack_id = "no stack"
+        else:
+            stack_id = temp.get("id")
+
+        if stack_id in stacks_dict:
+            stacks_dict[stack_id].append(uri)
+        else:
+            stacks_dict[stack_id] = [uri]
+
+    print("stack_dict: ", stacks_dict)
+
+    if stacks is not None:
+        return Response({"stacks": stacks_dict}, status.HTTP_200_OK)
+    else:
+        return Response("error in get all stacks", status.HTTP_400_BAD_REQUEST)
 
 
 def add_stack(request: Request) -> Response:
@@ -129,7 +160,7 @@ def download_stack(request: Request, stack_id: str = None) -> Response:
     stack = get_object_or_404(Stacks, id=stack_id, user=request.user)
 
     # Load service account credentials
-    credentials_path = settings.GCP_KEY_PATH
+    credentials_path = settings.GCP.KEY_PATH
 
     try:
         credentials = service_account.Credentials.from_service_account_file(
@@ -167,3 +198,15 @@ def download_stack(request: Request, stack_id: str = None) -> Response:
             {"error": "Error downloading stack."},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+    
+
+def update_database_storage_billing(request: Request):
+    data = request.data
+
+    for stack_id, usage in data.items():
+        StackDatabases.objects.filter(stack_id=stack_id).update(current_usage=F('current_usage')+usage)
+
+
+
+    return Response({"data": data}, status=status.HTTP_200_OK)
+

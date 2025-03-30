@@ -7,6 +7,6 @@ urlpatterns = [
     path("auth/callback", views.github_callback, name="github_callback"),
     path("logout", views.logout, name="logout"),
     path("repos", views.list_repos, name="list_repos"),
-    path("webhooks/create", views.create_github_webhook, name="create_webhook"),
-    path("webhooks/<int:webhook_id>", views.github_webhook, name="webhook"),
+    path("webhook/create", views.create_github_webhook, name="create_webhook"),
+    path("webhook", views.github_webhook, name="webhook"),
 ]
