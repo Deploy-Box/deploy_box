@@ -1,31 +1,55 @@
-from django.shortcuts import render, redirect
-from django.http import JsonResponse, HttpResponse
-from django.contrib.auth.forms import UserCreationForm
-from rest_framework_simplejwt.tokens import RefreshToken
-from django.contrib.auth.decorators import login_required, permission_required
-from django.contrib.auth.models import User
-from django.contrib.auth import logout, authenticate
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
-from rest_framework import status
-import requests
+from django.shortcuts import render
+from django.http import HttpRequest, HttpResponse
+from django.conf import settings
 
+from core.decorators import oauth_required
 
 # Basic Routes
-def home(request):
+def home(request: HttpRequest) -> HttpResponse:
     return render(request, "home.html", {})
 
-
-def stacks(request):
+def stacks(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks.html", {})
 
-
-def pricing(request):
+def pricing(request: HttpRequest) -> HttpResponse:
     return render(request, "pricing.html", {})
 
-def profile(request):
+def profile(request: HttpRequest) -> HttpResponse:
     return render(request, "profile.html", {})
 
-def maintenance(request):
+def maintenance(request: HttpRequest) -> HttpResponse:
     return render(request, "maintenance.html", {})
+
+# Authentication Routes
+def login(request: HttpRequest) -> HttpResponse:
+    return render(request, "accounts/login.html", {})
+
+def signup(request: HttpRequest) -> HttpResponse:
+    return render(request, "accounts/signup.html", {})
+
+def logout(request: HttpRequest) -> HttpResponse:
+    return render(request, "accounts/logout.html", {})  
+
+# Payment Routes
+STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
+
+@oauth_required()
+def home_page_view(request: HttpRequest) -> HttpResponse:
+    return render(request, "payments/home.html")
+
+@oauth_required()
+def add_card_view(request: HttpRequest) -> HttpResponse:
+    return render(
+        request,
+        "payments/add-card.html",
+        {"stripe_publishable_key": STRIPE_PUBLISHABLE_KEY},
+    )
+
+@oauth_required()
+def success_view(request: HttpRequest) -> HttpResponse:
+    return render(request, "payments/success.html")
+
+@oauth_required()
+def cancelled_view(request: HttpRequest) -> HttpResponse:
+    return render(request, "payments/cancelled.html")
+

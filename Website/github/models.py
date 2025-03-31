@@ -3,9 +3,10 @@ from django.contrib.auth.models import User
 from cryptography.fernet import Fernet
 from api.models import Stacks
 import os
-import base64
 import json
+from typing import Any
 
+ENCRYPTION_KEY = os.getenv("GITHUB_TOKEN_KEY")
 
 class Webhooks(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link webhook to a user
@@ -25,12 +26,11 @@ class Webhooks(models.Model):
 class WebhookEvents(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link event to a user
     stack = models.ForeignKey(Stacks, on_delete=models.CASCADE)  # Link event to a stack
-    event_type = models.CharField(max_length=100)  # e.g., "push", "pull_request"
-    payload = models.JSONField()  # Store entire webhook payload
+    payload: Any = models.JSONField()  # Store entire webhook payload
     received_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.event_type} event for {self.repository} at {self.received_at}"
+        return f"{self.received_at}"
 
     def get_pretty_payload(self):
         """Return a formatted JSON payload (for debugging in Django Admin)"""
@@ -42,7 +42,6 @@ class WebhookEvents(models.Model):
 #     return base64.urlsafe_b64encode(os.urandom(32))
 
 
-ENCRYPTION_KEY = os.getenv("GITHUB_TOKEN_KEY")
 
 
 class Tokens(models.Model):
