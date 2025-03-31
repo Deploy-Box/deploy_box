@@ -7,6 +7,7 @@ urlpatterns = [
     path("stacks/<int:stack_id>", views.stack_operations, name="get_update_stack"),
     path("stacks/get_all_stacks", views.get_all_stacks, name="get_all_stacks"),
     path("stacks/update_database_usage", views.update_database_usage, name="update_database_usage"),
+    path("stacks/get_stack_usage_from_db", views.get_usage_per_stack_from_db, name="get_usage_per_stack_from_db"),
     path(
         "stacks/<int:stack_id>/download", views.stack_operations, name="download_stack"
     ),

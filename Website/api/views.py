@@ -35,3 +35,9 @@ def get_all_stacks(request: HttpRequest) -> JsonResponse:
 def update_database_usage(request: HttpRequest) -> JsonResponse:
     return stack_services.update_database_storage_billing(request)
 
+@api_view(["GET"])
+def get_usage_per_stack_from_db(request):
+    return stack_services.get_database_current_use_from_db(request)
+
+
+

@@ -14,5 +14,5 @@ class StackDatabasesSerializer(serializers.ModelSerializer):
     class Meta:
         model = StackDatabases
 
-        depth = 1
+        depth = 2
         fields = "__all__"
