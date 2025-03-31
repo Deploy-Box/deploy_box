@@ -7,3 +7,5 @@ local*
 /CLI/build/
 **key.json
 nginx.conf
+.DS_Store
+.vscode

@@ -1,57 +1,33 @@
-from django.conf import settings
-from django.http.response import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.http import HttpResponse
-from requests import Response
-from .serializers.payments_serializer import PaymentsSerializer
-from api.serializers.stacks_serializer import StackDatabasesSerializer
-from api.models import Stacks
-from django.contrib.auth.models import User
-from accounts.models import UserProfile
-from api.models import StackDatabases
-from api.models import AvailableStacks
 import json
 import time
 import stripe
-from accounts.decorators.oauth_required import oauth_required
-from django.shortcuts import render
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
+from django.http import HttpResponse, JsonResponse, HttpRequest
+from django.contrib.auth.models import User
+
+from core.decorators import oauth_required
 from api.services.stack_services import deploy_stack
-from django.db.models import F
+from api.models import AvailableStacks, Stacks
+from accounts.models import UserProfile
+
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
-stripe.publishable_key = settings.STRIPE.get("PUBLISHABLE_KEY")
-stripe.endpoint_secret = settings.STRIPE.get("ENDPOINT_SECRET")
-
-
-@oauth_required
-def home_page_view(request):
-    return render(request, "payments-home.html")
-
-
-@oauth_required
-def add_card_view(request):
-    return render(
-        request,
-        "payments-add-card.html",
-        {"stripe_publishable_key": settings.STRIPE.get("PUBLISHABLE_KEY")},
-    )
-
-
-@oauth_required
-def success_view(request):
-    return render(request, "payments-success.html")
-
-
-@oauth_required
-def cancelled_view(request):
-    return render(request, "payments-cancelled.html")
+STRIPE_ENDPOINT_SECRET = settings.STRIPE.get("ENDPOINT_SECRET", None)
+STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
 
 
 @csrf_exempt
-def stripe_config(request):
-    if request.method == "GET":
-        stripe_config = {"publicKey": settings.STRIPE.get("PUBLISHABLE_KEY")}
-        return JsonResponse(stripe_config, safe=False)
+def stripe_config(request: HttpRequest) -> JsonResponse:
+    if request.method != "GET":
+        # Handle non-GET requests
+        return JsonResponse(
+            {"error": "Invalid request method. Only GET is allowed."},
+            status=405
+        )
+    
+    stripe_config = {"publicKey": STRIPE_PUBLISHABLE_KEY}
+    return JsonResponse(stripe_config, safe=False)
 
 
 def create_stripe_user(user: User):
@@ -70,7 +46,7 @@ def create_stripe_user(user: User):
 
 @csrf_exempt
 @oauth_required
-def create_intent(request):
+def create_intent(request: HttpRequest) -> JsonResponse:
     try:
         user_profile = UserProfile.objects.get(user=request.user)
 
@@ -85,7 +61,7 @@ def create_intent(request):
 
 @csrf_exempt
 @oauth_required
-def save_payment_method(request):
+def save_payment_method(request: HttpRequest) -> JsonResponse:
     try:
         payment_method_id = request.POST.get("payment_method")
 
@@ -111,43 +87,46 @@ def save_payment_method(request):
 
 
 @csrf_exempt
-def create_checkout_session(request):
-    if request.method == "POST":
-        domain_url = settings.HOST
-        stripe.api_key = settings.STRIPE.get("SECRET_KEY")
-        data = json.loads(request.body)
-        stack_id = data.get("stackId")
-        try:
-            print(stack_id)
-            price_id = AvailableStacks.objects.get(id=stack_id).price_id
-            checkout_session = stripe.checkout.Session.create(
-                customer=UserProfile.objects.get(
-                    user_id=request.user.id
-                ).stripe_customer_id,
-                success_url=domain_url
-                + "/payments/success?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url=domain_url + "/payments/cancelled",
-                payment_method_types=["card"],
-                mode="payment",
-                line_items=[
-                    {
-                        "price": price_id,
-                        "quantity": 1,
-                    }
-                ],
-                payment_intent_data={
-                    "setup_future_usage": "off_session",  # This tells Stripe to save the card for future payments
-                },
-            )
-            return JsonResponse({"sessionId": checkout_session["id"]})
-        except Exception as e:
-            return JsonResponse({"error": str(e)})
+def create_checkout_session(request: HttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        # Handle non-POST requests
+        return JsonResponse(
+            {"error": "Invalid request method. Only POST is allowed."},
+            status=405
+        )
 
-    return JsonResponse({"error": "Invalid request"})
+    domain_url = settings.HOST
+    data = json.loads(request.body)
+    stack_id = data.get("stackId")
+    try:
+        print(stack_id)
+        price_id = AvailableStacks.objects.get(id=stack_id).price_id
+        checkout_session = stripe.checkout.Session.create(
+            customer=UserProfile.objects.get(
+                user_id=request.user.id
+            ).stripe_customer_id,
+            success_url=domain_url
+            + "/payments/success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=domain_url + "/payments/cancelled",
+            payment_method_types=["card"],
+            mode="payment",
+            line_items=[
+                {
+                    "price": price_id,
+                    "quantity": 1,
+                }
+            ],
+            payment_intent_data={
+                "setup_future_usage": "off_session",  # This tells Stripe to save the card for future payments
+            },
+        )
+        return JsonResponse({"sessionId": checkout_session["id"]})
+    except Exception as e:
+        return JsonResponse({"error": str(e)})
 
 
 @csrf_exempt
-def create_subscription(request):
+def create_subscription(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         data = json.loads(request.body)
         customer_id = data.get("customer_id")  # The customer ID created earlier
@@ -175,7 +154,8 @@ def create_subscription(request):
             )
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
-
+        
+    return JsonResponse({"error": "Invalid request method"}, status=400)
 
 def record_usage(subscription_item_id, quantity):
     try:
@@ -190,10 +170,9 @@ def record_usage(subscription_item_id, quantity):
 
 
 @csrf_exempt
-def stripe_webhook(request):
+def stripe_webhook(request: HttpRequest) -> HttpResponse:
     # Use `stripe listen --forward-to http://127.0.0.1:8000/payments/webhook` to listen for events
-    stripe.api_key = settings.STRIPE.get("SECRET_KEY")
-    endpoint_secret = settings.STRIPE.get("ENDPOINT_SECRET")
+    endpoint_secret = STRIPE_ENDPOINT_SECRET
     payload = request.body
     sig_header = request.headers.get("Stripe-Signature")
     event = None
@@ -257,7 +236,7 @@ def stripe_webhook(request):
 
 
 @csrf_exempt
-def create_invoice(request):
+def create_invoice(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         try:
             # Get data from the request body (e.g., customer_id, amount, description)
