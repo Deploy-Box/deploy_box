@@ -10,6 +10,7 @@ import api.utils.gcp_utils as gcp_utils
 from api.utils import MongoDBUtils
 from api.models import StackDatabases, StackBackends, Stacks, StackFrontends
 from api.serializers.stacks_serializer import StacksSerializer, StackDatabasesSerializer
+from core.decorators import oauth_required
 
 logger = logging.getLogger(__name__)
 
@@ -187,20 +188,20 @@ def update_stack(request: HttpRequest, stack_id: str | None) -> JsonResponse:
             status=400
         )
 
-    stack = get_stacks(request, stack_id)
+    stack = get_object_or_404(Stacks, id=stack_id, user=request.user)
     if not stack:
         return JsonResponse(
             {"error": "Stack not found."},
             status=404
         )
 
-    stack_type = request.GET.get("type", stack.type)
-    variant = request.GET.get("variant", stack.variant)
-    version = request.GET.get("version", stack.version)
+    stack_type = request.GET.get("type", stack.purchased_stack.type)
+    variant = request.GET.get("variant", stack.purchased_stack.variant)
+    version = request.GET.get("version", stack.purchased_stack.version)
 
-    stack.type = stack_type
-    stack.variant = variant
-    stack.version = version
+    stack.purchased_stack.type = stack_type
+    stack.purchased_stack.variant = variant
+    stack.purchased_stack.version = version
     stack.save()
 
     return JsonResponse(
@@ -217,7 +218,7 @@ def update_stack(request: HttpRequest, stack_id: str | None) -> JsonResponse:
     )
 
 
-def download_stack(request: HttpRequest, stack_id: str | None = None) -> JsonResponse:
+def download_stack(request: HttpRequest, stack_id: str | None = None) -> JsonResponse | FileResponse:
     if not stack_id:
         return JsonResponse(
             {"error": "Stack ID is required."},
@@ -243,7 +244,7 @@ def download_stack(request: HttpRequest, stack_id: str | None = None) -> JsonRes
         )
 
     bucket_name = "deploy_box_bucket"
-    blob_name = f"{stack.stack.type.upper()}.tar"
+    blob_name = f"{stack.purchased_stack.type.upper()}.tar"
 
     try:
         bucket = client.bucket(bucket_name)
@@ -270,7 +271,7 @@ def download_stack(request: HttpRequest, stack_id: str | None = None) -> JsonRes
     
 
 def update_database_storage_billing(request: HttpRequest) -> JsonResponse:
-    data = request.data
+    data = request.GET
 
     for stack_id, usage in data.items():
         StackDatabases.objects.filter(stack_id=stack_id).update(current_usage=F('current_usage')+usage)
@@ -286,8 +287,8 @@ def update_database_storage_billing(request: HttpRequest) -> JsonResponse:
     )
 
 
-@oauth_required
-def get_database_current_use_from_db(request: Request):
+@oauth_required()
+def get_database_current_use_from_db(request: HttpRequest) -> JsonResponse:
     stacks = StackDatabases.objects.all()
     stacks = StackDatabasesSerializer(stacks, many=True).data
     print(stacks)
@@ -313,8 +314,12 @@ def get_database_current_use_from_db(request: Request):
     print("stack_dict: ", stacks_dict)
 
     if stacks is not None:
-        return Response({"stacks": stacks_dict}, status.HTTP_200_OK)
+        return JsonResponse(
+            {"stacks": stacks_dict},
+            status=200
+        )
     else:
-        return Response("error in get all stacks", status.HTTP_400_BAD_REQUEST)
-
-
+        return JsonResponse(
+            {"error": "No stacks found."},
+            status=404
+        )

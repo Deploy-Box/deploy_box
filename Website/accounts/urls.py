@@ -1,8 +1,7 @@
-from typing import List, Union
-from django.urls import URLPattern, URLResolver, path
+from django.urls import path
 from . import views
 
-urlpatterns: List[Union[URLPattern, URLResolver]] = [
+urlpatterns = [
     path('authorize/', views.oauth_authorize, name='oauth_authorize'),
     path('callback/', views.oauth_callback, name='oauth_callback'),
     path('login/', views.login_view, name='login'),

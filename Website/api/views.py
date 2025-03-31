@@ -1,9 +1,9 @@
-from django.http import JsonResponse, HttpRequest
+from django.http import JsonResponse, HttpRequest, FileResponse
 
 from api.services import stack_services
 from core.decorators import oauth_required
 
-def stack_operations(request: HttpRequest, stack_id: str | None = None) -> JsonResponse:
+def stack_operations(request: HttpRequest, stack_id: str | None = None) -> JsonResponse | FileResponse:
     # GET: Fetch available stacks or a specific stack
     if request.method == "GET":
         if request.path.endswith("/download"):
@@ -35,7 +35,6 @@ def get_all_stacks(request: HttpRequest) -> JsonResponse:
 def update_database_usage(request: HttpRequest) -> JsonResponse:
     return stack_services.update_database_storage_billing(request)
 
-@api_view(["GET"])
 def get_usage_per_stack_from_db(request):
     return stack_services.get_database_current_use_from_db(request)
 
