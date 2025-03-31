@@ -1,4 +1,5 @@
 
+{% load static %}
 <nav id="navbar" class="bg-transparent fixed top-0 left-0 right-0 z-10 border-gray-200">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
       <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
@@ -13,7 +14,7 @@
       <div class="hidden w-full md:block md:w-auto" id="navbar-dropdown">
         <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-transparent md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-transparent">
           <li>
-            <a id="home" href="/" class="block py-2 px-3 text-white rounded-sm md:bg-transparent md:text-emerald-400" aria-current="page">Home</a>
+            <a id="home" href="/" class="block py-2 px-3 rounded-sm bg-transparent text-emerald-400 hover:text-emerald-400" aria-current="page">Home</a>
           </li>
           <li>
             <a id="stacks" href="/stacks" class="block py-2 px-3 text-white rounded-sm hover:text-emerald-400">Stacks</a>
@@ -35,49 +36,5 @@
     </div>
   </nav>
 
-  <script>
-    const navbar = document.getElementById('navbar');
-    const navbarText = document.getElementById('navbar-text');
-    const stacks = document.getElementById('stacks');
-    const pricing = document.getElementById('pricing');
-    const contact = document.getElementById('contact');
-    const login = document.getElementById('login')
-  
-    // Listen for scroll events
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 500) {
-        // When scrolling past 50px, change navbar background and text color
-        navbar.classList.add('bg-white', 'text-black');
-        navbarText.classList.add('text-black');
-        stacks.classList.add('text-black'); // Change text color to black
-        pricing.classList.add('text-black'); // Change text color to black
-        login.classList.add('text-black');
-        login.classList.add('border-black');
-        contact.classList.add('text-black'); // Change text color to black
-        navbar.classList.remove('bg-transparent', 'text-white');
-        navbarText.classList.remove('text-white')
-        stacks.classList.remove('text-white'); // Ensure text color is removed
-        pricing.classList.remove('text-white'); // Ensure text color is removed
-        contact.classList.remove('text-white'); // Ensure text color is removed
-        login.classList.remove('text-white');
-        login.classList.remove('border-white');
-      } else {
-        // When at the top, revert to original transparent background and white text
-        navbar.classList.remove('bg-white', 'text-black');
-        navbar.classList.add('bg-transparent', 'text-white');
-        navbarText.classList.remove('text-black');
-        navbarText.classList.add('text-white'); // Revert text color to white
-        stacks.classList.remove('text-black');
-        stacks.classList.add('text-emerald-400'); // Revert text color to white
-        pricing.classList.remove('text-black');
-        pricing.classList.add('text-white'); // Revert text color to white
-        contact.classList.remove('text-black');
-        contact.classList.add('text-white'); // Revert text color to white
-        login.classList.remove('text-black');
-        login.classList.add('text-white');
-        login.classList.remove('border-black');
-        login.classList.add('border-white');
-      }
-    });
-  </script>
+  <script src="{% static 'navbar.js' %}"></script>
   
