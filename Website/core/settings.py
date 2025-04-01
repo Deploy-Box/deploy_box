@@ -1,3 +1,4 @@
+from typing import Dict, Union, List, Any
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -10,17 +11,18 @@ HOST = os.environ.get("HOST")
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-DEBUG = os.environ.get("ENV", "dev") == "dev"
+ENV = os.environ.get("ENV", "dev")
+DEBUG = ENV == "dev"
 
 ALLOWED_HOSTS = [
     "deploy-box.onrender.com",
     "deploy-box.kalebwbishop.com",
 ]
 if DEBUG:
-    ALLOWED_HOSTS += [
+    ALLOWED_HOSTS.extend([
         "127.0.0.1",
         "localhost",
-    ]
+    ])
 
 ROOT_URLCONF = "core.urls"
 
@@ -40,6 +42,8 @@ INSTALLED_APPS = [
     "tailwind",
     "theme",
     "payments.apps.PaymentsConfig",
+
+    # Custom Apps
     "main_site",
     "api",
     "accounts",
@@ -47,25 +51,37 @@ INSTALLED_APPS = [
 ]
 
 if DEBUG:
-    INSTALLED_APPS += [
+    INSTALLED_APPS.extend([
         "django_browser_reload",
         "django_extensions",
-    ]
+    ])
+
 
 # Authentication
-OAUTH2_PROVIDER = {
-    "ACCESS_TOKEN_EXPIRE_SECONDS": 36000,
-    "AUTHORIZATION_CODE_EXPIRATION": 600,
+OAUTH2_PROVIDER: Dict[str, Union[int, bool, List[str], Dict[str, str]]] = {
+    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,  # 1 hour
+    'REFRESH_TOKEN_EXPIRE_SECONDS': 86400,  # 1 day
+    "AUTHORIZATION_CODE_EXPIRATION": 600,  # 10 minutes
+    'ROTATE_REFRESH_TOKENS': True,
+    'GRANT_TYPES': [
+        'authorization_code',
+        'password',
+    ],
+    'SCOPES': {
+        'read': 'Read scope',
+        'write': 'Write scope',
+    },
+    'PKCE_REQUIRED': True,
 }
 
-OAUTH2_AUTHORIZATION_CODE = {
-    "client_id": os.environ.get("OAUTH2_AUTHORIZATION_CODE_CLIENT_ID"),
-    "client_secret": os.environ.get("OAUTH2_AUTHORIZATION_CODE_CLIENT_SECRET"),
-    "redirect_uri": f"{HOST}/accounts/callback/",
-    "token_url": f"{HOST}/accounts/o/token/",
+OAUTH2_PASSWORD_CREDENTIALS: Dict[str, Union[str, None]] = {
+    "client_id": os.environ.get("OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID"),
+    "client_secret": os.environ.get("OAUTH2_PASSWORD_CREDENTIALS_CLIENT_SECRET"),
+    "redirect_uri": f"{HOST}/callback/",
+    "token_url": f"{HOST}/o/token/",
 }
 
-OAUTH2_CLIENT_CREDENTIALS = {
+OAUTH2_CLIENT_CREDENTIALS: Dict[str, Union[str, None]] = {
     "client_id": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID"),
     "client_secret": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET"),
     "token_url": f"{HOST}/accounts/o/token/",
@@ -104,10 +120,10 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 if DEBUG:
-    CSRF_TRUSTED_ORIGINS += [
-        "http://127.0.0.1:8000",
-        "http://localhost:8000"
-    ]
+    CSRF_TRUSTED_ORIGINS.extend([
+        "http://12.0.0.1:8000",
+        "http://localhost:8000",
+    ])
 
 # Middleware
 MIDDLEWARE = [
@@ -122,7 +138,7 @@ MIDDLEWARE = [
 ]
 
 # Database
-DATABASES = {
+DATABASES: Dict[str, Dict[str, Any]] = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("DB_NAME"),
@@ -178,10 +194,11 @@ GCP = {
 GITHUB = {
     "CLIENT_ID": os.environ.get("GITHUB_CLIENT_ID"),
     "CLIENT_SECRET": os.environ.get("GITHUB_CLIENT_SECRET"),
+
 }
 
 # Templates Configuration
-TEMPLATES = [
+TEMPLATES: List[Dict[str, Any]] = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": ["templates"],

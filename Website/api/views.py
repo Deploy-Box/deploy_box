@@ -1,11 +1,9 @@
-from rest_framework.decorators import api_view
-from rest_framework.request import Request
-from rest_framework.response import Response
-from api.services import stack_services
-from accounts.decorators.oauth_required import oauth_required
+from django.http import JsonResponse, HttpRequest, FileResponse
 
-@api_view(["GET", "POST", "PATCH"])
-def stack_operations(request: Request, stack_id=None) -> Response:
+from api.services import stack_services
+from core.decorators import oauth_required
+
+def stack_operations(request: HttpRequest, stack_id: str | None = None) -> JsonResponse | FileResponse:
     # GET: Fetch available stacks or a specific stack
     if request.method == "GET":
         if request.path.endswith("/download"):
@@ -24,12 +22,21 @@ def stack_operations(request: Request, stack_id=None) -> Response:
     elif request.method == "PATCH":
         return stack_services.update_stack(request, stack_id)
     
-@api_view(["GET"])
-@oauth_required
-def get_all_stacks(request: Request) -> Response:
+    # If the request method is not handled, return a 405 Method Not Allowed
+    return JsonResponse(
+        {"error": "Method not allowed."},
+        status=405
+    )
+    
+@oauth_required()
+def get_all_stacks(request: HttpRequest) -> JsonResponse:
     return stack_services.get_all_stacks(request)
 
-@api_view(["POST"])
-def update_database_usage(request: Request) -> Response:
+def update_database_usage(request: HttpRequest) -> JsonResponse:
     return stack_services.update_database_storage_billing(request)
+
+def get_usage_per_stack_from_db(request):
+    return stack_services.get_database_current_use_from_db(request)
+
+
 

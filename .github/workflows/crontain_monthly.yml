@@ -1,8 +1,8 @@
-name: Daily CRON
+name: Monthly CRON
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # Runs at midnight (00:00) UTC every dayh
+    - cron: '0 0 1 * *'  # Runs on the first of each month
   workflow_dispatch:
 
 jobs:
@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -30,4 +31,4 @@ jobs:
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: |
           source venv/bin/activate 
-          python crontainer/main.py
+          python crontainer/monthly.py
