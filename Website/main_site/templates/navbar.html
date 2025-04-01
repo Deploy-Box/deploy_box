@@ -27,7 +27,7 @@
           </li>
           <li>
             <a id="login" class="px-6 py-2 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring"
-            href="{% if user.is_authenticated %}/profile{% else %}/accounts/login{% endif %}" id="login-button">
+            href="{% if user.is_authenticated %}/profile{% else %}/login{% endif %}" id="login-button">
             {% if user.is_authenticated %} Visit Account {% else %} Login {% endif %}
          </a>
           </li>
