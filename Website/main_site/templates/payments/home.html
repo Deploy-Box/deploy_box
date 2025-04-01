@@ -1,16 +1,15 @@
-{% load static %} {% load static tailwind_tags %}
+{% extends 'base.html' %}
+{% load static %}
 
-<!DOCTYPE html>
-<html>
-  {% tailwind_css %}
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Django + Stripe Checkout</title>
+    {% block extra_head%}
     <script src="https://js.stripe.com/v3/"></script>
+    <script src="{% static 'main.js' %}"></script>
     <script src="{% static 'payments/index.js' %}"></script>
+    {% endblock %}
   </head>
-  <body>
+
+  {% block content %}
     <div class="pt-10 flex items-center justify-center text-3xl text-bold">
       <header>Purchase your Stack!</header>
     </div>
@@ -49,5 +48,4 @@
         </div>
       </section>
     </div>
-  </body>
-</html>
+    {% endblock %}
