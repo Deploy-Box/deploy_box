@@ -275,7 +275,7 @@ from google.cloud.devtools import cloudbuild_v1
 from google.oauth2 import service_account
 
 
-def sample_submit_and_approve_build(stack_id, github_repo, github_token, layer:str, port=80):
+def sample_submit_and_approve_build(stack_id, github_repo, github_token, layer:str):
     try:
         # Create a client with credentials
         credentials = service_account.Credentials.from_service_account_file(settings.GCP.get("KEY_PATH"))
@@ -323,7 +323,6 @@ def sample_submit_and_approve_build(stack_id, github_repo, github_token, layer:s
                         --region=us-central1 \
                         --platform=managed \
                         --allow-unauthenticated \
-                        --set-env-vars=PORT={port}
                 """,
                 ],
             ),
@@ -431,7 +430,7 @@ def github_webhook(request):
 
         threading.Thread(
             target=sample_submit_and_approve_build,
-            args=(webhook.stack.id, webhook.repository, github_token, "Website", 8000),
+            args=(webhook.stack.id, webhook.repository, github_token, "Website"),
         ).start()
 
     elif repository == "HamzaKhairy/green_toolkit":
@@ -452,12 +451,12 @@ def github_webhook(request):
 
         threading.Thread(
             target=sample_submit_and_approve_build,
-            args=(webhook.stack.id, webhook.repository, github_token, "backend", 8080),
+            args=(webhook.stack.id, webhook.repository, github_token, "backend"),
         ).start()
 
         threading.Thread(
             target=sample_submit_and_approve_build,
-            args=(webhook.stack.id, webhook.repository, github_token, "frontend", 8080),
+            args=(webhook.stack.id, webhook.repository, github_token, "frontend"),
         ).start()
 
 
