@@ -7,7 +7,7 @@ urlpatterns = [
     path("", include(("main_site.urls", "main_site"), "main_site")),
     path("admin/", admin.site.urls),
     path("api/accounts/", include(("accounts.urls", "accounts"), "accounts")),
-    path("api/stacks", include(("api.urls", "api"), "stacks")),
+    path("api/stack/", include(("api.urls", "api"), "stack")),
     path("api/payments/", include(("payments.urls", "payments"), "payments")),
     path("api/github/", include(("github.urls", "github"), "github")),
     path('o/', include('oauth2_provider.urls', namespace='oauth2_provider')),

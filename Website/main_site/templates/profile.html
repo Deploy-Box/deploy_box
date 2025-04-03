@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+{%load static%}
+
+{% block content %}
+<div class="min-h-full pb-12">
+    <div class="w-full bg-zinc-950 pt-16 pb-24 text-center">
+        <h4 class="text-2xl text-gray-100 mt-10">Manage Your Profile</h4>
+        <p class="text-md text-gray-100 mt-2">Update your account information and manage your security settings</p>
+    </div>
+
+    <div class="w-full 2xl:w-3/4 flex items-center justify-center px-8 md:px-32 lg:px-16 2xl:px-0 mx-auto -mt-10">
+        <div class="w-full max-w-2xl">
+            <div class="bg-white shadow-2xl rounded-lg py-8 px-8">
+                <h2 class="text-xl font-bold text-emerald-400 mb-6">Account Information</h2>
+                <form id="userForm" class="space-y-6">
+                    <div>
+                        <label for="username" class="block text-sm font-medium text-zinc-900">Update Username</label>
+                        <input type="text" id="username" name="username"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-400 focus:ring-emerald-400" />
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-zinc-900">Update Email</label>
+                        <input type="email" id="email" name="email"
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-400 focus:ring-emerald-400" />
+                    </div>
+
+                    <button type="submit"
+                        class="w-full bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150">
+                        Update Profile
+                    </button>
+                </form>
+
+                <div class="mt-8 pt-8 border-t border-gray-300">
+                    <h2 class="text-xl font-bold text-emerald-400 mb-6">Security Settings</h2>
+                    <form id="resetForm" class="space-y-6">
+                        <div>
+                            <label for="resetEmail" class="block text-sm font-medium text-zinc-900">Reset
+                                Password</label>
+                            <input type="email" id="resetEmail" name="resetEmail" required
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-emerald-400 focus:ring-emerald-400" />
+                        </div>
+
+                        <button type="button" id="resetPassword"
+                            class="w-full bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150">
+                            Request Password Reset
+                        </button>
+                    </form>
+                </div>
+
+                <div class="mt-8 pt-8 border-t border-gray-300">
+                    <a href="/api/accounts/logout/"
+                        class="block w-full bg-red-500 hover:bg-red-600 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150 text-center">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'script.js' %}"></script>
+
+{% endblock %}

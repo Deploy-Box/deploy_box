@@ -6,11 +6,19 @@ import requests
 from django.conf import settings
 from django.shortcuts import redirect
 from django.contrib.auth import authenticate, login
-from django.http import JsonResponse, HttpRequest, HttpResponseRedirect, HttpResponsePermanentRedirect
+from django.http import (
+    JsonResponse,
+    HttpRequest,
+    HttpResponseRedirect,
+    HttpResponsePermanentRedirect,
+)
 
 from accounts.forms import CustomUserCreationForm
 from payments.views import create_stripe_user
 from accounts.models import UserProfile
+from core.decorators import oauth_required
+from accounts.models import Organization, Project
+from accounts.services import get_project
 
 # Authentication
 def signup(request: HttpRequest):
@@ -28,21 +36,24 @@ def signup(request: HttpRequest):
             )
 
             return redirect("/accounts/login")
-        
+
     return JsonResponse({"message": "POST request required for signup"}, status=400)
 
+
 def login_view(request: HttpRequest):
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+    if request.method == "POST":
+        username = request.POST.get("username")
+        password = request.POST.get("password")
 
         if not username or not password:
             # Handle missing username or password
-            return JsonResponse({"message": "Username and password are required"}, status=400)
+            return JsonResponse(
+                {"message": "Username and password are required"}, status=400
+            )
 
         # Authenticate user
         user = authenticate(request, username=username, password=password)
-        
+
         if user is not None:
             # Login the user
             login(request, user)
@@ -55,7 +66,10 @@ def login_view(request: HttpRequest):
 
             if not token_url or not client_id or not client_secret:
                 # Handle missing configuration for token request
-                return JsonResponse({"message": "Token URL or client credentials not configured"}, status=500)
+                return JsonResponse(
+                    {"message": "Token URL or client credentials not configured"},
+                    status=500,
+                )
 
             # Prepare the payload for the token request
             payload: dict[str, str] = {
@@ -71,7 +85,9 @@ def login_view(request: HttpRequest):
             response = requests.post(token_url, data=payload)
 
             if response.status_code != 200:
-                return JsonResponse({"message": "Failed to obtain access token"}, status=400)
+                return JsonResponse(
+                    {"message": "Failed to obtain access token"}, status=400
+                )
 
             # Parse the response and handle the token
             token = response.json()
@@ -82,39 +98,50 @@ def login_view(request: HttpRequest):
 
             # Check if access token was successfully obtained
             if not request.session["access_token"]:
-                return JsonResponse({"message": "Failed to obtain access token from response"}, status=400)
+                return JsonResponse(
+                    {"message": "Failed to obtain access token from response"},
+                    status=400,
+                )
 
             # Redirect back to next page
-            next_url = request.POST.get('next', '/')
+            next_url = request.POST.get("next", "/")
             if next_url:
                 # Redirect to the next URL if provided
                 print(f"Redirecting to next URL: {next_url}")
                 return HttpResponseRedirect(next_url)
-            
+
             # If no next URL, redirect to a default page
             print("No next URL provided, redirecting to default page.")
-            return HttpResponseRedirect('/')
+            return HttpResponseRedirect("/")
 
         else:
             # Invalid credentials
             return JsonResponse({"message": "Invalid credentials"}, status=400)
 
-    return JsonResponse({"message": "POST request required"}, status=400)    
+    return JsonResponse({"message": "POST request required"}, status=400)
 
-    
+
 # Helper functions for PKCE
 def generate_code_verifier():
     """Generates a code verifier for PKCE."""
-    return ''.join(random.choices(string.ascii_letters + string.digits, k=43))
+    return "".join(random.choices(string.ascii_letters + string.digits, k=43))
+
 
 def generate_code_challenge(code_verifier: str) -> str:
     """Generates a code challenge using the S256 method."""
     code_verifier_bytes = code_verifier.encode("utf-8")
-    code_challenge = base64.urlsafe_b64encode(hashlib.sha256(code_verifier_bytes).digest()).decode("utf-8").rstrip("=")
+    code_challenge = (
+        base64.urlsafe_b64encode(hashlib.sha256(code_verifier_bytes).digest())
+        .decode("utf-8")
+        .rstrip("=")
+    )
     return code_challenge
 
+
 # Step 1: Authorization Request
-def oauth_authorize(request: HttpRequest) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
+def oauth_authorize(
+    request: HttpRequest,
+) -> HttpResponseRedirect | HttpResponsePermanentRedirect:
     code_verifier = generate_code_verifier()
     code_challenge = generate_code_challenge(code_verifier)
 
@@ -123,8 +150,9 @@ def oauth_authorize(request: HttpRequest) -> HttpResponseRedirect | HttpResponse
 
     # Redirect to OAuth2 provider's authorization endpoint
     authorization_url = f"{settings.OAUTH2_PROVIDER['AUTHORIZATION_URL']}?response_type=code&client_id={settings.OAUTH2_AUTHORIZATION_CODE['client_id']}&redirect_uri={settings.OAUTH2_AUTHORIZATION_CODE['redirect_uri']}&code_challenge={code_challenge}&code_challenge_method=S256"
-    
+
     return redirect(authorization_url)
+
 
 # Step 2: Callback and Token Exchange
 def oauth_callback(request: HttpRequest) -> JsonResponse:
@@ -165,6 +193,7 @@ def oauth_callback(request: HttpRequest) -> JsonResponse:
 
     return JsonResponse(tokens)
 
+
 def logout_view(request: HttpRequest) -> JsonResponse:
     """
     Handle user logout by clearing the session and redirecting to the login page.
@@ -172,5 +201,48 @@ def logout_view(request: HttpRequest) -> JsonResponse:
     # Clear the session
     request.session.flush()
 
-    # Redirect to login page
-    return JsonResponse({"message": "Logged out successfully"}, status=200)
+    # Redirect to the login page
+    return HttpResponseRedirect("/")
+
+
+@oauth_required()
+def get_organizations(request: HttpRequest) -> JsonResponse:
+    """
+    Fetch the list of organizations for the authenticated user.
+    """
+    user = request.user
+    organizations = Organization.objects.filter(organizationmember__user=user).distinct()
+
+    organization_list = [
+        {
+            "id": org.id,
+            "name": org.name,
+            "created_at": org.created_at,
+            "updated_at": org.updated_at,
+        }
+        for org in organizations
+    ]
+    return JsonResponse({"organizations": organization_list})
+
+
+@oauth_required()
+def get_projects(request: HttpRequest) -> JsonResponse:
+    """
+    Fetch the list of projects for the authenticated user.
+    """
+    user = request.user
+    projects = get_project(user)
+
+    project_list = [
+        {
+            "id": project.id,
+            "name": project.name,
+            "description": project.description,
+            "organization": project.organization.name,
+            "created_at": project.created_at,
+            "updated_at": project.updated_at,
+        }
+        for project in projects
+    ]
+    return JsonResponse({"projects": project_list})
+

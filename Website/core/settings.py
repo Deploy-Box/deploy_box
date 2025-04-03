@@ -177,7 +177,7 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 STRIPE = {
     "PUBLISHABLE_KEY": os.environ.get("STRIPE_PUBLISHABLE_KEY"),
     "SECRET_KEY": os.environ.get("STRIPE_SECRET_KEY"),
-    "ENDPOINT_SECRET": os.environ.get("STRIPE_ENDPOINT_SECRET"),
+    "WEBHOOK_SECRET": os.environ.get("STRIPE_WEBHOOK_SECRET"),
 }
 
 MONGO_DB = {

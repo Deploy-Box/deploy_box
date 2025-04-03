@@ -33,8 +33,8 @@
           </li>
           <li>
             <a id="login" class="px-6 py-2 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring"
-            href="/signup" id="login-button">
-            Signup
+            href="{% if user.is_authenticated %}/dashboard{% else %}/signup{% endif %}" id="login-button">
+            {% if user.is_authenticated %} Visit Dashboard {% else %} signup {% endif %}
          </a>
           </li>
         </ul>
