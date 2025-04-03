@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
 from django.conf import settings
+from accounts.forms import CustomUserCreationForm as form
 
 from core.decorators import oauth_required
 
@@ -25,7 +26,7 @@ def login(request: HttpRequest) -> HttpResponse:
     return render(request, "accounts/login.html", {})
 
 def signup(request: HttpRequest) -> HttpResponse:
-    return render(request, "accounts/signup.html", {})
+    return render(request, "accounts/signup.html", {'form': form})
 
 def logout(request: HttpRequest) -> HttpResponse:
     return render(request, "accounts/logout.html", {})  
