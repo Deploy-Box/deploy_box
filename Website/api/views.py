@@ -1,7 +1,8 @@
 from django.http import JsonResponse, HttpRequest, FileResponse
 
-from api.services import stack_services
+from api.services import stack_services, GCP_services
 from core.decorators import oauth_required
+
 
 def stack_operations(request: HttpRequest, organization_id: str, project_id: str, stack_id: str | None = None) -> JsonResponse | FileResponse:
     # GET: Fetch available stacks or a specific stack
@@ -45,5 +46,6 @@ def update_database_usage(request: HttpRequest) -> JsonResponse:
 def get_usage_per_stack_from_db(request):
     return stack_services.get_database_current_use_from_db(request)
 
-
-
+@oauth_required()
+def update_cpu_billing(request: HttpRequest) -> JsonResponse:
+    return GCP_services.update_billing_cpu(request)

@@ -60,9 +60,6 @@ def delete_organization(request: HttpRequest) -> JsonResponse:
 
 
 
-
-
-
 def add_collaborator(request: HttpRequest):
     if request.method == "POST":
         try:

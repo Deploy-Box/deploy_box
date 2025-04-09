@@ -1,7 +1,3416 @@
 {
-    "error": {
-        "code": 404,
-        "message": "Cannot find metric(s) that match type = \"run.googleapis.com/container/cpu/utilization\". If a metric was created recently, it could take up to 10 minutes to become available. Please try again soon.",
-        "status": "NOT_FOUND"
-    }
+    "timeSeries": [
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "backend-1-00001-tqf",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "configuration_name": "backend-1",
+                    "service_name": "backend-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 5.956341520306002
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "backend-2-00001-ws6",
+                    "service_name": "backend-2",
+                    "project_id": "deploy-box",
+                    "configuration_name": "backend-2",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 4.887686225418189
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "backend-2-00002-26g",
+                    "location": "us-central1",
+                    "service_name": "backend-2",
+                    "project_id": "deploy-box",
+                    "configuration_name": "backend-2"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 3.3
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "configuration_name": "backend-2",
+                    "revision_name": "backend-2-00003-dn6",
+                    "service_name": "backend-2"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 3.2
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "backend-2",
+                    "revision_name": "backend-2-00004-nwt",
+                    "service_name": "backend-2",
+                    "location": "us-central1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 2.987474793952643
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "backend-2-00005-m9m",
+                    "project_id": "deploy-box",
+                    "service_name": "backend-2",
+                    "location": "us-central1",
+                    "configuration_name": "backend-2"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 3.0998348676494842
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "configuration_name": "backend-2",
+                    "revision_name": "backend-2-00006-mbk",
+                    "service_name": "backend-2",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 4.442614788482965
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 16.531890040806555
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "configuration_name": "backend-3",
+                    "location": "us-central1",
+                    "revision_name": "backend-3-00032-2bv",
+                    "service_name": "backend-3"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 2.067147848383206
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "service_name": "backend-3",
+                    "configuration_name": "backend-3",
+                    "revision_name": "backend-3-00033-qq5"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 3.5
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "configuration_name": "backend-3",
+                    "service_name": "backend-3",
+                    "revision_name": "backend-3-00034-jb2"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 3.5
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "backend-3",
+                    "revision_name": "backend-3-00035-tjf",
+                    "service_name": "backend-3",
+                    "project_id": "deploy-box",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 2.7
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "revision_name": "backend-3-00036-x2v",
+                    "project_id": "deploy-box",
+                    "service_name": "backend-3",
+                    "configuration_name": "backend-3"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1.071036635980485
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "backend-3",
+                    "configuration_name": "backend-3",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "revision_name": "backend-3-00037-p9q"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 2.0621255339971727
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "backend-3",
+                    "service_name": "backend-3",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "revision_name": "backend-3-00038-nfb"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1.3841936199139813
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "configuration_name": "backend-3",
+                    "service_name": "backend-3",
+                    "revision_name": "backend-3-00039-dnp",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 106.17952959733148
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "backend-3",
+                    "revision_name": "backend-3-00040-lbt",
+                    "project_id": "deploy-box",
+                    "configuration_name": "backend-3",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 197.44632015275855
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "service_name": "backend-3",
+                    "revision_name": "backend-3-00041-llp",
+                    "configuration_name": "backend-3",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 32883.5216974827
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "backend-3",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "configuration_name": "backend-3",
+                    "revision_name": "backend-3-00042-59d"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-09T00:00:00Z",
+                        "endTime": "2025-04-16T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 6905.5140228877135
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 604629.2883756962
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 431826.8396190582
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "backend-4",
+                    "revision_name": "backend-4-00001-mt8",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "service_name": "backend-4"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 3.3922321108807103
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "revision_name": "backend-4-00002-cch",
+                    "location": "us-central1",
+                    "service_name": "backend-4",
+                    "configuration_name": "backend-4"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 2.2
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "service_name": "backend-4",
+                    "configuration_name": "backend-4",
+                    "location": "us-central1",
+                    "revision_name": "backend-4-00003-5fw"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 2.80538431004952
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 69.33697177581726
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "backend-4",
+                    "revision_name": "backend-4-00004-9zd",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "service_name": "backend-4"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 13.540466492961338
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "revision_name": "backend-4-00005-5zs",
+                    "location": "us-central1",
+                    "configuration_name": "backend-4",
+                    "service_name": "backend-4"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 5.738148431970893
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "backend-4",
+                    "configuration_name": "backend-4",
+                    "revision_name": "backend-4-00006-xhd",
+                    "project_id": "deploy-box",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 7.698821731079115
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "backend-5-00011-jzg",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "service_name": "backend-5",
+                    "configuration_name": "backend-5"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-09T00:00:00Z",
+                        "endTime": "2025-04-16T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 0.40000330664098493
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 604272.6212364122
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 464640.31072849536
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "backend-6-00001-b94",
+                    "project_id": "deploy-box",
+                    "configuration_name": "backend-6",
+                    "service_name": "backend-6",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 7.7
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "backend-6-00002-dss",
+                    "location": "us-central1",
+                    "service_name": "backend-6",
+                    "project_id": "deploy-box",
+                    "configuration_name": "backend-6"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1.8
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "revision_name": "backend-6-00003-pzl",
+                    "service_name": "backend-6",
+                    "project_id": "deploy-box",
+                    "configuration_name": "backend-6"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 0.9080919771095697
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "flask-recipe-scraper",
+                    "service_name": "flask-recipe-scraper",
+                    "revision_name": "flask-recipe-scraper-00002-qjj",
+                    "location": "us-central1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 56.330990908632884
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "revision_name": "flask-recipe-scraper-00003-dvd",
+                    "service_name": "flask-recipe-scraper",
+                    "configuration_name": "flask-recipe-scraper"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 34.7
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "flask-recipe-scraper",
+                    "project_id": "deploy-box",
+                    "revision_name": "flask-recipe-scraper-00004-lm7",
+                    "location": "us-central1",
+                    "service_name": "flask-recipe-scraper"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 406.18658296966714
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "service_name": "frontend-1",
+                    "location": "us-central1",
+                    "revision_name": "frontend-1-00001-6wk",
+                    "configuration_name": "frontend-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 0.6000004685959062
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "service_name": "frontend-2",
+                    "project_id": "deploy-box",
+                    "revision_name": "frontend-2-00001-xhl",
+                    "configuration_name": "frontend-2"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "frontend-2",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "service_name": "frontend-2",
+                    "revision_name": "frontend-2-00002-rhw"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 11.10000397331426
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "configuration_name": "frontend-2",
+                    "service_name": "frontend-2",
+                    "revision_name": "frontend-2-00003-vxc"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 6.574233875272576
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "frontend-2",
+                    "revision_name": "frontend-2-00004-snc",
+                    "project_id": "deploy-box",
+                    "service_name": "frontend-2",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 10.127254005026701
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "frontend-2",
+                    "configuration_name": "frontend-2",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "revision_name": "frontend-2-00005-mhj"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 218.400896690188
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 252.18509041244386
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "frontend-3",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "configuration_name": "frontend-3",
+                    "revision_name": "frontend-3-00045-b4z"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 24.586778195243653
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "frontend-3-00046-7gs",
+                    "configuration_name": "frontend-3",
+                    "project_id": "deploy-box",
+                    "service_name": "frontend-3",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 8.30799861625772
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "frontend-3-00047-gcb",
+                    "configuration_name": "frontend-3",
+                    "project_id": "deploy-box",
+                    "service_name": "frontend-3",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 15.59208533781135
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "service_name": "frontend-3",
+                    "revision_name": "frontend-3-00048-v66",
+                    "configuration_name": "frontend-3",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1.557474154471933
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "frontend-3-00049-gxl",
+                    "service_name": "frontend-3",
+                    "configuration_name": "frontend-3",
+                    "location": "us-central1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 2.700001359997371
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "revision_name": "frontend-3-00050-kck",
+                    "location": "us-central1",
+                    "configuration_name": "frontend-3",
+                    "service_name": "frontend-3"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 4.6615721777781065
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "service_name": "frontend-3",
+                    "project_id": "deploy-box",
+                    "revision_name": "frontend-3-00051-kpk",
+                    "configuration_name": "frontend-3"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 3.138546743585567
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "frontend-3",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "service_name": "frontend-3",
+                    "revision_name": "frontend-3-00052-2gp"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 6.23919542270795
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "revision_name": "frontend-3-00053-5hk",
+                    "configuration_name": "frontend-3",
+                    "service_name": "frontend-3"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 33011.98034108166
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "frontend-3",
+                    "revision_name": "frontend-3-00054-fsv",
+                    "project_id": "deploy-box",
+                    "service_name": "frontend-3",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-09T00:00:00Z",
+                        "endTime": "2025-04-16T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 6904.497598203539
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 604709.2189394601
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 431754.6190323033
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "configuration_name": "frontend-4",
+                    "service_name": "frontend-4",
+                    "project_id": "deploy-box",
+                    "revision_name": "frontend-4-00001-wks"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1.1814283224499524
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "frontend-4-00002-z7x",
+                    "service_name": "frontend-4",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "configuration_name": "frontend-4"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 11.7
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "configuration_name": "frontend-4",
+                    "revision_name": "frontend-4-00003-q72",
+                    "service_name": "frontend-4",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 20.377780071733334
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "frontend-4",
+                    "configuration_name": "frontend-4",
+                    "revision_name": "frontend-4-00004-mvf",
+                    "location": "us-central1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 7.636283293001536
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "configuration_name": "frontend-4",
+                    "service_name": "frontend-4",
+                    "revision_name": "frontend-4-00005-pw5"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 352.5674842398883
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "frontend-4",
+                    "revision_name": "frontend-4-00006-hm8",
+                    "service_name": "frontend-4",
+                    "project_id": "deploy-box",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 90.51754205808365
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "frontend-4-00007-5q4",
+                    "project_id": "deploy-box",
+                    "service_name": "frontend-4",
+                    "location": "us-central1",
+                    "configuration_name": "frontend-4"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 52.61237648813828
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "configuration_name": "frontend-4",
+                    "revision_name": "frontend-4-00008-678",
+                    "service_name": "frontend-4"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-09T00:00:00Z",
+                        "endTime": "2025-04-16T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 6.058814654781423
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 351.6117808385241
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "frontend-5",
+                    "revision_name": "frontend-5-00008-82w",
+                    "service_name": "frontend-5",
+                    "location": "us-central1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-09T00:00:00Z",
+                        "endTime": "2025-04-16T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 0.49999596666814483
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 32.50270557803837
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 304799.33438889915
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "frontend-6",
+                    "revision_name": "frontend-6-00001-hq4",
+                    "service_name": "frontend-6",
+                    "location": "us-central1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1.1
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-1",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00001-vnf"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.3009699851269
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00002-457",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.2944564780176
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00003-7w2",
+                    "project_id": "deploy-box",
+                    "service_name": "website-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.19163728488203
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00004-6ww",
+                    "project_id": "deploy-box",
+                    "service_name": "website-1",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.30045203887744
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "service_name": "website-1",
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00005-c84"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 233.35652366437424
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-1",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-1-00006-jc7",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 237.43396085723307
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-1-00007-87j",
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.30006200038446
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-1-00009-p8z",
+                    "configuration_name": "website-1",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 212.37722299004534
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-1",
+                    "revision_name": "website-1-00010-g6w",
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 232.3457995359968
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-1",
+                    "configuration_name": "website-1",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-1-00011-tww",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.28373886032665
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "revision_name": "website-1-00012-526",
+                    "configuration_name": "website-1",
+                    "project_id": "deploy-box",
+                    "service_name": "website-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 233.9522002597829
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00013-m6d",
+                    "project_id": "deploy-box",
+                    "service_name": "website-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 220.107394393715
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "revision_name": "website-1-00014-q9p",
+                    "service_name": "website-1",
+                    "configuration_name": "website-1",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.3
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "service_name": "website-1",
+                    "revision_name": "website-1-00015-d42",
+                    "configuration_name": "website-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 234.18430702336946
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-1",
+                    "configuration_name": "website-1",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-1-00016-qc9"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.3000520002895
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-1",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "revision_name": "website-1-00017-xbs"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.30023600071252
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-1-00018-9m2",
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 229.76585710616487
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00019-8gx",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "service_name": "website-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.2005179961841
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "revision_name": "website-1-00020-77q",
+                    "configuration_name": "website-1",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.1689428516971
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00021-tgx",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.20099598462514
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-1",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00022-qdh"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.30021019942765
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-1",
+                    "location": "us-central1",
+                    "revision_name": "website-1-00023-2q9",
+                    "project_id": "deploy-box",
+                    "configuration_name": "website-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 216.00571961823
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-1",
+                    "project_id": "deploy-box",
+                    "service_name": "website-1",
+                    "revision_name": "website-1-00024-9gv",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 232.29884502677197
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-1",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-1-00025-wcb",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 240.3
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-1",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-1-00026-kv8",
+                    "service_name": "website-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 19.8
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-1",
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "revision_name": "website-1-00027-pr4",
+                    "service_name": "website-1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 967.4241509227336
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-1-00028-k6c",
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "service_name": "website-1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 7423.793422043421
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-1-00029-264",
+                    "configuration_name": "website-1",
+                    "project_id": "deploy-box",
+                    "service_name": "website-1",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 20867.046839727253
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-1",
+                    "revision_name": "website-1-00030-n68",
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1091.856642283
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "configuration_name": "website-1",
+                    "project_id": "deploy-box",
+                    "service_name": "website-1",
+                    "revision_name": "website-1-00031-jds"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-09T00:00:00Z",
+                        "endTime": "2025-04-16T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 0
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 364690.30621181906
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "service_name": "website-1",
+                    "configuration_name": "website-1",
+                    "revision_name": "website-1-00032-ps5"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-09T00:00:00Z",
+                        "endTime": "2025-04-16T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 6908.419507363713
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 199.59658706637683
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-8",
+                    "revision_name": "website-8-00003-6z5",
+                    "location": "us-central1",
+                    "configuration_name": "website-8",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 92175.30729032366
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-8",
+                    "revision_name": "website-8-00005-fr8",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "configuration_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 832.2905898184086
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-8",
+                    "revision_name": "website-8-00006-5zb",
+                    "service_name": "website-8",
+                    "location": "us-central1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 98.3694489911849
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-8",
+                    "location": "us-central1",
+                    "revision_name": "website-8-00007-dw5",
+                    "project_id": "deploy-box",
+                    "configuration_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1391.1154787283963
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "location": "us-central1",
+                    "configuration_name": "website-8",
+                    "service_name": "website-8",
+                    "revision_name": "website-8-00008-lx5"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 12.100238702027557
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-8",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-8-00009-k7v",
+                    "location": "us-central1",
+                    "service_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 6.048298818464426
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "service_name": "website-8",
+                    "configuration_name": "website-8",
+                    "revision_name": "website-8-00010-wbc",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 6.002640447140721
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "service_name": "website-8",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-8-00011-9qv"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 12.235007388
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-8",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-8-00012-xxc",
+                    "location": "us-central1",
+                    "configuration_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 46095.12186646477
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-8-00013-qtl",
+                    "service_name": "website-8",
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 38819.34169864246
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-8",
+                    "service_name": "website-8",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-8-00014-gn9",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 174.06366271686235
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-8-00015-rsw",
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "service_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 235.0308794823216
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-8",
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "revision_name": "website-8-00016-z8t",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 766.1709388382388
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "revision_name": "website-8-00017-r47",
+                    "configuration_name": "website-8",
+                    "service_name": "website-8",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 470.16815820248314
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-8-00018-77n",
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "service_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 89674.9933499515
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-8",
+                    "revision_name": "website-8-00019-nww",
+                    "configuration_name": "website-8",
+                    "project_id": "deploy-box",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 672.3259944160624
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-8-00020-n2v",
+                    "project_id": "deploy-box",
+                    "service_name": "website-8",
+                    "location": "us-central1",
+                    "configuration_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1643.5798290947673
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-8",
+                    "service_name": "website-8",
+                    "revision_name": "website-8-00021-pxr",
+                    "location": "us-central1",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 1275.7362785713474
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "service_name": "website-8",
+                    "revision_name": "website-8-00022-sd9",
+                    "configuration_name": "website-8",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 56.696665756379055
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-8-00023-9xb",
+                    "service_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 96.59426804259967
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "location": "us-central1",
+                    "service_name": "website-8",
+                    "configuration_name": "website-8",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-8-00024-tft"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 6101.66068111314
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-8-00025-8rq",
+                    "configuration_name": "website-8",
+                    "service_name": "website-8",
+                    "project_id": "deploy-box",
+                    "location": "us-central1"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 811.2942136831491
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "project_id": "deploy-box",
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "revision_name": "website-8-00026-79t",
+                    "service_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 534.3392345465686
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-8",
+                    "project_id": "deploy-box",
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "revision_name": "website-8-00027-6j8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 134.9267564969653
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-8",
+                    "project_id": "deploy-box",
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "revision_name": "website-8-00028-qst"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 564.886568278549
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-8",
+                    "revision_name": "website-8-00029-lh9",
+                    "location": "us-central1",
+                    "project_id": "deploy-box",
+                    "service_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 822.9300821101762
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "revision_name": "website-8-00030-2z2",
+                    "project_id": "deploy-box",
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "service_name": "website-8"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 352.96784966819325
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "service_name": "website-8",
+                    "project_id": "deploy-box",
+                    "revision_name": "website-8-00031-4nd"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 15605.950056888434
+                    }
+                }
+            ]
+        },
+        {
+            "metric": {
+                "type": "run.googleapis.com/container/billable_instance_time"
+            },
+            "resource": {
+                "type": "cloud_run_revision",
+                "labels": {
+                    "service_name": "website-8",
+                    "configuration_name": "website-8",
+                    "location": "us-central1",
+                    "revision_name": "website-8-00032-zsj",
+                    "project_id": "deploy-box"
+                }
+            },
+            "metricKind": "DELTA",
+            "valueType": "DOUBLE",
+            "points": [
+                {
+                    "interval": {
+                        "startTime": "2025-04-02T00:00:00Z",
+                        "endTime": "2025-04-09T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 48188.28632910611
+                    }
+                },
+                {
+                    "interval": {
+                        "startTime": "2025-03-26T00:00:00Z",
+                        "endTime": "2025-04-02T00:00:00Z"
+                    },
+                    "value": {
+                        "doubleValue": 306721.0019402425
+                    }
+                }
+            ]
+        }
+    ],
+    "unit": "s"
 }
