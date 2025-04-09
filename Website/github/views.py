@@ -215,7 +215,7 @@ def create_github_webhook(request):
         webhook_data = webhook_response.json()
         if webhook_response.status_code == 201:
             # Successfully created webhook, save to database
-            Webhooks.objects.create(
+            Webhook.objects.create(
                 user=user,
                 repository=f"{github_username}/{repo_name}",
                 webhook_id=webhook_data.get("id"),
@@ -242,8 +242,8 @@ def delete_github_webhook(request):
     repo = request.POST.get("repository")
 
     try:
-        webhook = Webhooks.objects.get(user=user, repository=repo)
-    except Webhooks.DoesNotExist:
+        webhook = Webhook.objects.get(user=user, repository=repo)
+    except Webhook.DoesNotExist:
         return JsonResponse({"error": "Webhook not found"}, status=404)
 
     headers = {
@@ -263,12 +263,12 @@ def delete_github_webhook(request):
 
 
 def list_github_webhooks(request):
-    """List all GitHub webhooks for the authenticated user"""
+    """List all GitHub Webhooks for the authenticated user"""
     webhooks = Webhook.objects.filter(user=request.user)
     data = [
         {"repository": wh.repository, "webhook_id": wh.webhook_id} for wh in webhooks
     ]
-    return JsonResponse({"webhooks": data}, status=200)
+    return JsonResponse({"Webhooks": data}, status=200)
 
 
 import hmac
@@ -397,7 +397,7 @@ def github_webhook(request):
         # If webhook ID is not present in headers, return 400
         return JsonResponse({"error": "Missing webhook ID"}, status=400)
 
-    webhook = Webhooks.objects.filter(webhook_id=webhook_id).first()
+    webhook = Webhook.objects.filter(webhook_id=webhook_id).first()
     if not webhook:
         # If no webhook found for the given ID, return 404
         return JsonResponse({"error": "Webhook not found"}, status=404)
@@ -415,6 +415,13 @@ def github_webhook(request):
     event_type = request.headers.get("X-GitHub-Event")
     repository = payload.get("repository", {}).get("full_name", "unknown/repo")
 
+    # Check if this involves the main branch
+    ref = payload.get("ref")
+    if not ref or not ref.endswith("/main"):
+        return JsonResponse(
+            {"message": "Ignored - not main branch"}, status=200
+        )
+
     # Ignore events that aren't in the allowed list
     if event_type not in ALLOWED_EVENTS:
         return JsonResponse(
@@ -422,7 +429,7 @@ def github_webhook(request):
         )
 
     # Find user based on webhook repository
-    webhook = Webhooks.objects.filter(webhook_id=webhook_id).first()
+    webhook = Webhook.objects.filter(webhook_id=webhook_id).first()
     print("repository", repository)
     print("webhook", webhook)
     user = webhook.user if webhook else None
