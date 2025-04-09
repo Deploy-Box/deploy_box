@@ -13,4 +13,8 @@ urlpatterns = [
     path("create-invoice", views.create_invoice),
     path("get_customer_id", views.get_customer_id),
     path("update_invoice_billing", views.update_invoice_billing),
+    path("create-price-item", views.create_price_item, name="create-price-item"),
+    path("update-price-item", views.update_price_item, name="update-price-item"),
+    path("delete-price-item", views.delete_price_item, name="delete-price-item"),
+    path("get_price_item_by_name/<str:name>/", views.get_price_item_by_name, name="get_price_item_by_name"),
 ]
