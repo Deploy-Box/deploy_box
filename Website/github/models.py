@@ -1,17 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import User
 from cryptography.fernet import Fernet
-from api.models import Stacks
+from api.models import Stack
+from core.fields import ShortUUIDField
 import os
 import json
 from typing import Any
 
 ENCRYPTION_KEY = os.getenv("GITHUB_TOKEN_KEY")
 
-class Webhooks(models.Model):
+class Webhook(models.Model):
+    id = ShortUUIDField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link webhook to a user
     stack = models.ForeignKey(
-        Stacks, on_delete=models.CASCADE
+        Stack, on_delete=models.CASCADE
     )  # Link webhook to a stack
     repository = models.CharField(max_length=255)  # Repo name e.g., "username/repo"
     webhook_id = models.IntegerField(unique=True)  # GitHub's webhook ID
@@ -23,9 +25,10 @@ class Webhooks(models.Model):
         return f"Webhook for {self.repository} (User: {self.user.username})"
 
 
-class WebhookEvents(models.Model):
+class WebhookEvent(models.Model):
+    id = ShortUUIDField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link event to a user
-    stack = models.ForeignKey(Stacks, on_delete=models.CASCADE)  # Link event to a stack
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)  # Link event to a stack
     payload: Any = models.JSONField()  # Store entire webhook payload
     received_at = models.DateTimeField(auto_now_add=True)
 
@@ -42,9 +45,8 @@ class WebhookEvents(models.Model):
 #     return base64.urlsafe_b64encode(os.urandom(32))
 
 
-
-
-class Tokens(models.Model):
+class Token(models.Model):
+    id = ShortUUIDField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)  # Link token to user
     encrypted_token = models.BinaryField()  # Store encrypted token
 

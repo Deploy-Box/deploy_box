@@ -26,7 +26,6 @@ if DEBUG:
 
 ROOT_URLCONF = "core.urls"
 
-
 # Application definition
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -58,7 +57,7 @@ if DEBUG:
 
 
 # Authentication
-OAUTH2_PROVIDER: Dict[str, Union[int, bool, List[str], Dict[str, str]]] = {
+OAUTH2_PROVIDER = {
     'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,  # 1 hour
     'REFRESH_TOKEN_EXPIRE_SECONDS': 86400,  # 1 day
     "AUTHORIZATION_CODE_EXPIRATION": 600,  # 10 minutes
@@ -74,14 +73,14 @@ OAUTH2_PROVIDER: Dict[str, Union[int, bool, List[str], Dict[str, str]]] = {
     'PKCE_REQUIRED': True,
 }
 
-OAUTH2_PASSWORD_CREDENTIALS: Dict[str, Union[str, None]] = {
+OAUTH2_PASSWORD_CREDENTIALS = {
     "client_id": os.environ.get("OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID"),
     "client_secret": os.environ.get("OAUTH2_PASSWORD_CREDENTIALS_CLIENT_SECRET"),
     "redirect_uri": f"{HOST}/callback/",
     "token_url": f"{HOST}/o/token/",
 }
 
-OAUTH2_CLIENT_CREDENTIALS: Dict[str, Union[str, None]] = {
+OAUTH2_CLIENT_CREDENTIALS = {
     "client_id": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID"),
     "client_secret": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET"),
     "token_url": f"{HOST}/accounts/o/token/",
@@ -96,7 +95,8 @@ SESSION_SAVE_EVERY_REQUEST = True
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-SECURE_SSL_REDIRECT = os.environ.get("SECURE_SSL_REDIRECT", "true").lower() == "true"
+SECURE_SSL_REDIRECT = not DEBUG
+print(f"SECURE_SSL_REDIRECT: {SECURE_SSL_REDIRECT}")
 CSRF_COOKIE_SECURE = not DEBUG
 
 # Email
@@ -138,7 +138,7 @@ MIDDLEWARE = [
 ]
 
 # Database
-DATABASES: Dict[str, Dict[str, Any]] = {
+DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("DB_NAME"),
@@ -177,7 +177,7 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 STRIPE = {
     "PUBLISHABLE_KEY": os.environ.get("STRIPE_PUBLISHABLE_KEY"),
     "SECRET_KEY": os.environ.get("STRIPE_SECRET_KEY"),
-    "ENDPOINT_SECRET": os.environ.get("STRIPE_ENDPOINT_SECRET"),
+    "WEBHOOK_SECRET": os.environ.get("STRIPE_WEBHOOK_SECRET"),
 }
 
 MONGO_DB = {
@@ -198,7 +198,7 @@ GITHUB = {
 }
 
 # Templates Configuration
-TEMPLATES: List[Dict[str, Any]] = [
+TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
         "DIRS": ["templates"],

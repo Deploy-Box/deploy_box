@@ -12,9 +12,9 @@ import hashlib
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Webhooks, Tokens
+from .models import Webhook, Token, WebhookEvent
 import secrets
-from api.models import Stacks
+from api.models import Stack
 
 GITHUB_SECRET = "your_webhook_secret"
 # GitHub OAuth credentials
@@ -65,7 +65,7 @@ def github_callback(request):
         return HttpResponse("Failed to retrieve user info", status=400)
 
     # Store token securely in database
-    github_token, created = Tokens.objects.get_or_create(user=request.user)
+    github_token, created = Token.objects.get_or_create(user=request.user)
     github_token.set_token(access_token)
     github_token.save()
 
@@ -97,8 +97,8 @@ def list_repos(request):
 
     # Retrieve GitHub token securely
     try:
-        github_token = Tokens.objects.get(user=user).get_token()
-    except Tokens.DoesNotExist:
+        github_token = Token.objects.get(user=user).get_token()
+    except Token.DoesNotExist:
         return JsonResponse({"error": "GitHub token not found"}, status=403)
 
     repo_response = requests.get(
@@ -113,7 +113,7 @@ def list_repos(request):
     repos = repo_response.json()
 
     # Fetch user stacks
-    stacks = Stacks.objects.filter(user=user)
+    stacks = Stack.objects.filter(user=user)
     if not stacks.exists():
         return JsonResponse({"error": "No stacks available"}, status=404)
 
@@ -123,13 +123,13 @@ def list_repos(request):
     for repo in repos:
         # Rendering each repo item with deploy button
         repo_list_html += render_to_string(
-            'repo_list_item.html', 
+            "repo_list_item.html",
             {
-                'repo_name': repo['name'],
-                'repo_url': repo['html_url'],
-                'repo_clone_url': repo['clone_url'],
-                'stacks': stacks
-            }
+                "repo_name": repo["name"],
+                "repo_url": repo["html_url"],
+                "repo_clone_url": repo["clone_url"],
+                "stacks": stacks,
+            },
         )
 
     repo_list_html += "</ul>"
@@ -141,7 +141,6 @@ import requests
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import Webhooks
 
 GITHUB_API_BASE = "https://api.github.com"
 
@@ -154,15 +153,17 @@ def create_github_webhook(request):
     stack_id = request.POST.get("stack-id")
 
     if not repo_name or not stack_id:
-        return JsonResponse({"error": "Repository name and Stack ID are required"}, status=400)
+        return JsonResponse(
+            {"error": "Repository name and Stack ID are required"}, status=400
+        )
 
-    stack = Stacks.objects.filter(id=stack_id).first()
+    stack = Stack.objects.filter(id=stack_id).first()
     if not stack:
         return JsonResponse({"error": "Stack not found"}, status=404)
 
     try:
-        github_token = Tokens.objects.get(user=user).get_token()
-    except Tokens.DoesNotExist:
+        github_token = Token.objects.get(user=user).get_token()
+    except Token.DoesNotExist:
         return JsonResponse({"error": "GitHub token not found"}, status=403)
 
     headers = {"Authorization": f"token {github_token}"}
@@ -170,7 +171,9 @@ def create_github_webhook(request):
         response = requests.get(f"{GITHUB_API_BASE}/user", headers=headers, timeout=5)
         response.raise_for_status()
     except requests.RequestException as e:
-        return JsonResponse({"error": f"GitHub API request failed: {str(e)}"}, status=400)
+        return JsonResponse(
+            {"error": f"GitHub API request failed: {str(e)}"}, status=400
+        )
 
     github_username = response.json().get("login")
 
@@ -178,7 +181,9 @@ def create_github_webhook(request):
     repo_check_url = f"{GITHUB_API_BASE}/repos/{github_username}/{repo_name}"
     repo_response = requests.get(repo_check_url, headers=headers)
     if repo_response.status_code != 200:
-        return JsonResponse({"error": "Repository not found or access denied"}, status=404)
+        return JsonResponse(
+            {"error": "Repository not found or access denied"}, status=404
+        )
 
     # Generate a unique webhook secret
     webhook_secret = secrets.token_hex(32)
@@ -202,7 +207,7 @@ def create_github_webhook(request):
             f"https://api.github.com/repos/{github_username}/{repo_name}/hooks",
             headers=headers,
             json=payload,
-            timeout=5
+            timeout=5,
         )
         webhook_response.raise_for_status()
 
@@ -210,20 +215,25 @@ def create_github_webhook(request):
         webhook_data = webhook_response.json()
         if webhook_response.status_code == 201:
             # Successfully created webhook, save to database
-            Webhooks.objects.create(
+            Webhook.objects.create(
                 user=user,
                 repository=f"{github_username}/{repo_name}",
                 webhook_id=webhook_data.get("id"),
                 stack=stack,
-                secret=webhook_secret
+                secret=webhook_secret,
             )
         else:
             # Handle unexpected response
             return JsonResponse({"error": "Failed to create webhook"}, status=400)
     except requests.RequestException as e:
-        return JsonResponse({"error": f"Failed to create webhook: {str(e)}"}, status=400)
+        return JsonResponse(
+            {"error": f"Failed to create webhook: {str(e)}"}, status=400
+        )
 
-    return JsonResponse({"message": "Webhook created successfully", "webhook_secret": webhook_secret}, status=201)
+    return JsonResponse(
+        {"message": "Webhook created successfully", "webhook_secret": webhook_secret},
+        status=201,
+    )
 
 
 def delete_github_webhook(request):
@@ -232,8 +242,8 @@ def delete_github_webhook(request):
     repo = request.POST.get("repository")
 
     try:
-        webhook = Webhooks.objects.get(user=user, repository=repo)
-    except Webhooks.DoesNotExist:
+        webhook = Webhook.objects.get(user=user, repository=repo)
+    except Webhook.DoesNotExist:
         return JsonResponse({"error": "Webhook not found"}, status=404)
 
     headers = {
@@ -253,12 +263,12 @@ def delete_github_webhook(request):
 
 
 def list_github_webhooks(request):
-    """List all GitHub webhooks for the authenticated user"""
-    webhooks = Webhooks.objects.filter(user=request.user)
+    """List all GitHub Webhooks for the authenticated user"""
+    webhooks = Webhook.objects.filter(user=request.user)
     data = [
         {"repository": wh.repository, "webhook_id": wh.webhook_id} for wh in webhooks
     ]
-    return JsonResponse({"webhooks": data}, status=200)
+    return JsonResponse({"Webhooks": data}, status=200)
 
 
 import hmac
@@ -266,7 +276,6 @@ import hashlib
 import json
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import WebhookEvents, Webhooks
 from django.contrib.auth.models import User
 
 ALLOWED_EVENTS = {"push", "pull_request", "issues"}  # Specify allowed event types
@@ -275,10 +284,12 @@ from google.cloud.devtools import cloudbuild_v1
 from google.oauth2 import service_account
 
 
-def sample_submit_and_approve_build(stack_id, github_repo, github_token, layer:str, port=80):
+def sample_submit_and_approve_build(stack_id, github_repo, github_token, layer: str):
     try:
         # Create a client with credentials
-        credentials = service_account.Credentials.from_service_account_file(settings.GCP.get("KEY_PATH"))
+        credentials = service_account.Credentials.from_service_account_file(
+            settings.GCP.get("KEY_PATH")
+        )
         client = cloudbuild_v1.CloudBuildClient(credentials=credentials)
 
         # Replace with your project ID
@@ -323,7 +334,6 @@ def sample_submit_and_approve_build(stack_id, github_repo, github_token, layer:s
                         --region=us-central1 \
                         --platform=managed \
                         --allow-unauthenticated \
-                        --set-env-vars=PORT={port}
                 """,
                 ],
             ),
@@ -386,12 +396,12 @@ def github_webhook(request):
     if not webhook_id:
         # If webhook ID is not present in headers, return 400
         return JsonResponse({"error": "Missing webhook ID"}, status=400)
-    
-    webhook = Webhooks.objects.filter(webhook_id=webhook_id).first()
+
+    webhook = Webhook.objects.filter(webhook_id=webhook_id).first()
     if not webhook:
         # If no webhook found for the given ID, return 404
         return JsonResponse({"error": "Webhook not found"}, status=404)
-    
+
     secret = webhook.secret
 
     computed_signature = (
@@ -405,6 +415,13 @@ def github_webhook(request):
     event_type = request.headers.get("X-GitHub-Event")
     repository = payload.get("repository", {}).get("full_name", "unknown/repo")
 
+    # Check if this involves the main branch
+    ref = payload.get("ref")
+    if not ref or not ref.endswith("/main"):
+        return JsonResponse(
+            {"message": "Ignored - not main branch"}, status=200
+        )
+
     # Ignore events that aren't in the allowed list
     if event_type not in ALLOWED_EVENTS:
         return JsonResponse(
@@ -412,7 +429,7 @@ def github_webhook(request):
         )
 
     # Find user based on webhook repository
-    webhook = Webhooks.objects.filter(webhook_id=webhook_id).first()
+    webhook = Webhook.objects.filter(webhook_id=webhook_id).first()
     print("repository", repository)
     print("webhook", webhook)
     user = webhook.user if webhook else None
@@ -422,7 +439,7 @@ def github_webhook(request):
     #     user=user, stack=webhook.stack, event_type=event_type, payload=payload
     # )
 
-    github_token = Tokens.objects.get(user=user).get_token()
+    github_token = Token.objects.get(user=user).get_token()
 
     # TODO: Handle different repository types
     if repository == "WernkeJD/deploy_box":
@@ -431,7 +448,7 @@ def github_webhook(request):
 
         threading.Thread(
             target=sample_submit_and_approve_build,
-            args=(webhook.stack.id, webhook.repository, github_token, "Website", 8000),
+            args=(webhook.stack.id, webhook.repository, github_token, "Website"),
         ).start()
 
     elif repository == "HamzaKhairy/green_toolkit":
@@ -440,41 +457,48 @@ def github_webhook(request):
 
         threading.Thread(
             target=sample_submit_and_approve_build,
-            args=(webhook.stack.id, webhook.repository, github_token, "deploybox/MERN/backend"),
+            args=(
+                webhook.stack.id,
+                webhook.repository,
+                github_token,
+                "deploybox/MERN/backend",
+            ),
         ).start()
 
         threading.Thread(
             target=sample_submit_and_approve_build,
-            args=(webhook.stack.id, webhook.repository, github_token, "deploybox/MERN/frontend"),
+            args=(
+                webhook.stack.id,
+                webhook.repository,
+                github_token,
+                "deploybox/MERN/frontend",
+            ),
         ).start()
 
     else:
 
         threading.Thread(
             target=sample_submit_and_approve_build,
-            args=(webhook.stack.id, webhook.repository, github_token, "backend", 8080),
+            args=(webhook.stack.id, webhook.repository, github_token, "backend"),
         ).start()
 
         threading.Thread(
             target=sample_submit_and_approve_build,
-            args=(webhook.stack.id, webhook.repository, github_token, "frontend", 8080),
+            args=(webhook.stack.id, webhook.repository, github_token, "frontend"),
         ).start()
-
-
 
     return JsonResponse({"status": "success", "event_type": event_type}, status=200)
 
 
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse
-from .models import WebhookEvents
 import threading
 
 
 @login_required
 def list_github_webhook_events(request):
     """Retrieve all webhook events for the authenticated user"""
-    events = WebhookEvents.objects.filter(user=request.user).order_by("-received_at")
+    events = WebhookEvent.objects.filter(user=request.user).order_by("-received_at")
     data = [
         {
             "event_type": event.event_type,

@@ -8,12 +8,11 @@ from django.contrib.auth.models import User
 
 from core.decorators import oauth_required
 from api.services.stack_services import deploy_stack
-from api.models import AvailableStacks, Stacks
-from accounts.models import UserProfile
+from api.models import AvailableStack, Stack, StackDatabase
+from accounts.models import UserProfile, Project
 
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
-STRIPE_ENDPOINT_SECRET = settings.STRIPE.get("ENDPOINT_SECRET", None)
 STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
 
 
@@ -22,10 +21,9 @@ def stripe_config(request: HttpRequest) -> JsonResponse:
     if request.method != "GET":
         # Handle non-GET requests
         return JsonResponse(
-            {"error": "Invalid request method. Only GET is allowed."},
-            status=405
+            {"error": "Invalid request method. Only GET is allowed."}, status=405
         )
-    
+
     stripe_config = {"publicKey": STRIPE_PUBLISHABLE_KEY}
     return JsonResponse(stripe_config, safe=False)
 
@@ -91,8 +89,7 @@ def create_checkout_session(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         # Handle non-POST requests
         return JsonResponse(
-            {"error": "Invalid request method. Only POST is allowed."},
-            status=405
+            {"error": "Invalid request method. Only POST is allowed."}, status=405
         )
 
     domain_url = settings.HOST
@@ -100,7 +97,7 @@ def create_checkout_session(request: HttpRequest) -> JsonResponse:
     stack_id = data.get("stackId")
     try:
         print(stack_id)
-        price_id = AvailableStacks.objects.get(id=stack_id).price_id
+        price_id = AvailableStack.objects.get(id=stack_id).price_id
         checkout_session = stripe.checkout.Session.create(
             customer=UserProfile.objects.get(
                 user_id=request.user.id
@@ -154,8 +151,9 @@ def create_subscription(request: HttpRequest) -> JsonResponse:
             )
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=400)
-        
+
     return JsonResponse({"error": "Invalid request method"}, status=400)
+
 
 def record_usage(subscription_item_id, quantity):
     try:
@@ -171,14 +169,16 @@ def record_usage(subscription_item_id, quantity):
 
 @csrf_exempt
 def stripe_webhook(request: HttpRequest) -> HttpResponse:
-    # Use `stripe listen --forward-to http://127.0.0.1:8000/payments/webhook` to listen for events
-    endpoint_secret = STRIPE_ENDPOINT_SECRET
+    # Use `stripe listen --forward-to http://127.0.0.1:8000/api/payments/webhook` to listen for events
+    WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
     payload = request.body
     sig_header = request.headers.get("Stripe-Signature")
     event = None
 
+    # 
+
     try:
-        event = stripe.Webhook.construct_event(payload, sig_header, endpoint_secret)
+        event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
     except ValueError as e:
         # Invalid payload
         print(f"Error parsing webhook payload: {e}")
@@ -217,15 +217,23 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse:
 
         # Fetch the corresponding stack based on Price ID
         try:
-            available_stack = AvailableStacks.objects.get(price_id=price_id)
-        except AvailableStacks.DoesNotExist:
+            available_stack = AvailableStack.objects.get(price_id=price_id)
+        except AvailableStack.DoesNotExist:
             print(f"Stack with Price ID {price_id} not found.")
             return HttpResponse(status=400)
+        
+        # Get the project ID
+        project_id = 1
+
+        # TODO: Get the project ID from the user
+        project = Project.objects.get(id=project_id)
 
         # Create a stack entry for the user
-        stack = Stacks.objects.create(user=user, purchased_stack=available_stack)
+        stack = Stack.objects.create(name="MERN Stack", purchased_stack=available_stack, project=project)
 
-        deploy_stack(None, stack.id)
+        # TODO: Deploy the stack
+        # request.user = user
+        # deploy_stack(request, stack.id)
 
         return HttpResponse(status=200)
 
@@ -272,6 +280,7 @@ def create_invoice(request: HttpRequest) -> JsonResponse:
                 {"error": "An error occurred while creating the invoice."}, status=400
             )
 
+
 @csrf_exempt
 def get_customer_id(request):
     if request.method == "POST":
@@ -287,10 +296,12 @@ def get_customer_id(request):
             # Query the UserProfile by the provided user_id
             try:
                 user = UserProfile.objects.get(user_id=user_id)
-                customer_id = user.stripe_customer_id  # Assuming customer_id is a field in UserProfile
+                customer_id = (
+                    user.stripe_customer_id
+                )  # Assuming customer_id is a field in UserProfile
 
                 return JsonResponse({"customer_id": customer_id}, status=200)
-            
+
             except UserProfile.DoesNotExist:
                 return JsonResponse({"error": "User not found"}, status=404)
 
@@ -298,22 +309,29 @@ def get_customer_id(request):
             return JsonResponse({"error": "Invalid JSON"}, status=400)
     else:
         return JsonResponse({"error": "Only POST requests are allowed."}, status=405)
-    
+
+
 @csrf_exempt
 def update_invoice_billing(request):
     if request.method == "POST":
         data = json.loads(request.body)
         stack_id = data.get("stack_id")
         cost = data.get("cost")
-        updated_count = StackDatabases.objects.filter(stack_id=stack_id).update(current_usage=0)
-        billing = StackDatabases.objects.filter(stack_id=stack_id).update(pending_billed=F("pending_billed")+cost)
+        updated_count = StackDatabase.objects.filter(stack_id=stack_id).update(
+            current_usage=0
+        )
+        billing = StackDatabase.objects.filter(stack_id=stack_id).update(
+            pending_billed=F("pending_billed") + cost
+        )
 
         # Check if any rows were updated
         if updated_count > 0:
             # Successfully updated
-            return JsonResponse({"message": "Invoice billing updated successfully."}, status=200)
+            return JsonResponse(
+                {"message": "Invoice billing updated successfully."}, status=200
+            )
         else:
             # Failed to update (either no such stack_id or no change made)
-            return JsonResponse({"error": "Stack ID not found or already updated."}, status=400)
-
-        
+            return JsonResponse(
+                {"error": "Stack ID not found or already updated."}, status=400
+            )

@@ -1,18 +1,16 @@
 from rest_framework import serializers
-from ..models import Stacks, StackDatabases
+from ..models import Stack, StackDatabase
 
 
-class StacksSerializer(serializers.ModelSerializer):
+class StackSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Stacks
-
+        model = Stack
         depth = 1
         fields = "__all__"
 
 
-class StackDatabasesSerializer(serializers.ModelSerializer):
+class StackDatabaseSerializer(serializers.ModelSerializer):
     class Meta:
-        model = StackDatabases
-
+        model = StackDatabase
         depth = 2
         fields = "__all__"

@@ -8,29 +8,32 @@ from django.db.models import F
 
 import api.utils.gcp_utils as gcp_utils
 from api.utils import MongoDBUtils
-from api.models import StackDatabases, StackBackends, Stacks, StackFrontends
-from api.serializers.stacks_serializer import StacksSerializer, StackDatabasesSerializer
+from accounts.models import Project
+from api.models import StackDatabase, StackBackend, Stack, StackFrontend
+from api.serializers.stacks_serializer import StackSerializer, StackDatabaseSerializer
 from core.decorators import oauth_required
+from accounts.services import get_project
 
 logger = logging.getLogger(__name__)
 
 def get_stacks(request: HttpRequest, stack_id: str | None = None) -> JsonResponse:
     user = request.user
 
+    project = Project.objects.get(user=user)
+
     if stack_id:
         try:
-            stack = Stacks.objects.get(id=stack_id, user=user)
-            stack = StacksSerializer(stack).data
+            stack = Stack.objects.get(id=stack_id, project=project)
+            stack = StackSerializer(stack).data
             return JsonResponse({"data": stack}, status=200)
-        except Stacks.DoesNotExist:
-
+        except Stack.DoesNotExist:
             return JsonResponse(
                 {"error": "Stack not found."},
                 status=404
             )
     else:
-        stacks = Stacks.objects.filter(user=user)
-        stacks = StacksSerializer(stacks, many=True).data
+        stacks = Stack.objects.filter(project=project)
+        stacks = StackSerializer(stacks, many=True).data
         return JsonResponse(
             {"data": stacks},
             status=200
@@ -38,10 +41,9 @@ def get_stacks(request: HttpRequest, stack_id: str | None = None) -> JsonRespons
     
 #TODO change to get all database stacks
 def get_all_stacks(_: HttpRequest) -> JsonResponse:
-    stacks = StackDatabases.objects.all()
-    stacks = StackDatabasesSerializer(stacks, many=True).data
+    stacks = StackDatabase.objects.all()
+    stacks = StackDatabaseSerializer(stacks, many=True).data
     print(stacks)
-
 
     stacks_dict = {}
     for stack in stacks:
@@ -70,11 +72,33 @@ def get_all_stacks(_: HttpRequest) -> JsonResponse:
             {"error": "No stacks found."},
             status=404
         )
+    
+def get_stack(request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> JsonResponse:
+    user = request.user
+    project = get_project(user, organization_id, project_id)
+
+    try:
+        stack = Stack.objects.get(id=stack_id, project=project)
+    except Stack.DoesNotExist:
+        return JsonResponse({"error": "Stack not found."}, status=404)
+
+    if stack is None:
+        return JsonResponse(
+            {"error": "Stack not found."},
+            status=404
+        )
+
+    stack = StackSerializer(stack).data
+
+
+    return JsonResponse({"data": stack}, status=200)
 
 
 def add_stack(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         user = request.user
+        project = Project.objects.get(user=user)
+
         stack_type = request.POST.get("type")
         variant = request.POST.get("variant")
         version = request.POST.get("version")
@@ -85,15 +109,15 @@ def add_stack(request: HttpRequest) -> JsonResponse:
                 status=400
             )
 
-        if Stacks.objects.filter(
-            user=user, type=stack_type, variant=variant, version=version
+        if Stack.objects.filter(
+            project=project, type=stack_type, variant=variant, version=version
         ).exists():
             return JsonResponse(
                 {"error": "Stack with the same type, variant, and version already exists."},
                 status=400
             )
 
-        Stacks.objects.create(user=user, type=stack_type, variant=variant, version=version)
+        Stack.objects.create(project=project, type=stack_type, variant=variant, version=version)
         return JsonResponse(
             {"message": "Stack added successfully."},
             status=201
@@ -104,14 +128,14 @@ def add_stack(request: HttpRequest) -> JsonResponse:
         status=405
     )   
 
-def deploy_MERN_stack(stack: Stacks, stack_id: str) -> JsonResponse:
+def deploy_MERN_stack(stack: Stack, stack_id: str) -> JsonResponse:
     """
     Deploys a MERN stack by creating the necessary backend and frontend services."
     """
     # Create deployment database
     mongodb_utils = MongoDBUtils()
     mongo_db_uri = mongodb_utils.deploy_mongodb_database(stack_id)
-    stack_database = StackDatabases.objects.create(
+    stack_database = StackDatabase.objects.create(
         stack=stack,
         uri=mongo_db_uri,
     )
@@ -122,7 +146,7 @@ def deploy_MERN_stack(stack: Stacks, stack_id: str) -> JsonResponse:
         f"backend-{stack_id}", backend_image, {"MONGO_URI": mongo_db_uri}
     )
 
-    stack_backend = StackBackends.objects.create(
+    stack_backend = StackBackend.objects.create(
         stack=stack,
         url=backend_url,
         image_url=backend_image,
@@ -135,7 +159,7 @@ def deploy_MERN_stack(stack: Stacks, stack_id: str) -> JsonResponse:
         {"REACT_APP_BACKEND_URL": backend_url},
     )
 
-    stack_frontend = StackFrontends.objects.create(
+    stack_frontend = StackFrontend.objects.create(
         stack=stack,
         url=frontend_url,
         image_url=frontend_image,
@@ -167,8 +191,11 @@ def deploy_stack(request: HttpRequest, stack_id: str | None) -> JsonResponse:
             status=400
         )
     
+    user = request.user
+    project = Project.objects.get(user=user)
+
     # Get the stack object or return 404 if not found
-    stack = get_object_or_404(Stacks, id=stack_id, user=request.user)
+    stack = get_object_or_404(Stack, id=stack_id, project=project)
 
     if stack.purchased_stack.variant == "MERN":
         return deploy_MERN_stack(stack, stack_id)
@@ -188,7 +215,10 @@ def update_stack(request: HttpRequest, stack_id: str | None) -> JsonResponse:
             status=400
         )
 
-    stack = get_object_or_404(Stacks, id=stack_id, user=request.user)
+    user = request.user
+    project = Project.objects.get(user=user)
+
+    stack = get_object_or_404(Stack, id=stack_id, project=project)
     if not stack:
         return JsonResponse(
             {"error": "Stack not found."},
@@ -226,7 +256,10 @@ def download_stack(request: HttpRequest, stack_id: str | None = None) -> JsonRes
         )
 
     # Get the user's stack or return 404
-    stack = get_object_or_404(Stacks, id=stack_id, user=request.user)
+    user = request.user
+    project = get_project(user)
+
+    stack = get_object_or_404(Stack, id=stack_id, project=project)
 
     # Load service account credentials
     credentials_path = settings.GCP.KEY_PATH
@@ -274,9 +307,7 @@ def update_database_storage_billing(request: HttpRequest) -> JsonResponse:
     data = request.GET
 
     for stack_id, usage in data.items():
-        StackDatabases.objects.filter(stack_id=stack_id).update(current_usage=F('current_usage')+usage)
-
-
+        StackDatabase.objects.filter(stack_id=stack_id).update(current_usage=F('current_usage')+usage)
 
     return JsonResponse(
         {
@@ -289,8 +320,8 @@ def update_database_storage_billing(request: HttpRequest) -> JsonResponse:
 
 @oauth_required()
 def get_database_current_use_from_db(request: HttpRequest) -> JsonResponse:
-    stacks = StackDatabases.objects.all()
-    stacks = StackDatabasesSerializer(stacks, many=True).data
+    stacks = StackDatabase.objects.all()
+    stacks = StackDatabaseSerializer(stacks, many=True).data
     print(stacks)
 
     stacks_dict = {}
