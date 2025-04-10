@@ -2,6 +2,7 @@ import json
 from django.http import JsonResponse, HttpRequest
 from core.wrappers.GCPWrapper.main import GCPWrapper
 from api.models import Stack
+from payments.models import Prices
 import time
 
 def get_billable_instance_time(epoch: str) -> dict:
@@ -26,11 +27,12 @@ def update_billing_cpu(request: HttpRequest) -> JsonResponse:
         data = get_billable_instance_time(time.time())
 
         print(data)
-        
+        price_item = Prices.objects.filter(name="cpu_usage_multiple").first()
+        price = price_item.price
 
         for stack_id, usage in data.items():
             stack = Stack.objects.get(id=stack_id)
-            stack.pending_billed = (usage * 0.00004)
+            stack.pending_billed = (usage * price)
 
     else:
         return JsonResponse({"error": "only post"}, 405)

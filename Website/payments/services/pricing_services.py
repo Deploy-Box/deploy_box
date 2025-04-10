@@ -61,6 +61,7 @@ def delete_price_item(request: HttpRequest) -> JsonResponse:
                 return JsonResponse({"message": "price item deleted"}, status=200)
             else:
                 return JsonResponse({"message": "price item does not exist"}, status=404)
+            
         except Exception as e:
             return JsonResponse({"message": f'and unexpected error returned {str(e)}'}, status = 500)       
 
@@ -71,6 +72,7 @@ def get_price_item_by_name(request: HttpRequest, name: str) -> JsonResponse:
 
             if price_item:
                 price = price_item.price
+
                 return JsonResponse({"name": name, "price": price}, status=200)
             else:
                 return JsonResponse({"message": "item does not exist"}, status=404)
