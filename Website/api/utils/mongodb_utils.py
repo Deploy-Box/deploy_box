@@ -4,6 +4,7 @@ import hashlib
 from pymongo import MongoClient
 from django.conf import settings
 
+
 class MongoDBUtils:
     __mongo_db_token = None
     __MONGODB_PROJECT_ID = settings.MONGO_DB.get("PROJECT_ID")
@@ -19,12 +20,11 @@ class MongoDBUtils:
             self.__get_token()
 
     def __get_token(self) -> None:
-        """"
+        """ "
         Retrieve a MongoDB token using the OAuth2 client credentials flow."
         """
         if MongoDBUtils.__mongo_db_token:
             return
-
 
         url = "https://cloud.mongodb.com/api/oauth/token"
         payload = {"grant_type": "client_credentials"}
@@ -38,7 +38,6 @@ class MongoDBUtils:
             raise Exception({"error": response.json()})
 
         MongoDBUtils.__mongo_db_token = response.json().get("access_token")
-
 
     def __request_helper(self, url, method="GET", data=None) -> dict:
         url = f"https://cloud.mongodb.com/api/atlas/v2{url}"
@@ -60,11 +59,13 @@ class MongoDBUtils:
             elif method == "DELETE":
                 response = requests.delete(url, headers=headers)
             elif method == "PATCH":
-                response = requests.patch(url, headers=headers, json=data)            
+                response = requests.patch(url, headers=headers, json=data)
 
             if response is None:
                 # Handle unsupported method
-                raise Exception(f"Unsupported HTTP method: {method}. Please use GET, POST, PUT, DELETE, or PATCH.")
+                raise Exception(
+                    f"Unsupported HTTP method: {method}. Please use GET, POST, PUT, DELETE, or PATCH."
+                )
 
             if response.status_code == 401:
                 MongoDBUtils.__mongo_db_token = None
@@ -86,43 +87,53 @@ class MongoDBUtils:
         """
         # Generate a unique password using the current time
         password = hashlib.sha256(str(time.time()).encode()).hexdigest()[:12]
-        
+
         # Ensure the password meets MongoDB's requirements (at least 8 characters, contains letters and digits)
         return password
-    
+
     def __check_if_user_exists(self, username: str) -> bool:
         """
         Check if a MongoDB user exists by username.
         This method queries the MongoDB Atlas API to check for the existence of a user with the given username.
         """
-        response = self.__request_helper(
-            f"/groups/{MongoDBUtils.__MONGODB_PROJECT_ID}/databaseUsers/admin/{username}", "GET"
-        )
+        try:
+            response = self.__request_helper(
+                f"/groups/{MongoDBUtils.__MONGODB_PROJECT_ID}/databaseUsers/admin/{username}",
+                "GET",
+            )
 
-        if isinstance(response, dict) and "error" in response:
-            # Handle error response
+            if isinstance(response, dict) and "error" in response:
+                # Handle error response
+                return False
+
+            # If the response is a valid user object, return True
+            return (
+                True
+                if isinstance(response, dict) and response.get("username") == username
+                else False
+            )
+        except Exception as e:
             return False
-        
-        # If the response is a valid user object, return True
-        return True if isinstance(response, dict) and response.get("username") == username else False
-    
+
     def __update_user_password(self, username: str, new_password: str) -> None:
         """
         Update the password for an existing MongoDB user.
         This method sends a request to the MongoDB Atlas API to update the password for the specified username.
         """
-        user_data = {
-            "password": new_password
-        }
+        user_data = {"password": new_password}
 
         response = self.__request_helper(
-            f"/groups/{MongoDBUtils.__MONGODB_PROJECT_ID}/databaseUsers/admin/{username}", "PATCH", user_data
+            f"/groups/{MongoDBUtils.__MONGODB_PROJECT_ID}/databaseUsers/admin/{username}",
+            "PATCH",
+            user_data,
         )
 
         if isinstance(response, dict) and "error" in response:
             # Handle error response
-            raise Exception(f"Failed to update password for user {username}: {response['error']}")
-        
+            raise Exception(
+                f"Failed to update password for user {username}: {response['error']}"
+            )
+
         # Successfully updated the password
         print(f"Password for user {username} updated successfully.")
 
@@ -132,14 +143,11 @@ class MongoDBUtils:
         MONGODB_PROJECT_ID = MongoDBUtils.__MONGODB_PROJECT_ID
 
         database_name = f"db-{stack_id}"
-        username = f"deployBoxUser{stack_id}"
+        username = f"deployBoxUser-{stack_id}"
 
-        # Use different names for each environment
-        if settings.ENV == "dev":
-            database_name = f"dev-{database_name}"
-            username = f"dev-{username}"
-
-        password = self.__generate_password()  # Ensure we have a valid token before proceeding
+        password = (
+            self.__generate_password()
+        )  # Ensure we have a valid token before proceeding
 
         # Check if user already exists
         user_exists = self.__check_if_user_exists(username)
@@ -147,7 +155,7 @@ class MongoDBUtils:
         if user_exists:
             # User already exists, we can reuse the existing user
             self.__update_user_password(username, password)
-            
+
         else:
             # Create a new database user
             user_data = {
@@ -166,12 +174,10 @@ class MongoDBUtils:
 
             if not user_exists:
                 # If the user was not created successfully, raise an exception
-                raise Exception(f"Failed to create MongoDB user {username}. Please check the API response.")
+                raise Exception(
+                    f"Failed to create MongoDB user {username}. Please check the API response."
+                )
 
         connection_string = f"mongodb+srv://{username}:{password}@cluster0.yjaoi.mongodb.net/{database_name}?retryWrites=true&w=majority&appName=Cluster0"
 
         return connection_string
-
-
-
-

@@ -1,5 +1,5 @@
-from django.db import models # type: ignore
-from django.db.models import UniqueConstraint # type: ignore
+from django.db import models  # type: ignore
+from django.db.models import UniqueConstraint  # type: ignore
 from accounts.models import Project
 from core.fields import ShortUUIDField
 
@@ -22,14 +22,16 @@ class Stack(models.Model):
     name = models.CharField(max_length=100)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     purchased_stack = models.ForeignKey(AvailableStack, on_delete=models.DO_NOTHING)
-    usage = models.IntegerField(default=0)
-    pending_billed = models.IntegerField(default=0)
+    usage = models.FloatField(default=0)
+    pending_billed = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         constraints = [
-            UniqueConstraint(fields=['project', 'name'], name='unique_stack_name_per_project')
+            UniqueConstraint(
+                fields=["project", "name"], name="unique_stack_name_per_project"
+            )
         ]
 
     def __str__(self):

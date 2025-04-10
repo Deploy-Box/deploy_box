@@ -3,6 +3,7 @@ import json
 from pymongo import MongoClient
 import os
 
+
 def exchange_client_credentials_for_token(client_id, client_secret, token_url):
     """Exchanges client credentials for an access token."""
     data = {
@@ -23,26 +24,26 @@ def exchange_client_credentials_for_token(client_id, client_secret, token_url):
         print(f"Error during client credentials token exchange: {str(e)}")
         return None
 
+
 def send_data(data, token):
-    headers ={
-        "Authorization": f"Bearer {token}",
-        'Content-Type': 'application/json'
-    }  
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     url = "https://deploy-box.onrender.com/api/stacks/update_database_usage"
     requests.post(url, data=data, headers=headers)
 
 
 def check_db_size():
 
-    token_url = 'https://deploy-box.onrender.com/accounts/o/token/'
+    token_url = "https://deploy-box.onrender.com/o/token/"
 
-    token = exchange_client_credentials_for_token(os.environ.get("CLIENT_ID"), os.environ.get("CLIENT_SECRET"), token_url)
+    token = exchange_client_credentials_for_token(
+        os.environ.get("CLIENT_ID"), os.environ.get("CLIENT_SECRET"), token_url
+    )
     token = token.get("access_token")
 
-    headers ={
-        "Authorization": f"Bearer {token}"
-    }    
-    data = requests.get("https://deploy-box.onrender.com/api/stacks/get_all_stacks", headers=headers)
+    headers = {"Authorization": f"Bearer {token}"}
+    data = requests.get(
+        "https://deploy-box.onrender.com/api/stacks/get_all_stacks", headers=headers
+    )
 
     storage_amounts_dict = {}
 
@@ -62,8 +63,5 @@ def check_db_size():
     send_data(json_data, token)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     check_db_size()
-
-
-

@@ -1,8 +1,11 @@
 import json
 
-from django.http import HttpRequest, JsonResponse # type: ignore
+from django.http import HttpRequest, JsonResponse  # type: ignore
 
-def assertRequiredFields(request: HttpRequest, required_fields: list[str]) -> JsonResponse | tuple[str]:
+
+def assertRequiredFields(
+    request: HttpRequest, required_fields: list[str]
+) -> JsonResponse | tuple:
     """
     Check if the request contains all required fields.
 
@@ -11,8 +14,8 @@ def assertRequiredFields(request: HttpRequest, required_fields: list[str]) -> Js
         required_fields (list[str]): A list of required field names.
 
     Returns:
-        JsonResponse | None: Returns a JsonResponse with an error message if a required field is missing,
-                              otherwise returns None.
+        JsonResponse | tuple: Returns a JsonResponse with an error message if a required field is missing,
+                              otherwise returns a tuple of the field values.
     """
     return_fields = ()
 
@@ -22,9 +25,9 @@ def assertRequiredFields(request: HttpRequest, required_fields: list[str]) -> Js
 
     for field in required_fields:
         if field not in data.keys():
-            return JsonResponse({"error": f"Missing required field: {field}"}, status=400)
+            return JsonResponse(
+                {"error": f"Missing required field: {field}"}, status=400
+            )
         return_fields += (data.get(field),)
-    
 
     return return_fields
-

@@ -27,6 +27,12 @@ class GCPWrapper():
     def __get_auth_token(self):
         # Refresh and get token
         auth_req = google.auth.transport.requests.Request()
+
+        if self.__cloud_platform_creds is None:
+            self.__load_credentials()
+
+        assert self.__cloud_platform_creds is not None, "Cloud Platform credentials not found"
+
         self.__cloud_platform_creds.refresh(auth_req)
         self.__token = self.__cloud_platform_creds.token
 
@@ -41,16 +47,8 @@ class GCPWrapper():
 
         return requests.get(url, headers=headers).json()
 
-    def get_billable_instance_time(self, epoch: str):
+    def get_billable_instance_time(self, epoch: float):
         epoch = int(epoch)
-
-        return_item = {
-                "stack_id": {
-                    "cpu": 1031,
-                    "ram": 230482
-                },
-                "stack_da": 242452
-        }
 
         # Convert epoch to datetime
         dt = datetime.datetime.fromtimestamp(epoch)
