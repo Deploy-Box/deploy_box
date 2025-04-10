@@ -1,6 +1,6 @@
 import logging
+import json
 
-from typing import cast, Tuple
 from google.cloud import storage  # type: ignore
 from google.oauth2 import service_account  # type: ignore
 from django.http import HttpRequest, JsonResponse, FileResponse  # type: ignore
@@ -305,9 +305,12 @@ def download_stack(
 
 
 def update_database_storage_billing(request: HttpRequest) -> JsonResponse:
-    data = request.GET
+    data = json.loads(request.body)
+
+    print("data: ", data)
 
     for stack_id, usage in data.items():
+        print(stack_id, usage)
         StackDatabase.objects.filter(stack_id=stack_id).update(
             current_usage=F("current_usage") + usage
         )

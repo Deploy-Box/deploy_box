@@ -51,7 +51,7 @@ def check_db_size():
 
     storage_amounts_dict = {}
 
-    for stack_id, uris in data.json().get("stacks").items():
+    for stack_id, uris in data.json().get("data").items():
         for uri in uris:
             client = MongoClient(uri)
             db = client.get_default_database()
@@ -68,4 +68,7 @@ def check_db_size():
 
 
 if __name__ == "__main__":
+    import dotenv
+
+    dotenv.load_dotenv()
     check_db_size()
