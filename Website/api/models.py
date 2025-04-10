@@ -72,4 +72,4 @@ class StackDatabase(models.Model):
     pending_billed = models.IntegerField(default=0)
 
     def __str__(self):
-        return self.url
+        return self.uri

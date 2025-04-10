@@ -4,7 +4,9 @@ from pymongo import MongoClient
 import os
 
 
-def exchange_client_credentials_for_token(client_id, client_secret, token_url):
+def exchange_client_credentials_for_token(
+    client_id, client_secret, token_url
+) -> dict | None:
     """Exchanges client credentials for an access token."""
     data = {
         "grant_type": "client_credentials",
@@ -27,7 +29,7 @@ def exchange_client_credentials_for_token(client_id, client_secret, token_url):
 
 def send_data(data, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "https://deploy-box.onrender.com/api/stacks/update_database_usage"
+    url = "https://deploy-box.onrender.com/api/stack/update_database_usage"
     requests.post(url, data=data, headers=headers)
 
 
@@ -38,11 +40,13 @@ def check_db_size():
     token = exchange_client_credentials_for_token(
         os.environ.get("CLIENT_ID"), os.environ.get("CLIENT_SECRET"), token_url
     )
+
+    assert token is not None, "Token is None"
     token = token.get("access_token")
 
     headers = {"Authorization": f"Bearer {token}"}
     data = requests.get(
-        "https://deploy-box.onrender.com/api/stacks/get_all_stacks", headers=headers
+        "https://deploy-box.onrender.com/api/stack/get_all_stacks", headers=headers
     )
 
     storage_amounts_dict = {}

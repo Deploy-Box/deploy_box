@@ -19,6 +19,8 @@ def stack_operations(
             if stack_id is None:
                 return stack_services.get_stacks(request)
             else:
+                assert organization_id is not None, "Organization ID is required."
+                assert project_id is not None, "Project ID is required."
                 return stack_services.get_stack(
                     request, organization_id, project_id, stack_id
                 )

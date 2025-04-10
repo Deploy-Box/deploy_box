@@ -70,7 +70,7 @@ def charge_customer():
 
     headers = {"Authorization": f"Bearer {token}"}
     data = requests.get(
-        "https://deploy-box.onrender.com/api/stacks/get_stack_usage_from_db",
+        "https://deploy-box.onrender.com/api/stack/get_stack_usage_from_db",
         headers=headers,
     )
     print("data: ", data.json())
