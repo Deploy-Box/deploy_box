@@ -11,6 +11,7 @@ from api.services.stack_services import deploy_stack
 from api.models import AvailableStack, Stack, StackDatabase
 from accounts.models import UserProfile, Project
 
+from payments.services import pricing_services
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
@@ -240,9 +241,6 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse:
     return HttpResponse(status=200)
 
 
-# new branch work################################################################################################
-
-
 @csrf_exempt
 def create_invoice(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
@@ -335,3 +333,19 @@ def update_invoice_billing(request):
             return JsonResponse(
                 {"error": "Stack ID not found or already updated."}, status=400
             )
+        
+@oauth_required()
+def create_price_item(request: HttpRequest) -> JsonResponse:
+    return pricing_services.create_price_item(request)
+
+@oauth_required()
+def update_price_item(request: HttpRequest) -> JsonResponse:
+    return pricing_services.update_price_item(request)
+
+@oauth_required()
+def delete_price_item(request: HttpRequest) -> JsonResponse:
+    return pricing_services.delete_price_item(request)
+
+@oauth_required()
+def get_price_item_by_name(request: HttpRequest, name: str) -> JsonResponse:
+    return pricing_services.get_price_item_by_name(request, name)

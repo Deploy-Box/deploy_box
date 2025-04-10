@@ -22,6 +22,7 @@ if DEBUG:
     ALLOWED_HOSTS.extend([
         "127.0.0.1",
         "localhost",
+        "10.11.230.216"
     ])
 
 ROOT_URLCONF = "core.urls"
@@ -123,6 +124,7 @@ if DEBUG:
     CSRF_TRUSTED_ORIGINS.extend([
         "http://12.0.0.1:8000",
         "http://localhost:8000",
+        "http://10.11.230.216:8000",
     ])
 
 # Middleware
