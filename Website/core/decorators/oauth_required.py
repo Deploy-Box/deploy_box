@@ -49,6 +49,8 @@ def oauth_required(allowed_applications: List[str] | None = None):
                 if token.application.name not in allowed_applications:
                     error_message = f"Application '{token.application.name}' is not allowed."
                     return JsonResponse({"error": f"Application '{token.application.name}' is not allowed."}, status=401)
+                
+            request.user = token.user
 
             # If the token is valid, continue with the view
             return view_func(request, *args, **kwargs)

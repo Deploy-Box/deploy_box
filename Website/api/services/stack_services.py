@@ -5,13 +5,16 @@ from google.oauth2 import service_account
 from django.shortcuts import get_object_or_404
 from django.conf import settings
 from django.db.models import F
+import json
 
 import api.utils.gcp_utils as gcp_utils
 from api.utils import MongoDBUtils
-from accounts.models import Project
-from api.models import StackDatabase, StackBackend, Stack, StackFrontend
+from accounts.models import Project, ProjectMember
+from api.models import StackDatabase, StackBackend, Stack, StackFrontend, AvailableStack
 from api.serializers.stacks_serializer import StackSerializer, StackDatabaseSerializer
+from django.contrib.auth.models import User # type:ignore
 from core.decorators import oauth_required
+from core.helpers.assertRequiredFields import assertRequiredFields
 from accounts.services import get_project
 
 logger = logging.getLogger(__name__)
@@ -95,38 +98,32 @@ def get_stack(request: HttpRequest, organization_id: str, project_id: str, stack
 
 
 def add_stack(request: HttpRequest) -> JsonResponse:
-    if request.method == "POST":
-        user = request.user
-        project = Project.objects.get(user=user)
+    user = request.user
 
-        stack_type = request.POST.get("type")
-        variant = request.POST.get("variant")
-        version = request.POST.get("version")
+    response = assertRequiredFields(request, ["project_id", "available_stack_id", "name"])
 
-        if not stack_type or not variant or not version:
-            return JsonResponse(
-                {"error": "Type, variant, and version are required."},
-                status=400
-            )
-
-        if Stack.objects.filter(
-            project=project, type=stack_type, variant=variant, version=version
-        ).exists():
-            return JsonResponse(
-                {"error": "Stack with the same type, variant, and version already exists."},
-                status=400
-            )
-
-        Stack.objects.create(project=project, type=stack_type, variant=variant, version=version)
-        return JsonResponse(
-            {"message": "Stack added successfully."},
-            status=201
-        )
+    if type(response) == JsonResponse:
+        return response
     
+    project_id, available_stack_id, name = response
+
+    project_member = get_object_or_404(ProjectMember, user=user, project_id=project_id)
+
+    if project_member.role not in ["owner", "admin"]:
+        return JsonResponse(
+            {"error": "User does not have permission to add a stack."},
+            status=403
+        )
+
+    project = get_object_or_404(Project, id=project_id)
+    available_stack = get_object_or_404(AvailableStack, id=available_stack_id)
+
+    Stack.objects.create(name=name, project=project, purchased_stack=available_stack)
+
     return JsonResponse(
-        {"error": "Invalid request method. Only POST is allowed."},
-        status=405
-    )   
+        {"message": "Stack added successfully."},
+        status=201
+    )
 
 def deploy_MERN_stack(stack: Stack, stack_id: str) -> JsonResponse:
     """

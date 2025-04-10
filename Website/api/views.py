@@ -4,7 +4,8 @@ from api.services import stack_services, GCP_services
 from core.decorators import oauth_required
 
 
-def stack_operations(request: HttpRequest, organization_id: str, project_id: str, stack_id: str | None = None) -> JsonResponse | FileResponse:
+@oauth_required()
+def stack_operations(request: HttpRequest, organization_id: str | None = None, project_id: str | None = None, stack_id: str | None = None) -> JsonResponse | FileResponse:
     # GET: Fetch available stacks or a specific stack
     if request.method == "GET":
         if request.path.endswith("/download"):
