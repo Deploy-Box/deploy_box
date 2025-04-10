@@ -20,6 +20,7 @@ from core.decorators import oauth_required
 from accounts.models import Organization, Project
 from accounts.services import get_project, organization_services, project_services
 
+
 # Authentication
 def signup(request: HttpRequest):
     if request.method == "POST":
@@ -211,7 +212,9 @@ def get_organizations(request: HttpRequest) -> JsonResponse:
     Fetch the list of organizations for the authenticated user.
     """
     user = request.user
-    organizations = Organization.objects.filter(organizationmember__user=user).distinct()
+    organizations = Organization.objects.filter(
+        organizationmember__user=user
+    ).distinct()
 
     organization_list = [
         {
@@ -247,44 +250,51 @@ def get_projects(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"projects": project_list})
 
 
-
 @oauth_required()
 def create_organization(request: HttpRequest) -> JsonResponse:
     return organization_services.create_organization(request)
+
 
 @oauth_required()
 def update_organization(request: HttpRequest) -> JsonResponse:
     return organization_services.update_organization(request)
 
+
 @oauth_required()
 def delete_organization(request: HttpRequest) -> JsonResponse:
     return organization_services.delete_organization(request)
+
 
 @oauth_required()
 def add_org_members(request: HttpRequest) -> JsonResponse:
     return organization_services.add_collaborator(request)
 
+
 @oauth_required()
 def remove_org_member(request: HttpRequest) -> JsonResponse:
-    return organization_services.remove_collaborator(request)        
+    return organization_services.remove_collaborator(request)
+
 
 @oauth_required()
 def create_project(request: HttpRequest) -> JsonResponse:
-    return project_services.create_project(request)   
+    return project_services.create_project(request)
+
 
 @oauth_required()
 def update_project(request: HttpRequest) -> JsonResponse:
-    return project_services.update_project(request)  
+    return project_services.update_project(request)
+
 
 @oauth_required()
 def delete_project(request: HttpRequest) -> JsonResponse:
     return project_services.delete_project(request)
 
+
 @oauth_required()
 def add_project_members(request: HttpRequest) -> JsonResponse:
-    return project_services.add_project_members(request)  
+    return project_services.add_project_members(request)
+
 
 @oauth_required()
 def delete_project_member(request: HttpRequest) -> JsonResponse:
-    return project_services.delete_project_member(request)  
-
+    return project_services.delete_project_member(request)

@@ -1,11 +1,12 @@
-from oauth2_provider.models import AccessToken  # type: ignore
+from oauth2_provider.models import AccessToken
+from django.shortcuts import redirect
+from django.http import JsonResponse
+from django.http import HttpRequest
 from functools import wraps
 from typing import Any, Callable, List
-from django.http import HttpRequest, JsonResponse  # type: ignore
-from django.shortcuts import redirect  # type: ignore
-from django.utils import timezone  # type: ignore
-from django.conf import settings  # type: ignore
-from django.contrib.auth.models import User  # type: ignore
+from django.utils import timezone
+from django.conf import settings
+from django.contrib.auth.models import User
 
 
 def oauth_required(allowed_applications: List[str] | None = None):
@@ -60,10 +61,8 @@ def oauth_required(allowed_applications: List[str] | None = None):
                         status=401,
                     )
 
-            auth_request = AuthHttpRequest(token.user, request)
-
             # If the token is valid, continue with the view
-            return view_func(auth_request, *args, **kwargs)
+            return view_func(request, *args, **kwargs)
 
         return _wrapped_view
 
@@ -73,8 +72,9 @@ def oauth_required(allowed_applications: List[str] | None = None):
 class AuthHttpRequest(HttpRequest):
     auth_user: User
 
-    def __init__(self, auth_user, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, auth_user, request):
+        super().__init__()
+        self.__dict__.update(request.__dict__)
         self.auth_user = auth_user
 
 
