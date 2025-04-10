@@ -1,7 +1,9 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpRequest, HttpResponse
 from django.conf import settings
 from accounts.forms import CustomUserCreationForm as form
+from django.contrib.auth.models import User
+from accounts.models import Organization, OrganizationMember, Project, ProjectMember
 
 from core.decorators import oauth_required
 
@@ -24,7 +26,10 @@ def profile(request: HttpRequest) -> HttpResponse:
 
 @oauth_required()
 def dashboard(request: HttpRequest) -> HttpResponse:
-    return render(request, "dashboard.html", {})
+    user = request.user
+    organizations = Organization.objects.filter(organizationmember__user = user)
+    projects = Project.objects.filter(projectmember__user = user)
+    return render(request, "dashboard.html", {'user': user, 'organizations': organizations, 'projects': projects})
 
 @oauth_required()
 def organization_dashboard(request: HttpRequest, organization_id: str) -> HttpResponse:
