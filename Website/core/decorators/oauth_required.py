@@ -1,12 +1,11 @@
-from oauth2_provider.models import AccessToken
-from django.shortcuts import redirect
-from django.http import HttpRequest, JsonResponse
+from oauth2_provider.models import AccessToken  # type: ignore
 from functools import wraps
 from typing import Any, Callable, List
-from django.utils import timezone
-from django.conf import settings
-from typing import TypedDict, Optional
-from django.contrib.auth.models import User
+from django.http import HttpRequest, JsonResponse  # type: ignore
+from django.shortcuts import redirect  # type: ignore
+from django.utils import timezone  # type: ignore
+from django.conf import settings  # type: ignore
+from django.contrib.auth.models import User  # type: ignore
 
 
 def oauth_required(allowed_applications: List[str] | None = None):

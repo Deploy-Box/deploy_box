@@ -97,8 +97,7 @@ def add_stack(request: AuthHttpRequest) -> JsonResponse:
     if isinstance(response, JsonResponse):
         return response
 
-    response_tuple = cast(Tuple[str, str, str], response)
-    project_id, available_stack_id, name = response_tuple
+    project_id, available_stack_id, name = response
 
     project_member = get_object_or_404(ProjectMember, user=user, project_id=project_id)
 
