@@ -57,8 +57,8 @@ def update_billing_cpu(request: HttpRequest) -> JsonResponse:
             except Stack.DoesNotExist:
                 continue
 
-            stack.pending_billed = usage * price
-            print(stack.pending_billed)
+            stack.instance_usage_bill_amount = usage * price
+            stack.instance_usage = usage
             stack.save()
 
         return JsonResponse({"success": "Billing updated"}, status=200)
