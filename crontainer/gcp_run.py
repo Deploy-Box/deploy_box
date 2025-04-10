@@ -26,7 +26,7 @@ def exchange_client_credentials_for_token(
 
 
 def call_update_billing():
-    token_url = "http://localhost:8000/o/token/"
+    token_url = "https://deploy-box.onrender.com/o/token/"
 
     token = exchange_client_credentials_for_token(
         os.environ.get("CLIENT_ID"), os.environ.get("CLIENT_SECRET"), token_url
@@ -37,7 +37,7 @@ def call_update_billing():
 
     headers = {"Authorization": f"Bearer {token}"}
     response = requests.post(
-        "http://localhost:8000/api/stack/update-billing/", headers=headers
+        "https://deploy-box.onrender.com/api/stack/update-billing/", headers=headers
     )
 
     if response.status_code != 200:
