@@ -87,18 +87,7 @@ def get_stack(
     return JsonResponse({"data": stack}, status=200)
 
 
-def add_stack(request: AuthHttpRequest) -> JsonResponse:
-    user = request.auth_user
-
-    response = assertRequiredFields(
-        request, ["project_id", "available_stack_id", "name"]
-    )
-
-    if isinstance(response, JsonResponse):
-        return response
-
-    project_id, available_stack_id, name = response
-
+def add_stack(user, project_id, available_stack_id, name) -> JsonResponse:
     project_member = get_object_or_404(ProjectMember, user=user, project_id=project_id)
 
     if project_member.role not in ["owner", "admin"]:
