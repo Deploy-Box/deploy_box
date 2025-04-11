@@ -20,8 +20,12 @@
                                 <div>
                                     <h3 class="text-lg font-semibold text-zinc-900">{{organization.name}}</h3>
                                     <p class="text-sm text-zinc-500">Created: {{organization.created_at}}</p>
+
                                 </div>
                                 <div class="space-x-2">
+                                    <a href="org/{{organization.id}}/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
+                                        Manage Organization
+                                    </a>
                                     <button class="text-emerald-400 hover:text-emerald-500">
                                         Edit
                                     </button>
@@ -39,9 +43,6 @@
                     <button id="createOrgBtn" class="flex-1 bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150">
                         Create New Organization
                     </button>
-                    <a href="org/1/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded font-bold transition duration-150 text-center">
-                        Manage Organizations
-                    </a>
                 </div>
             </div>
 
@@ -58,6 +59,9 @@
                                     <p class="text-sm text-zinc-500">Created: {{project.created_at}}</p>
                                 </div>
                                 <div class="space-x-2">
+                                    <a href="org/{{project.organization_id}}/proj/{{project.id}}/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
+                                        Manage Project
+                                    </a>
                                     <button class="text-emerald-400 hover:text-emerald-500">
                                         Edit
                                     </button>
@@ -77,9 +81,6 @@
                     <button id="createProjectBtn" class="flex-1 bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150">
                         Create New Project
                     </button>
-                    <a href="org/1/proj/1/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded font-bold transition duration-150 text-center">
-                        Manage Projects
-                    </a>
                 </div>
             </div>
 
