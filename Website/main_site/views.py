@@ -1,7 +1,10 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.http import HttpRequest, HttpResponse
 from django.conf import settings
 from accounts.forms import CustomUserCreationForm as form
+from django.contrib.auth.models import User
+from accounts.models import Organization, OrganizationMember, Project, ProjectMember
+from api.models import Stack
 
 from core.decorators import oauth_required
 
@@ -24,15 +27,24 @@ def profile(request: HttpRequest) -> HttpResponse:
 
 @oauth_required()
 def dashboard(request: HttpRequest) -> HttpResponse:
-    return render(request, "dashboard.html", {})
+    user = request.user
+    organizations = Organization.objects.filter(organizationmember__user = user)
+    projects = Project.objects.filter(projectmember__user = user)
+    return render(request, "dashboard.html", {'user': user, 'organizations': organizations, 'projects': projects})
 
 @oauth_required()
 def organization_dashboard(request: HttpRequest, organization_id: str) -> HttpResponse:
-    return render(request, "organization_dashboard.html", {"organization_id": organization_id})
+    user=request.user
+    organization = Organization.objects.get(id=int(organization_id))
+    members = OrganizationMember.objects.filter(organization = organization)
+    return render(request, "organization_dashboard.html", {'user': user, 'organization': organization, 'members': members})
 
 @oauth_required()
 def project_dashboard(request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
-    return render(request, "project_dashboard.html", {"organization_id": organization_id, "project_id": project_id})
+    user = request.user
+    project = Project.objects.get(id=project_id)
+    stacks = Stack.objects.filter(project_id=project_id)
+    return render(request, "project_dashboard.html", {"organization_id": organization_id, "project": project, 'stacks': stacks})
 
 @oauth_required()
 def stack_dashboard(request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:

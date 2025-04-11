@@ -43,7 +43,7 @@ class GCPWrapper():
 
         headers = {
             'Authorization': f'Bearer {self.__token}'
-        } 
+        }
 
         return requests.get(url, headers=headers).json()
 

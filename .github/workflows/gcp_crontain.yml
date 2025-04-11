@@ -2,7 +2,7 @@ name: Monthly GCP Billing Update
 
 on:
   schedule:
-    - cron: '0 0 1 * *'  # Runs on the first of each month
+    - cron: "0 0 1 * *" # Runs on the first of each month
   workflow_dispatch:
 
 jobs:
@@ -10,7 +10,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -30,5 +29,5 @@ jobs:
           CLIENT_ID: ${{ secrets.CLIENT_ID }}
           CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
         run: |
-          source venv/bin/activate 
-          python crontainer/gcp_run.py
+          source venv/bin/activate
+          python crontainer/gcp_billing.py

@@ -7,22 +7,42 @@
         <h4 class="text-2xl text-gray-100 mt-10">Dashboard</h4>
         <p class="text-md text-gray-100 mt-2">Manage your organizations and projects</p>
     </div>
-    
+
     <div class="w-full 2xl:w-3/4 flex items-center justify-center px-8 md:px-32 lg:px-16 2xl:px-0 mx-auto -mt-10">
         <div class="w-full max-w-4xl">
             <!-- Organizations Section -->
             <div class="bg-white shadow-2xl rounded-lg py-8 px-8 mb-8">
                 <h2 class="text-xl font-bold text-emerald-400 mb-6">Your Organizations</h2>
                 <div id="organizationsList" class="space-y-4">
-                    <!-- Organizations will be loaded here dynamically -->
+                    {% for organization in organizations %}
+                        <div class="bg-zinc-50 p-4 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-zinc-900">{{organization.name}}</h3>
+                                    <p class="text-sm text-zinc-500">Created: {{organization.created_at}}</p>
+
+                                </div>
+                                <div class="space-x-2">
+                                    <a href="org/{{organization.id}}/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
+                                        Manage Organization
+                                    </a>
+                                    <button class="text-emerald-400 hover:text-emerald-500">
+                                        Edit
+                                    </button>
+                                    <button class="text-red-500 hover:text-red-600">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div>you have no orgs</div>
+                    {% endfor %}
                 </div>
                 <div class="flex space-x-4 mt-6">
                     <button id="createOrgBtn" class="flex-1 bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150">
                         Create New Organization
                     </button>
-                    <a href="org/1/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded font-bold transition duration-150 text-center">
-                        Manage Organizations
-                    </a>
                 </div>
             </div>
 
@@ -30,15 +50,37 @@
             <div class="bg-white shadow-2xl rounded-lg py-8 px-8 mb-8">
                 <h2 class="text-xl font-bold text-emerald-400 mb-6">Your Projects</h2>
                 <div id="projectsList" class="space-y-4">
-                    <!-- Projects will be loaded here dynamically -->
+                    {% for project in projects %}
+                    <div class="bg-zinc-50 p-4 rounded-lg">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h3 class="text-lg font-semibold text-zinc-900">{{project.name}}</h3>
+                                    <p class="text-sm text-zinc-500">Organization: {{project.organization.name}}</p>
+                                    <p class="text-sm text-zinc-500">Created: {{project.created_at}}</p>
+                                </div>
+                                <div class="space-x-2">
+                                    <a href="org/{{project.organization_id}}/proj/{{project.id}}/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
+                                        Manage Project
+                                    </a>
+                                    <button class="text-emerald-400 hover:text-emerald-500">
+                                        Edit
+                                    </button>
+                                    <button class="text-red-500 hover:text-red-600">
+                                        Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    {% empty %}
+                    <div>you have no projects</div>
+                    {% endfor %}
                 </div>
                 <div class="flex space-x-4 mt-6">
                     <button id="createProjectBtn" class="flex-1 bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150">
                         Create New Project
                     </button>
-                    <a href="org/1/proj/1/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded font-bold transition duration-150 text-center">
-                        Manage Projects
-                    </a>
                 </div>
             </div>
 
@@ -64,7 +106,6 @@
     </div>
 </div>
 
-<script src="{% static 'dashboard.js' %}"></script>
 {% endblock %}
 
     <!-- Organization -->

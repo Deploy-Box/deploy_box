@@ -22,8 +22,8 @@ class Stack(models.Model):
     name = models.CharField(max_length=100)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     purchased_stack = models.ForeignKey(AvailableStack, on_delete=models.DO_NOTHING)
-    usage = models.FloatField(default=0)
-    pending_billed = models.FloatField(default=0)
+    instance_usage = models.FloatField(default=0)
+    instance_usage_bill_amount = models.FloatField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

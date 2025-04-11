@@ -7,7 +7,7 @@
         <h4 class="text-2xl text-gray-100 mt-10">Project Dashboard</h4>
         <p class="text-md text-gray-100 mt-2">Manage your project settings and resources</p>
     </div>
-    
+
     <div class="w-full 2xl:w-3/4 flex items-center justify-center px-8 md:px-32 lg:px-16 2xl:px-0 mx-auto -mt-10">
         <div class="w-full max-w-4xl">
             <!-- Project Overview -->
@@ -15,12 +15,12 @@
                 <h2 class="text-xl font-bold text-emerald-400 mb-6">Project Overview</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div class="bg-zinc-50 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold text-zinc-900">Project Status</h3>
-                        <p class="text-zinc-600 mt-2">Active</p>
+                        <h3 class="text-lg font-semibold text-zinc-900">Project Name</h3>
+                        <p class="text-zinc-600 mt-2">{{project.name}}</p>
                     </div>
                     <div class="bg-zinc-50 p-4 rounded-lg">
-                        <h3 class="text-lg font-semibold text-zinc-900">Last Deployed</h3>
-                        <p class="text-zinc-600 mt-2">2 hours ago</p>
+                        <h3 class="text-lg font-semibold text-zinc-900">Project Description</h3>
+                        <p class="text-zinc-600 mt-2">{{project.description}}</p>
                     </div>
                 </div>
             </div>
@@ -30,26 +30,51 @@
                 <h2 class="text-xl font-bold text-emerald-400 mb-6">Project Stacks</h2>
                 <div id="stacksList" class="space-y-4">
                     <!-- Stacks will be loaded here dynamically -->
+                    {% for stack in stacks %}
+                    <div class="bg-zinc-50 p-4 rounded-lg">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-semibold text-zinc-900">{{stack.name}}</h3>
+                                <p class="text-sm text-zinc-500">usage: {{stack.instance_usage}}</p>
+
+                            </div>
+                            <div class="space-x-2">
+                                <a href="/dashboard/org/{{ organization_id }}/proj/{{ project_id }}/stack/{{stack.id}}/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
+                                    Manage Organization
+                                </a>
+                                <!-- <button class="text-emerald-400 hover:text-emerald-500">
+                                    {% if member.role == 'member' %}make admin{% else %}make member{% endif %}
+                                </button> -->
+                                <button class="text-red-500 hover:text-red-600">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div>this org has no members</div>
+                    {% endfor %}
                 </div>
-                <a href="/dashboard/org/{{ organization_id }}/proj/{{ project_id }}/stack/1/" class="mt-6 w-full bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150 inline-block text-center">
-                    Manage Stacks
-                </a>
             </div>
 
             <!-- Project Settings -->
             <div class="bg-white shadow-2xl rounded-lg py-8 px-8">
                 <h2 class="text-xl font-bold text-emerald-400 mb-6">Project Settings</h2>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <button class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
+                    <button
+                        class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
                         Environment Variables
                     </button>
-                    <button class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
+                    <button
+                        class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
                         Build Settings
                     </button>
-                    <button class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
+                    <button
+                        class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
                         Deployment Settings
                     </button>
-                    <button class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
+                    <button
+                        class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
                         Collaborators
                     </button>
                 </div>
@@ -58,5 +83,4 @@
     </div>
 </div>
 
-<script src="{% static 'project_dashboard.js' %}"></script>
-{% endblock %} 
+{% endblock %}
