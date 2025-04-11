@@ -2,7 +2,7 @@ from django.http import JsonResponse, HttpRequest, FileResponse  # type: ignore
 
 from api.services import stack_services, GCP_services
 from core.decorators import oauth_required, AuthHttpRequest
-
+from core.helpers import assertRequiredFields
 
 @oauth_required()
 def stack_operations(
@@ -30,7 +30,18 @@ def stack_operations(
         if request.path.endswith("/deploy"):
             return stack_services.deploy_stack(request, stack_id)
         else:
-            return stack_services.add_stack(request)
+            user = request.auth_user
+
+            response = assertRequiredFields(
+                request, ["project_id", "available_stack_id", "name"]
+            )
+
+            if isinstance(response, JsonResponse):
+                return response
+
+            project_id, available_stack_id, name = response
+
+            return stack_services.add_stack(user, project_id, available_stack_id, name)
 
     # PATCH: Update a stack
     elif request.method == "PATCH":

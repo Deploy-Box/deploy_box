@@ -2,12 +2,12 @@ import json
 import time
 import stripe
 from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
 from django.http import HttpResponse, JsonResponse, HttpRequest
+from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
 
-from core.decorators import oauth_required
-from api.services.stack_services import deploy_stack
+from core.decorators import oauth_required, AuthHttpRequest
+from api.services import stack_services
 from api.models import AvailableStack, Stack, StackDatabase
 from accounts.models import UserProfile, Project
 
@@ -17,7 +17,6 @@ stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
 
 
-@csrf_exempt
 def stripe_config(request: HttpRequest) -> JsonResponse:
     if request.method != "GET":
         # Handle non-GET requests
@@ -43,50 +42,11 @@ def create_stripe_user(user: User):
         return JsonResponse({"error": str(e)}, status=400)
 
 
-@csrf_exempt
-@oauth_required
-def create_intent(request: HttpRequest) -> JsonResponse:
-    try:
-        user_profile = UserProfile.objects.get(user=request.user)
+@oauth_required()
+def create_checkout_session(request: AuthHttpRequest) -> JsonResponse:
+    auth_user = request.auth_user
+    user_profile = request.user_profile
 
-        intent = stripe.SetupIntent.create(
-            customer=user_profile.stripe_customer_id,
-        )
-        print(intent.client_secret)
-        return JsonResponse({"client_secret": intent.client_secret})
-    except stripe.error.StripeError as e:
-        return JsonResponse({"error": str(e)}, status=400)
-
-
-@csrf_exempt
-@oauth_required
-def save_payment_method(request: HttpRequest) -> JsonResponse:
-    try:
-        payment_method_id = request.POST.get("payment_method")
-
-        user_profile = UserProfile.objects.get(user=request.user)
-        customer_id = user_profile.stripe_customer_id
-
-        # Attach the payment method to the customer
-        stripe.PaymentMethod.attach(
-            payment_method_id,
-            customer=customer_id,  # Use the current logged-in user's Stripe customer ID
-        )
-
-        # Optionally, you can set this payment method as the default for subscriptions
-        stripe.customers.update(
-            customer_id,  # Use the current logged-in user's Stripe customer ID
-            invoice_settings={"default_payment_method": payment_method_id},
-        )
-
-        return JsonResponse({"status": "Payment method saved successfully"})
-
-    except stripe.error.StripeError as e:
-        return JsonResponse({"error": str(e)}, status=400)
-
-
-@csrf_exempt
-def create_checkout_session(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         # Handle non-POST requests
         return JsonResponse(
@@ -100,9 +60,13 @@ def create_checkout_session(request: HttpRequest) -> JsonResponse:
         print(stack_id)
         price_id = AvailableStack.objects.get(id=stack_id).price_id
         checkout_session = stripe.checkout.Session.create(
-            customer=UserProfile.objects.get(
-                user_id=request.user.id
-            ).stripe_customer_id,
+            metadata={
+                'stack_id': stack_id,
+                'user_id': auth_user.id,
+                'project_id': "1",
+                'name': "MERN Stack",
+            },
+            customer=user_profile.stripe_customer_id,
             success_url=domain_url
             + "/payments/success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=domain_url + "/payments/cancelled",
@@ -123,39 +87,6 @@ def create_checkout_session(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": str(e)})
 
 
-@csrf_exempt
-def create_subscription(request: HttpRequest) -> JsonResponse:
-    if request.method == "POST":
-        data = json.loads(request.body)
-        customer_id = data.get("customer_id")  # The customer ID created earlier
-        price_id = "price_1R1GKgC8awKXIVJaWsiksB7O"  # The ID for the metered plan
-
-        print(data)
-
-        try:
-            # Create the subscription for the customer
-            subscription = stripe.Subscription.create(
-                customer=customer_id,
-                items=[
-                    {
-                        "price": price_id,
-                    }
-                ],
-                expand=["latest_invoice.payment_intent"],
-            )
-
-            return JsonResponse(
-                {
-                    "subscription_id": subscription.id,
-                    "client_secret": subscription.latest_invoice.payment_intent.client_secret,
-                }
-            )
-        except Exception as e:
-            return JsonResponse({"error": str(e)}, status=400)
-
-    return JsonResponse({"error": "Invalid request method"}, status=400)
-
-
 def record_usage(subscription_item_id, quantity):
     try:
         stripe.UsageRecord.create(
@@ -168,15 +99,14 @@ def record_usage(subscription_item_id, quantity):
         print(f"Error recording usage: {e}")
 
 
-@csrf_exempt
-def stripe_webhook(request: HttpRequest) -> HttpResponse:
+def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
     # Use `stripe listen --forward-to http://127.0.0.1:8000/api/payments/webhook` to listen for events
-    WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
+    # WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
+    WEBHOOK_SECRET = "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
+
     payload = request.body
     sig_header = request.headers.get("Stripe-Signature")
     event = None
-
-    # 
 
     try:
         event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
@@ -191,25 +121,18 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse:
 
     # Handle the checkout.session.completed event
     if event["type"] == "checkout.session.completed":
-        print("Payment was successful.")
-
         session = event["data"]["object"]
 
         # Get Stripe Customer ID
         stripe_customer_id = session.get("customer")
 
         # Fetch the user based on the Stripe Customer ID
-        try:
-            user_account = UserProfile.objects.get(
-                stripe_customer_id=stripe_customer_id
-            )
-            user = User.objects.get(id=user_account.user_id)
-        except User.DoesNotExist:
-            print(f"User with Stripe ID {stripe_customer_id} not found.")
-            return HttpResponse("Customer does not exist", status=400)
+        user_account = get_object_or_404(UserProfile, stripe_customer_id=stripe_customer_id)
+        user = user_account.user
 
         # Retrieve line items to get the Price ID
         line_items = stripe.checkout.Session.list_line_items(session["id"])
+
         if not line_items["data"]:
             print("No line items found in session.")
             return HttpResponse("No line items", status=400)
@@ -217,31 +140,22 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse:
         price_id = line_items["data"][0]["price"]["id"]  # Get first price ID
 
         # Fetch the corresponding stack based on Price ID
-        try:
-            available_stack = AvailableStack.objects.get(price_id=price_id)
-        except AvailableStack.DoesNotExist:
-            print(f"Stack with Price ID {price_id} not found.")
-            return HttpResponse(status=400)
+        available_stack = get_object_or_404(AvailableStack, price_id=price_id)
         
-        # Get the project ID
-        project_id = 1
+        # Get the project
+        project_id = session.get("metadata", {}).get("project_id")
 
-        # TODO: Get the project ID from the user
-        project = Project.objects.get(id=project_id)
+        # Get the name
+        name = session.get("metadata", {}).get("name")
+
+        print(user, project_id, available_stack.id, name)
 
         # Create a stack entry for the user
-        stack = Stack.objects.create(name="MERN Stack", purchased_stack=available_stack, project=project)
-
-        # TODO: Deploy the stack
-        # request.user = user
-        # deploy_stack(request, stack.id)
-
-        return HttpResponse(status=200)
+        return stack_services.add_stack(user, project_id, available_stack.id, name)
 
     return HttpResponse(status=200)
 
 
-@csrf_exempt
 def create_invoice(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
         try:
@@ -279,7 +193,6 @@ def create_invoice(request: HttpRequest) -> JsonResponse:
             )
 
 
-@csrf_exempt
 def get_customer_id(request):
     if request.method == "POST":
         try:
@@ -309,7 +222,6 @@ def get_customer_id(request):
         return JsonResponse({"error": "Only POST requests are allowed."}, status=405)
 
 
-@csrf_exempt
 def update_invoice_billing(request):
     if request.method == "POST":
         data = json.loads(request.body)
