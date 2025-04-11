@@ -7,7 +7,6 @@ class UserProfile(models.Model):
     id = ShortUUIDField(primary_key=True)
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     birthdate = models.DateField()
-    stripe_customer_id = models.CharField(max_length=255, blank=True)
     email_verification_token = models.CharField(max_length=256, null=True, blank=True)
     new_email = models.EmailField(null=True, blank=True)
 
@@ -18,6 +17,8 @@ class UserProfile(models.Model):
 class Organization(models.Model):
     id = ShortUUIDField(primary_key=True)
     name = models.CharField(max_length=255)
+    email = models.EmailField()
+    stripe_customer_id = models.CharField(max_length=255, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

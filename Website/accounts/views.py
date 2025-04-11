@@ -13,30 +13,46 @@ from django.http import (
     HttpResponsePermanentRedirect,
 )
 
-from accounts.forms import CustomUserCreationForm
+from accounts.forms import CustomUserCreationForm, OrganizationSignUpForm
 from payments.views import create_stripe_user
-from accounts.models import UserProfile
+from accounts.models import UserProfile, Organization
 from core.decorators import oauth_required
-from accounts.models import Organization, Project
+from accounts.models import Organization
 from accounts.services import get_project, organization_services, project_services
 
 
 # Authentication
 def signup(request: HttpRequest):
+    print(request.method)
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
+        org_form = OrganizationSignUpForm(request.POST)
+
+        if form.is_valid() and org_form.is_valid():
             user = form.save()
             birthdate = form.cleaned_data["birthdate"]
 
+            org = org_form.save()
+            name = org_form.cleaned_data["org_name"]
+            email = org_form.cleaned_data["org_email"]
+
             # Create a stripe customer
-            stripe_customer_id = create_stripe_user(user)
+            stripe_customer_id = create_stripe_user(name=name, email=email)
+
+            if not stripe_customer_id:
+                return JsonResponse({"message": "Failed to create Stripe customer"}, status=400)
 
             UserProfile.objects.create(
-                user=user, birthdate=birthdate, stripe_customer_id=stripe_customer_id
+                user=user, birthdate=birthdate
             )
 
-            return redirect("/accounts/login")
+            Organization.objects.create(
+                name=name, email=email, stripe_customer_id=stripe_customer_id
+            )
+
+            return redirect("/login")
+        
+        return JsonResponse({"message": f"Invalid form data {form.is_valid()}, {org_form.is_valid()}"}, status=400)
 
     return JsonResponse({"message": "POST request required for signup"}, status=400)
 

@@ -1,22 +1,21 @@
-import os
 import requests
-import subprocess
-from django.shortcuts import render, redirect
-from django.http import HttpResponse
-from django.conf import settings
-from django.urls import reverse
-from django.contrib.sessions.models import Session
-from django.template.loader import render_to_string
 import hmac
 import hashlib
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from .models import Webhook, Token, WebhookEvent
 import secrets
+import threading
+
+from django.shortcuts import redirect, get_object_or_404
+from django.http import HttpResponse, JsonResponse, HttpRequest
+from django.conf import settings
+from django.urls import reverse
+from django.template.loader import render_to_string
+
+from core.decorators import oauth_required, AuthHttpRequest
+from core.helpers import assertRequiredFields
+from core.wrappers.GCPWrapper.main import GCPWrapper
+from github.models import Webhook, Token
 from api.models import Stack
 
-GITHUB_SECRET = "your_webhook_secret"
 # GitHub OAuth credentials
 CLIENT_ID = settings.GITHUB.get("CLIENT_ID")
 CLIENT_SECRET = settings.GITHUB.get("CLIENT_SECRET")
@@ -26,18 +25,17 @@ GITHUB_USER_URL = "https://api.github.com/user"
 GITHUB_REPOS_URL = "https://api.github.com/user/repos"
 
 
-def home(request):
+def home(_: HttpRequest) -> HttpResponse:
     return HttpResponse(
         "Welcome to Deploy Box! <a href='/github/auth'>Login with GitHub</a>"
     )
 
-
-def github_login(request):
+def github_login(_: HttpRequest) -> HttpResponse:
     """Redirects users to GitHub OAuth page."""
     return redirect(f"{GITHUB_AUTH_URL}?client_id={CLIENT_ID}&scope=repo")
 
 
-def github_callback(request):
+def github_callback(request: HttpRequest) -> HttpResponse:
     """Handles GitHub OAuth callback and fetches user info."""
     code = request.GET.get("code")
     if not code:
@@ -76,7 +74,7 @@ def github_callback(request):
     return redirect(reverse("github:list_repos"))
 
 
-def dashboard(request):
+def dashboard(request: HttpRequest) -> HttpResponse:
     """Displays user info after successful login."""
     if "github_user" not in request.session:
         return redirect(reverse("github:home"))
@@ -85,13 +83,13 @@ def dashboard(request):
     return HttpResponse(f"Welcome, {user['login']}! <a href='/logout'>Logout</a>")
 
 
-def logout(request):
+def logout(request: HttpRequest) -> HttpResponse:
     """Clears session data."""
     request.session.clear()
     return redirect(reverse("github:home"))
 
 
-def list_repos(request):
+def list_repos(request: HttpRequest) -> HttpResponse:
     """Fetch and display user repositories with a deploy button."""
     user = request.user
 
@@ -145,8 +143,7 @@ from django.http import JsonResponse
 GITHUB_API_BASE = "https://api.github.com"
 
 
-@csrf_exempt
-def create_github_webhook(request):
+def create_github_webhook(request: HttpRequest) -> JsonResponse:
     """Create and store a GitHub webhook for a user's repository."""
     user = request.user
     repo_name = request.POST.get("repo-name")
@@ -235,188 +232,39 @@ def create_github_webhook(request):
         status=201,
     )
 
+def github_webhook(request: HttpRequest) -> JsonResponse:
+    """Handles GitHub webhook events."""
 
-def delete_github_webhook(request):
-    """Delete a GitHub webhook for a user's repository"""
-    user = request.user
-    repo = request.POST.get("repository")
+    ALLOWED_EVENTS = {"push"}
 
-    try:
-        webhook = Webhook.objects.get(user=user, repository=repo)
-    except Webhook.DoesNotExist:
-        return JsonResponse({"error": "Webhook not found"}, status=404)
-
-    headers = {
-        "Authorization": f"token {user.github_token}",
-        "Accept": "application/vnd.github.v3+json",
-    }
-
-    response = requests.delete(
-        f"{GITHUB_API_BASE}/repos/{repo}/hooks/{webhook.webhook_id}", headers=headers
-    )
-
-    if response.status_code == 204:
-        webhook.delete()
-        return JsonResponse({"message": "Webhook deleted"}, status=200)
-    else:
-        return JsonResponse({"error": response.json()}, status=response.status_code)
-
-
-def list_github_webhooks(request):
-    """List all GitHub Webhooks for the authenticated user"""
-    webhooks = Webhook.objects.filter(user=request.user)
-    data = [
-        {"repository": wh.repository, "webhook_id": wh.webhook_id} for wh in webhooks
-    ]
-    return JsonResponse({"Webhooks": data}, status=200)
-
-
-import hmac
-import hashlib
-import json
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.models import User
-
-ALLOWED_EVENTS = {"push", "pull_request", "issues"}  # Specify allowed event types
-
-from google.cloud.devtools import cloudbuild_v1
-from google.oauth2 import service_account
-
-
-def sample_submit_and_approve_build(stack_id, github_repo, github_token, layer: str):
-    try:
-        # Create a client with credentials
-        credentials = service_account.Credentials.from_service_account_file(
-            settings.GCP.get("KEY_PATH")
-        )
-        client = cloudbuild_v1.CloudBuildClient(credentials=credentials)
-
-        # Replace with your project ID
-        project_id = "deploy-box"
-        github_url = (
-            f"https://{github_token}:x-oauth-basic@github.com/{github_repo}.git"
-        )
-        github_repo_name = github_repo.split("/")[-1]
-        print(github_url)
-        print(github_repo_name)
-
-        image_name = f"us-central1-docker.pkg.dev/deploy-box/deploy-box-repository/{layer}-{stack_id}".lower()
-
-        # Define the Cloud Build steps similar to the YAML configuration
-        build_steps = [
-            cloudbuild_v1.BuildStep(
-                name="gcr.io/cloud-builders/git", args=["clone", github_url]
-            ),
-            cloudbuild_v1.BuildStep(
-                name="gcr.io/cloud-builders/docker",
-                entrypoint="bash",
-                args=[
-                    "-c",
-                    f"docker build -t {image_name} ./{github_repo_name}/{layer}",
-                ],
-            ),
-            cloudbuild_v1.BuildStep(
-                name="gcr.io/cloud-builders/docker",
-                args=[
-                    "push",
-                    image_name,
-                ],
-            ),
-            cloudbuild_v1.BuildStep(
-                name="gcr.io/google.com/cloudsdktool/cloud-sdk",
-                entrypoint="bash",
-                args=[
-                    "-c",
-                    f"""
-                    gcloud run deploy {layer.lower()}-{stack_id} \
-                        --image={image_name} \
-                        --region=us-central1 \
-                        --platform=managed \
-                        --allow-unauthenticated \
-                """,
-                ],
-            ),
-            cloudbuild_v1.BuildStep(
-                name="gcr.io/google.com/cloudsdktool/cloud-sdk",
-                entrypoint="bash",
-                args=[
-                    "-c",
-                    f"""
-                    service_full_name="projects/deploy-box/locations/us-central1/services/{layer.lower()}-{stack_id}"
-                    gcloud run services add-iam-policy-binding {layer.lower()}-{stack_id} \
-                        --region=us-central1 \
-                        --member="allUsers" \
-                        --role="roles/run.invoker"
-                """,
-                ],
-            ),
-        ]
-
-        # Define the build configuration (timeout, source location, and steps)
-        build = cloudbuild_v1.Build(steps=build_steps, timeout="600s")
-
-        # Create the build request
-        build_request = cloudbuild_v1.CreateBuildRequest(
-            project_id=project_id, build=build
-        )
-
-        # Submit the build
-        print("Submitting build...")
-        operation = client.create_build(build_request)
-
-        # Wait for the build to finish and catch any errors
-        print("Waiting for build to complete...")
-        response = operation.result()
-        print(f"Build submitted: {response.status}")
-        print(f"Build ID: {response.id}")
-        print(f"Build name: {response.name}")
-
-        if response.status != cloudbuild_v1.Build.Status.SUCCESS:
-            print("Build failed. Checking logs...")
-            # Optionally, fetch more logs or information on why the build failed
-            print(
-                f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{response.id}?project={project_id}"
-            )
-
-    except Exception as e:
-        print(f"An error occurred: {e}")
-
-
-@csrf_exempt
-def github_webhook(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request"}, status=400)
 
-    # Validate GitHub signature
-    signature = request.headers.get("X-Hub-Signature-256")
-    body = request.body
+    response = assertRequiredFields(request, ["X-Hub-Signature-256", "X-GitHub-Hook-ID"], "header")
+    if isinstance(response, JsonResponse):
+        return response
+    
+    signature, webhook_id = response
 
-    webhook_id = request.headers.get("X-GitHub-Hook-ID")
-    if not webhook_id:
-        # If webhook ID is not present in headers, return 400
-        return JsonResponse({"error": "Missing webhook ID"}, status=400)
+    response = assertRequiredFields(request, ["X-GitHub-Event", "repository", "ref", "payload"], "header")
+    if isinstance(response, JsonResponse):
+        return response
 
-    webhook = Webhook.objects.filter(webhook_id=webhook_id).first()
-    if not webhook:
-        # If no webhook found for the given ID, return 404
-        return JsonResponse({"error": "Webhook not found"}, status=404)
+    event_type, repository_name, ref, payload = response
 
-    secret = webhook.secret
+    webhook = get_object_or_404(Webhook, webhook_id=webhook_id)
 
     computed_signature = (
-        "sha256=" + hmac.new(secret.encode(), body, hashlib.sha256).hexdigest()
+        "sha256=" + hmac.new(webhook.secret.encode(), request.body, hashlib.sha256).hexdigest()
     )
+
     if not hmac.compare_digest(signature, computed_signature):
         return JsonResponse({"error": "Invalid signature"}, status=403)
 
     # Parse webhook payload
-    payload = json.loads(body)
-    event_type = request.headers.get("X-GitHub-Event")
-    repository = payload.get("repository", {}).get("full_name", "unknown/repo")
+    repository_name = payload.get("repository", {}).get("full_name", "unknown/repo")
 
     # Check if this involves the main branch
-    ref = payload.get("ref")
     if not ref or not ref.endswith("/main"):
         return JsonResponse(
             {"message": "Ignored - not main branch"}, status=200
@@ -429,34 +277,28 @@ def github_webhook(request):
         )
 
     # Find user based on webhook repository
-    webhook = Webhook.objects.filter(webhook_id=webhook_id).first()
-    print("repository", repository)
-    print("webhook", webhook)
-    user = webhook.user if webhook else None
+    user = webhook.user
 
-    # Store event in the database
-    # webhook_event = WebhookEvents.objects.create(
-    #     user=user, stack=webhook.stack, event_type=event_type, payload=payload
-    # )
+    github_token = get_object_or_404(Token, user=user).get_token()
 
-    github_token = Token.objects.get(user=user).get_token()
+    gcp_wrapper = GCPWrapper()
 
     # TODO: Handle different repository types
-    if repository == "WernkeJD/deploy_box":
+    if repository_name == "Deploy-Box/deploy_box":
         # Handle the specific repository
-        print("Handling WernkeJD/deploy_box repository")
+        print("Handling Deploy-Box/deploy_box repository")
 
         threading.Thread(
-            target=sample_submit_and_approve_build,
+            target=gcp_wrapper.submit_and_approve_build,
             args=(webhook.stack.id, webhook.repository, github_token, "Website"),
         ).start()
 
-    elif repository == "HamzaKhairy/green_toolkit":
+    elif repository_name == "HamzaKhairy/green_toolkit":
         # Handle the specific repository
         print("Handling HamzaKhairy/green_toolkit repository")
 
         threading.Thread(
-            target=sample_submit_and_approve_build,
+            target=gcp_wrapper.submit_and_approve_build,
             args=(
                 webhook.stack.id,
                 webhook.repository,
@@ -466,7 +308,7 @@ def github_webhook(request):
         ).start()
 
         threading.Thread(
-            target=sample_submit_and_approve_build,
+            target=gcp_wrapper.submit_and_approve_build,
             args=(
                 webhook.stack.id,
                 webhook.repository,
@@ -478,34 +320,13 @@ def github_webhook(request):
     else:
 
         threading.Thread(
-            target=sample_submit_and_approve_build,
+            target=gcp_wrapper.submit_and_approve_build,
             args=(webhook.stack.id, webhook.repository, github_token, "backend"),
         ).start()
 
         threading.Thread(
-            target=sample_submit_and_approve_build,
+            target=gcp_wrapper.submit_and_approve_build,
             args=(webhook.stack.id, webhook.repository, github_token, "frontend"),
         ).start()
 
     return JsonResponse({"status": "success", "event_type": event_type}, status=200)
-
-
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-import threading
-
-
-@login_required
-def list_github_webhook_events(request):
-    """Retrieve all webhook events for the authenticated user"""
-    events = WebhookEvent.objects.filter(user=request.user).order_by("-received_at")
-    data = [
-        {
-            "event_type": event.event_type,
-            "repository": event.repository,
-            "received_at": event.received_at.isoformat(),
-            "payload": event.payload,
-        }
-        for event in events
-    ]
-    return JsonResponse({"events": data}, status=200)

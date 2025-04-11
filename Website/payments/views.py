@@ -5,6 +5,7 @@ from django.conf import settings
 from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
 from django.contrib.auth.models import User
+from accounts.models import Organization
 
 from core.decorators import oauth_required, AuthHttpRequest
 from api.services import stack_services
@@ -28,12 +29,13 @@ def stripe_config(request: HttpRequest) -> JsonResponse:
     return JsonResponse(stripe_config, safe=False)
 
 
-def create_stripe_user(user: User):
+def create_stripe_user(**kwargs):
     # Create a new customer in Stripe
     try:
+        print("kwargs", kwargs)
         customer = stripe.Customer.create(
-            name=f"{user.first_name} {user.last_name}",
-            email=user.email,
+            name= kwargs.name,
+            email= kwargs.email,
         )
 
         return customer.id
@@ -198,7 +200,7 @@ def get_customer_id(request):
         try:
             # Parse the JSON data from the request body
             data = json.loads(request.body)
-            user_id = data.get("user_id")  # Extract user_id from the JSON payload
+            org_id = data.get("org_id")  # Extract user_id from the JSON payload
 
             # Check if user_id is provided
             if not user_id:
@@ -206,9 +208,9 @@ def get_customer_id(request):
 
             # Query the UserProfile by the provided user_id
             try:
-                user = UserProfile.objects.get(user_id=user_id)
+                org = Organization.objects.get(id=org_id)
                 customer_id = (
-                    user.stripe_customer_id
+                    org.stripe_customer_id
                 )  # Assuming customer_id is a field in UserProfile
 
                 return JsonResponse({"customer_id": customer_id}, status=200)

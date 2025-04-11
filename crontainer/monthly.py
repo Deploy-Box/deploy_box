@@ -16,14 +16,14 @@ def invoice(data, token):
     return response
 
 
-def get_customer_id(user_id, token):
+def get_customer_id(org_id, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
     url = "https://deploy-box.onrender.com/payments/get_customer_id"
 
-    user_id = {"user_id": user_id}
-    user_id = json.dumps(user_id)
+    org_id = {"org_id": org_id}
+    org_id = json.dumps(org_id)
 
-    return requests.post(url, user_id, headers=headers)
+    return requests.post(url, org_id, headers=headers)
 
 
 def update_invoice_billing(stack_id, cost, token):
@@ -55,13 +55,13 @@ def charge_customer():
     print("data: ", data.json())
 
     for stack_id, values in data.json().get("stacks").items():
-        user_id, usage = values
+        org_id, usage = values
         cost = (
             int(round(((usage / 1_000_000) * 0.01) * 100, 0))
             if int(round(((usage / 1_000_000) * 0.01) * 100, 0)) >= 50
             else 50
         )
-        customer_id = get_customer_id(user_id=user_id, token=token)
+        customer_id = get_customer_id(org_id=org_id, token=token)
         customer_id = customer_id.json().get("customer_id")
 
         data = {
