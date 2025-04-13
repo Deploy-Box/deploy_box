@@ -1,6 +1,6 @@
 
 {% load static %}
-<nav id="navbar" class="bg-transparent fixed top-0 left-0 right-0 z-10 border-gray-200">
+<nav id="navbar" class="bg-zinc-950 fixed top-0 left-0 right-0 z-10 border-gray-200 mb-16 p-2">
     <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
       <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
           <span id="navbar-text" class="self-center text-2xl font-semibold whitespace-nowrap text-white">Deploy Box</span>
@@ -14,16 +14,16 @@
       <div class="hidden w-full md:block md:w-auto" id="navbar-dropdown">
         <ul class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-transparent md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-transparent">
           <li>
-            <a id="home" href="/" class="block py-2 px-3 rounded-sm bg-transparent text-emerald-400 hover:text-emerald-400" aria-current="page">Home</a>
+            <a id="home" href="/" class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/' %} text-emerald-400 {% else %} text-white {% endif %} " aria-current="page">Home</a>
           </li>
           <li>
-            <a id="stacks" href="/stacks" class="block py-2 px-3 text-white rounded-sm hover:text-emerald-400">Stacks</a>
+            <a id="stacks" href="/stacks" class="block py-2 px-3 bg-black rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/stacks/' %} text-emerald-400 {% else %} text-white {% endif %}">Stacks</a>
           </li>
           <li>
-            <a id="pricing" href="/pricing" class="block py-2 px-3 text-white rounded-sm hover:text-emerald-400">Pricing</a>
+            <a id="pricing" href="/pricing" class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/pricing/' %} text-emerald-400 {% else %} text-white {% endif %}">Pricing</a>
           </li>
           <li>
-            <a id="contact" href="/contact" class="block py-2 px-3 text-white rounded-sm hover:text-emerald-400">Contact</a>
+            <a id="contact" href="/contact" class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/contact/' %} text-emerald-400 {% else %} text-white {% endif %}">Contact</a>
           </li>
           <li>
             <a id="login" class="px-6 py-2 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring"
@@ -42,5 +42,3 @@
     </div>
   </nav>
 
-  <script src="{% static 'navbar.js' %}"></script>
-  

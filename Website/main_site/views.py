@@ -48,7 +48,9 @@ def project_dashboard(request: HttpRequest, organization_id: str, project_id: st
 
 @oauth_required()
 def stack_dashboard(request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
-    return render(request, "stack_dashboard.html", {"organization_id": organization_id, "project_id": project_id, "stack_id": stack_id})
+    user = request.user
+    stack = Stack.objects.get(id=stack_id)
+    return render(request, "stack_dashboard.html", {"organization_id": organization_id, "project_id": project_id, "stack": stack})
 
 
 def maintenance(request: HttpRequest) -> HttpResponse:
