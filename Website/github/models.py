@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from cryptography.fernet import Fernet
-from api.models import Stack
+from stacks.models import Stack
 from core.fields import ShortUUIDField
 import os
 
@@ -9,6 +9,7 @@ ENCRYPTION_KEY = os.getenv("GITHUB_TOKEN_KEY")
 
 if not ENCRYPTION_KEY:
     raise ValueError("GITHUB_TOKEN_KEY is not set")
+
 
 class Webhook(models.Model):
     id = ShortUUIDField(primary_key=True)
@@ -24,6 +25,7 @@ class Webhook(models.Model):
 
     def __str__(self):
         return f"Webhook for {self.repository} (User: {self.user.username})"
+
 
 class Token(models.Model):
     id = ShortUUIDField(primary_key=True)

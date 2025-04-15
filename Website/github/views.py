@@ -12,9 +12,9 @@ from django.template.loader import render_to_string
 
 from core.decorators import oauth_required, AuthHttpRequest
 from core.helpers import assertRequiredFields
-from core.wrappers.GCPWrapper.main import GCPWrapper
+from core.utils import GCPUtils
 from github.models import Webhook, Token
-from api.models import Stack
+from stacks.models import Stack
 
 # GitHub OAuth credentials
 CLIENT_ID = settings.GITHUB.get("CLIENT_ID")
@@ -29,6 +29,7 @@ def home(_: HttpRequest) -> HttpResponse:
     return HttpResponse(
         "Welcome to Deploy Box! <a href='/github/auth'>Login with GitHub</a>"
     )
+
 
 def github_login(_: HttpRequest) -> HttpResponse:
     """Redirects users to GitHub OAuth page."""
@@ -232,6 +233,7 @@ def create_github_webhook(request: HttpRequest) -> JsonResponse:
         status=201,
     )
 
+
 def github_webhook(request: HttpRequest) -> JsonResponse:
     """Handles GitHub webhook events."""
 
@@ -240,13 +242,17 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request"}, status=400)
 
-    response = assertRequiredFields(request, ["X-Hub-Signature-256", "X-GitHub-Hook-ID"], "header")
+    response = assertRequiredFields(
+        request, ["X-Hub-Signature-256", "X-GitHub-Hook-ID"], "header"
+    )
     if isinstance(response, JsonResponse):
         return response
-    
+
     signature, webhook_id = response
 
-    response = assertRequiredFields(request, ["X-GitHub-Event", "repository", "ref", "payload"], "header")
+    response = assertRequiredFields(
+        request, ["X-GitHub-Event", "repository", "ref", "payload"], "header"
+    )
     if isinstance(response, JsonResponse):
         return response
 
@@ -255,7 +261,8 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     webhook = get_object_or_404(Webhook, webhook_id=webhook_id)
 
     computed_signature = (
-        "sha256=" + hmac.new(webhook.secret.encode(), request.body, hashlib.sha256).hexdigest()
+        "sha256="
+        + hmac.new(webhook.secret.encode(), request.body, hashlib.sha256).hexdigest()
     )
 
     if not hmac.compare_digest(signature, computed_signature):
@@ -266,9 +273,7 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
 
     # Check if this involves the main branch
     if not ref or not ref.endswith("/main"):
-        return JsonResponse(
-            {"message": "Ignored - not main branch"}, status=200
-        )
+        return JsonResponse({"message": "Ignored - not main branch"}, status=200)
 
     # Ignore events that aren't in the allowed list
     if event_type not in ALLOWED_EVENTS:
@@ -281,7 +286,7 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
 
     github_token = get_object_or_404(Token, user=user).get_token()
 
-    gcp_wrapper = GCPWrapper()
+    gcp_wrapper = GCPUtils()
 
     # TODO: Handle different repository types
     if repository_name == "Deploy-Box/deploy_box":
@@ -289,7 +294,7 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
         print("Handling Deploy-Box/deploy_box repository")
 
         threading.Thread(
-            target=gcp_wrapper.submit_and_approve_build,
+            target=gcp_wrapper.post_build_and_deploy,
             args=(webhook.stack.id, webhook.repository, github_token, "Website"),
         ).start()
 
@@ -298,7 +303,7 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
         print("Handling HamzaKhairy/green_toolkit repository")
 
         threading.Thread(
-            target=gcp_wrapper.submit_and_approve_build,
+            target=gcp_wrapper.post_build_and_deploy,
             args=(
                 webhook.stack.id,
                 webhook.repository,
@@ -308,7 +313,7 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
         ).start()
 
         threading.Thread(
-            target=gcp_wrapper.submit_and_approve_build,
+            target=gcp_wrapper.post_build_and_deploy,
             args=(
                 webhook.stack.id,
                 webhook.repository,
@@ -320,12 +325,12 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     else:
 
         threading.Thread(
-            target=gcp_wrapper.submit_and_approve_build,
+            target=gcp_wrapper.post_build_and_deploy,
             args=(webhook.stack.id, webhook.repository, github_token, "backend"),
         ).start()
 
         threading.Thread(
-            target=gcp_wrapper.submit_and_approve_build,
+            target=gcp_wrapper.post_build_and_deploy,
             args=(webhook.stack.id, webhook.repository, github_token, "frontend"),
         ).start()
 

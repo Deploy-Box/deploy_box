@@ -49,7 +49,7 @@ class Project(models.Model):
     name = models.CharField(max_length=255)
     description = models.TextField()
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
-    stacks = models.ManyToManyField('api.Stack', related_name='projects', blank=True)
+    stacks = models.ManyToManyField("stacks.Stack", related_name="projects", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -73,5 +73,3 @@ class ProjectMember(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.project.name}"
-
-

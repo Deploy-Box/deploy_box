@@ -8,8 +8,8 @@ from django.contrib.auth.models import User
 from accounts.models import Organization
 
 from core.decorators import oauth_required, AuthHttpRequest
-from api.services import stack_services
-from api.models import AvailableStack, Stack, StackDatabase
+import stacks.services as stack_services
+from stacks.models import PurchasableStack, Stack, StackDatabase
 from accounts.models import UserProfile, Project
 
 from payments.services import pricing_services
@@ -34,8 +34,8 @@ def create_stripe_user(**kwargs):
     try:
         print("kwargs", kwargs)
         customer = stripe.Customer.create(
-            name= kwargs.name,
-            email= kwargs.email,
+            name=kwargs.name,
+            email=kwargs.email,
         )
 
         return customer.id
@@ -60,13 +60,13 @@ def create_checkout_session(request: AuthHttpRequest) -> JsonResponse:
     stack_id = data.get("stackId")
     try:
         print(stack_id)
-        price_id = AvailableStack.objects.get(id=stack_id).price_id
+        price_id = PurchasableStack.objects.get(id=stack_id).price_id
         checkout_session = stripe.checkout.Session.create(
             metadata={
-                'stack_id': stack_id,
-                'user_id': auth_user.id,
-                'project_id': "1",
-                'name': "MERN Stack",
+                "stack_id": stack_id,
+                "user_id": auth_user.id,
+                "project_id": "1",
+                "name": "MERN Stack",
             },
             customer=user_profile.stripe_customer_id,
             success_url=domain_url
@@ -104,7 +104,9 @@ def record_usage(subscription_item_id, quantity):
 def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
     # Use `stripe listen --forward-to http://127.0.0.1:8000/api/payments/webhook` to listen for events
     # WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
-    WEBHOOK_SECRET = "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
+    WEBHOOK_SECRET = (
+        "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
+    )
 
     payload = request.body
     sig_header = request.headers.get("Stripe-Signature")
@@ -129,7 +131,9 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
         stripe_customer_id = session.get("customer")
 
         # Fetch the user based on the Stripe Customer ID
-        user_account = get_object_or_404(UserProfile, stripe_customer_id=stripe_customer_id)
+        user_account = get_object_or_404(
+            UserProfile, stripe_customer_id=stripe_customer_id
+        )
         user = user_account.user
 
         # Retrieve line items to get the Price ID
@@ -143,7 +147,7 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
 
         # Fetch the corresponding stack based on Price ID
         available_stack = get_object_or_404(AvailableStack, price_id=price_id)
-        
+
         # Get the project
         project_id = session.get("metadata", {}).get("project_id")
 
@@ -247,18 +251,22 @@ def update_invoice_billing(request):
             return JsonResponse(
                 {"error": "Stack ID not found or already updated."}, status=400
             )
-        
+
+
 @oauth_required()
 def create_price_item(request: HttpRequest) -> JsonResponse:
     return pricing_services.create_price_item(request)
+
 
 @oauth_required()
 def update_price_item(request: HttpRequest) -> JsonResponse:
     return pricing_services.update_price_item(request)
 
+
 @oauth_required()
 def delete_price_item(request: HttpRequest) -> JsonResponse:
     return pricing_services.delete_price_item(request)
+
 
 @oauth_required()
 def get_price_item_by_name(request: HttpRequest, name: str) -> JsonResponse:

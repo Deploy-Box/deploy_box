@@ -4,7 +4,7 @@ from django.conf import settings
 from accounts.forms import CustomUserCreationForm as form
 from django.contrib.auth.models import User
 from accounts.models import Organization, OrganizationMember, Project, ProjectMember
-from api.models import Stack
+from stacks.models import Stack
 
 from core.decorators import oauth_required
 
@@ -25,32 +25,58 @@ def pricing(request: HttpRequest) -> HttpResponse:
 def profile(request: HttpRequest) -> HttpResponse:
     return render(request, "profile.html", {})
 
+
 @oauth_required()
 def dashboard(request: HttpRequest) -> HttpResponse:
     user = request.user
-    organizations = Organization.objects.filter(organizationmember__user = user)
-    projects = Project.objects.filter(projectmember__user = user)
-    return render(request, "dashboard.html", {'user': user, 'organizations': organizations, 'projects': projects})
+    organizations = Organization.objects.filter(organizationmember__user=user)
+    projects = Project.objects.filter(projectmember__user=user)
+    return render(
+        request,
+        "dashboard.html",
+        {"user": user, "organizations": organizations, "projects": projects},
+    )
+
 
 @oauth_required()
 def organization_dashboard(request: HttpRequest, organization_id: str) -> HttpResponse:
-    user=request.user
+    user = request.user
     organization = Organization.objects.get(id=int(organization_id))
-    members = OrganizationMember.objects.filter(organization = organization)
-    return render(request, "organization_dashboard.html", {'user': user, 'organization': organization, 'members': members})
+    members = OrganizationMember.objects.filter(organization=organization)
+    return render(
+        request,
+        "organization_dashboard.html",
+        {"user": user, "organization": organization, "members": members},
+    )
+
 
 @oauth_required()
-def project_dashboard(request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
+def project_dashboard(
+    request: HttpRequest, organization_id: str, project_id: str
+) -> HttpResponse:
     user = request.user
     project = Project.objects.get(id=project_id)
     stacks = Stack.objects.filter(project_id=project_id)
-    return render(request, "project_dashboard.html", {"organization_id": organization_id, "project": project, 'stacks': stacks})
+    return render(
+        request,
+        "project_dashboard.html",
+        {"organization_id": organization_id, "project": project, "stacks": stacks},
+    )
+
 
 @oauth_required()
-def stack_dashboard(request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
-    user = request.user
-    stack = Stack.objects.get(id=stack_id)
-    return render(request, "stack_dashboard.html", {"organization_id": organization_id, "project_id": project_id, "stack": stack})
+def stack_dashboard(
+    request: HttpRequest, organization_id: str, project_id: str, stack_id: str
+) -> HttpResponse:
+    return render(
+        request,
+        "stack_dashboard.html",
+        {
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "stack_id": stack_id,
+        },
+    )
 
 
 def maintenance(request: HttpRequest) -> HttpResponse:
