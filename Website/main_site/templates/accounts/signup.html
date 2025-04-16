@@ -6,8 +6,20 @@
         <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
             <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">Create an account</h1>
 
-            <form method="POST" class="space-y-6" action="{% url 'signup' %}">
-                {% csrf_token %}
+            <form method="POST" class="space-y-6" action="{% url 'accounts:signup' %}">
+
+                <div>
+                    <label for="org_name">Organization Name</label>
+                    <input type="text" name="org_name", id="org_name">{{form.org_name}}</input>
+                </div>
+
+                <div>
+                    <label for="org_email">Organization Email</label>
+                    <input type="text" name="org_email", id="org_email">{{form.org_email}}</input>
+                </div>
+
+                <hr>
+
                 <div>
                     <label for="username" class="block text-sm font-medium text-zinc-950">Username</label>
                     <div class="mt-1">

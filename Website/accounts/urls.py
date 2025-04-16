@@ -2,24 +2,50 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("authorize/", views.oauth_authorize, name="oauth_authorize"),
-    path("callback/", views.oauth_callback, name="oauth_callback"),
+    # Authentication endpoints
     path("login/", views.login_view, name="login"),
     path("signup/", views.signup, name="signup"),
     path("logout/", views.logout_view, name="logout"),
 
-    #organizations
-    path("organizations/", views.get_organizations, name="organizations"),
-    path("organizations/create-organization/", views.create_organization, name="create_organization"),
-    path("organizations/update-organization/", views.update_organization, name="update_organization"),
-    path("organizations/delete-organization/", views.delete_organization, name="delete_organization"),
-    path("organizations/add-collaborator/", views.add_org_members, name="add_org_members"),  
-    path("organizations/remove-collaborator/", views.remove_org_member, name="remove_org_member"),
+    # OAuth endpoints
+    path("oauth/authorize/", views.oauth_authorize, name="oauth_authorize"),
+    path("oauth/callback/", views.oauth_callback, name="oauth_callback"),
 
-    #projects  
-    path("organizations/create-project/", views.create_project, name="create_project"),  
-    path("organizations/update-project/", views.update_project, name="update_project"),  
-    path("organizations/delete-project/", views.delete_project, name="delete_project"),  
-    path("organizations/add-project-members/", views.add_project_members, name="add_project_members"),  
-    path("organizations/delete-project-member/", views.delete_project_member, name="delete_project_member"),  
+
+    # path(
+    #     "organizations/<str:org_id>/members/add/",
+    #     views.add_org_members,
+    #     name="organization_member_add",
+    # ),
+    # path(
+    #     "organizations/<str:org_id>/members/<str:member_id>/remove/",
+    #     views.remove_org_member,
+    #     name="organization_member_remove",
+    # ),
+    # # Project management
+    # path(
+    #     "organizations/<str:org_id>/projects/create/",
+    #     views.create_project,
+    #     name="project_create",
+    # ),
+    # path(
+    #     "organizations/<str:org_id>/projects/<str:project_id>/update/",
+    #     views.update_project,
+    #     name="project_update",
+    # ),
+    # path(
+    #     "organizations/<str:org_id>/projects/<str:project_id>/delete/",
+    #     views.delete_project,
+    #     name="project_delete",
+    # ),
+    # path(
+    #     "organizations/<str:org_id>/projects/<str:project_id>/members/add/",
+    #     views.add_project_members,
+    #     name="project_member_add",
+    # ),
+    # path(
+    #     "organizations/<str:org_id>/projects/<str:project_id>/members/<str:member_id>/remove/",
+    #     views.delete_project_member,
+    #     name="project_member_remove",
+    # ),
 ]

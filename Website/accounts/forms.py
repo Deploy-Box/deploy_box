@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from organizations.models import Organization
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -17,3 +18,18 @@ class CustomUserCreationForm(UserCreationForm):
             "last_name",
             "birthdate",
         ]
+
+
+class OrganizationSignUpForm(forms.ModelForm):
+    org_name = forms.CharField()
+    org_email = forms.EmailField()
+
+
+    class Meta:
+        model = Organization
+        fields = [
+            'org_name',
+            'org_email'
+        ]
+
+

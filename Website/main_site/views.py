@@ -1,10 +1,11 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render
 from django.http import HttpRequest, HttpResponse
 from django.conf import settings
-from accounts.forms import CustomUserCreationForm as form
-from django.contrib.auth.models import User
-from accounts.models import Organization, OrganizationMember, Project, ProjectMember
-from api.models import Stack
+from accounts.forms import CustomUserCreationForm
+from organizations.models import Organization, OrganizationMember
+from projects.models import Project
+from stacks.models import Stack
+from organizations.forms import OrganizationCreateForm, OrganizationCreateFormWithMembers, OrganizationMemberForm
 
 from core.decorators import oauth_required
 
@@ -35,8 +36,8 @@ def dashboard(request: HttpRequest) -> HttpResponse:
 @oauth_required()
 def organization_dashboard(request: HttpRequest, organization_id: str) -> HttpResponse:
     user=request.user
-    organization = Organization.objects.get(id=int(organization_id))
-    members = OrganizationMember.objects.filter(organization = organization)
+    organization = Organization.objects.get(id=organization_id)
+    members = OrganizationMember.objects.filter(organization=organization)
     return render(request, "organization_dashboard.html", {'user': user, 'organization': organization, 'members': members})
 
 @oauth_required()
@@ -48,7 +49,9 @@ def project_dashboard(request: HttpRequest, organization_id: str, project_id: st
 
 @oauth_required()
 def stack_dashboard(request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
-    return render(request, "stack_dashboard.html", {"organization_id": organization_id, "project_id": project_id, "stack_id": stack_id})
+    user = request.user
+    stack = Stack.objects.get(id=stack_id)
+    return render(request, "stack_dashboard.html", {"organization_id": organization_id, "project_id": project_id, "stack": stack})
 
 
 def maintenance(request: HttpRequest) -> HttpResponse:
@@ -61,7 +64,7 @@ def login(request: HttpRequest) -> HttpResponse:
 
 
 def signup(request: HttpRequest) -> HttpResponse:
-    return render(request, "accounts/signup.html", {"form": form})
+    return render(request, "accounts/signup.html", {"form": CustomUserCreationForm})
 
 
 def logout(request: HttpRequest) -> HttpResponse:
@@ -94,3 +97,8 @@ def success_view(request: HttpRequest) -> HttpResponse:
 @oauth_required()
 def cancelled_view(request: HttpRequest) -> HttpResponse:
     return render(request, "payments/cancelled.html")
+
+@oauth_required()
+def test(request: HttpRequest) -> HttpResponse:
+    form = OrganizationCreateFormWithMembers()
+    return render(request, 'accounts/test.html', {'form': form})

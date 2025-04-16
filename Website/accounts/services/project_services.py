@@ -3,7 +3,8 @@ import json
 from django.contrib.auth.models import User  # type: ignore
 from django.http import JsonResponse, HttpRequest  # type: ignore
 
-from accounts.models import Organization, Project, ProjectMember
+from organizations.models import Organization
+from projects.models import Project, ProjectMember
 
 
 def get_project(user: User, organization_id: str, project_id: str) -> Project:

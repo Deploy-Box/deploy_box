@@ -2,14 +2,19 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("config/", views.stripe_config),
-    path("create-checkout-session/", views.create_checkout_session),
-    path("webhook", views.stripe_webhook),
-    path("webhook/", views.stripe_webhook),
-    path("create-invoice", views.create_invoice),
-    path("get_customer_id", views.get_customer_id),
-    path("create-price-item", views.create_price_item, name="create-price-item"),
-    path("update-price-item", views.update_price_item, name="update-price-item"),
-    path("delete-price-item", views.delete_price_item, name="delete-price-item"),
-    path("get_price_item_by_name/<str:name>/", views.get_price_item_by_name, name="get_price_item_by_name"),
+    # Stripe configuration
+    path("config/", views.stripe_config, name="stripe_config"),
+    # Checkout and webhook
+    path("checkout/create/", views.create_checkout_session, name="checkout_create"),
+    path("save-payment-method/", views.save_stripe_payment_method, name="save_payment_method"),
+    path("webhook/", views.stripe_webhook, name="stripe_webhook"),
+    # Invoice management
+    path("invoices/create/", views.create_invoice, name="invoice_create"),
+    # Customer management
+    path("customers/<str:customer_id>/", views.get_customer_id, name="customer_detail"),
+    # Price management
+    path("prices/", views.create_price_item, name="price_create"),
+    path("prices/<str:price_id>/update/", views.update_price_item, name="price_update"),
+    path("prices/<str:price_id>/delete/", views.delete_price_item, name="price_delete"),
+    path("prices/name/<str:name>/", views.get_price_item_by_name, name="price_by_name"),
 ]

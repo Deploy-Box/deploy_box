@@ -13,30 +13,34 @@ from django.http import (
     HttpResponsePermanentRedirect,
 )
 
-from accounts.forms import CustomUserCreationForm
+from accounts.forms import CustomUserCreationForm, OrganizationSignUpForm
 from payments.views import create_stripe_user
 from accounts.models import UserProfile
 from core.decorators import oauth_required
-from accounts.models import Organization, Project
+from organizations.models import Organization, OrganizationMember
 from accounts.services import get_project, organization_services, project_services
+from organizations.services import create_organization
 
 
 # Authentication
 def signup(request: HttpRequest):
+    print(request.method)
     if request.method == "POST":
         form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
+        org_form = OrganizationSignUpForm(request.POST)
+
+        if form.is_valid() and org_form.is_valid():
             user = form.save()
             birthdate = form.cleaned_data["birthdate"]
 
-            # Create a stripe customer
-            stripe_customer_id = create_stripe_user(user)
+            name = org_form.cleaned_data["org_name"]
+            email = org_form.cleaned_data["org_email"]
 
-            UserProfile.objects.create(
-                user=user, birthdate=birthdate, stripe_customer_id=stripe_customer_id
-            )
+            create_organization(user, name, email)
 
-            return redirect("/accounts/login")
+            return redirect("/login")
+
+        return JsonResponse({"message": f"Invalid form data {form.is_valid()}, {org_form.is_valid()}"}, status=400)
 
     return JsonResponse({"message": "POST request required for signup"}, status=400)
 
@@ -195,7 +199,7 @@ def oauth_callback(request: HttpRequest) -> JsonResponse:
     return JsonResponse(tokens)
 
 
-def logout_view(request: HttpRequest) -> JsonResponse:
+def logout_view(request: HttpRequest) -> JsonResponse | HttpResponseRedirect:
     """
     Handle user logout by clearing the session and redirecting to the login page.
     """
@@ -205,96 +209,36 @@ def logout_view(request: HttpRequest) -> JsonResponse:
     # Redirect to the login page
     return HttpResponseRedirect("/")
 
-
-@oauth_required()
-def get_organizations(request: HttpRequest) -> JsonResponse:
-    """
-    Fetch the list of organizations for the authenticated user.
-    """
-    user = request.user
-    organizations = Organization.objects.filter(
-        organizationmember__user=user
-    ).distinct()
-
-    organization_list = [
-        {
-            "id": org.id,
-            "name": org.name,
-            "created_at": org.created_at,
-            "updated_at": org.updated_at,
-        }
-        for org in organizations
-    ]
-    return JsonResponse({"organizations": organization_list})
+# @oauth_required()
+# def add_org_members(request: HttpRequest) -> JsonResponse:
+#     return organization_services.add_collaborator(request)
 
 
-@oauth_required()
-def get_projects(request: HttpRequest) -> JsonResponse:
-    """
-    Fetch the list of projects for the authenticated user.
-    """
-    user = request.user
-    projects = get_project(user)
-
-    project_list = [
-        {
-            "id": project.id,
-            "name": project.name,
-            "description": project.description,
-            "organization": project.organization.name,
-            "created_at": project.created_at,
-            "updated_at": project.updated_at,
-        }
-        for project in projects
-    ]
-    return JsonResponse({"projects": project_list})
+# @oauth_required()
+# def remove_org_member(request: HttpRequest) -> JsonResponse:
+#     return organization_services.remove_collaborator(request)
 
 
-@oauth_required()
-def create_organization(request: HttpRequest) -> JsonResponse:
-    return organization_services.create_organization(request)
+# @oauth_required()
+# def create_project(request: HttpRequest) -> JsonResponse:
+#     return project_services.create_project(request)
 
 
-@oauth_required()
-def update_organization(request: HttpRequest) -> JsonResponse:
-    return organization_services.update_organization(request)
+# @oauth_required()
+# def update_project(request: HttpRequest) -> JsonResponse:
+#     return project_services.update_project(request)
 
 
-@oauth_required()
-def delete_organization(request: HttpRequest) -> JsonResponse:
-    return organization_services.delete_organization(request)
+# @oauth_required()
+# def delete_project(request: HttpRequest) -> JsonResponse:
+#     return project_services.delete_project(request)
 
 
-@oauth_required()
-def add_org_members(request: HttpRequest) -> JsonResponse:
-    return organization_services.add_collaborator(request)
+# @oauth_required()
+# def add_project_members(request: HttpRequest) -> JsonResponse:
+#     return project_services.add_project_members(request)
 
 
-@oauth_required()
-def remove_org_member(request: HttpRequest) -> JsonResponse:
-    return organization_services.remove_collaborator(request)
-
-
-@oauth_required()
-def create_project(request: HttpRequest) -> JsonResponse:
-    return project_services.create_project(request)
-
-
-@oauth_required()
-def update_project(request: HttpRequest) -> JsonResponse:
-    return project_services.update_project(request)
-
-
-@oauth_required()
-def delete_project(request: HttpRequest) -> JsonResponse:
-    return project_services.delete_project(request)
-
-
-@oauth_required()
-def add_project_members(request: HttpRequest) -> JsonResponse:
-    return project_services.add_project_members(request)
-
-
-@oauth_required()
-def delete_project_member(request: HttpRequest) -> JsonResponse:
-    return project_services.delete_project_member(request)
+# @oauth_required()
+# def delete_project_member(request: HttpRequest) -> JsonResponse:
+#     return project_services.delete_project_member(request)
