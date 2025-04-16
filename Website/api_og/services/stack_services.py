@@ -9,13 +9,12 @@ from django.conf import settings  # type: ignore
 from django.db.models import F  # type: ignore
 from django.db import transaction  # type: ignore
 
-from api.utils import gcp_utils
-from api.utils import MongoDBUtils
-from accounts.models import Project, ProjectMember
-from api.models import StackDatabase, StackBackend, Stack, StackFrontend, AvailableStack
-from api.serializers.stacks_serializer import StackSerializer, StackDatabaseSerializer
+from core.utils import GCPUtils, MongoDBUtils
+from projects.models import Project, ProjectMember
+from stacks.models import StackDatabase, StackBackend, Stack, StackFrontend, PurchasableStack
+# from api.serializers.stacks_serializer import StackSerializer, StackDatabaseSerializer
 from core.decorators import oauth_required, AuthHttpRequest
-from core.helpers import assertRequiredFields
+from core.helpers import assertRequestFields
 from accounts.services import get_project
 
 logger = logging.getLogger(__name__)

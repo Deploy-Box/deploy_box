@@ -1,6 +1,6 @@
 from django.db import models
 from django.db.models import UniqueConstraint
-from accounts.models import Project
+from projects.models import Project
 from core.fields import ShortUUIDField
 
 

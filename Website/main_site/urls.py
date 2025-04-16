@@ -15,7 +15,7 @@ urlpatterns = [
     # Dashboard
     path("dashboard/", views.dashboard, name="dashboard"),
     path(
-        "dashboard/organizations/<str:organization_id>/",
+        "dashboard/org/<str:organization_id>/",
         views.organization_dashboard,
         name="organization_dashboard",
     ),
@@ -43,4 +43,5 @@ urlpatterns = [
     path(
         "payments/checkout/cancelled/", views.cancelled_view, name="checkout_cancelled"
     ),
+    path("accounts/test.html", views.test, name='test')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

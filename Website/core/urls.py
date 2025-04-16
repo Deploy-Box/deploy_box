@@ -19,17 +19,22 @@ urlpatterns = [
                 ),
                 # Stack management
                 path("stacks/", include(("stacks.urls", "stacks"), namespace="stacks")),
-                # path(
-                #     "projects/",
-                #     include(("projects.urls", "projects"), namespace="projects"),
-                # ),
-                # path(
-                #     "organizations/",
-                #     include(
-                #         ("projects.urls", "projects"),
-                #         namespace="organizations",
-                #     ),
-                # ),
+
+                # Project management
+                path(
+                    "projects/",
+                    include(("projects.urls", "projects"), namespace="projects"),
+                ),
+
+                # Organization management
+                path(
+                    "organizations/",
+                    include(
+                        ("organizations.urls", "organizations"),
+                        namespace="organizations",
+                    ),
+                ),
+
                 # Payment processing
                 path(
                     "payments/",

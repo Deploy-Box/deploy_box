@@ -98,7 +98,7 @@ class GCPUtils:
 
         return self.__request_helper(SERVICE_URL)
 
-    def post_build_and_deploy(self, stack_id, github_repo, github_token, layer: str):
+    def post_build_and_deploy(self, stack_id, github_repo, github_token, layer: str, port: int = 8080):
         try:
             # Replace with your project ID
             project_id = "deploy-box"
@@ -133,7 +133,8 @@ class GCPUtils:
                             --image={image_name} \
                             --region=us-central1 \
                             --platform=managed \
-                            --allow-unauthenticated
+                            --allow-unauthenticated \
+                            --port={port}
                         """,
                     ],
                 },
@@ -279,4 +280,10 @@ class GCPUtils:
 if __name__ == "__main__":
     gcp_wrapper = GCPUtils()
 
-    print(gcp_wrapper.stream_logs(["frontend-5", "backend-5"]))
+    gcp_wrapper.post_build_and_deploy(
+        stack_id="5",
+        github_repo="Deploy-Box/deploy_box",
+        github_token=settings.GITHUB_TOKEN,
+        layer="website",
+        port=8000
+    )

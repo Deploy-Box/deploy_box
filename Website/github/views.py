@@ -10,8 +10,9 @@ from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
 
+import stacks.services as stack_services
 from core.decorators import oauth_required, AuthHttpRequest
-from core.helpers import assertRequiredFields
+from core.helpers import assertRequestFields
 from core.utils import GCPUtils
 from github.models import Webhook, Token
 from stacks.models import Stack
@@ -21,13 +22,15 @@ CLIENT_ID = settings.GITHUB.get("CLIENT_ID")
 CLIENT_SECRET = settings.GITHUB.get("CLIENT_SECRET")
 GITHUB_AUTH_URL = "https://github.com/login/oauth/authorize"
 GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
+GITHUB_API_BASE = "https://api.github.com"
 GITHUB_USER_URL = "https://api.github.com/user"
 GITHUB_REPOS_URL = "https://api.github.com/user/repos"
 
 
 def home(_: HttpRequest) -> HttpResponse:
+    print(CLIENT_ID)
     return HttpResponse(
-        "Welcome to Deploy Box! <a href='/github/auth'>Login with GitHub</a>"
+        "Welcome to Deploy Box! <a href='/api/v1/github/auth/login'>Login with GitHub</a>"
     )
 
 
@@ -64,7 +67,7 @@ def github_callback(request: HttpRequest) -> HttpResponse:
         return HttpResponse("Failed to retrieve user info", status=400)
 
     # Store token securely in database
-    github_token, created = Token.objects.get_or_create(user=request.user)
+    github_token, _ = Token.objects.get_or_create(user=request.user)
     github_token.set_token(access_token)
     github_token.save()
 
@@ -72,7 +75,9 @@ def github_callback(request: HttpRequest) -> HttpResponse:
     request.session["github_user"] = user_data
     request.session.modified = True
 
-    return redirect(reverse("github:list_repos"))
+    print("access_token:", access_token)  # For debugging purposes, remove in production
+
+    return redirect(reverse("github:repository_list"))
 
 
 def dashboard(request: HttpRequest) -> HttpResponse:
@@ -90,15 +95,11 @@ def logout(request: HttpRequest) -> HttpResponse:
     return redirect(reverse("github:home"))
 
 
-def list_repos(request: HttpRequest) -> HttpResponse:
+@oauth_required()
+def list_repos(request: AuthHttpRequest) -> HttpResponse:
     """Fetch and display user repositories with a deploy button."""
-    user = request.user
-
-    # Retrieve GitHub token securely
-    try:
-        github_token = Token.objects.get(user=user).get_token()
-    except Token.DoesNotExist:
-        return JsonResponse({"error": "GitHub token not found"}, status=403)
+    user = request.auth_user
+    github_token = get_object_or_404(Token, user=user).get_token()
 
     repo_response = requests.get(
         GITHUB_REPOS_URL,
@@ -112,9 +113,7 @@ def list_repos(request: HttpRequest) -> HttpResponse:
     repos = repo_response.json()
 
     # Fetch user stacks
-    stacks = Stack.objects.filter(user=user)
-    if not stacks.exists():
-        return JsonResponse({"error": "No stacks available"}, status=404)
+    stacks = stack_services.get_stacks(user)
 
     # Safely render repositories list with deploy button
     repo_list_html = "<h2>Your GitHub Repositories:</h2><ul>"
@@ -136,33 +135,21 @@ def list_repos(request: HttpRequest) -> HttpResponse:
     return HttpResponse(repo_list_html)
 
 
-import requests
-from django.conf import settings
-from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
-
-GITHUB_API_BASE = "https://api.github.com"
-
-
-def create_github_webhook(request: HttpRequest) -> JsonResponse:
+@oauth_required()
+def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
     """Create and store a GitHub webhook for a user's repository."""
-    user = request.user
-    repo_name = request.POST.get("repo-name")
-    stack_id = request.POST.get("stack-id")
+    user = request.auth_user
 
-    if not repo_name or not stack_id:
-        return JsonResponse(
-            {"error": "Repository name and Stack ID are required"}, status=400
-        )
+    response = assertRequestFields(
+        request, ["repo-name", "stack-id"]
+    )
+    if isinstance(response, JsonResponse):
+        return response
 
-    stack = Stack.objects.filter(id=stack_id).first()
-    if not stack:
-        return JsonResponse({"error": "Stack not found"}, status=404)
+    repo_name, stack_id = response
 
-    try:
-        github_token = Token.objects.get(user=user).get_token()
-    except Token.DoesNotExist:
-        return JsonResponse({"error": "GitHub token not found"}, status=403)
+    stack = get_object_or_404(Stack, id=stack_id, user=user)
+    github_token = get_object_or_404(Token, user=user).get_token()
 
     headers = {"Authorization": f"token {github_token}"}
     try:
@@ -185,6 +172,7 @@ def create_github_webhook(request: HttpRequest) -> JsonResponse:
 
     # Generate a unique webhook secret
     webhook_secret = secrets.token_hex(32)
+    print(webhook_secret)  # For debugging purposes, remove in production
 
     # Webhook URL
     webhook_url = f"{settings.HOST}/github/webhook"
@@ -242,7 +230,7 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request"}, status=400)
 
-    response = assertRequiredFields(
+    response = assertRequestFields(
         request, ["X-Hub-Signature-256", "X-GitHub-Hook-ID"], "header"
     )
     if isinstance(response, JsonResponse):
@@ -250,7 +238,7 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
 
     signature, webhook_id = response
 
-    response = assertRequiredFields(
+    response = assertRequestFields(
         request, ["X-GitHub-Event", "repository", "ref", "payload"], "header"
     )
     if isinstance(response, JsonResponse):

@@ -9,8 +9,9 @@ from stacks.models import (
     StackBackend,
     StackFrontend,
 )
-from accounts.models import Project
+from projects.models import Project
 from core.utils import GCPUtils, MongoDBUtils
+from accounts.models import User
 
 logger = logging.getLogger(__name__)
 
@@ -37,6 +38,9 @@ def add_stack(
 
 def get_stack(request) -> JsonResponse:
     return JsonResponse({"message": "Stack retrieved successfully."})
+
+def get_stacks(user: User) -> list[Stack]:
+    return list(Stack.objects.filter(project__user=user).order_by("-created_at"))
 
 
 def deploy_MERN_stack(stack: Stack) -> JsonResponse:

@@ -4,15 +4,13 @@ import stripe
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.models import User
-from accounts.models import Organization
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.services as stack_services
-from stacks.models import PurchasableStack, Stack, StackDatabase
-from accounts.models import UserProfile, Project
-
+from stacks.models import PurchasableStack, StackDatabase
+from organizations.models import Organization, OrganizationMember
 from payments.services import pricing_services
+from accounts.models import UserProfile
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
@@ -34,8 +32,8 @@ def create_stripe_user(**kwargs):
     try:
         print("kwargs", kwargs)
         customer = stripe.Customer.create(
-            name=kwargs.name,
-            email=kwargs.email,
+            name=kwargs.get('name'), # type: ignore
+            email=kwargs.get('email'), # type: ignore
         )
 
         return customer.id
@@ -43,11 +41,48 @@ def create_stripe_user(**kwargs):
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
 
+def save_stripe_payment_method(request: AuthHttpRequest) -> JsonResponse:
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=405)
+
+    try:
+        data = json.loads(request.body)
+        payment_method_id = data.get("payment_method_id")
+        organization_id = data.get("organization_id")  # Assuming organizationId is used as customerId
+
+        organization = get_object_or_404(Organization, id=organization_id)
+        customer_id = organization.stripe_customer_id
+
+        print(f"Payment Method ID: {payment_method_id}, Customer ID: {customer_id}", "Organization ID:", organization_id)
+
+        if not payment_method_id or not customer_id:
+            return JsonResponse({"error": "Missing paymentMethodId or customerId"}, status=400)
+
+        # Attach the payment method to the customer
+        stripe.PaymentMethod.attach(
+            payment_method_id,
+            customer=customer_id,
+        )
+
+        # Set the payment method as the default for the customer
+        stripe.Customer.modify(
+            customer_id,
+            invoice_settings={"default_payment_method": payment_method_id},
+        )
+
+        return JsonResponse({"message": "Payment method saved successfully."}, status=200)
+
+    except stripe.error.StripeError as e:
+        return JsonResponse({"error": str(e)}, status=400)
+
+    except Exception as e:
+        return JsonResponse({"error": "An error occurred while saving the payment method."}, status=400)
 
 @oauth_required()
-def create_checkout_session(request: AuthHttpRequest) -> JsonResponse:
+def create_checkout_session(request: AuthHttpRequest, org_id: int) -> JsonResponse:
     auth_user = request.auth_user
     user_profile = request.user_profile
+    organization = Organization.objects.get(id=org_id)
 
     if request.method != "POST":
         # Handle non-POST requests
@@ -68,7 +103,7 @@ def create_checkout_session(request: AuthHttpRequest) -> JsonResponse:
                 "project_id": "1",
                 "name": "MERN Stack",
             },
-            customer=user_profile.stripe_customer_id,
+            customer=organization.stripe_customer_id,
             success_url=domain_url
             + "/payments/success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=domain_url + "/payments/cancelled",
@@ -146,7 +181,7 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
         price_id = line_items["data"][0]["price"]["id"]  # Get first price ID
 
         # Fetch the corresponding stack based on Price ID
-        available_stack = get_object_or_404(AvailableStack, price_id=price_id)
+        available_stack = get_object_or_404(PurchasableStack, price_id=price_id)
 
         # Get the project
         project_id = session.get("metadata", {}).get("project_id")
@@ -207,7 +242,7 @@ def get_customer_id(request):
             org_id = data.get("org_id")  # Extract user_id from the JSON payload
 
             # Check if user_id is provided
-            if not user_id:
+            if not org_id:
                 return JsonResponse({"error": "user_id is required"}, status=400)
 
             # Query the UserProfile by the provided user_id

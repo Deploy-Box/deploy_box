@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpRequest, FileResponse  # type: ignore
 from api.services import stack_services, GCP_services
 from api.models import StackBackend, StackFrontend, StackDatabase
 from core.decorators import oauth_required, AuthHttpRequest
-from core.helpers import assertRequiredFields
+from core.helpers import assertRequestFields
 from core.utils import GCPUtils
 
 
@@ -35,7 +35,7 @@ def stack_handler(
         else:
             user = request.auth_user
 
-            response = assertRequiredFields(
+            response = assertRequestFields(
                 request, ["project_id", "available_stack_id", "name"]
             )
 

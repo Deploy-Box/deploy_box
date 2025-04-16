@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
-from .models import Organization
+from organizations.models import Organization
 
 
 class CustomUserCreationForm(UserCreationForm):
@@ -31,3 +31,5 @@ class OrganizationSignUpForm(forms.ModelForm):
             'org_name',
             'org_email'
         ]
+
+

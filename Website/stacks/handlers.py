@@ -2,18 +2,18 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
 from core.decorators import AuthHttpRequest
-from core.helpers import assertRequiredFields
+from core.helpers import assertRequestFields
 import stacks.services as services
-from accounts.models import Project
+from projects.models import Project
 from stacks.models import PurchasableStack
 
 
 def get_stack(request: AuthHttpRequest) -> JsonResponse:
-    pass
+    return services.get_stack(request)
 
 
 def post_stack(request: AuthHttpRequest) -> JsonResponse:
-    response = assertRequiredFields(
+    response = assertRequestFields(
         request, ["project_id", "purchasable_stack_id", "name"]
     )
 
@@ -29,23 +29,23 @@ def post_stack(request: AuthHttpRequest) -> JsonResponse:
 
 
 def patch_stack(request: AuthHttpRequest) -> JsonResponse:
-    pass
+    return JsonResponse({"error": "Not implemented"}, status=501)
 
 
 def delete_stack(request: AuthHttpRequest) -> JsonResponse:
-    pass
+    return JsonResponse({"error": "Not implemented"}, status=501)
 
 
 def get_stack_usage(request: AuthHttpRequest) -> JsonResponse:
-    pass
+    return JsonResponse({"error": "Not implemented"}, status=501)
 
 
 def get_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
-    pass
+    return JsonResponse({"error": "Not implemented"}, status=501)
 
 
 def post_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
-    response = assertRequiredFields(request, ["type", "variant", "version", "price_id"])
+    response = assertRequestFields(request, ["type", "variant", "version", "price_id"])
 
     if isinstance(response, JsonResponse):
         return response
@@ -62,8 +62,8 @@ def post_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
 
 
 def patch_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
-    pass
+    return JsonResponse({"error": "Not implemented"}, status=501)
 
 
 def delete_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
-    pass
+    return JsonResponse({"error": "Not implemented"}, status=501)
