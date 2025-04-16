@@ -51,15 +51,15 @@
                 <h2 class="text-xl font-bold text-emerald-400 mb-6">Your Projects</h2>
                 <div id="projectsList" class="space-y-4">
                     {% for project in projects %}
-                    <div class="bg-zinc-50 p-4 rounded-lg">
+                        <div class="bg-zinc-50 p-4 rounded-lg">
                             <div class="flex justify-between items-center">
                                 <div>
-                                    <h3 class="text-lg font-semibold text-zinc-900">{{project.name}}</h3>
-                                    <p class="text-sm text-zinc-500">Organization: {{project.organization.name}}</p>
-                                    <p class="text-sm text-zinc-500">Created: {{project.created_at}}</p>
+                                    <h3 class="text-lg font-semibold text-zinc-900">{{ project.name }}</h3>
+                                    <p class="text-sm text-zinc-500">Organization: {{ project.organization.name }}</p>
+                                    <p class="text-sm text-zinc-500">Created: {{ project.created_at }}</p>
                                 </div>
                                 <div class="space-x-2">
-                                    <a href="org/{{project.organization_id}}/proj/{{project.id}}/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
+                                    <a href="org/{{ project.organization.id }}/proj/{{ project.id }}/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
                                         Manage Project
                                     </a>
                                     <button class="text-emerald-400 hover:text-emerald-500">
@@ -71,10 +71,8 @@
                                 </div>
                             </div>
                         </div>
-
-                    </div>
                     {% empty %}
-                    <div>you have no projects</div>
+                        <div>you have no projects</div>
                     {% endfor %}
                 </div>
                 <div class="flex space-x-4 mt-6">
