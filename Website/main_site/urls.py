@@ -43,5 +43,5 @@ urlpatterns = [
     path(
         "payments/checkout/cancelled/", views.cancelled_view, name="checkout_cancelled"
     ),
-    path("accounts/test.html", views.test, name='test')
+    path("accounts/create_organization_form", views.create_organization_form, name='create_organization_form')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

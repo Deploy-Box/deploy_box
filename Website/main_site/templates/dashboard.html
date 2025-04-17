@@ -40,9 +40,11 @@
                     {% endfor %}
                 </div>
                 <div class="flex space-x-4 mt-6">
-                    <button id="createOrgBtn" class="flex-1 bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150">
-                        Create New Organization
-                    </button>
+                    <a href="{% url 'main_site:create_organization_form' %}">
+                        <button id="createOrgBtn" class="flex-1 bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150">
+                            Create New Organization
+                        </button>
+                    </a>
                 </div>
             </div>
 
@@ -59,7 +61,7 @@
                                     <p class="text-sm text-zinc-500">Created: {{ project.created_at }}</p>
                                 </div>
                                 <div class="space-x-2">
-                                    <a href="org/{{ project.organization.id }}/proj/{{ project.id }}/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
+                                    <a href="{% url 'main_site:project_dashboard' project.organization_id project.id %}" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
                                         Manage Project
                                     </a>
                                     <button class="text-emerald-400 hover:text-emerald-500">

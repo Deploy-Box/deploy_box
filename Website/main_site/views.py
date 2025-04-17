@@ -99,6 +99,6 @@ def cancelled_view(request: HttpRequest) -> HttpResponse:
     return render(request, "payments/cancelled.html")
 
 @oauth_required()
-def test(request: HttpRequest) -> HttpResponse:
+def create_organization_form(request: HttpRequest) -> HttpResponse:
     form = OrganizationCreateFormWithMembers()
-    return render(request, 'accounts/test.html', {'form': form})
+    return render(request, 'accounts/create_organization_form.html', {'form': form})
