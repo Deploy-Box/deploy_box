@@ -32,6 +32,43 @@
         </div>
       </div>
 
+      <!-- Projects Section -->
+      <div class="bg-white shadow-2xl rounded-lg py-8 px-8 mb-8">
+        <div class="flex justify-between items-center mb-6">
+          <h2 class="text-xl font-bold text-emerald-400">Projects</h2>
+          <a href="{% url 'main_site:create_project_form' organization_id=organization.id %}">
+            <button class="bg-emerald-400 hover:bg-emerald-500 px-4 py-2 text-sm text-white uppercase rounded font-bold transition duration-150">
+              Create Project
+            </button>
+          </a>
+        </div>
+        <div id="projectsList" class="space-y-4">
+          {% for project in projects %}
+          <div class="bg-zinc-50 p-4 rounded-lg">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-semibold text-zinc-900">{{ project.name }}</h3>
+                <p class="text-sm text-zinc-500">Created: {{ project.created_at }}</p>
+              </div>
+              <div class="space-x-2">
+                <a href="{% url 'main_site:project_dashboard' project.organization_id project.id %}" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
+                  Manage Project
+                </a>
+                <button class="text-emerald-400 hover:text-emerald-500">
+                  Edit
+                </button>
+                <button class="text-red-500 hover:text-red-600">
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+          {% empty %}
+          <div>No projects in this organization</div>
+          {% endfor %}
+        </div>
+      </div>
+
       <!-- Organization Members Section -->
       <div class="bg-white shadow-2xl rounded-lg py-8 px-8 mb-8">
         <div class="flex justify-between items-center mb-6">
@@ -54,22 +91,103 @@
                 <h3 class="text-lg font-semibold text-zinc-900">
                   {{member.user.username}}
                 </h3>
-                <p class="text-sm text-zinc-500">role: {{member.role}}</p>
+                <p class="text-sm text-zinc-500">Role: {{member.role|title}}</p>
               </div>
               <div class="space-x-2">
                 <button class="text-emerald-400 hover:text-emerald-500">
-                  {% if member.role == 'member' %}make admin{% else %}make
-                  member{% endif %}
+                  {% if member.role.lower == 'member' %}Make Admin{% else %}Make Member{% endif %}
                 </button>
                 <button class="text-red-500 hover:text-red-600">Delete</button>
               </div>
             </div>
           </div>
           {% empty %}
-          <div>this org has no members</div>
+          <div>This organization has no members</div>
           {% endfor %}
         </div>
       </div>
+
+      <!-- Billing Section -->
+      <div class="bg-white shadow-2xl rounded-lg py-8 px-8 mb-8">
+        <h2 class="text-xl font-bold text-emerald-400 mb-6">Billing</h2>
+        <div class="space-y-6">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-lg font-semibold text-zinc-900">Current Plan</h3>
+              <p class="text-sm text-zinc-500">View your current subscription plan</p>
+            </div>
+            <button
+              id="viewPlanBtn"
+              class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150"
+            >
+              View Plan
+            </button>
+          </div>
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-lg font-semibold text-zinc-900">Billing History</h3>
+              <p class="text-sm text-zinc-500">View your past invoices and payments</p>
+            </div>
+            <button
+              id="viewBillingHistoryBtn"
+              class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150"
+            >
+              View History
+            </button>
+          </div>
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-lg font-semibold text-zinc-900">Payment Method</h3>
+              <p class="text-sm text-zinc-500">Add or update your payment method</p>
+            </div>
+            <button
+              id="addPaymentMethodBtn"
+              class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150"
+            >
+              Add Payment Method
+            </button>
+          </div>
+
+          <!-- Current Card Information -->
+          <div id="currentCardInfo" class="hidden bg-zinc-50 p-4 rounded-lg">
+            <div class="flex justify-between items-center">
+              <div>
+                <h4 class="text-md font-semibold text-zinc-900">Current Card</h4>
+                <p class="text-sm text-zinc-500">
+                  <span id="cardBrand"></span> ending in <span id="cardLast4"></span>
+                </p>
+                <p class="text-sm text-zinc-500">
+                  Expires <span id="cardExpMonth"></span>/<span id="cardExpYear"></span>
+                </p>
+              </div>
+              <button
+                id="removeCardBtn"
+                class="text-red-500 hover:text-red-600 text-sm font-medium"
+              >
+                Remove Card
+              </button>
+            </div>
+          </div>
+
+          <!-- Stripe Elements Container -->
+          <div id="paymentForm" class="hidden mt-4">
+            <form id="stripePaymentForm">
+              <div
+                id="cardElement"
+                class="bg-zinc-50 p-4 rounded-lg border border-zinc-200"
+              ></div>
+              <div id="cardErrors" class="text-red-500 text-sm mt-2"></div>
+              <button
+                type="submit"
+                class="bg-emerald-400 hover:bg-emerald-500 px-4 py-2 text-sm text-white uppercase rounded font-bold transition duration-150 mt-4"
+              >
+                Save Payment Method
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
       <!-- Organization Settings -->
       <div class="bg-white shadow-2xl rounded-lg py-8 px-8">
         <h2 class="text-xl font-bold text-emerald-400 mb-6">
@@ -106,128 +224,9 @@
               Manage Keys
             </button>
           </div>
-          <div class="flex justify-between items-center">
+          <div class="flex justify-between items-center {% if not is_admin %}opacity-75{% endif %}">
             <div>
-              <h3 class="text-lg font-semibold text-zinc-900">Billing</h3>
-              <p class="text-sm text-zinc-500">
-                View and manage your organization's billing
-              </p>
-            </div>
-            <button
-              id="viewBillingBtn"
-              class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150"
-            >
-              View Billing
-            </button>
-            <div>
-              <h3 class="text-lg font-semibold text-zinc-900">
-                Payment Method
-              </h3>
-              <p class="text-sm text-zinc-500">
-                Add or update your payment method
-              </p>
-            </div>
-            <button
-              id="addPaymentMethodBtn"
-              class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150"
-            >
-              Add Payment Method
-            </button>
-
-            <!-- Stripe Elements Container -->
-            <div id="paymentForm" class="hidden mt-4">
-              <form id="stripePaymentForm">
-                <div
-                  id="cardElement"
-                  class="bg-zinc-50 p-4 rounded-lg border border-zinc-200"
-                ></div>
-                <div id="cardErrors" class="text-red-500 text-sm mt-2"></div>
-                <button
-                  type="submit"
-                  class="bg-emerald-400 hover:bg-emerald-500 px-4 py-2 text-sm text-white uppercase rounded font-bold transition duration-150 mt-4"
-                >
-                  Save Payment Method
-                </button>
-              </form>
-            </div>
-
-            <script src="https://js.stripe.com/v3/"></script>
-            <script>
-              document
-                .getElementById("addPaymentMethodBtn")
-                .addEventListener("click", function () {
-                  document
-                    .getElementById("paymentForm")
-                    .classList.toggle("hidden");
-                });
-
-              // Fetch the publishable key from the server
-              fetch("/api/v1/payments/config")
-                .then((response) => response.json())
-                .then((data) => {
-                  if (data.publicKey) {
-                    const stripe = Stripe(data.publicKey);
-                    const elements = stripe.elements();
-                    const cardElement = elements.create("card");
-                    cardElement.mount("#cardElement");
-
-                    const form = document.getElementById("stripePaymentForm");
-                    form.addEventListener("submit", async (event) => {
-                      event.preventDefault();
-
-                      const { error, paymentMethod } =
-                        await stripe.createPaymentMethod({
-                          type: "card",
-                          card: cardElement,
-                        });
-
-                      if (error) {
-                        document.getElementById("cardErrors").textContent =
-                          error.message;
-                      } else {
-                        document.getElementById("cardErrors").textContent = "";
-
-                        // Send paymentMethod.id to your server for further processing
-                        fetch("/api/v1/payments/save-payment-method/", {
-                          method: "POST",
-                          headers: {
-                            "Content-Type": "application/json",
-                          },
-                          body: JSON.stringify({
-                            payment_method_id: paymentMethod.id,
-                            organization_id: "{{ organization.id }}",
-                          }),
-                        })
-                          .then((response) => response.json())
-                          .then((result) => {
-                            if (result.message) {
-                              alert(result.message);
-                            } else if (result.error) {
-                              document.getElementById(
-                                "cardErrors"
-                              ).textContent = result.error;
-                            }
-                          })
-                          .catch((error) => {
-                            console.error(
-                              "Error saving payment method:",
-                              error
-                            );
-                          });
-                      }
-                    });
-                  } else {
-                    console.error("Publishable key not found in response");
-                  }
-                })
-                .catch((error) => {
-                  console.error("Error fetching publishable key:", error);
-                });
-            </script>
-          </div>
-          <div class="flex justify-between items-center">
-            <div>
-              <h3 class="text-lg font-semibold text-red-600">
+              <h3 class="text-lg font-semibold {% if not is_admin %}text-zinc-500{% else %}text-red-600{% endif %}">
                 Delete Organization
               </h3>
               <p class="text-sm text-zinc-500">
@@ -236,7 +235,8 @@
             </div>
             <button
               id="deleteOrgBtn"
-              class="bg-red-100 hover:bg-red-200 px-6 py-3 text-sm text-red-600 rounded font-bold transition duration-150"
+              class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150 {% if not is_admin %}bg-red-100 hover:bg-red-100 cursor-not-allowed{% endif %}"
+              {% if not is_admin %}disabled title="Only organization admins can delete the organization"{% endif %}
             >
               Delete Organization
             </button>
@@ -246,4 +246,10 @@
     </div>
   </div>
 </div>
+
+<!-- Hidden input for organization ID -->
+<input type="hidden" id="organizationId" value="{{ organization.id }}">
+<script src="https://js.stripe.com/v3/"></script>
+<script src="{% static 'organization_dashboard.js' %}"></script>
+
 {% endblock %}

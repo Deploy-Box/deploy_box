@@ -19,6 +19,8 @@
       {{ form.organization.email }}
     </div>
 
+    <input type="hidden" name="organization" value='{{organization_id}}'>{{ form.organization.organization}}</input>
+
     <!-- Members Selection -->
     <div class="mb-4">
       <label for="member" class="block text-sm font-medium text-gray-700"

@@ -26,12 +26,16 @@ def assertRequestFields(
     if body_or_header == "header":
         data = request.headers
     elif mimetype == "application/json":
-        data = json.loads(request.body)
+        try:
+            data = json.loads(request.body)
+        except json.JSONDecodeError:
+            return JsonResponse(
+                {"error": "Invalid JSON", "data": str(request.body)}, status=400
+            )
     elif mimetype == "application/x-www-form-urlencoded":
         data = parse_qs(request.body.decode("utf-8"))
-        print(f"Data: {data}")
         data = {key: value[0] for key, value in data.items()}
-        print(f"Parsed Data: {data}")
+        print(f"Data: {data}")
     else:
         return JsonResponse(
             {"error": "Unsupported"}, status=400

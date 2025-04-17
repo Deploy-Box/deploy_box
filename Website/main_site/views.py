@@ -6,6 +6,7 @@ from organizations.models import Organization, OrganizationMember
 from projects.models import Project
 from stacks.models import Stack
 from organizations.forms import OrganizationCreateForm, OrganizationCreateFormWithMembers, OrganizationMemberForm
+from projects.forms import ProjectCreateFormWithMembers
 
 from core.decorators import oauth_required
 
@@ -38,7 +39,9 @@ def organization_dashboard(request: HttpRequest, organization_id: str) -> HttpRe
     user=request.user
     organization = Organization.objects.get(id=organization_id)
     members = OrganizationMember.objects.filter(organization=organization)
-    return render(request, "organization_dashboard.html", {'user': user, 'organization': organization, 'members': members})
+    is_admin = OrganizationMember.objects.filter(organization=organization, user=user, role='admin').exists()
+    print(is_admin)
+    return render(request, "organization_dashboard.html", {'user': user, 'organization': organization, 'members': members, 'is_admin': is_admin})
 
 @oauth_required()
 def project_dashboard(request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
@@ -102,3 +105,8 @@ def cancelled_view(request: HttpRequest) -> HttpResponse:
 def create_organization_form(request: HttpRequest) -> HttpResponse:
     form = OrganizationCreateFormWithMembers()
     return render(request, 'accounts/create_organization_form.html', {'form': form})
+
+@oauth_required()
+def create_project_form(request: HttpRequest, organization_id: str) -> HttpResponse:
+    form = ProjectCreateFormWithMembers()
+    return render(request, 'accounts/create_project_form.html', {'form': form, 'organization_id': organization_id})

@@ -6,6 +6,8 @@ from django.shortcuts import get_object_or_404
 from projects.models import Project, ProjectMember
 from accounts.models import User
 from organizations.models import Organization, OrganizationMember
+from .forms import ProjectCreateFormWithMembers
+
 
 logger = logging.getLogger(__name__)
 

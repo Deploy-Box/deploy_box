@@ -15,7 +15,7 @@ urlpatterns = [
     # Dashboard
     path("dashboard/", views.dashboard, name="dashboard"),
     path(
-        "dashboard/org/<str:organization_id>/",
+        "dashboard/organizations/<str:organization_id>/",
         views.organization_dashboard,
         name="organization_dashboard",
     ),
@@ -43,5 +43,6 @@ urlpatterns = [
     path(
         "payments/checkout/cancelled/", views.cancelled_view, name="checkout_cancelled"
     ),
-    path("accounts/create_organization_form", views.create_organization_form, name='create_organization_form')
+    path("dashboard/organizations/create_organization_form", views.create_organization_form, name='create_organization_form'),
+    path("dashboard/organizations/<str:organization_id>/create_project_form", views.create_project_form, name='create_project_form')
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

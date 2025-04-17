@@ -18,7 +18,7 @@ def get_project(request: AuthHttpRequest, project_id: str) -> JsonResponse:
 def create_project(request: AuthHttpRequest) -> JsonResponse:
     user = request.auth_user
 
-    response = assertRequestFields(request, ["name", "description", "organization_id"])
+    response = assertRequestFields(request, ["name", "description", "organization"], mimetype="application/x-www-form-urlencoded")
 
     if isinstance(response, JsonResponse):
         return response
