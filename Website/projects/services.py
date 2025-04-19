@@ -1,12 +1,14 @@
 import logging
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.db import transaction
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse
 
 from projects.models import Project, ProjectMember
 from accounts.models import User
 from organizations.models import Organization, OrganizationMember
 from .forms import ProjectCreateFormWithMembers
+from main_site.views import organization_dashboard
 
 
 logger = logging.getLogger(__name__)
@@ -43,24 +45,29 @@ def get_project(user: User, project_id: str) -> JsonResponse:
         "updated_at": project.updated_at,
     })
 
-def create_project(user: User, name: str, description: str, organization_id: str) -> JsonResponse:
-    # Check if the user is a member of the organization
-    organization = get_object_or_404(Organization, id=organization_id)
-    get_object_or_404(OrganizationMember, organization=organization, user=user)
+def create_project(user: User, name: str, description: str, organization_id: str) -> JsonResponse | HttpResponse:
+    try:
+        # Check if the user is a member of the organization
+        organization = get_object_or_404(Organization, id=organization_id)
+        get_object_or_404(OrganizationMember, organization=organization, user=user)
 
-    # Create the project
-    project = Project.objects.create(name=name, description=description, organization=organization)
+        # Create the project
+        project = Project.objects.create(name=name, description=description, organization=organization)
 
-    # Add the user as a member of the project
-    ProjectMember.objects.create(user=user, project=project, role="admin")
+        # Add the user as a member of the project
+        ProjectMember.objects.create(user=user, project=project, role="admin")
 
-    return JsonResponse({
-        "id": project.id,
-        "name": project.name,
-        "description": project.description,
-        "created_at": project.created_at,
-        "updated_at": project.updated_at,
-    })
+        check_project = Project.objects.get(name=name, organization=organization)
+
+        if check_project:
+
+            return redirect(reverse('main_site:organization_dashboard', args=[organization_id]))
+
+        else:
+            return JsonResponse({"message": "project does not exist"}, status=400)
+
+    except Exception as e:
+        return JsonResponse({"message": f'an unexpected error occured {e}'}, status=400)
 
 def update_project(project_id: int, name: str, description: str, user: User) -> JsonResponse:
     try:

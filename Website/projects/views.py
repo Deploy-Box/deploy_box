@@ -1,4 +1,4 @@
-from django.http import JsonResponse, FileResponse
+from django.http import HttpResponse, JsonResponse, FileResponse
 
 from core.decorators import oauth_required, AuthHttpRequest
 import projects.handlers as handlers
@@ -7,7 +7,7 @@ import projects.handlers as handlers
 @oauth_required()
 def base_routing(
     request: AuthHttpRequest,
-) -> JsonResponse:
+) -> JsonResponse | HttpResponse:
     if request.method == "GET":
         return handlers.get_projects(request)
 

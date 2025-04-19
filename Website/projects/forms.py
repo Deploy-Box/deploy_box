@@ -14,7 +14,7 @@ class ProjectCreateForm(forms.ModelForm): # type: ignore
         fields = ['name', 'description', 'organization']
 
 class ProjectMemberForm(forms.ModelForm):
-    member = forms.CharField(max_length=100)
+    member = forms.CharField(max_length=100, required=False)
     ROLE_CHOICES = [('Admin', 'admin'), ('Member', 'member'),]
     role = forms.ChoiceField(choices=ROLE_CHOICES)
 
