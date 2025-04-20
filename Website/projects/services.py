@@ -92,7 +92,7 @@ def update_project(project_id: int, name: str, description: str, user: User) -> 
         "updated_at": project.updated_at,
     })
 
-def delete_project(project_id: int, user: User) -> JsonResponse:
+def delete_project(project_id: str, user: User) -> JsonResponse:
     try:
         project = Project.objects.get(id=project_id)
     except Project.DoesNotExist:

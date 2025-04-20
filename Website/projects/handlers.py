@@ -31,3 +31,8 @@ def create_project(request: AuthHttpRequest) -> JsonResponse | HttpResponse:
 
     except Exception as e:
         return JsonResponse({"message": f'An unexpected error occured {e}'}, status=400)
+
+def delete_project(request: AuthHttpRequest, project_id: str) -> JsonResponse:
+    user = request.auth_user
+
+    return services.delete_project(user=user, project_id=project_id)

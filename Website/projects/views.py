@@ -20,12 +20,15 @@ def base_routing(
         )
 
 @oauth_required()
-def get_project(
+def specific_routing(
     request: AuthHttpRequest,
     project_id: str,
 ) -> JsonResponse:
     if request.method == "GET":
         return handlers.get_project(request, project_id)
+
+    elif request.method == "DELETE":
+        return handlers.delete_project(request, project_id)
 
     else:
         return JsonResponse(

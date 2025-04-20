@@ -41,7 +41,6 @@ def organization_dashboard(request: HttpRequest, organization_id: str) -> HttpRe
     members = OrganizationMember.objects.filter(organization=organization)
     projects = Project.objects.filter(organization_id=organization_id)
     is_admin = OrganizationMember.objects.filter(organization=organization, user=user, role='admin').exists()
-    print(is_admin)
     return render(request, "organization_dashboard.html", {'user': user, 'organization': organization, 'members': members, 'is_admin': is_admin, 'projects': projects})
 
 @oauth_required()
