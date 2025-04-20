@@ -26,10 +26,10 @@
                                     <a href="{% url 'main_site:organization_dashboard' organization.id %}" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
                                         Manage Organization
                                     </a>
-                                    <button class="text-emerald-400 hover:text-emerald-500">
+                                    <!-- <button class="text-emerald-400 hover:text-emerald-500">
                                         Edit
-                                    </button>
-                                    <button class="text-red-500 hover:text-red-600">
+                                    </button> -->
+                                    <button id="deleteOrgBtn" class="text-red-500 hover:text-red-600" value="{{organization.id}}">
                                         Delete
                                     </button>
                                 </div>
@@ -69,6 +69,8 @@
         </div>
     </div>
 </div>
+
+<script src="{% static 'dashboard.js' %}"></script>
 
 {% endblock %}
 
