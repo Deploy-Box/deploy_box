@@ -197,12 +197,46 @@ document.getElementById("deleteProjBtn").addEventListener("click", function () {
         if (response.ok) {
           window.location.href = "/dashboard/"; // Redirect to organizations list
         } else {
-          throw new Error("Failed to delete organization");
+          throw new Error("Failed to delete project");
         }
       })
       .catch((error) => {
-        console.error("Error deleting organization:", error);
-        alert("Failed to delete organization. Please try again.");
+        console.error("Error deleting project:", error);
+        alert("Failed to delete project. Please try again.");
       });
   }
+});
+
+// Select all the buttons with the class "memberRole"
+const memberRoleButtons = document.querySelectorAll("#memberRole");
+
+// Iterate over each button and add an event listener
+memberRoleButtons.forEach((button) => {
+  button.addEventListener("click", function () {
+    const memberId = button.getAttribute("user_id");
+    const organizationId = document.getElementById("organizationId").value;
+
+    // Ask for confirmation before making a change
+    if (
+      confirm("Are you sure you would like to update this users permissions?")
+    ) {
+      fetch(`/api/v1/organizations/${organizationId}/update_role/${memberId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      })
+        .then((response) => {
+          if (response.ok) {
+            window.location.href = `/dashboard/organizations/${organizationId}`;
+          } else {
+            throw new Error("Failed to update user");
+          }
+        })
+        .catch((error) => {
+          console.error("Error updating user:", error);
+          alert("Failed to update user");
+        });
+    }
+  });
 });

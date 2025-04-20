@@ -5,6 +5,7 @@ import organizations.services as services
 from core.decorators import AuthHttpRequest
 from core.helpers import assertRequestFields
 from .forms import OrganizationCreateFormWithMembers
+from organizations.models import OrganizationMember, Organization
 
 
 def get_organizations(request: AuthHttpRequest) -> JsonResponse:
@@ -51,3 +52,16 @@ def delete_organization(request: AuthHttpRequest, organization_id: str) -> JsonR
     user = request.auth_user
 
     return services.delete_organization(user, organization_id)
+
+def update_user(request: AuthHttpRequest, organization_id: str, user_id: str) -> JsonResponse:
+    user = request.auth_user
+    organization = Organization.objects.get(id=organization_id)
+    is_admin = OrganizationMember.objects.filter(organization=organization, user=user, role='admin').exists()
+
+    if is_admin:
+        return services.update_user(organization, user_id)
+    else:
+        return JsonResponse({"message": "you must be an org admin to remove members"}, status=400)
+
+
+

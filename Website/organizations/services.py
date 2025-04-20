@@ -103,3 +103,22 @@ def delete_organization(user: User, organization_id: str) -> JsonResponse:
 
     return JsonResponse({"message": "organization deleted"}, status=200)
 
+def update_user(organization: object, user_id: str) -> JsonResponse:
+    try:
+        user = User.objects.get(id=user_id)
+        org_member = OrganizationMember.objects.get(organization=organization, user=user)
+
+        if org_member.role.lower() == "admin":
+            print("user is admin")
+            org_member.role = "member"
+            org_member.save()
+            return JsonResponse({"message": "user permission updated successfully"}, status=200)
+        else:
+            org_member.role = "admin"
+            org_member.save()
+            return JsonResponse({"message": "user permission updated successfully"}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"message": f'an unexpected error occured {e}'}, status=400)
+
+
