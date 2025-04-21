@@ -47,3 +47,13 @@ def update_user(
         return handlers.update_user(request, organization_id, user_id)
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
+
+@oauth_required()
+def add_org_member(
+    request: AuthHttpRequest,
+    organization_id: str,
+) -> JsonResponse:
+    if request.method == "POST":
+        return handlers.add_org_members(request, organization_id)
+    else:
+        return JsonResponse({"message": "method not allowed"}, status=405)

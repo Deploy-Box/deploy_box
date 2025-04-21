@@ -44,6 +44,13 @@ def organization_dashboard(request: HttpRequest, organization_id: str) -> HttpRe
     return render(request, "organization_dashboard.html", {'user': user, 'organization': organization, 'members': members, 'is_admin': is_admin, 'projects': projects})
 
 @oauth_required()
+def add_org_members(request: HttpRequest, organization_id: str) -> HttpResponse:
+    user = request.user
+    organization = Organization.objects.get(id=organization_id)
+    form = OrganizationMemberForm()
+    return render(request, "accounts/invite_org_member.html",{'organization': organization, 'user': user, 'form': form})
+
+@oauth_required()
 def project_dashboard(request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
     user = request.user
     project = Project.objects.get(id=project_id)
