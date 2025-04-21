@@ -103,3 +103,40 @@ def delete_organization(user: User, organization_id: str) -> JsonResponse:
 
     return JsonResponse({"message": "organization deleted"}, status=200)
 
+def update_user(organization: object, user_id: str) -> JsonResponse:
+    try:
+        user = User.objects.get(id=user_id)
+        org_member = OrganizationMember.objects.get(organization=organization, user=user)
+
+        if org_member.role.lower() == "admin":
+            print("user is admin")
+            org_member.role = "member"
+            org_member.save()
+            return JsonResponse({"message": "user permission updated successfully"}, status=200)
+        else:
+            org_member.role = "admin"
+            org_member.save()
+            return JsonResponse({"message": "user permission updated successfully"}, status=200)
+
+    except Exception as e:
+        return JsonResponse({"message": f'an unexpected error occured {e}'}, status=400)
+
+
+def add_org_members(member: str, role: str, organization: object, user: User) -> JsonResponse:
+    permission_check = OrganizationMember.objects.filter(user_id=user, role='admin').exists()
+
+    if permission_check:
+        user_to_add = User.objects.get(username=member)
+
+        if not user_to_add:
+            return JsonResponse({"message": "user could not be found please ensuer username is correct"}, status=404)
+
+        OrganizationMember.objects.create(organization=organization, user=user_to_add, role=role)
+
+        return JsonResponse({"message": "user has been successfully added"}, status=200)
+
+
+    else:
+        return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)
+
+

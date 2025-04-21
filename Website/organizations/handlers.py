@@ -4,7 +4,8 @@ from django.http import JsonResponse
 import organizations.services as services
 from core.decorators import AuthHttpRequest
 from core.helpers import assertRequestFields
-from .forms import OrganizationCreateFormWithMembers
+from .forms import OrganizationCreateFormWithMembers, OrganizationMemberForm
+from organizations.models import OrganizationMember, Organization
 
 
 def get_organizations(request: AuthHttpRequest) -> JsonResponse:
@@ -18,7 +19,6 @@ def get_organization(request: AuthHttpRequest, organization_id: str) -> JsonResp
     return services.get_organization(user, organization_id)
 
 def create_organization(request: AuthHttpRequest) -> JsonResponse:
-
 
     form = OrganizationCreateFormWithMembers(request.POST)
 
@@ -51,3 +51,33 @@ def delete_organization(request: AuthHttpRequest, organization_id: str) -> JsonR
     user = request.auth_user
 
     return services.delete_organization(user, organization_id)
+
+def update_user(request: AuthHttpRequest, organization_id: str, user_id: str) -> JsonResponse:
+    user = request.auth_user
+    organization = Organization.objects.get(id=organization_id)
+    is_admin = OrganizationMember.objects.filter(organization=organization, user=user, role='admin').exists()
+
+    if is_admin:
+        return services.update_user(organization, user_id)
+    else:
+        return JsonResponse({"message": "you must be an org admin to remove members"}, status=400)
+
+def add_org_members(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
+
+        user = request.auth_user
+        organization = Organization.objects.get(id=organization_id)
+
+        response = assertRequestFields(request, ["member", "role"], mimetype='application/x-www-form-urlencoded')
+
+        if isinstance(response, JsonResponse):
+            return response
+
+        member, role = response
+
+        return services.add_org_members(member, role, organization, user)
+
+
+
+
+
+
