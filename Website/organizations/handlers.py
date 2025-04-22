@@ -44,6 +44,7 @@ def create_organization(request: AuthHttpRequest) -> JsonResponse:
 def update_organization(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
     user = request.auth_user
     data = json.loads(request.body)
+    assert(data != None)
 
     return services.update_organization(user, organization_id, data)
 

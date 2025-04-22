@@ -77,7 +77,7 @@ def update_organization(user: User, organization_id: str, data: dict) -> JsonRes
 
     # Check if the user is an admin of the organization
     if not OrganizationMember.objects.filter(user=user, organization=organization, role="admin").exists():
-        return JsonResponse({"error": "You are not authorized to update this organization"}, status=403)
+        return JsonResponse({"error": "You are not authorized to update this organization", "success": False}, status=403)
 
     organization.name = data.get("name", organization.name)
     organization.email = data.get("email", organization.email)
@@ -88,7 +88,8 @@ def update_organization(user: User, organization_id: str, data: dict) -> JsonRes
         "id": organization.id,
         "name": organization.name,
         "email": organization.email,
-    })
+        "success": True,
+    }, status=200)
 
 
 def delete_organization(user: User, organization_id: str) -> JsonResponse:

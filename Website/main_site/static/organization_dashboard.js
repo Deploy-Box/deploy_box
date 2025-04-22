@@ -275,3 +275,33 @@ removeUserButtons.forEach((button) => {
     }
   });
 });
+
+function editName() {
+  // Hide the button and show the input field
+  document.getElementById("editNameBtn").classList.add("hidden");
+  document.getElementById("nameInput").classList.remove("hidden");
+  document.getElementById("saveNameBtn").classList.remove("hidden");
+}
+
+function saveName() {
+  const newName = document.getElementById("nameInput").value;
+  const organizationId = document.getElementById("organizationId").value;
+
+  // Make an AJAX call to save the name in the backend
+  fetch(`/api/v1/organizations/${organizationId}/`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name: newName }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        alert("Name saved successfully");
+        window.location.href = `/dashboard/organizations/${organizationId}/`;
+      } else {
+        alert("Error saving name");
+      }
+    });
+}
