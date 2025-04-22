@@ -115,17 +115,19 @@ def update_user(user: User, organization: object, user_id: str) -> JsonResponse:
         return JsonResponse({"message": "in order to downgrade your own permissions there must be more than one admin"}, status=400)
 
     try:
-        user = User.objects.get(id=user_id)
-        org_member = OrganizationMember.objects.get(organization=organization, user=user)
+        org_user = User.objects.get(id=user_id)
+        org_member = OrganizationMember.objects.get(organization=organization, user=org_user)
 
         if org_member.role.lower() == "admin":
             print("user is admin")
             org_member.role = "member"
             org_member.save()
+            invite_org_member.send_user_permission_update_emaill(user=org_user, organization=organization)
             return JsonResponse({"message": "user permission updated successfully"}, status=200)
         else:
             org_member.role = "admin"
             org_member.save()
+            invite_org_member.send_user_permission_update_emaill(user=org_user, organization=organization)
             return JsonResponse({"message": "user permission updated successfully"}, status=200)
 
     except Exception as e:
