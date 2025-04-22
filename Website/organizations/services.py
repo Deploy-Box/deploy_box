@@ -104,7 +104,16 @@ def delete_organization(user: User, organization_id: str) -> JsonResponse:
 
     return JsonResponse({"message": "organization deleted"}, status=200)
 
-def update_user(organization: object, user_id: str) -> JsonResponse:
+def update_user(user: User, organization: object, user_id: str) -> JsonResponse:
+    permission_check = OrganizationMember.objects.filter(user=user, organization=organization, role="admin").exists()
+    multiple_admin_check = OrganizationMember.objects.filter(organization=organization, role="admin")
+
+    if not permission_check:
+        return JsonResponse({"message": "you must be an admin of this org to update permissions"}, status=400)
+
+    if len(multiple_admin_check) <= 1 and user.id == int(user_id):
+        return JsonResponse({"message": "in order to downgrade your own permissions there must be more than one admin"}, status=400)
+
     try:
         user = User.objects.get(id=user_id)
         org_member = OrganizationMember.objects.get(organization=organization, user=user)
@@ -124,7 +133,7 @@ def update_user(organization: object, user_id: str) -> JsonResponse:
 
 
 def add_org_members(member: str, role: str, organization: object, user: User) -> JsonResponse:
-    permission_check = OrganizationMember.objects.filter(user_id=user, role='admin').exists()
+    permission_check = OrganizationMember.objects.filter(user_id=user, organization=organization, role='admin').exists()
 
     if permission_check:
         user_to_add = User.objects.get(username=member)
@@ -152,8 +161,8 @@ def remove_org_member(user: User, organization_id: str, user_id: str) -> JsonRes
     if permission_check:
         user_to_remove = OrganizationMember.objects.filter(id=user_id, organization_id=organization_id).first()
         organization = Organization.objects.get(id=organization_id)
-        print(user_to_remove.user_id)
-        user_to_email = User.objects.get(id=user_to_remove.user_id)
+        print(user_to_remove.user_id) # type: ignore
+        user_to_email = User.objects.get(id=user_to_remove.user_id) # type: ignore
 
         invite_org_member.send_user_removed_email(user_to_email, organization)
 

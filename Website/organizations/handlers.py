@@ -58,7 +58,7 @@ def update_user(request: AuthHttpRequest, organization_id: str, user_id: str) ->
     is_admin = OrganizationMember.objects.filter(organization=organization, user=user, role='admin').exists()
 
     if is_admin:
-        return services.update_user(organization, user_id)
+        return services.update_user(user, organization, user_id)
     else:
         return JsonResponse({"message": "you must be an org admin to remove members"}, status=400)
 
