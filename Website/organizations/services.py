@@ -111,7 +111,7 @@ def update_user(user: User, organization: object, user_id: str) -> JsonResponse:
     if not permission_check:
         return JsonResponse({"message": "you must be an admin of this org to update permissions"}, status=400)
 
-    if len(multiple_admin_check) <= 1 and user.id == int(user_id):
+    if len(multiple_admin_check) <= 1 and user.id == int(user_id): # type: ignore
         return JsonResponse({"message": "in order to downgrade your own permissions there must be more than one admin"}, status=400)
 
     try:
