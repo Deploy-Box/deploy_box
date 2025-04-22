@@ -179,8 +179,9 @@ GCP = {
 }
 
 GITHUB = {
-    "CLIENT_ID": os.environ.get("GITHUB_CLIENT_ID"),
-    "CLIENT_SECRET": os.environ.get("GITHUB_CLIENT_SECRET"),
+    "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
+    "CLIENT_SECRET": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_SECRET"),
+    "TOKEN_KEY": os.environ.get("DEPLOY_BOX_GITHUB_TOKEN_KEY"),
 }
 
 # Templates Configuration
