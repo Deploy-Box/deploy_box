@@ -1,11 +1,11 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
 from cryptography.fernet import Fernet
 from stacks.models import Stack
 from core.fields import ShortUUIDField
-import os
 
-ENCRYPTION_KEY = os.getenv("GITHUB_TOKEN_KEY")
+ENCRYPTION_KEY = settings.GITHUB["TOKEN_KEY"]
 
 if not ENCRYPTION_KEY:
     raise ValueError("GITHUB_TOKEN_KEY is not set")

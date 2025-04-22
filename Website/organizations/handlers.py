@@ -44,6 +44,7 @@ def create_organization(request: AuthHttpRequest) -> JsonResponse:
 def update_organization(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
     user = request.auth_user
     data = json.loads(request.body)
+    assert(data != None)
 
     return services.update_organization(user, organization_id, data)
 
@@ -58,7 +59,7 @@ def update_user(request: AuthHttpRequest, organization_id: str, user_id: str) ->
     is_admin = OrganizationMember.objects.filter(organization=organization, user=user, role='admin').exists()
 
     if is_admin:
-        return services.update_user(organization, user_id)
+        return services.update_user(user, organization, user_id)
     else:
         return JsonResponse({"message": "you must be an org admin to remove members"}, status=400)
 
@@ -75,6 +76,12 @@ def add_org_members(request: AuthHttpRequest, organization_id: str) -> JsonRespo
         member, role = response
 
         return services.add_org_members(member, role, organization, user)
+
+def remove_org_member(request: AuthHttpRequest, organization_id: str, user_id: str) -> JsonResponse:
+
+    user = request.auth_user
+
+    return services.remove_org_member(user, organization_id, user_id)
 
 
 

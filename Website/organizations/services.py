@@ -7,6 +7,7 @@ from projects.services import create_project
 from accounts.models import User
 from organizations.models import Organization, OrganizationMember
 from payments.views import create_stripe_user
+from .helpers.email_helpers import invite_org_member
 
 logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ def update_organization(user: User, organization_id: str, data: dict) -> JsonRes
 
     # Check if the user is an admin of the organization
     if not OrganizationMember.objects.filter(user=user, organization=organization, role="admin").exists():
-        return JsonResponse({"error": "You are not authorized to update this organization"}, status=403)
+        return JsonResponse({"error": "You are not authorized to update this organization", "success": False}, status=403)
 
     organization.name = data.get("name", organization.name)
     organization.email = data.get("email", organization.email)
@@ -87,7 +88,8 @@ def update_organization(user: User, organization_id: str, data: dict) -> JsonRes
         "id": organization.id,
         "name": organization.name,
         "email": organization.email,
-    })
+        "success": True,
+    }, status=200)
 
 
 def delete_organization(user: User, organization_id: str) -> JsonResponse:
@@ -103,19 +105,30 @@ def delete_organization(user: User, organization_id: str) -> JsonResponse:
 
     return JsonResponse({"message": "organization deleted"}, status=200)
 
-def update_user(organization: object, user_id: str) -> JsonResponse:
+def update_user(user: User, organization: object, user_id: str) -> JsonResponse:
+    permission_check = OrganizationMember.objects.filter(user=user, organization=organization, role="admin").exists()
+    multiple_admin_check = OrganizationMember.objects.filter(organization=organization, role="admin")
+
+    if not permission_check:
+        return JsonResponse({"message": "you must be an admin of this org to update permissions"}, status=400)
+
+    if len(multiple_admin_check) <= 1 and user.id == int(user_id): # type: ignore
+        return JsonResponse({"message": "in order to downgrade your own permissions there must be more than one admin"}, status=400)
+
     try:
-        user = User.objects.get(id=user_id)
-        org_member = OrganizationMember.objects.get(organization=organization, user=user)
+        org_user = User.objects.get(id=user_id)
+        org_member = OrganizationMember.objects.get(organization=organization, user=org_user)
 
         if org_member.role.lower() == "admin":
             print("user is admin")
             org_member.role = "member"
             org_member.save()
+            invite_org_member.send_user_permission_update_emaill(user=org_user, organization=organization)
             return JsonResponse({"message": "user permission updated successfully"}, status=200)
         else:
             org_member.role = "admin"
             org_member.save()
+            invite_org_member.send_user_permission_update_emaill(user=org_user, organization=organization)
             return JsonResponse({"message": "user permission updated successfully"}, status=200)
 
     except Exception as e:
@@ -123,7 +136,7 @@ def update_user(organization: object, user_id: str) -> JsonResponse:
 
 
 def add_org_members(member: str, role: str, organization: object, user: User) -> JsonResponse:
-    permission_check = OrganizationMember.objects.filter(user_id=user, role='admin').exists()
+    permission_check = OrganizationMember.objects.filter(user_id=user, organization=organization, role='admin').exists()
 
     if permission_check:
         user_to_add = User.objects.get(username=member)
@@ -131,10 +144,38 @@ def add_org_members(member: str, role: str, organization: object, user: User) ->
         if not user_to_add:
             return JsonResponse({"message": "user could not be found please ensuer username is correct"}, status=404)
 
+        member_check = OrganizationMember.objects.filter(organization=organization, user=user_to_add)
+
+        if member_check:
+            return JsonResponse({"message": "this user is already a member of this organization"}, status=200)
+
         OrganizationMember.objects.create(organization=organization, user=user_to_add, role=role)
+
+        invite_org_member.send_invite_email(user_to_add, organization)
 
         return JsonResponse({"message": "user has been successfully added"}, status=200)
 
+    else:
+        return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)
+
+def remove_org_member(user: User, organization_id: str, user_id: str) -> JsonResponse:
+    permission_check = OrganizationMember.objects.filter(user_id=user, role='admin').exists()
+
+    if permission_check:
+        user_to_remove = OrganizationMember.objects.filter(id=user_id, organization_id=organization_id).first()
+        organization = Organization.objects.get(id=organization_id)
+        print(user_to_remove.user_id) # type: ignore
+        user_to_email = User.objects.get(id=user_to_remove.user_id) # type: ignore
+
+        invite_org_member.send_user_removed_email(user_to_email, organization)
+
+        if not user_to_remove:
+            return JsonResponse({"message", "user could not be found"}, status=404)
+
+
+        user_to_remove.delete()
+
+        return JsonResponse({"message": "user has been removed from organization"}, status=200)
 
     else:
         return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)
