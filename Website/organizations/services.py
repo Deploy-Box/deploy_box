@@ -7,6 +7,7 @@ from projects.services import create_project
 from accounts.models import User
 from organizations.models import Organization, OrganizationMember
 from payments.views import create_stripe_user
+from .helpers.email_helpers import invite_org_member
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +132,14 @@ def add_org_members(member: str, role: str, organization: object, user: User) ->
         if not user_to_add:
             return JsonResponse({"message": "user could not be found please ensuer username is correct"}, status=404)
 
+        member_check = OrganizationMember.objects.get(organization=organization, user=user_to_add)
+
+        if member_check:
+            return JsonResponse({"message": "this user is already a member of this organization"}, status=200)
+
         OrganizationMember.objects.create(organization=organization, user=user_to_add, role=role)
+
+        invite_org_member.send_invite_email(user_to_add, organization)
 
         return JsonResponse({"message": "user has been successfully added"}, status=200)
 
