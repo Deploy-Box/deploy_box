@@ -96,7 +96,7 @@
                 <button id="memberRole" class="text-emerald-400 hover:text-emerald-500" value="{{member.role.lower}}" user_id="{{member.user.id}}">
                   {% if member.role.lower == 'member' %}Make Admin{% else %}Make Member{% endif %}
                 </button>
-                <button class="text-red-500 hover:text-red-600">Delete</button>
+                  <button id="removeUserBtn" class="text-red-500 hover:text-red-600" value="{{member.id}}">Delete</button>
               </div>
             </div>
           </div>

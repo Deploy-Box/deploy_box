@@ -76,6 +76,12 @@ def add_org_members(request: AuthHttpRequest, organization_id: str) -> JsonRespo
 
         return services.add_org_members(member, role, organization, user)
 
+def remove_org_member(request: AuthHttpRequest, organization_id: str, user_id: str) -> JsonResponse:
+
+    user = request.auth_user
+
+    return services.remove_org_member(user, organization_id, user_id)
+
 
 
 

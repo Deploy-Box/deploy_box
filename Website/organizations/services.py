@@ -135,6 +135,22 @@ def add_org_members(member: str, role: str, organization: object, user: User) ->
 
         return JsonResponse({"message": "user has been successfully added"}, status=200)
 
+    else:
+        return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)
+
+def remove_org_member(user: User, organization_id: str, user_id: str) -> JsonResponse:
+    permission_check = OrganizationMember.objects.filter(user_id=user, role='admin').exists()
+
+    if permission_check:
+        user_to_remove = OrganizationMember.objects.filter(id=user_id, organization_id=organization_id).first()
+
+        if not user_to_remove:
+            return JsonResponse({"message", "user could not be found"}, status=404)
+
+
+        user_to_remove.delete()
+
+        return JsonResponse({"message": "user has been removed from organization"}, status=200)
 
     else:
         return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)

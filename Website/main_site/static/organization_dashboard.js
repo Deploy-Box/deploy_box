@@ -240,3 +240,38 @@ memberRoleButtons.forEach((button) => {
     }
   });
 });
+
+// Select all the buttons with the class "memberRole"
+const removeUserButtons = document.querySelectorAll("#removeUserBtn");
+
+// Iterate over each button and add an event listener
+removeUserButtons.forEach((button) => {
+  button.addEventListener("click", function () {
+    const memberId = button.getAttribute("value");
+    const organizationId = document.getElementById("organizationId").value;
+
+    // Ask for confirmation before making a change
+    if (confirm("Are you sure you would like to remove this user?")) {
+      fetch(
+        `/api/v1/organizations/${organizationId}/remove_org_member/${memberId}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      )
+        .then((response) => {
+          if (response.ok) {
+            window.location.href = `/dashboard/organizations/${organizationId}`;
+          } else {
+            throw new Error("Failed to remove user");
+          }
+        })
+        .catch((error) => {
+          console.error("Error removing user:", error);
+          alert("Failed to remove user");
+        });
+    }
+  });
+});
