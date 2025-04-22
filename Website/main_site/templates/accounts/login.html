@@ -7,7 +7,6 @@
         <h1 class="font-bold text-center text-2xl mb-5">Deploy Box</h1>
         <div class="bg-white ring-2 ring-gray-200 shadow-2xl shado-gray-400 w-full rounded-lg divide-y divide-gray-200">
             <form action="{% url 'accounts:login' %}" method="POST" class="px-5 py-7">
-                {% csrf_token %}
                 <input type="hidden" name="next" value="{{ next }}" />
 
                 <div class="mb-5">

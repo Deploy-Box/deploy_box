@@ -1,7 +1,6 @@
 <li>
     <a href="{{ repo_url }}">{{ repo_name }}</a>
     <form action="{% url 'github:create_webhook' %}" method="post" style="display:inline;">
-        {% csrf_token %}
         <select name="stack-id" required>
             {% for stack in stacks %}
                 <option value="{{ stack.id }}">{{ stack.id }}</option>
