@@ -9,6 +9,7 @@ import google.auth.transport.requests
 
 
 class GCPUtils:
+    # Docs: https://cloud.google.com/python/docs/reference/
     _instance = None
 
     def __new__(cls):
@@ -54,8 +55,6 @@ class GCPUtils:
         self.__cloud_platform_creds.refresh(auth_req)
         self.__token = self.__cloud_platform_creds.token
 
-        print(self.__token)
-
     def __request_helper(self, url, method="GET", data=None):
         # Use the token in your request
         if not self.__token:
@@ -67,7 +66,9 @@ class GCPUtils:
         }
 
         if method == "GET":
-            return requests.get(url, headers=headers).json()
+            response = requests.get(url, headers=headers)
+            print(response.status_code)
+            return response.json()
         elif method == "POST":
             return requests.post(url, headers=headers, json=data).json()
         elif method == "PUT":
@@ -275,15 +276,19 @@ class GCPUtils:
 
         print(json.dumps(cleaned_logs, indent=4))
         return {"status": "success", "data": cleaned_logs}
+    
+    def get_env_vars(self, service_name: str):
+        # Print list of all services
+        url = f"https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services"
+        response = self.__request_helper(url)
+        # print(response)
+
+        url = f"https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services/{service_name}"
+        response = self.__request_helper(url)
+        return response.get("template", {}).get("containers", [])[0].get("env", [])
 
 
 if __name__ == "__main__":
     gcp_wrapper = GCPUtils()
 
-    gcp_wrapper.post_build_and_deploy(
-        stack_id="5",
-        github_repo="Deploy-Box/deploy_box",
-        github_token=settings.GITHUB_TOKEN,
-        layer="website",
-        port=8000
-    )
+    print(gcp_wrapper.get_env_vars("website-1"))
