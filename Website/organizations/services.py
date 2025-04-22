@@ -132,7 +132,7 @@ def add_org_members(member: str, role: str, organization: object, user: User) ->
         if not user_to_add:
             return JsonResponse({"message": "user could not be found please ensuer username is correct"}, status=404)
 
-        member_check = OrganizationMember.objects.get(organization=organization, user=user_to_add)
+        member_check = OrganizationMember.objects.filter(organization=organization, user=user_to_add)
 
         if member_check:
             return JsonResponse({"message": "this user is already a member of this organization"}, status=200)
@@ -151,6 +151,11 @@ def remove_org_member(user: User, organization_id: str, user_id: str) -> JsonRes
 
     if permission_check:
         user_to_remove = OrganizationMember.objects.filter(id=user_id, organization_id=organization_id).first()
+        organization = Organization.objects.get(id=organization_id)
+        print(user_to_remove.user_id)
+        user_to_email = User.objects.get(id=user_to_remove.user_id)
+
+        invite_org_member.send_user_removed_email(user_to_email, organization)
 
         if not user_to_remove:
             return JsonResponse({"message", "user could not be found"}, status=404)
