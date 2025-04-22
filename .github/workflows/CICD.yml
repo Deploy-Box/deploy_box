@@ -31,6 +31,7 @@ jobs:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DEPLOY_BOX_GITHUB_TOKEN: ${{ secrets.DEPLOY_BOX_GITHUB_TOKEN }}
         run: |
           source venv/bin/activate
           python Website/manage.py makemigrations
