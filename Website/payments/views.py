@@ -1,10 +1,11 @@
 import json
 import time
 import stripe
+import random
+
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
-import stripe.error
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.services as stack_services
@@ -176,8 +177,46 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
             PurchasableStack, id=purchasable_stack_id
         )
 
+        list_of_adjectives = [
+            "Superb",
+            "Incredible",
+            "Fantastic",
+            "Amazing",
+            "Awesome",
+            "Brilliant",
+            "Exceptional",
+            "Outstanding",
+            "Remarkable",
+            "Extraordinary",
+            "Magnificent",
+            "Spectacular",
+            "Stunning",
+            "Impressive",
+        ]
+
+        list_of_nouns = [
+            "Stack",
+            "Project",
+            "Application",
+            "Service",
+            "Solution",
+            "Platform",
+            "System",
+            "Framework",
+            "Architecture",
+            "Design",
+            "Model",
+            "Structure",
+            "Configuration",
+        ]
+        
+        # Generate a random name for the stack
+        random_adjective = random.choice(list_of_adjectives)
+        random_noun = random.choice(list_of_nouns)
+        random_name = f"{random_adjective} {random_noun}"
+
         # Create a stack entry for the user
-        return stack_services.add_stack(project, purchased_stack, purchased_stack.version)
+        return stack_services.add_stack(project, purchased_stack, random_name)
 
     return HttpResponse(status=200)
 

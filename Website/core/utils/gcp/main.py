@@ -54,8 +54,6 @@ class GCPUtils:
         self.__cloud_platform_creds.refresh(auth_req)
         self.__token = self.__cloud_platform_creds.token
 
-        print(self.__token)
-
     def __request_helper(self, url, method="GET", data=None) -> dict | None:
         # Use the token in your request
         if not self.__token:
@@ -71,7 +69,12 @@ class GCPUtils:
         elif method == "POST":
             return requests.post(url, headers=headers, json=data).json()
         elif method == "PUT":
-            return requests.put(url, headers=headers, json=data).json()
+            response = requests.get(url, headers=headers)
+            if response.status_code == 404:
+                print("Service not found")
+                return None
+            print(response.status_code)
+            return response.json()
         elif method == "DELETE":
             return requests.delete(url, headers=headers).json()
 
@@ -97,7 +100,9 @@ class GCPUtils:
         )
         return self.__request_helper(SERVICE_URL)
 
-    def post_build_and_deploy(self, stack_id, github_repo, github_token, layer: str, port: int = 8080):
+    def post_build_and_deploy(
+        self, stack_id, github_repo, github_token, layer: str, port: int = 8080
+    ):
         try:
             # Replace with your project ID
             project_id = "deploy-box"
@@ -211,11 +216,20 @@ class GCPUtils:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-    def deploy_service(self, stack_id: str, image_name: str, layer: str, env_vars: dict | None = None, **kwargs) -> str:
+    def deploy_service(
+        self,
+        stack_id: str,
+        image_name: str,
+        layer: str,
+        env_vars: dict | None = None,
+        **kwargs,
+    ) -> str:
         service_name = f"{layer.lower()}-{stack_id.lower()}"
 
         port = kwargs.get("port", 8080) if kwargs else 8080
-        env_vars_str = ','.join([f'{k}="{v}"' for k, v in env_vars.items()]) if env_vars else ''
+        env_vars_str = (
+            ",".join([f'{k}="{v}"' for k, v in env_vars.items()]) if env_vars else ""
+        )
         print(env_vars_str)
 
         try:
@@ -324,6 +338,112 @@ class GCPUtils:
         except Exception as e:
             print(f"An error occurred: {e}")
 
+
+    def redeploy_service(
+        self,
+        service_name: str,
+        image_name: str,
+        env_vars: dict | None = None,
+        **kwargs,
+    ) -> str:
+        port = kwargs.get("port", 8080) if kwargs else 8080
+        env_vars_str = (
+            ",".join([f'{k}="{v}"' for k, v in env_vars.items()]) if env_vars else ""
+        )
+        print(env_vars_str)
+
+        try:
+            # Replace with your project ID
+            project_id = "deploy-box"
+
+            # Define the Cloud Build steps
+            build_steps = [
+                {
+                    "name": "gcr.io/google.com/cloudsdktool/cloud-sdk",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        f"""
+                        gcloud run deploy {service_name} \
+                            --image={image_name} \
+                            --region=us-central1 \
+                            --platform=managed \
+                            --allow-unauthenticated \
+                            --port={port} \
+                            --set-env-vars={env_vars_str}
+                            """,
+                    ],
+                }
+            ]
+
+            # Define the build configuration
+            build_config = {"steps": build_steps, "timeout": "600s"}
+
+            # API endpoint for creating a build
+            api_url = (
+                f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds"
+            )
+
+            # Submit the build
+            print("Submitting build...")
+            response = self.__request_helper(api_url, method="POST", data=build_config)
+
+            if response is None:
+                print(f"Error creating build: {response}")
+                raise Exception("Error creating build")
+
+            response.get("metadata", {})
+            metadata = response.get("metadata", {})
+            build = metadata.get("build", {})
+            build_id = build.get("id", None)
+
+            if not build_id:
+                print(f"Error creating build: {response}")
+                raise Exception("Error creating build")
+
+            print(f"Build submitted with ID: {build_id}")
+
+            # Poll for build status
+            print("Waiting for build to complete...")
+            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds/{build_id}"
+
+            status = "UNKNOWN"
+            while True:
+                build_status = self.__request_helper(build_status_url)
+                if build_status is None:
+                    print("Error getting build status")
+                    break
+
+                status = build_status.get("status", "UNKNOWN")
+                print(f"Build status: {status}")
+
+                if status in [
+                    "SUCCESS",
+                    "FAILURE",
+                    "INTERNAL_ERROR",
+                    "TIMEOUT",
+                    "CANCELLED",
+                    "EXPIRED",
+                ]:
+                    break
+
+                time.sleep(10)  # Wait 10 seconds before checking again
+
+            if status == "SUCCESS":
+                print(f"Build completed successfully: {build_id}")
+                print(
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                )
+                return self.get_service_endpoint(service_name)
+            else:
+                print(f"Build failed with status: {status}")
+                print(
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                )
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
     def get_all_services(self) -> dict:
         url = "https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services"
         response = self.__request_helper(url)
@@ -351,8 +471,10 @@ class GCPUtils:
 
         if response is None:
             raise Exception("Service not found")
+        
+        print(json.dumps(response, indent=4))
 
-        service = response.get("uri", "")
+        service = response.get("urls", [""])[0]
 
         if not service:
             raise Exception("Service not found")
@@ -423,11 +545,47 @@ class GCPUtils:
         print(json.dumps(cleaned_logs, indent=4))
         return {"status": "success", "data": cleaned_logs}
 
+    def get_service_envs(self, service_name: str) -> dict:
+        url = f"https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services/{service_name}"
+        response = self.__request_helper(url)
+
+        print(json.dumps(response, indent=4))
+
+        template = response.get("template", {})
+        containers = template.get("containers", [{}])[0]
+        env_vars_list = containers.get("env", [])
+
+        env_vars = {}
+        for env_var in env_vars_list:
+            env_vars[env_var.get("name")] = env_var.get("value")
+
+        return env_vars
+
+    def put_service_envs(self, service_name: str, env_vars: dict) -> dict:
+        # Get the existing service definition
+        service_url = f"https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services/{service_name}"
+        service = self.__request_helper(service_url, method="GET")
+
+        if not service:
+            raise Exception(f"Could not fetch service: {service_name}")
+
+        # Merge new env vars with existing ones
+        container = service["template"]["containers"][0]
+        existing_envs = {env["name"]: env["value"] for env in container.get("env", [])}
+        merged_envs = {**existing_envs, **env_vars}
+
+        self.redeploy_service(
+            service_name,
+            service["template"]["containers"][0]["image"],
+            env_vars=merged_envs,
+        )
+
 
 if __name__ == "__main__":
     gcp_wrapper = GCPUtils()
 
-    print(gcp_wrapper.get_service_endpoint("backend-9a77369a03984b9a"))
+    print(gcp_wrapper.get_service_endpoint("backend-e1d72d93b09944e5"))
+    # print(gcp_wrapper.put_service_envs("backend-9a77369a03984b9a", {"TEST": "TEST"}))
 
     # backend_image = "gcr.io/deploy-box/mern-backend"
     # backend_url = gcp_wrapper.deploy_service(
@@ -437,5 +595,3 @@ if __name__ == "__main__":
     #         {"MONGO_URI": "mongodb+srv://deployBoxUser-e9c9afbc1c0942c8:f45bdc78db0a@cluster0.yjaoi.mongodb.net/db-e9c9afbc1c0942c8?retryWrites=true&w=majority&appName=Cluster0"},
     #         port=5001
     #     )
-
-

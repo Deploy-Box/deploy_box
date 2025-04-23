@@ -1,4 +1,5 @@
 import logging
+import secrets
 from django.http import JsonResponse
 from django.db import transaction
 
@@ -27,8 +28,11 @@ def add_stack(
 
             if purchasable_stack.type == "MERN":
                 return deploy_MERN_stack(stack)
+            elif purchasable_stack.type == "Django":
+                return deploy_django_stack(stack)
             else:
                 return JsonResponse({"error": "Stack type not supported."}, status=400)
+            
     except Exception as e:
         logger.error(f"Failed to create and deploy stack: {str(e)}")
         return JsonResponse(
@@ -109,6 +113,45 @@ def deploy_MERN_stack(stack: Stack) -> JsonResponse:
         },
         status=201,
     )
+
+def deploy_django_stack(stack: Stack):
+    gcp_utils = GCPUtils()
+
+    stack_id = stack.id
+
+    django_secret_key = secrets.token_urlsafe(50)
+
+    backend_image = "gcr.io/deploy-box/django"
+    print(f"Deploying backend with image: {backend_image}")
+    frontend_url = gcp_utils.deploy_service(
+        stack_id,
+        backend_image,
+        "backend",
+        {"DJANGO_SECRET_KEY": django_secret_key},
+        port=8080
+    )
+
+    gcp_utils.put_service_envs(f"backend-{stack_id}", {"DJANGO_ALLOWED_HOSTS": frontend_url.split("//")[-1]})
+
+    stack_frontend = StackFrontend.objects.create(
+        stack=stack,
+        url=frontend_url,
+        image_url=backend_image,
+    )
+
+    stack_frontend.save()
+
+    return JsonResponse(
+        {
+            "message": "Django stack deployed successfully.",
+            "data": {
+                "stack_id": stack_id,
+                "frontend_url": frontend_url,
+            },
+        },
+        status=201,
+    )
+
 
 
 def post_purchasable_stack(
