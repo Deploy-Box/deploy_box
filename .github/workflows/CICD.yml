@@ -53,7 +53,7 @@ jobs:
         run: |
           echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > gcp-key.json
           gcloud auth activate-service-account --key-file=gcp-key.json
-          gcloud auth configure-docker
+          gcloud auth configure-docker us-central1-docker.pkg.dev
           docker push us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1
 
       - name: Deploy to Google App Engine
