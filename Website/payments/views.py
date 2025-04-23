@@ -11,7 +11,6 @@ import stacks.services as stack_services
 from stacks.models import PurchasableStack, StackDatabase
 from organizations.models import Organization
 from organizations.services import get_organization
-# from payments.services import pricing_services
 from accounts.models import UserProfile
 from core.helpers import request_helpers
 from projects.models import Project
