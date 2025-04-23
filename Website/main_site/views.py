@@ -5,7 +5,7 @@ from accounts.forms import CustomUserCreationForm
 from organizations.models import Organization, OrganizationMember
 from projects.models import Project
 from stacks.models import Stack
-from organizations.forms import OrganizationCreateFormWithMembers, OrganizationMemberForm
+from organizations.forms import OrganizationCreateFormWithMembers, OrganizationMemberForm, NonexistantOrganizationMemberForm
 from organizations.services import get_organizations
 from projects.forms import ProjectCreateFormWithMembers
 
@@ -50,6 +50,12 @@ def add_org_members(request: HttpRequest, organization_id: str) -> HttpResponse:
     organization = Organization.objects.get(id=organization_id)
     form = OrganizationMemberForm()
     return render(request, "accounts/invite_org_member.html",{'organization': organization, 'user': user, 'form': form})
+
+def add_nonexistant_org_members(request: HttpRequest, organization_id: str) -> HttpResponse:
+    user = request.user
+    organization = Organization.objects.get(id=organization_id)
+    form = NonexistantOrganizationMemberForm()
+    return render(request, "accounts/invite_nonexistant_org_member.html",{'organization': organization, 'user': user, 'form': form})
 
 @oauth_required()
 def project_dashboard(request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:

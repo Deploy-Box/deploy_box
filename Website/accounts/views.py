@@ -14,7 +14,7 @@ from django.http import (
 )
 
 from accounts.forms import CustomUserCreationForm, OrganizationSignUpForm
-from organizations.models import PendingInvites
+from organizations.models import PendingInvites, OrganizationMember, Organization
 
 # Authentication
 def signup(request: HttpRequest):
@@ -26,17 +26,21 @@ def signup(request: HttpRequest):
         if user_form.is_valid() and org_form.is_valid():
 
             email = user_form.cleaned_data["email"]
-            invites = PendingInvites.objects.filter(email=email)
+            invites = PendingInvites.objects.filter(email__iexact=email)
+
+            user = user_form.save()
+            organization = org_form.save(user=user)
 
             if invites.exists():  # Better to use `.exists()` to avoid loading all records into memory
                 for invite in invites:
+                    org_id = invite.organization_id # type: ignore
+                    org_to_add = Organization.objects.get(id=org_id)
+                    organization_member = OrganizationMember.objects.create(user=user, organization=org_to_add, role="member")
+                    print(organization_member)
                     invite.delete()
             else:
                 # Optional: handle the case where no invites are found (if needed)
                 pass
-
-            user = user_form.save()
-            organization = org_form.save(user=user)
 
             print(f"Created user {user} and organization {organization}")
 

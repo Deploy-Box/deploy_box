@@ -30,6 +30,7 @@ urlpatterns = [
         name="stack_dashboard",
     ),
     path("dashboard/organizations/<str:organization_id>/add_org_member", views.add_org_members, name="add_org_members"),
+    path("dashboard/organizations/<str:organization_id>/add_nonexistant_org_member", views.add_nonexistant_org_members, name="add_nonexistant_org_members"),
     # Authentication
     path(
         "login/",

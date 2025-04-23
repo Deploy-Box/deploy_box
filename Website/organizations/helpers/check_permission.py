@@ -19,7 +19,7 @@ def check_permisssion(user: User, organization_id, requeired_role: str | None) -
         return organization
     elif requeired_role.lower() == "admin":
         organization_member = get_object_or_404(OrganizationMember, user=user, organization_id=organization_id, role="admin")
-        return Organization.objects.get(organization_member=organization_member)
+        return Organization.objects.get(organizationmember=organization_member)
 
     raise OrganizationPermissionsError("You don't have permission to access this organization.", status=403)
 

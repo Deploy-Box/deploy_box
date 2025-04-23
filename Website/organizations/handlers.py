@@ -2,18 +2,16 @@ import json
 from django.http import JsonResponse
 
 import organizations.services as services
-from core.decorators import AuthHttpRequest, oauth_required
+from core.decorators import AuthHttpRequest
 from core.helpers import request_helpers
 from organizations.forms import OrganizationCreateFormWithMembers
 from organizations.models import OrganizationMember, Organization
 from organizations.helpers import check_permission
 
 
-@oauth_required()
 def get_organizations(request: AuthHttpRequest) -> JsonResponse:
-    auth_user = request.auth_user
-
-    organizations = services.get_organizations(auth_user)
+    user = request.auth_user
+    organizations = services.get_organizations(user)
 
     if not organizations:
         return JsonResponse({"message": "organizations not found"}, status=404)
@@ -90,7 +88,7 @@ def invite_new_user_to_org(request: AuthHttpRequest, organization_id: str) -> Js
     user = request.auth_user
 
     try:
-        email, = request_helpers.assertRequestFields(request, ["email"])
+        email, = request_helpers.assertRequestFields(request, ["email"], mimetype='application/x-www-form-urlencoded')
     except request_helpers.MissingFieldError as e:
         return JsonResponse({"message": e.message}, status=400)
 

@@ -72,12 +72,20 @@
           <h2 class="text-xl font-bold text-emerald-400">
             Organization Members
           </h2>
+          <a href="{% url 'main_site:add_nonexistant_org_members' organization_id=organization.id %}">
+            <button
+              id="inviteNewMemberBtn"
+              class="bg-emerald-400 hover:bg-emerald-500 px-4 py-2 text-sm text-white uppercase rounded font-bold transition duration-150"
+            >
+              Invite New Member
+            </button>
+          </a>
           <a href="{% url 'main_site:add_org_members' organization_id=organization.id %}">
             <button
               id="inviteMemberBtn"
               class="bg-emerald-400 hover:bg-emerald-500 px-4 py-2 text-sm text-white uppercase rounded font-bold transition duration-150"
             >
-              Invite Member
+              Invite Existing User
             </button>
           </a>
         </div>
