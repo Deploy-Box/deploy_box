@@ -56,6 +56,11 @@ jobs:
           gcloud auth configure-docker us-central1-docker.pkg.dev
           docker push us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1
 
-      - name: Deploy to Google App Engine
+      - name: Redeploy to Google Cloud Run
         run: |
-          gcloud app deploy
+          gcloud config set project deploy-box-prod
+          gcloud run deploy website-1 \
+            --image us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1 \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated
