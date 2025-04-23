@@ -31,7 +31,7 @@ def send_user_permission_update_emaill(user, organization):
 def send_invite_new_user_to_org(user: User, organization: Organization, email: str):
     subject = f'You have been invited to join {organization.name} on deploy box'
     message = f"""Hello, you have been invited to create an account and join {user.username}'s organization {organization.name} please use
-    the following link to sign up: http://localhost:8000/accounts/signup"""
+    the following link to sign up: {settings.HOST}/signup"""
     from_email = settings.EMAIL_HOST_USER
     recipient_list = [email]
 

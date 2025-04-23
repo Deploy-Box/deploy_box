@@ -34,7 +34,7 @@ def get_organization(user: User, organization_id: str) -> Organization | None:
 
 
 def create_organization(user: AuthUser, name: str, email: str) -> Organization | dict:
-    from payments.views import create_stripe_user
+    from payments.services import create_stripe_user
 
     try:
         with transaction.atomic():

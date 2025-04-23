@@ -93,7 +93,9 @@ def invite_new_user_to_org(request: AuthHttpRequest, organization_id: str) -> Js
         return JsonResponse({"message": e.message}, status=400)
 
     try:
+
         organization = check_permission.check_permisssion(user, organization_id, requeired_role="admin")
+
     except check_permission.OrganizationPermissionsError as e:
         return e.to_response()
 
