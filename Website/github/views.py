@@ -12,7 +12,7 @@ from django.template.loader import render_to_string
 
 import stacks.services as stack_services
 from core.decorators import oauth_required, AuthHttpRequest
-from core.helpers import assertRequestFields
+from core.helpers import request_helpers
 from core.utils import GCPUtils
 from github.models import Webhook, Token
 from stacks.models import Stack
@@ -140,13 +140,12 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
     """Create and store a GitHub webhook for a user's repository."""
     user = request.auth_user
 
-    response = assertRequestFields(
-        request, ["repo-name", "stack-id"]
-    )
-    if isinstance(response, JsonResponse):
-        return response
-
-    repo_name, stack_id = response
+    try:
+        repo_name, stack_id = request_helpers.assertRequestFields(
+            request, ["repo-name", "stack-id"]
+        )
+    except request_helpers.MissingFieldError as e:
+        return e.to_response()
 
     stack = get_object_or_404(Stack, id=stack_id, user=user)
     github_token = get_object_or_404(Token, user=user).get_token()
@@ -230,21 +229,12 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request"}, status=400)
 
-    response = assertRequestFields(
-        request, ["X-Hub-Signature-256", "X-GitHub-Hook-ID"], "header"
-    )
-    if isinstance(response, JsonResponse):
-        return response
-
-    signature, webhook_id = response
-
-    response = assertRequestFields(
-        request, ["X-GitHub-Event", "repository", "ref", "payload"], "header"
-    )
-    if isinstance(response, JsonResponse):
-        return response
-
-    event_type, repository_name, ref, payload = response
+    try:
+        signature, webhook_id, event_type, repository_name, ref, payload  = request_helpers.assertRequestFields(
+            request, ["X-Hub-Signature-256", "X-GitHub-Hook-ID", "X-GitHub-Event", "repository", "ref", "payload"], body_or_header="header"
+        )
+    except request_helpers.MissingFieldError as e:
+        return e.to_response()
 
     webhook = get_object_or_404(Webhook, webhook_id=webhook_id)
 
