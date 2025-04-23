@@ -4,7 +4,7 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 
 from projects.services import create_project
-from accounts.models import User, AuthUser
+from accounts.models import User
 from organizations.models import Organization, OrganizationMember, PendingInvites
 from .helpers.email_helpers import invite_org_member
 
@@ -15,6 +15,8 @@ def get_organizations(user: User) -> list[Organization]:
     """
     Get organizations for a user.
     """
+    if not user.pk:
+        raise ValueError("The user instance must be saved before querying related filters.")
     organizations = Organization.objects.filter(organizationmember__user=user).distinct()
     if not organizations.exists():
         return []
@@ -33,7 +35,7 @@ def get_organization(user: User, organization_id: str) -> Organization | None:
     return organization
 
 
-def create_organization(user: AuthUser, name: str, email: str) -> Organization | dict:
+def create_organization(user: User, name: str, email: str) -> Organization | dict:
     from payments.services import create_stripe_user
 
     try:

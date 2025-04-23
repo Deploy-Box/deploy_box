@@ -2,16 +2,18 @@ import json
 from django.http import JsonResponse
 
 import organizations.services as services
-from core.decorators import AuthHttpRequest
+from core.decorators import AuthHttpRequest, oauth_required
 from core.helpers import request_helpers
 from organizations.forms import OrganizationCreateFormWithMembers
 from organizations.models import OrganizationMember, Organization
 from organizations.helpers import check_permission
 
 
+@oauth_required()
 def get_organizations(request: AuthHttpRequest) -> JsonResponse:
-    user = request.auth_user
-    organizations = services.get_organizations(user)
+    auth_user = request.auth_user
+
+    organizations = services.get_organizations(auth_user)
 
     if not organizations:
         return JsonResponse({"message": "organizations not found"}, status=404)

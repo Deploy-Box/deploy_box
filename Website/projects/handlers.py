@@ -13,7 +13,13 @@ def get_projects(request: AuthHttpRequest) -> JsonResponse:
 def get_project(request: AuthHttpRequest, project_id: str) -> JsonResponse:
     user = request.auth_user
 
-    return services.get_project(user, project_id)
+    project = services.get_project(user, project_id)
+
+    if project is None:
+        return JsonResponse({"message": "Project not found"}, status=404)
+    
+    return JsonResponse(project, status=200)
+
 
 def create_project(request: AuthHttpRequest) -> JsonResponse | HttpResponse:
     try:

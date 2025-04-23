@@ -1,5 +1,3 @@
-console.log("Sanity check2!");
-
 // Get Stripe publishable key
 fetch("/api/v1/payments/config")
   .then((result) => {
@@ -7,7 +5,7 @@ fetch("/api/v1/payments/config")
   })
   .then((data) => {
     // Initialize Stripe.js
-    const stripe = Stripe(data.publicKey);
+    const stripe = Stripe(data.public_key);
 
     // Event handler
     document.querySelectorAll("#submitBtn").forEach((button) => {
