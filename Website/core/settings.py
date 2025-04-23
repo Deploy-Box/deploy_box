@@ -1,4 +1,3 @@
-from typing import Dict, Union, List, Any
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -13,6 +12,8 @@ HOST = os.environ.get("HOST")
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 ENV = os.environ.get("ENV", "dev")
 DEBUG = ENV == "dev"
+
+print("DEBUG", DEBUG)
 
 ALLOWED_HOSTS = [
     "deploy-box.onrender.com",
