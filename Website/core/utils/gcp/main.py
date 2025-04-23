@@ -56,7 +56,7 @@ class GCPUtils:
 
         print(self.__token)
 
-    def __request_helper(self, url, method="GET", data=None):
+    def __request_helper(self, url, method="GET", data=None) -> dict | None:
         # Use the token in your request
         if not self.__token:
             self.__get_auth_token()
@@ -95,7 +95,6 @@ class GCPUtils:
             f"&aggregation.alignmentPeriod={3600 * 24 * 7}s"
             "&aggregation.perSeriesAligner=ALIGN_SUM"
         )
-
         return self.__request_helper(SERVICE_URL)
 
     def post_build_and_deploy(self, stack_id, github_repo, github_token, layer: str, port: int = 8080):
@@ -109,7 +108,7 @@ class GCPUtils:
             print(github_url)
             print(github_repo_name)
 
-            image_name = f"us-central1-docker.pkg.dev/deploy-box/deploy-box-repository/{layer}-{stack_id}".lower()
+            image_name = f"us-central1-docker.pkg.dev/{project_id}/deploy-box-repository/{layer}-{stack_id}".lower()
 
             # Define the Cloud Build steps
             build_steps = [
@@ -133,8 +132,7 @@ class GCPUtils:
                             --image={image_name} \
                             --region=us-central1 \
                             --platform=managed \
-                            --allow-unauthenticated \
-                            --port={port}
+                            --allow-unauthenticated
                         """,
                     ],
                 },
@@ -144,7 +142,7 @@ class GCPUtils:
                     "args": [
                         "-c",
                         f"""
-                        service_full_name="projects/deploy-box/locations/us-central1/services/{layer.lower()}-{stack_id}"
+                        service_full_name="projects/{project_id}/locations/us-central1/services/{layer.lower()}-{stack_id}"
                         gcloud run services add-iam-policy-binding {layer.lower()}-{stack_id} \
                             --region=us-central1 \
                             --member="allUsers" \
@@ -213,6 +211,140 @@ class GCPUtils:
         except Exception as e:
             print(f"An error occurred: {e}")
 
+    def deploy_service(self, stack_id: str, image_name: str, layer: str, env_vars: dict | None = None, **kwargs) -> None:
+        service_name = f"{layer.lower()}-{stack_id.lower()}"
+
+        port = kwargs.get("port", 8080) if kwargs else 8080
+        env_vars_str = ','.join([f'{k}="{v}"' for k, v in env_vars.items()]) if env_vars else ''
+        print(env_vars_str)
+
+        try:
+            # Replace with your project ID
+            project_id = "deploy-box"
+
+            # Define the Cloud Build steps
+            build_steps = [
+                {
+                    "name": "gcr.io/google.com/cloudsdktool/cloud-sdk",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        f"""
+                        gcloud run deploy {service_name} \
+                            --image={image_name} \
+                            --region=us-central1 \
+                            --platform=managed \
+                            --allow-unauthenticated \
+                            --port={port} \
+                            --set-env-vars={env_vars_str}
+                            """,
+                    ],
+                },
+                {
+                    "name": "gcr.io/google.com/cloudsdktool/cloud-sdk",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        f"""
+                        service_full_name="projects/{project_id}/locations/us-central1/services/{service_name}"
+                        gcloud run services add-iam-policy-binding {service_name} \
+                            --region=us-central1 \
+                            --member="allUsers" \
+                            --role="roles/run.invoker"
+                        """,
+                    ],
+                },
+            ]
+
+            # Define the build configuration
+            build_config = {"steps": build_steps, "timeout": "600s"}
+
+            # API endpoint for creating a build
+            api_url = (
+                f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds"
+            )
+
+            # Submit the build
+            print("Submitting build...")
+            response = self.__request_helper(api_url, method="POST", data=build_config)
+
+            if response is None:
+                print(f"Error creating build: {response}")
+                return
+
+            response.get("metadata", {})
+            metadata = response.get("metadata", {})
+            build = metadata.get("build", {})
+            build_id = build.get("id", None)
+
+            if not build_id:
+                print(f"Error creating build: {response}")
+                return
+
+            print(f"Build submitted with ID: {build_id}")
+
+            # Poll for build status
+            print("Waiting for build to complete...")
+            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds/{build_id}"
+
+            status = "UNKNOWN"
+            while True:
+                build_status = self.__request_helper(build_status_url)
+                if build_status is None:
+                    print("Error getting build status")
+                    break
+
+                status = build_status.get("status", "UNKNOWN")
+                print(f"Build status: {status}")
+
+                if status in [
+                    "SUCCESS",
+                    "FAILURE",
+                    "INTERNAL_ERROR",
+                    "TIMEOUT",
+                    "CANCELLED",
+                    "EXPIRED",
+                ]:
+                    break
+
+                time.sleep(10)  # Wait 10 seconds before checking again
+
+            if status == "SUCCESS":
+                print(f"Build completed successfully: {build_id}")
+                print(
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                )
+            else:
+                print(f"Build failed with status: {status}")
+                print(
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                )
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+
+    def get_all_services(self) -> dict:
+        url = "https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services"
+        response = self.__request_helper(url)
+
+        if response is None:
+            return {"status": "error", "message": "No services found"}
+
+        services = response.get("services", [])
+
+        cleaned_services = []
+        for service in services:
+            cleaned_service = {
+                "name": service.get("name", ""),
+                "url": service.get("uri", ""),
+                "created_at": service.get("createTime", ""),
+                "updated_at": service.get("updateTime", ""),
+            }
+            cleaned_services.append(cleaned_service)
+
+        return {"status": "success", "data": cleaned_services}
+
+
     # TODO: This currently only grabs the latest logs, not a stream
     def stream_logs(
         self,
@@ -280,10 +412,13 @@ class GCPUtils:
 if __name__ == "__main__":
     gcp_wrapper = GCPUtils()
 
-    gcp_wrapper.post_build_and_deploy(
-        stack_id="5",
-        github_repo="Deploy-Box/deploy_box",
-        github_token=settings.GITHUB_TOKEN,
-        layer="website",
-        port=8000
-    )
+    backend_image = "gcr.io/deploy-box/mern-backend"
+    backend_url = gcp_wrapper.deploy_service(
+            "testing-1234",
+            backend_image,
+            "backend",
+            {"MONGO_URI": "mongodb+srv://deployBoxUser-e9c9afbc1c0942c8:f45bdc78db0a@cluster0.yjaoi.mongodb.net/db-e9c9afbc1c0942c8?retryWrites=true&w=majority&appName=Cluster0"},
+            port=5001
+        )
+
+

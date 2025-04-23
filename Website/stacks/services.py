@@ -62,8 +62,12 @@ def deploy_MERN_stack(stack: Stack) -> JsonResponse:
 
     backend_image = "gcr.io/deploy-box/mern-backend"
     print(f"Deploying backend with image: {backend_image}")
-    backend_url = gcp_utils.post_build_and_deploy(
-        f"backend-{stack_id}", backend_image, {"MONGO_URI": mongo_db_uri}, "backend"
+    backend_url = gcp_utils.deploy_service(
+        stack_id,
+        backend_image,
+        "backend",
+        {"MONGO_URI": mongo_db_uri},
+        port=5000
     )
 
     stack_backend = StackBackend.objects.create(
@@ -73,11 +77,13 @@ def deploy_MERN_stack(stack: Stack) -> JsonResponse:
     )
 
     frontend_image = "gcr.io/deploy-box/mern-frontend"
-    frontend_url = gcp_utils.post_build_and_deploy(
-        f"frontend-{stack_id}",
+    print(f"Deploying frontend with image: {frontend_image}")
+    frontend_url = gcp_utils.deploy_service(
+        stack_id,
         frontend_image,
-        {"REACT_APP_BACKEND_URL": backend_url},
         "frontend",
+        {"REACT_APP_BACKEND_URL": backend_url},
+        port=8080
     )
 
     stack_frontend = StackFrontend.objects.create(

@@ -7,7 +7,7 @@ from typing import Any, Callable, List
 from django.utils import timezone
 from django.conf import settings
 
-from accounts.models import User, UserProfile
+from accounts.models import User, UserProfile, AuthUser
 
 
 def oauth_required(allowed_applications: List[str] | None = None):
@@ -61,7 +61,7 @@ def oauth_required(allowed_applications: List[str] | None = None):
                         },
                         status=401,
                     )
-                
+
             auth_user = token.user
 
             if not auth_user:
@@ -74,8 +74,8 @@ def oauth_required(allowed_applications: List[str] | None = None):
                 error_message = "User profile not found."
                 return decide_return(is_api_call, error_message, request)
 
-            auth_request = AuthHttpRequest(auth_user, user_profile, request)
-            
+            auth_request = AuthHttpRequest(auth_user.id, auth_user, user_profile, request)
+
 
             # If the token is valid, continue with the view
             return view_func(auth_request, *args, **kwargs)
@@ -84,15 +84,13 @@ def oauth_required(allowed_applications: List[str] | None = None):
 
     return decorator
 
-
 class AuthHttpRequest(HttpRequest):
-    auth_user: User
-    user_profile: UserProfile
+    auth_user: AuthUser
 
-    def __init__(self, auth_user: User, user_profile: UserProfile, request: HttpRequest):
+    def __init__(self, user_id: str, user: User, user_profile: UserProfile, request: HttpRequest):
         super().__init__()
         self.__dict__.update(request.__dict__)
-        self.auth_user = auth_user
+        self.auth_user = AuthUser(user=user, user_id=user_id, user_profile=user_profile)
         self.user_profile = user_profile
 
 

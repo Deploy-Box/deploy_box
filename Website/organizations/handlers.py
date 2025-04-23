@@ -3,40 +3,44 @@ from django.http import JsonResponse
 
 import organizations.services as services
 from core.decorators import AuthHttpRequest
-from core.helpers import assertRequestFields
-from .forms import OrganizationCreateFormWithMembers, OrganizationMemberForm
+from core.helpers import request_helpers
+from organizations.forms import OrganizationCreateFormWithMembers
 from organizations.models import OrganizationMember, Organization
+from organizations.helpers import check_permission
 
 
 def get_organizations(request: AuthHttpRequest) -> JsonResponse:
     user = request.auth_user
+    organizations = services.get_organizations(user)
 
-    return services.get_organizations(user)
+    if not organizations:
+        return JsonResponse({"message": "organizations not found"}, status=404)
+
+    return JsonResponse(organizations, status=200)
 
 def get_organization(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
     user = request.auth_user
 
-    return services.get_organization(user, organization_id)
+    organization = services.get_organization(user, organization_id)
+
+    if not organization:
+        return JsonResponse({"message": "organization not found"}, status=404)
+
+    return JsonResponse(organization, status=200)
 
 def create_organization(request: AuthHttpRequest) -> JsonResponse:
-
     form = OrganizationCreateFormWithMembers(request.POST)
 
     if form.is_valid():
+        try:
+            name, email, _, _ = request_helpers.assertRequestFields(request, ["name", "email"], ["member", "role"], mimetype='application/x-www-form-urlencoded')
+        except request_helpers.MissingFieldError as e:
+            return JsonResponse({"message": e.message}, status=400)
 
         user = request.auth_user
+        organization = services.create_organization(user, name, email)
 
-        response = assertRequestFields(request, ["name", "email"], ["member", "role"], mimetype='application/x-www-form-urlencoded')
-
-
-        if isinstance(response, JsonResponse):
-            return response
-
-        name, email, member, role = response
-
-        print(response)
-
-        return services.create_organization(user, name, email, member, role)
+        return JsonResponse(organization, status=201)
 
     else:
         return JsonResponse({"message": "form is not valid"}, status=400)
@@ -64,16 +68,13 @@ def update_user(request: AuthHttpRequest, organization_id: str, user_id: str) ->
         return JsonResponse({"message": "you must be an org admin to remove members"}, status=400)
 
 def add_org_members(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
+        try:
+            member, role = request_helpers.assertRequestFields(request, ["member", "role"], mimetype='application/x-www-form-urlencoded')
+        except request_helpers.MissingFieldError as e:
+            return JsonResponse({"message": e.message}, status=400)
 
         user = request.auth_user
         organization = Organization.objects.get(id=organization_id)
-
-        response = assertRequestFields(request, ["member", "role"], mimetype='application/x-www-form-urlencoded')
-
-        if isinstance(response, JsonResponse):
-            return response
-
-        member, role = response
 
         return services.add_org_members(member, role, organization, user)
 
@@ -83,7 +84,20 @@ def remove_org_member(request: AuthHttpRequest, organization_id: str, user_id: s
 
     return services.remove_org_member(user, organization_id, user_id)
 
+def invite_new_user_to_org(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
+    user = request.auth_user
 
+    try:
+        email, = request_helpers.assertRequestFields(request, ["email"])
+    except request_helpers.MissingFieldError as e:
+        return JsonResponse({"message": e.message}, status=400)
+
+    try:
+        organization = check_permission.check_permisssion(user, organization_id, requeired_role="admin")
+    except check_permission.OrganizationPermissionsError as e:
+        return e.to_response()
+
+    return services.invite_new_user_to_org(user, organization, email)
 
 
 

@@ -2,7 +2,6 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
 from core.decorators import AuthHttpRequest
-from core.helpers import assertRequestFields
 import stacks.services as services
 from projects.models import Project
 from stacks.models import PurchasableStack

@@ -12,3 +12,13 @@ class UserProfile(models.Model):
 
     def __str__(self):
         return self.user.username
+
+class AuthUser(User):
+    id: str
+    user_profile: UserProfile
+
+    def __init__(self, user: User, user_id: str, user_profile: UserProfile):
+        super().__init__()
+        self.__dict__.update(user.__dict__)
+        self.id = user_id
+        self.user_profile = user_profile

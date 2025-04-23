@@ -4,57 +4,46 @@ from django.db import transaction
 from django.shortcuts import get_object_or_404
 
 from projects.services import create_project
-from accounts.models import User
-from organizations.models import Organization, OrganizationMember
-from payments.views import create_stripe_user
+from accounts.models import User, AuthUser
+from organizations.models import Organization, OrganizationMember, PendingInvites
 from .helpers.email_helpers import invite_org_member
 
 logger = logging.getLogger(__name__)
 
 
-def get_organizations(user: User) -> JsonResponse:
-    organization_members = OrganizationMember.objects.filter(user=user).values_list("organization", flat=True)
-    organization = Organization.objects.filter(id__in=organization_members).values(
-        "id",
-        "name",
-        "created_at",
-        "updated_at",
-    )
+def get_organizations(user: User) -> list[Organization]:
+    """
+    Get organizations for a user.
+    """
+    organizations = Organization.objects.filter(organizationmember__user=user).distinct()
+    if not organizations.exists():
+        return []
 
-    # Check if the user is a member of any project
-    if not organization.exists():
-        return JsonResponse({"data": []})
+    return list(organizations)
 
-    return JsonResponse({"data": list(organization)})
+def get_organization(user: User, organization_id: str) -> Organization | None:
+    """
+    Get organization for a user.
+    """
+    organization = Organization.objects.filter(organizationmember__user=user, id=organization_id).first()
 
-def get_organization(user: User, organization_id: str) -> JsonResponse:
-    organization = get_object_or_404(Organization, id=organization_id)
+    if not organization:
+        return None
 
-    # Check if the user is a member of the organization
-    if not OrganizationMember.objects.filter(user=user, organization=organization).exists():
-        return JsonResponse({"error": "You are not a member of this organization"}, status=403)
-
-    return JsonResponse({
-        "id": organization.id,
-        "name": organization.name,
-    })
+    return organization
 
 
-def create_organization(user: User, name: str, email: str, member:str | None, role: str) -> JsonResponse:
+def create_organization(user: AuthUser, name: str, email: str) -> Organization | dict:
+    from payments.views import create_stripe_user
+
     try:
         with transaction.atomic():
-            print("inside transaction")
             stripe_customer_id = create_stripe_user(name=name, email=email)
 
             organization = Organization.objects.create(
                             name=name, email=email, stripe_customer_id=stripe_customer_id
                         )
             OrganizationMember.objects.create(user=user, organization=organization, role="admin")
-
-            if member:
-                print("inside member")
-                user_id = User.objects.get(username=member)
-                OrganizationMember.objects.create(user=user_id, organization=organization, role=role)
 
             create_project(
                 name="Default Project",
@@ -64,12 +53,9 @@ def create_organization(user: User, name: str, email: str, member:str | None, ro
             )
 
     except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)
+        return {"error": str(e)}
 
-    return JsonResponse({
-        "id": organization.id,
-        "name": organization.name,
-    })
+    return organization
 
 
 def update_organization(user: User, organization_id: str, data: dict) -> JsonResponse:
@@ -149,7 +135,7 @@ def add_org_members(member: str, role: str, organization: object, user: User) ->
         if member_check:
             return JsonResponse({"message": "this user is already a member of this organization"}, status=200)
 
-        OrganizationMember.objects.create(organization=organization, user=user_to_add, role=role)
+        OrganizationMember.objects.create(organization=organization, user=user_to_add, role=role.lower())
 
         invite_org_member.send_invite_email(user_to_add, organization)
 
@@ -179,5 +165,13 @@ def remove_org_member(user: User, organization_id: str, user_id: str) -> JsonRes
 
     else:
         return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)
+
+def invite_new_user_to_org(user: User, organization: Organization, email: str ):
+    try:
+        invite_org_member.send_invite_new_user_to_org(user, organization, email)
+        PendingInvites.objects.create(organization=organization, email=email)
+        return JsonResponse({"message": "invite email has been sent to user"}, status=200)
+    except Exception as e:
+        return JsonResponse({"message": f"an unexpected error occured: {e}"}, status=400)
 
 
