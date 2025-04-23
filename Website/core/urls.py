@@ -4,6 +4,7 @@ from django.conf import settings
 from django.conf.urls.static import static
 from core.admin import admin_site
 
+
 urlpatterns = [
     # Main site URLs (frontend)
     path("", include(("main_site.urls", "main_site"), namespace="main_site")),
