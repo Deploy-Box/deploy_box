@@ -13,8 +13,6 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
 ENV = os.environ.get("ENV", "dev")
 DEBUG = ENV == "dev"
 
-print("DEBUG", DEBUG)
-
 ALLOWED_HOSTS = [
     "deploy-box.onrender.com",
     "deploy-box.kalebwbishop.com",
