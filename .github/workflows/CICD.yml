@@ -38,14 +38,17 @@ jobs:
           python Website/manage.py makemigrations
           python Website/manage.py migrate
 
+  docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
       - name: Build Docker Image
         run: |
           docker build -t us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1 Website/
 
       - name: Push Docker Image to Google Cloud Container Registry
         run: |
-          echo "${{ secrets.GCP_SA_KEY }}" > key.json
-          gcloud auth activate-service-account --key-file=key.json
+          gcloud auth activate-service-account --key-file=<(echo "${{ secrets.GCP_SA_KEY }}")
           gcloud auth configure-docker
           docker push us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1
 
