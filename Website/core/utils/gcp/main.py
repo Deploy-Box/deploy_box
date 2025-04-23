@@ -285,6 +285,10 @@ class GCPUtils:
 
         url = f"https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services/{service_name}"
         response = self.__request_helper(url)
+
+        if response is None:
+            return []
+
         return response.get("template", {}).get("containers", [])[0].get("env", [])
 
 
