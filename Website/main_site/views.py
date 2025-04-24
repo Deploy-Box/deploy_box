@@ -8,6 +8,7 @@ from stacks.models import Stack
 from organizations.forms import OrganizationCreateFormWithMembers, OrganizationMemberForm, NonexistantOrganizationMemberForm
 from organizations.services import get_organizations
 from projects.forms import ProjectCreateFormWithMembers
+from stacks.models import PurchasableStack
 
 from core.decorators import oauth_required, AuthHttpRequest
 
@@ -97,7 +98,8 @@ def home_page_view(request: AuthHttpRequest) -> HttpResponse:
     user = request.auth_user
     organizations = get_organizations(user)
     projects = [project for organization in organizations for project in organization.get_projects()]
-    return render(request, "payments/home.html", {"organizations": organizations, "projects":  projects})
+    stack_options = PurchasableStack.objects.all()
+    return render(request, "payments/home.html", {"organizations": organizations, "projects":  projects, "stack_options": stack_options})
 
 
 @oauth_required()
