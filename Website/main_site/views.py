@@ -66,8 +66,8 @@ def project_dashboard(request: HttpRequest, organization_id: str, project_id: st
     return render(request, "project_dashboard.html", {"organization_id": organization_id, "project": project, 'stacks': stacks})
 
 @oauth_required()
-def stack_dashboard(request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
-    user = request.user
+def stack_dashboard(request: AuthHttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
+    # TODO: Check if user is a member of the project
     stack = Stack.objects.get(id=stack_id)
     return render(request, "stack_dashboard.html", {"organization_id": organization_id, "project_id": project_id, "stack": stack})
 

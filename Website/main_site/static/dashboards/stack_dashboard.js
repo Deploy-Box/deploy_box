@@ -439,3 +439,31 @@ function setupLogControls() {
         pauseButton.textContent = isPaused ? 'Resume' : 'Pause';
     });
 }
+
+function deleteStack(stackId) {
+    if (confirm('Are you sure you want to delete this stack? This action cannot be undone.')) {
+        fetch(`/api/v1/stacks/${stackId}/delete`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/dashboard'; // Redirect to dashboard after successful deletion
+            } else {
+                alert('Failed to delete stack: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while deleting the stack');
+        });
+    }
+}
+
+const deleteStackBtn = document.getElementById('delete-stack-btn');
+deleteStackBtn.addEventListener('click', () => {
+    deleteStack(deleteStackBtn.dataset.stackId);
+});

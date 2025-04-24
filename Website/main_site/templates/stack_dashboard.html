@@ -8,6 +8,15 @@
 {% endblock %}
 
 {% block content %}
+<div class="fixed top-24 left-8">
+    <a href="{% url 'main_site:project_dashboard' organization_id project_id %}" class="inline-flex items-center px-4 py-2 bg-zinc-100 hover:bg-zinc-200 text-sm text-zinc-900 rounded font-medium transition duration-150">
+        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+        </svg>
+        Back to Project
+    </a>
+</div>
+
 <div class="min-h-full pb-12">
     <div class="w-full bg-zinc-950 pt-16 pb-24 text-center">
         <h4 class="text-2xl text-gray-100 mt-10">Stack Dashboard</h4>
@@ -136,8 +145,10 @@
                         Restart Stack
                     </button>
                     <button
+                        id="delete-stack-btn"
+                        data-stack-id="{{ stack.id }}"
                         class="bg-red-500 hover:bg-red-600 px-6 py-3 text-sm text-white rounded font-bold transition duration-150">
-                        Stop Stack
+                        Delete Stack
                     </button>
                     <button
                         class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
@@ -154,6 +165,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{% static 'stack_dashboard.js' %}"></script>
+<script src="{% static 'dashboards/stack_dashboard.js' %}"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 {% endblock %}

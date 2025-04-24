@@ -32,7 +32,14 @@ def patch_stack(request: AuthHttpRequest) -> JsonResponse:
 
 
 def delete_stack(request: AuthHttpRequest) -> JsonResponse:
-    return JsonResponse({"error": "Not implemented"}, status=501)
+    user = request.auth_user
+    
+    try:
+        stack_id = request_helpers.assertRequestFields(request, ["stack_id"])
+    except request_helpers.MissingFieldError as e:
+        return e.to_response()
+    
+    return services.delete_stack(stack_id)
 
 
 def get_stack_usage(request: AuthHttpRequest) -> JsonResponse:
