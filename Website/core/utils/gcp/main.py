@@ -167,7 +167,7 @@ class GCPUtils:
 
             # API endpoint for creating a build
             api_url = (
-                f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds"
+                f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
             )
 
             # Submit the build
@@ -183,7 +183,7 @@ class GCPUtils:
 
             # Poll for build status
             print("Waiting for build to complete...")
-            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds/{build_id}"
+            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds/{build_id}"
 
             status = "UNKNOWN"
             while True:
@@ -210,12 +210,12 @@ class GCPUtils:
             if status == "SUCCESS":
                 print(f"Build completed successfully: {build_id}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
             else:
                 print(f"Build failed with status: {status}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
 
         except Exception as e:
@@ -277,7 +277,7 @@ class GCPUtils:
 
             # API endpoint for creating a build
             api_url = (
-                f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds"
+                f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
             )
 
             # Submit the build
@@ -301,7 +301,7 @@ class GCPUtils:
 
             # Poll for build status
             print("Waiting for build to complete...")
-            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds/{build_id}"
+            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds/{build_id}"
 
             status = "UNKNOWN"
             while True:
@@ -328,13 +328,13 @@ class GCPUtils:
             if status == "SUCCESS":
                 print(f"Build completed successfully: {build_id}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
                 return self.get_service_endpoint(service_name)
             else:
                 print(f"Build failed with status: {status}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
 
         except Exception as e:
@@ -404,7 +404,7 @@ class GCPUtils:
 
             # Poll for build status
             print("Waiting for build to complete...")
-            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds/{build_id}"
+            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds/{build_id}"
 
             status = "UNKNOWN"
             while True:
@@ -431,13 +431,13 @@ class GCPUtils:
             if status == "SUCCESS":
                 print(f"Build completed successfully: {build_id}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
                 return self.get_service_endpoint(service_name)
             else:
                 print(f"Build failed with status: {status}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
 
         except Exception as e:
