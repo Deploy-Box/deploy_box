@@ -32,7 +32,7 @@ class GCPUtils:
         self.__get_auth_token()
 
     def __load_credentials(self):
-        SERVICE_ACCOUNT_FILE = "key.json"
+        SERVICE_ACCOUNT_FILE = settings.GCP.get("KEY_PATH")
 
         # Scopes needed for Cloud Run
         SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
