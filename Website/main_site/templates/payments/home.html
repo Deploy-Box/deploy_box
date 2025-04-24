@@ -44,42 +44,42 @@
   {% endfor %}
   </select>
 </div>
-<div class="p-10">
-  <section class="section flex items-center justify-center">
-    <div
-      class="p-10 rounded-l-xl border border-blue-gray-100 rounded-xl bg-no-repeat lg:bg-contain bg-cover bg-right mb-5 w-2/3"
-    >
-      <p
-        class="block antialiased font-sans text-sm font-light leading-normal text-blue-gray-900 font-bold mb-2"
+{%for stack_option in stack_options%}
+  <div class="p-4">
+    <section class="section flex items-center justify-center">
+      <div
+        class="p-10 rounded-l-xl border border-blue-gray-100 rounded-xl bg-no-repeat lg:bg-contain bg-cover bg-right mb-5 w-2/3"
       >
-        Most Popuar Stack
-      </p>
-      <h3
-        class="block antialiased tracking-normal font-sans text-3xl font-semibold leading-snug text-blue-gray-900"
-      >
-        MERN
-      </h3>
-      <p
-        class="block antialiased font-sans text-base font-light leading-relaxed text-inherit mt-2 mb-6 !text-base font-normal text-gray-500"
-      >
-        MERN stands for MondoDB, Express.js, React, and Node.js. It is a modern
-        stack that uses a combination of modern frameworks and a no sql database
-        to ensure you spin up your webapp as quicky as possible.
-      </p>
-      <div>
-        <button
-          class="align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg border border-gray-900 text-gray-900 hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] flex-shrink-0"
-          type="button"
-          data-ripple-dark="true"
-          id="submitBtn"
-          data-stack-id="ce09e2edbcab4b02"
+        <p
+          class="block antialiased font-sans text-sm font-light leading-normal text-blue-gray-900 font-bold mb-2"
         >
-          Purchase
-        </button>
+          Most Popuar Stack
+        </p>
+        <h3
+          class="block antialiased tracking-normal font-sans text-3xl font-semibold leading-snug text-blue-gray-900"
+        >
+          {{stack_option.name}}
+        </h3>
+        <p
+          class="block antialiased font-sans text-base font-light leading-relaxed text-inherit mt-2 mb-6 !text-base font-normal text-gray-500"
+        >
+        {{stack_option.description}}
+        </p>
+        <div>
+          <button
+            class="align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg border border-gray-900 text-gray-900 hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] flex-shrink-0"
+            type="button"
+            data-ripple-dark="true"
+            id="submitBtn"
+            data-stack-id="{{stack_option.id}}"
+          >
+            Purchase
+          </button>
+        </div>
       </div>
-    </div>
-  </section>
-</div>
+    </section>
+  </div>
+{%endfor%}
 <script src="{% static 'payments/index.js' %}"></script>
 
 {% endblock %}
