@@ -182,6 +182,7 @@ MONGO_DB = {
 
 GCP = {
     "KEY_PATH": os.environ.get("GCP_KEY_PATH"),
+    "PROJECT_ID": os.environ.get("GCP_PROJECT_ID"),
 }
 
 GITHUB = {
