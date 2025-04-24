@@ -10,6 +10,8 @@ class PurchasableStack(models.Model):
     variant = models.CharField(max_length=10)
     version = models.CharField(max_length=10)
     price_id = models.CharField(max_length=50)
+    description = models.CharField(default="check out this stack")
+    name = models.CharField(default="this is a stack")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

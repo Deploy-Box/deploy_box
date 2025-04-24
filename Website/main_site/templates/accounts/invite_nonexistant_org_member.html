@@ -1,0 +1,18 @@
+{% extends 'base.html' %} {% block content %}
+<div class="pt-16 p-4 mb-16">
+  <form method="POST" action="{% url 'organizations:invite_new_user_to_org' organization_id=organization.id %}">
+
+    <!-- Members Selection -->
+    <div class="mb-4">
+      <label for="email" class="block text-sm font-medium text-gray-700"
+        >Member Email</label
+      >
+      {{ form.email }}
+      <!-- Render the user field as a text input -->
+
+    <button type="submit" class="bg-emerald-400 text-white py-2 px-4 rounded">
+      invite Member
+    </button>
+  </form>
+</div>
+{% endblock %}

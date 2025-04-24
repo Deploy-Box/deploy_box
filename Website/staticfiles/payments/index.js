@@ -1,7 +1,7 @@
 console.log("Sanity check2!");
 
 // Get Stripe publishable key
-fetch("/api/payments/config")
+fetch("/api/v1/payments/config")
   .then((result) => {
     return result.json();
   })
@@ -13,10 +13,11 @@ fetch("/api/payments/config")
     document.querySelectorAll("#submitBtn").forEach((button) => {
       button.addEventListener("click", () => {
         const stackId = button.getAttribute("data-stack-id");
+        const org_id = document.getElementById("org_choice").value;
         console.log(stackId);
 
         // Get Checkout Session ID
-        fetch('/api/payments/create-checkout-session/', {
+        fetch(`/api/v1/payments/checkout/create/${org_id}/`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -27,7 +28,7 @@ fetch("/api/payments/config")
             return result.json();
           })
           .then((data) => {
-            console.log(data);
+            console.log("sessionID", data);
             // Redirect to Stripe Checkout
             return stripe.redirectToCheckout({ sessionId: data.sessionId });
           })
