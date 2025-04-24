@@ -5,7 +5,7 @@ urlpatterns = [
     # Stripe configuration
     path("config/", views.stripe_config, name="stripe_config"),
     # Checkout and webhook
-    path("checkout/create/", views.create_checkout_session, name="checkout_create"),
+    path("checkout/create/<str:org_id>/", views.create_checkout_session, name="checkout_create"),
     path("save-payment-method/", views.save_stripe_payment_method, name="save_payment_method"),
     path("webhook/", views.stripe_webhook, name="stripe_webhook"),
     # Invoice management

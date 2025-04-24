@@ -14,33 +14,39 @@ from django.http import (
 )
 
 from accounts.forms import CustomUserCreationForm, OrganizationSignUpForm
-from payments.views import create_stripe_user
-from accounts.models import UserProfile
-from core.decorators import oauth_required
-from organizations.models import Organization, OrganizationMember
-from accounts.services import get_project, organization_services, project_services
-from organizations.services import create_organization
-
+from organizations.models import PendingInvites, OrganizationMember, Organization
 
 # Authentication
 def signup(request: HttpRequest):
-    print(request.method)
     if request.method == "POST":
-        form = CustomUserCreationForm(request.POST)
+        print(request.POST)
+        user_form = CustomUserCreationForm(request.POST)
         org_form = OrganizationSignUpForm(request.POST)
 
-        if form.is_valid() and org_form.is_valid():
-            user = form.save()
-            birthdate = form.cleaned_data["birthdate"]
+        if user_form.is_valid() and org_form.is_valid():
 
-            name = org_form.cleaned_data["org_name"]
-            email = org_form.cleaned_data["org_email"]
+            email = user_form.cleaned_data["email"]
+            invites = PendingInvites.objects.filter(email__iexact=email)
 
-            create_organization(user, name, email)
+            user = user_form.save()
+            organization = org_form.save(user=user)
+
+            if invites.exists():  # Better to use `.exists()` to avoid loading all records into memory
+                for invite in invites:
+                    org_id = invite.organization_id # type: ignore
+                    org_to_add = Organization.objects.get(id=org_id)
+                    organization_member = OrganizationMember.objects.create(user=user, organization=org_to_add, role="member")
+                    print(organization_member)
+                    invite.delete()
+            else:
+                # Optional: handle the case where no invites are found (if needed)
+                pass
+
+            print(f"Created user {user} and organization {organization}")
 
             return redirect("/login")
 
-        return JsonResponse({"message": f"Invalid form data {form.is_valid()}, {org_form.is_valid()}"}, status=400)
+        return JsonResponse({"message": f"Invalid form data {user_form.is_valid()}{user_form.errors}, {org_form.is_valid()}"}, status=400)
 
     return JsonResponse({"message": "POST request required for signup"}, status=400)
 

@@ -1,7 +1,7 @@
 from django.http import HttpResponse, JsonResponse
 
 from core.decorators import AuthHttpRequest
-from core.helpers import assertRequestFields
+from core.helpers import request_helpers
 import projects.services as services
 
 
@@ -13,20 +13,23 @@ def get_projects(request: AuthHttpRequest) -> JsonResponse:
 def get_project(request: AuthHttpRequest, project_id: str) -> JsonResponse:
     user = request.auth_user
 
-    return services.get_project(user, project_id)
+    project = services.get_project(user, project_id)
+
+    if project is None:
+        return JsonResponse({"message": "Project not found"}, status=404)
+    
+    return JsonResponse(project, status=200)
+
 
 def create_project(request: AuthHttpRequest) -> JsonResponse | HttpResponse:
     try:
         user = request.auth_user
 
-        response = assertRequestFields(request, ["name", "description", "organization"], mimetype="application/x-www-form-urlencoded")
-
-        if isinstance(response, JsonResponse):
-            return response
-
-        name, description, organization_id = response
-
-
+        try:
+            name, description, organization_id = request_helpers.assertRequestFields(request, ["name", "description", "organization"], mimetype="application/json")
+        except request_helpers.MissingFieldError as e:
+            return e.to_response()
+  
         return services.create_project(user, name, description, organization_id)
 
     except Exception as e:

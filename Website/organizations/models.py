@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+
 from core.fields import ShortUUIDField
+
 
 class Organization(models.Model):
     id = ShortUUIDField(primary_key=True)
@@ -13,6 +15,10 @@ class Organization(models.Model):
     def __str__(self):
         return self.name
 
+    def get_projects(self) -> list:
+        from projects.models import Project
+
+        return list(Project.objects.filter(organization=self))
 
 class OrganizationMember(models.Model):
     id = ShortUUIDField(primary_key=True)
@@ -30,4 +36,14 @@ class OrganizationMember(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.organization.name}"
+
+
+class PendingInvites(models.Model):
+    id = ShortUUIDField(primary_key=True)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
+    email = models.EmailField()
+
+    def __str__(self):
+        return self.email
+
 

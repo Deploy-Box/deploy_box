@@ -7,9 +7,6 @@ from django.urls import reverse
 from projects.models import Project, ProjectMember
 from accounts.models import User
 from organizations.models import Organization, OrganizationMember
-from .forms import ProjectCreateFormWithMembers
-from main_site.views import organization_dashboard
-
 
 logger = logging.getLogger(__name__)
 
@@ -30,20 +27,9 @@ def get_projects(user: User) -> JsonResponse:
 
     return JsonResponse({"data": list(projects)})
 
-def get_project(user: User, project_id: str) -> JsonResponse:
-    project = get_object_or_404(Project, id=project_id)
+def get_project(user: User, project_id: str) -> Project | None:
+    return Project.objects.filter(user=user, id=project_id).first()
 
-    # Check if the user is a member of the project
-    if not ProjectMember.objects.filter(user=user, project=project).exists():
-        return JsonResponse({"error": "You are not a member of this project"}, status=403)
-
-    return JsonResponse({
-        "id": project.id,
-        "name": project.name,
-        "description": project.description,
-        "created_at": project.created_at,
-        "updated_at": project.updated_at,
-    })
 
 def create_project(user: User, name: str, description: str, organization_id: str) -> JsonResponse | HttpResponse:
     try:

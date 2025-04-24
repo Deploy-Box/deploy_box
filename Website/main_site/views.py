@@ -5,10 +5,11 @@ from accounts.forms import CustomUserCreationForm
 from organizations.models import Organization, OrganizationMember
 from projects.models import Project
 from stacks.models import Stack
-from organizations.forms import OrganizationCreateForm, OrganizationCreateFormWithMembers, OrganizationMemberForm
+from organizations.forms import OrganizationCreateFormWithMembers, OrganizationMemberForm, NonexistantOrganizationMemberForm
+from organizations.services import get_organizations
 from projects.forms import ProjectCreateFormWithMembers
 
-from core.decorators import oauth_required
+from core.decorators import oauth_required, AuthHttpRequest
 
 
 # Basic Routes
@@ -50,6 +51,12 @@ def add_org_members(request: HttpRequest, organization_id: str) -> HttpResponse:
     form = OrganizationMemberForm()
     return render(request, "accounts/invite_org_member.html",{'organization': organization, 'user': user, 'form': form})
 
+def add_nonexistant_org_members(request: HttpRequest, organization_id: str) -> HttpResponse:
+    user = request.user
+    organization = Organization.objects.get(id=organization_id)
+    form = NonexistantOrganizationMemberForm()
+    return render(request, "accounts/invite_nonexistant_org_member.html",{'organization': organization, 'user': user, 'form': form})
+
 @oauth_required()
 def project_dashboard(request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
     user = request.user
@@ -86,8 +93,11 @@ STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
 
 
 @oauth_required()
-def home_page_view(request: HttpRequest) -> HttpResponse:
-    return render(request, "payments/home.html")
+def home_page_view(request: AuthHttpRequest) -> HttpResponse:
+    user = request.auth_user
+    organizations = get_organizations(user)
+    projects = [project for organization in organizations for project in organization.get_projects()]
+    return render(request, "payments/home.html", {"organizations": organizations, "projects":  projects})
 
 
 @oauth_required()

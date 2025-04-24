@@ -1,6 +1,8 @@
 import json
 import time
 import stripe
+import random
+
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
@@ -8,13 +10,13 @@ from django.shortcuts import get_object_or_404
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.services as stack_services
 from stacks.models import PurchasableStack, StackDatabase
-from organizations.models import Organization, OrganizationMember
-from payments.services import pricing_services
+from organizations.models import Organization
+from organizations.services import get_organization
 from accounts.models import UserProfile
+from core.helpers import request_helpers
+from projects.models import Project
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
-STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
-
 
 def stripe_config(request: HttpRequest) -> JsonResponse:
     if request.method != "GET":
@@ -23,23 +25,9 @@ def stripe_config(request: HttpRequest) -> JsonResponse:
             {"error": "Invalid request method. Only GET is allowed."}, status=405
         )
 
-    stripe_config = {"publicKey": STRIPE_PUBLISHABLE_KEY}
-    return JsonResponse(stripe_config, safe=False)
-
-
-def create_stripe_user(**kwargs):
-    # Create a new customer in Stripe
-    try:
-        print("kwargs", kwargs)
-        customer = stripe.Customer.create(
-            name=kwargs.get('name'), # type: ignore
-            email=kwargs.get('email'), # type: ignore
-        )
-
-        return customer.id
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=400)
+    STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
+    stripe_config = {"public_key": STRIPE_PUBLISHABLE_KEY}
+    return JsonResponse(stripe_config, status=200)
 
 def save_stripe_payment_method(request: AuthHttpRequest) -> JsonResponse:
     if request.method != "POST":
@@ -79,33 +67,41 @@ def save_stripe_payment_method(request: AuthHttpRequest) -> JsonResponse:
         return JsonResponse({"error": "An error occurred while saving the payment method."}, status=400)
 
 @oauth_required()
-def create_checkout_session(request: AuthHttpRequest, org_id: int) -> JsonResponse:
+def create_checkout_session(request: AuthHttpRequest, org_id: str) -> JsonResponse:
     auth_user = request.auth_user
-    user_profile = request.user_profile
-    organization = Organization.objects.get(id=org_id)
+
+    if not org_id:
+        return JsonResponse({"error": "Organization ID is required"}, status=400)
 
     if request.method != "POST":
-        # Handle non-POST requests
         return JsonResponse(
             {"error": "Invalid request method. Only POST is allowed."}, status=405
         )
 
     domain_url = settings.HOST
-    data = json.loads(request.body)
-    stack_id = data.get("stackId")
+
     try:
-        print(stack_id)
-        price_id = PurchasableStack.objects.get(id=stack_id).price_id
+        stack_id, project_id = request_helpers.assertRequestFields(request, ["stack_id", "project_id"])
+    except request_helpers.MissingFieldError as e:
+        return e.to_response()
+
+    organization = get_organization(auth_user, org_id)
+
+    if not organization:
+        return JsonResponse({"error": "Organization not found"}, status=404)
+
+    price_id = PurchasableStack.objects.get(id=stack_id).price_id
+
+    try:
         checkout_session = stripe.checkout.Session.create(
             metadata={
-                "stack_id": stack_id,
-                "user_id": auth_user.id,
-                "project_id": "1",
-                "name": "MERN Stack",
+                "purchasable_stack_id": stack_id,
+                "organization_id": organization.id,
+                "project_id": project_id,
             },
             customer=organization.stripe_customer_id,
             success_url=domain_url
-            + "/payments/success?session_id={CHECKOUT_SESSION_ID}",
+            + "/payments/checkout/success?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=domain_url + "/payments/cancelled",
             payment_method_types=["card"],
             mode="payment",
@@ -137,7 +133,7 @@ def record_usage(subscription_item_id, quantity):
 
 
 def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
-    # Use `stripe listen --forward-to http://127.0.0.1:8000/api/payments/webhook` to listen for events
+    # Use `stripe listen --forward-to http://127.0.0.1:8000/api/v1/payments/webhook/` to listen for events
     # WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
     WEBHOOK_SECRET = (
         "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
@@ -162,37 +158,65 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
 
-        # Get Stripe Customer ID
-        stripe_customer_id = session.get("customer")
+        metadata = session.get("metadata", {})
+
+        purchasable_stack_id = metadata.get("purchasable_stack_id")
+        project_id = metadata.get("project_id")
+        organization_id = metadata.get("organization_id")
 
         # Fetch the user based on the Stripe Customer ID
-        user_account = get_object_or_404(
-            UserProfile, stripe_customer_id=stripe_customer_id
+        organization = get_object_or_404(
+            Organization, id=organization_id
         )
-        user = user_account.user
 
-        # Retrieve line items to get the Price ID
-        line_items = stripe.checkout.Session.list_line_items(session["id"])
+        project = get_object_or_404(
+            Project, id=project_id, organization=organization
+        )
 
-        if not line_items["data"]:
-            print("No line items found in session.")
-            return HttpResponse("No line items", status=400)
+        purchased_stack = get_object_or_404(
+            PurchasableStack, id=purchasable_stack_id
+        )
 
-        price_id = line_items["data"][0]["price"]["id"]  # Get first price ID
+        list_of_adjectives = [
+            "Superb",
+            "Incredible",
+            "Fantastic",
+            "Amazing",
+            "Awesome",
+            "Brilliant",
+            "Exceptional",
+            "Outstanding",
+            "Remarkable",
+            "Extraordinary",
+            "Magnificent",
+            "Spectacular",
+            "Stunning",
+            "Impressive",
+        ]
 
-        # Fetch the corresponding stack based on Price ID
-        available_stack = get_object_or_404(PurchasableStack, price_id=price_id)
-
-        # Get the project
-        project_id = session.get("metadata", {}).get("project_id")
-
-        # Get the name
-        name = session.get("metadata", {}).get("name")
-
-        print(user, project_id, available_stack.id, name)
+        list_of_nouns = [
+            "Stack",
+            "Project",
+            "Application",
+            "Service",
+            "Solution",
+            "Platform",
+            "System",
+            "Framework",
+            "Architecture",
+            "Design",
+            "Model",
+            "Structure",
+            "Configuration",
+        ]
+        
+        # Generate a random name for the stack
+        random_adjective = random.choice(list_of_adjectives)
+        random_noun = random.choice(list_of_nouns)
+        random_name = f"{random_adjective} {random_noun}"
 
         # Create a stack entry for the user
-        return stack_services.add_stack(user, project_id, available_stack.id, name)
+        return stack_services.add_stack(project, purchased_stack, random_name)
 
     return HttpResponse(status=200)
 
@@ -369,7 +393,7 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
 
         if len(payment_methods.data) <= 1:
             return JsonResponse(
-                {"error": "Cannot remove the only payment method. Please add another payment method first."}, 
+                {"error": "Cannot remove the only payment method. Please add another payment method first."},
                 status=400
             )
 
@@ -380,7 +404,7 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
         if default_payment_method_id:
             # Detach the payment method
             stripe.PaymentMethod.detach(default_payment_method_id)
-            
+
             # Set the next available payment method as default
             if payment_methods.data:
                 next_payment_method = next(

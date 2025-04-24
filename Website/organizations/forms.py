@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Organization, OrganizationMember # type: ignore
+from .models import Organization, OrganizationMember, PendingInvites # type: ignore
 from accounts.models import User
 
 class OrganizationCreateForm(forms.ModelForm): # type: ignore
@@ -23,3 +23,10 @@ class OrganizationMemberForm(forms.ModelForm):
 class OrganizationCreateFormWithMembers(forms.Form):
     organization = OrganizationCreateForm()
     members = OrganizationMemberForm()
+
+class NonexistantOrganizationMemberForm(forms.ModelForm):
+    email = forms.EmailField()
+
+    class Meta:
+        model= PendingInvites
+        fields = ['email']
