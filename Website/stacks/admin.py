@@ -6,5 +6,4 @@ class PurchasableStackAdmin(admin.ModelAdmin):
     search_fields = ("type", "variant", "version", "price_id")
     list_display = ("id", "type", "variant", "version", "price_id")
 
-admin.site.register(PurchasableStack, PurchasableStackAdmin)
 
