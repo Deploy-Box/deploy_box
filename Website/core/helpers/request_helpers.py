@@ -1,7 +1,7 @@
 import json
 from typing import Literal
 from urllib.parse import parse_qs
-from django.http import HttpRequest, JsonResponse  # type: ignore
+from django.http import HttpRequest, JsonResponse
 
 class MissingFieldError(Exception):
     def __init__(self, message: str, status: int = 400):

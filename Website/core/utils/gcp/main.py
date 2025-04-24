@@ -9,6 +9,7 @@ import google.auth.transport.requests
 
 
 class GCPUtils:
+    # Docs: https://cloud.google.com/python/docs/reference/
     _instance = None
 
     def __new__(cls):
@@ -65,7 +66,9 @@ class GCPUtils:
         }
 
         if method == "GET":
-            return requests.get(url, headers=headers).json()
+            response = requests.get(url, headers=headers)
+            print(response.status_code)
+            return response.json()
         elif method == "POST":
             return requests.post(url, headers=headers, json=data).json()
         elif method == "PUT":

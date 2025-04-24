@@ -2,12 +2,14 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from core.admin import admin_site
+
 
 urlpatterns = [
     # Main site URLs (frontend)
     path("", include(("main_site.urls", "main_site"), namespace="main_site")),
     # Admin interface
-    path("admin/", admin.site.urls),
+    path("admin/", admin_site.urls),
     # API endpoints
     path(
         "api/v1/",

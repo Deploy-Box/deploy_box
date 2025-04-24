@@ -31,8 +31,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "rest_framework_simplejwt",
     "oauth2_provider",
     "tailwind",
     "theme",
@@ -91,11 +89,20 @@ SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_SAVE_EVERY_REQUEST = True
 
+# Disable CSRF protection
+CSRF_TRUSTED_ORIGINS = []
+for host in ALLOWED_HOSTS:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{host}")
+    CSRF_TRUSTED_ORIGINS.append(f"http://{host}")
+
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False
+
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_SSL_REDIRECT = not DEBUG
-CSRF_COOKIE_SECURE = not DEBUG
 
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
