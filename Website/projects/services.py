@@ -1,6 +1,5 @@
 import logging
 from django.http import HttpResponse, JsonResponse
-from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 
@@ -28,7 +27,11 @@ def get_projects(user: User) -> JsonResponse:
     return JsonResponse({"data": list(projects)})
 
 def get_project(user: User, project_id: str) -> Project | None:
-    return Project.objects.filter(user=user, id=project_id).first()
+    project = Project.objects.filter(user=user, id=project_id).first()
+    if not project:
+        return None
+    
+    return project
 
 
 def create_project(user: User, name: str, description: str, organization_id: str) -> JsonResponse | HttpResponse:
@@ -82,6 +85,7 @@ def delete_project(project_id: str, user: User) -> JsonResponse:
     try:
         project = Project.objects.get(id=project_id)
     except Project.DoesNotExist:
+        logger.error(f"Project not found: {project_id}")
         return JsonResponse({"error": "Project not found"}, status=404)
 
     # Check if the user is a member of the project

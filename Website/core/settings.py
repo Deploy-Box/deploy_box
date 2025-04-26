@@ -90,10 +90,10 @@ SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_SAVE_EVERY_REQUEST = True
 
 # Disable CSRF protection
-CSRF_TRUSTED_ORIGINS = []
+CSRF_TRUSTED_ORIGINS: list[str] = []
+
 for host in ALLOWED_HOSTS:
-    CSRF_TRUSTED_ORIGINS.append(f"https://{host}")
-    CSRF_TRUSTED_ORIGINS.append(f"http://{host}")
+    CSRF_TRUSTED_ORIGINS.extend([f"https://{host}", f"http://{host}"])
 
 CSRF_COOKIE_SECURE = not DEBUG
 CSRF_USE_SESSIONS = False
@@ -172,6 +172,8 @@ STRIPE = {
     "SECRET_KEY": os.environ.get("STRIPE_SECRET_KEY"),
     "WEBHOOK_SECRET": os.environ.get("STRIPE_WEBHOOK_SECRET"),
 }
+
+print(os.environ.get("STRIPE_PUBLISHABLE_KEY"))
 
 MONGO_DB = {
     "ORG_ID": os.environ.get("MONGODB_ORG_ID"),

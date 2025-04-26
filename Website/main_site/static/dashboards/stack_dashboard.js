@@ -62,8 +62,99 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     });
+
+    // Check GitHub authorization status
+    checkGitHubAuth();
+
+    // Repository dropdown functionality
+    const repoDropdownBtn = document.getElementById('repo-dropdown-btn');
+    const repoDropdown = document.getElementById('repo-dropdown');
+
+    if (repoDropdownBtn && repoDropdown) {
+        repoDropdownBtn.addEventListener('click', function () {
+            repoDropdown.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function (event) {
+            if (!repoDropdownBtn.contains(event.target) && !repoDropdown.contains(event.target)) {
+                repoDropdown.classList.add('hidden');
+            }
+        });
+    }
 });
 
+function checkGitHubAuth() {
+    fetch('/api/v1/github/repositories/json/')
+        .then(response => {
+            if (response.ok) {
+                // User is authorized, show repository dropdown
+                document.getElementById('github-connect').classList.add('hidden');
+                document.getElementById('github-repos').classList.remove('hidden');
+                return response.json();
+            } else {
+                // User is not authorized, show connect button
+                document.getElementById('github-connect').classList.remove('hidden');
+                document.getElementById('github-repos').classList.add('hidden');
+                throw new Error('Not authorized');
+            }
+        })
+        .then(data => {
+            // Populate repository dropdown
+            const repoDropdown = document.getElementById('repo-dropdown');
+            if (repoDropdown) {
+                const repoList = repoDropdown.querySelector('.py-2');
+                repoList.innerHTML = '';
+
+                data.repositories.forEach(repo => {
+                    const repoItem = document.createElement('a');
+                    repoItem.href = '#';
+                    repoItem.className = 'block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100';
+                    repoItem.textContent = repo.full_name;
+                    repoItem.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        // Handle repository selection
+                        const repoName = repo.full_name;
+                        const dashboard = document.getElementById('dashboard');
+                        const stack_id = dashboard.getAttribute('data-stack-id');
+
+                        // Create webhook
+                        fetch('/api/v1/github/webhooks/create/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                'repo-name': repoName,
+                                'stack-id': stack_id
+                            })
+                        })
+                            .then(response => {
+                                if (!response.ok) {
+                                    throw new Error('Failed to create webhook');
+                                }
+                                return response.json();
+                            })
+                            .then(data => {
+                                // Show success message
+                                alert('Successfully connected repository!');
+                                // Update UI to show connected status
+                                repoDropdownBtn.textContent = `Connected: ${repo.full_name}`;
+                                repoDropdown.classList.add('hidden');
+                            })
+                            .catch(error => {
+                                console.error('Error creating webhook:', error);
+                                alert('Failed to connect repository. Please try again.');
+                            });
+                    });
+                    repoList.appendChild(repoItem);
+                });
+            }
+        })
+        .catch(error => {
+            console.error('Error checking GitHub auth:', error);
+        });
+}
 
 window.onload = function () {
     // Get the organization_id, project_id, and stack_id from the data attributes
@@ -442,24 +533,24 @@ function setupLogControls() {
 
 function deleteStack(stackId) {
     if (confirm('Are you sure you want to delete this stack? This action cannot be undone.')) {
-        fetch(`/api/v1/stacks/${stackId}/delete`, {
+        fetch(`/api/v1/stacks/${stackId}/`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
             },
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = '/dashboard'; // Redirect to dashboard after successful deletion
-            } else {
-                alert('Failed to delete stack: ' + (data.error || 'Unknown error'));
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('An error occurred while deleting the stack');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = '/dashboard'; // Redirect to dashboard after successful deletion
+                } else {
+                    alert('Failed to delete stack: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the stack');
+            });
     }
 }
 

@@ -40,11 +40,22 @@ def add_stack(
         )
 
 
-def get_stack(request) -> JsonResponse:
-    return JsonResponse({"message": "Stack retrieved successfully."})
+def get_stack(stack_id: str) -> Stack:
+    return Stack.objects.get(id=stack_id)
+
+def delete_stack(stack: Stack) -> bool:
+    try:
+        stack.delete()
+    except Exception as e:
+        logger.error(f"Failed to delete stack: {str(e)}")
+        return False
+
+    return True
 
 def get_stacks(user: User) -> list[Stack]:
-    return list(Stack.objects.filter(project__user=user).order_by("-created_at"))
+    projects = Project.objects.filter(projectmember__user=user)
+
+    return list(Stack.objects.filter(project__in=projects).order_by("-created_at"))
 
 
 def deploy_MERN_stack(stack: Stack) -> JsonResponse:
