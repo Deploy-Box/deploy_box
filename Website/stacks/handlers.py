@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from core.decorators import AuthHttpRequest
 import stacks.services as services
 from projects.models import Project
-from stacks.models import PurchasableStack
+from stacks.models import PurchasableStack, Stack
 from core.helpers import request_helpers
 
 
@@ -31,8 +31,15 @@ def patch_stack(request: AuthHttpRequest) -> JsonResponse:
     return JsonResponse({"error": "Not implemented"}, status=501)
 
 
-def delete_stack(request: AuthHttpRequest) -> JsonResponse:
-    return JsonResponse({"error": "Not implemented"}, status=501)
+def delete_stack(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
+    stack = get_object_or_404(Stack, id=stack_id)
+
+    stack_deleted = services.delete_stack(stack)
+
+    if not stack_deleted:
+        return JsonResponse({"error": "Failed to delete stack."}, status=500)
+    
+    return JsonResponse({"success": True, "message": "Stack deleted successfully."}, status=200)
 
 
 def get_stack_usage(request: AuthHttpRequest) -> JsonResponse:

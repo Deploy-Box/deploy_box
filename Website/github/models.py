@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
 from cryptography.fernet import Fernet
+
 from stacks.models import Stack
 from core.fields import ShortUUIDField
 
@@ -36,7 +37,7 @@ class Token(models.Model):
         """Encrypt and store GitHub token."""
         assert isinstance(ENCRYPTION_KEY, str)
         cipher = Fernet(ENCRYPTION_KEY)
-        token_string = str(token)  # Ensure token is a string
+        token_string = str(token)
         encrypted_token = cipher.encrypt(token_string.encode())
         self.encrypted_token = encrypted_token
 
@@ -44,6 +45,7 @@ class Token(models.Model):
         """Decrypt and return GitHub token."""
         assert isinstance(ENCRYPTION_KEY, str)
         cipher = Fernet(ENCRYPTION_KEY)
-        decrypted_token = cipher.decrypt(self.encrypted_token)
-        decoded_token = decrypted_token.decode()
-        return decoded_token
+        bytes_token = bytes(self.encrypted_token)
+        decrypted_token = cipher.decrypt(bytes_token)
+        return decrypted_token.decode()
+

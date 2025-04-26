@@ -14,7 +14,7 @@ class MissingFieldError(Exception):
 
 def assertRequestFields(
     request: HttpRequest, required_fields: list[str], optional_fields: list[str] = [], body_or_header: Literal["body", "header"] = "body", mimetype: Literal["application/json", "application/x-www-form-urlencoded"] = "application/json"
-) ->  tuple:
+) -> tuple[str, ...]:
     """
     Check if the request contains all required fields.
 
@@ -26,8 +26,7 @@ def assertRequestFields(
         mimetype (Literal["application/json", "application/x-www-form-urlencoded"]): The expected content type of the request body.
 
     Returns:
-        JsonResponse | tuple: Returns a JsonResponse with an error message if a required field is missing,
-                              otherwise returns a tuple of the field values.
+        tuple[str, ...]: Returns a tuple of string values for all fields. Optional fields will return empty strings if not present.
     """
     return_fields = ()
 
@@ -59,12 +58,14 @@ def assertRequestFields(
                 f"Missing required field: {field}", status=400
             )
 
-        return_fields += (data.get(field),)
+        value = data.get(field)
+        return_fields += (str(value) if value is not None else "",)
 
     for field in optional_fields:
         if field in data.keys():
-            return_fields += (data.get(field),)
+            value = data.get(field)
+            return_fields += (str(value) if value is not None else "",)
         else:
-            return_fields += (None,)
+            return_fields += ("",)  # Return empty string instead of None for optional fields
 
     return return_fields

@@ -40,11 +40,22 @@ def add_stack(
         )
 
 
-def get_stack(request) -> JsonResponse:
-    return JsonResponse({"message": "Stack retrieved successfully."})
+def get_stack(stack_id: str) -> Stack:
+    return Stack.objects.get(id=stack_id)
+
+def delete_stack(stack: Stack) -> bool:
+    try:
+        stack.delete()
+    except Exception as e:
+        logger.error(f"Failed to delete stack: {str(e)}")
+        return False
+
+    return True
 
 def get_stacks(user: User) -> list[Stack]:
-    return list(Stack.objects.filter(project__user=user).order_by("-created_at"))
+    projects = Project.objects.filter(projectmember__user=user)
+
+    return list(Stack.objects.filter(project__in=projects).order_by("-created_at"))
 
 
 def deploy_MERN_stack(stack: Stack) -> JsonResponse:
@@ -64,7 +75,7 @@ def deploy_MERN_stack(stack: Stack) -> JsonResponse:
         uri=mongo_db_uri,
     )
 
-    backend_image = "gcr.io/deploy-box/mern-backend"
+    backend_image = f"gcr.io/{gcp_utils.project_id}/mern-backend"
     print(f"Deploying backend with image: {backend_image}")
     backend_url = gcp_utils.deploy_service(
         stack_id,
@@ -80,7 +91,7 @@ def deploy_MERN_stack(stack: Stack) -> JsonResponse:
         image_url=backend_image,
     )
 
-    frontend_image = "gcr.io/deploy-box/mern-frontend"
+    frontend_image = f"gcr.io/{gcp_utils.project_id}/mern-frontend"
     print(f"Deploying frontend with image: {frontend_image}")
     frontend_url = gcp_utils.deploy_service(
         stack_id,
@@ -121,7 +132,7 @@ def deploy_django_stack(stack: Stack):
 
     django_secret_key = secrets.token_urlsafe(50)
 
-    backend_image = "gcr.io/deploy-box/django"
+    backend_image = f"gcr.io/{gcp_utils.project_id}/django"
     print(f"Deploying backend with image: {backend_image}")
     frontend_url = gcp_utils.deploy_service(
         stack_id,

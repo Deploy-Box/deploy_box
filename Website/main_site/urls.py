@@ -29,8 +29,16 @@ urlpatterns = [
         views.stack_dashboard,
         name="stack_dashboard",
     ),
-    path("dashboard/organizations/<str:organization_id>/add_org_member", views.add_org_members, name="add_org_members"),
-    path("dashboard/organizations/<str:organization_id>/add_nonexistant_org_member", views.add_nonexistant_org_members, name="add_nonexistant_org_members"),
+    path(
+        "dashboard/organizations/<str:organization_id>/add_org_member",
+        views.add_org_members,
+        name="add_org_members",
+    ),
+    path(
+        "dashboard/organizations/<str:organization_id>/add_nonexistant_org_member",
+        views.add_nonexistant_org_members,
+        name="add_nonexistant_org_members",
+    ),
     # Authentication
     path(
         "login/",
@@ -45,6 +53,14 @@ urlpatterns = [
     path(
         "payments/checkout/cancelled/", views.cancelled_view, name="checkout_cancelled"
     ),
-    path("dashboard/organizations/create_organization_form", views.create_organization_form, name='create_organization_form'),
-    path("dashboard/organizations/<str:organization_id>/create_project_form", views.create_project_form, name='create_project_form')
+    path(
+        "dashboard/organizations/create_organization_form",
+        views.create_organization_form,
+        name="create_organization_form",
+    ),
+    path(
+        "dashboard/organizations/<str:organization_id>/create_project_form",
+        views.create_project_form,
+        name="create_project_form",
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

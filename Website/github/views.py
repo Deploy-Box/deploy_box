@@ -3,6 +3,8 @@ import hmac
 import hashlib
 import secrets
 import threading
+import json
+import logging
 
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse, HttpRequest
@@ -20,30 +22,35 @@ from stacks.models import Stack
 # GitHub OAuth credentials
 CLIENT_ID = settings.GITHUB.get("CLIENT_ID")
 CLIENT_SECRET = settings.GITHUB.get("CLIENT_SECRET")
-GITHUB_AUTH_URL = "https://github.com/login/oauth/authorize"
-GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 GITHUB_API_BASE = "https://api.github.com"
-GITHUB_USER_URL = "https://api.github.com/user"
 GITHUB_REPOS_URL = "https://api.github.com/user/repos"
 
+logger = logging.getLogger(__name__)
 
 def home(_: HttpRequest) -> HttpResponse:
-    print(CLIENT_ID)
     return HttpResponse(
         "Welcome to Deploy Box! <a href='/api/v1/github/auth/login'>Login with GitHub</a>"
     )
 
 
-def github_login(_: HttpRequest) -> HttpResponse:
+def login(request: HttpRequest) -> HttpResponse:
     """Redirects users to GitHub OAuth page."""
-    return redirect(f"{GITHUB_AUTH_URL}?client_id={CLIENT_ID}&scope=repo")
+    next_url = request.GET.get("next")
+    state = next_url if next_url else ""
+    
+    GITHUB_AUTH_URL = "https://github.com/login/oauth/authorize"
+    return redirect(f"{GITHUB_AUTH_URL}?client_id={CLIENT_ID}&scope=repo&state={state}")
 
 
-def github_callback(request: HttpRequest) -> HttpResponse:
+def callback(request: HttpRequest) -> HttpResponse:
     """Handles GitHub OAuth callback and fetches user info."""
     code = request.GET.get("code")
+    state = request.GET.get("state", "")  # Get the state parameter which contains our next URL
+    
     if not code:
         return HttpResponse("Authorization failed", status=400)
+
+    GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
 
     # Exchange code for access token
     token_response = requests.post(
@@ -52,12 +59,15 @@ def github_callback(request: HttpRequest) -> HttpResponse:
         data={"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET, "code": code},
     )
     token_json = token_response.json()
+
+    print(token_json)
     access_token = token_json.get("access_token")
 
     if not access_token:
         return HttpResponse("Failed to retrieve access token", status=400)
 
     # Fetch user info from GitHub API
+    GITHUB_USER_URL = "https://api.github.com/user"
     user_response = requests.get(
         GITHUB_USER_URL, headers={"Authorization": f"token {access_token}"}
     )
@@ -77,7 +87,11 @@ def github_callback(request: HttpRequest) -> HttpResponse:
 
     print("access_token:", access_token)  # For debugging purposes, remove in production
 
-    return redirect(reverse("github:repository_list"))
+    # Use the state parameter as the return URL
+    if state:
+        return redirect(state)
+    
+    return redirect(reverse("main_site:dashboard"))
 
 
 def dashboard(request: HttpRequest) -> HttpResponse:
@@ -139,42 +153,68 @@ def list_repos(request: AuthHttpRequest) -> HttpResponse:
 def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
     """Create and store a GitHub webhook for a user's repository."""
     user = request.auth_user
+    logger.info(f"Starting webhook creation process for user {user.username}")
 
     try:
         repo_name, stack_id = request_helpers.assertRequestFields(
             request, ["repo-name", "stack-id"]
         )
+        logger.info(f"Received webhook creation request for repository {repo_name} and stack {stack_id}")
     except request_helpers.MissingFieldError as e:
+        logger.error(f"Missing required fields in webhook creation request: {str(e)}")
         return e.to_response()
-
-    stack = get_object_or_404(Stack, id=stack_id, user=user)
+    
+    stack = stack_services.get_stack(stack_id)
     github_token = get_object_or_404(Token, user=user).get_token()
 
     headers = {"Authorization": f"token {github_token}"}
     try:
+        logger.debug("Verifying GitHub token validity")
         response = requests.get(f"{GITHUB_API_BASE}/user", headers=headers, timeout=5)
         response.raise_for_status()
+        logger.debug("GitHub token verification successful")
     except requests.RequestException as e:
+        logger.error(f"GitHub API request failed: {str(e)}")
         return JsonResponse(
             {"error": f"GitHub API request failed: {str(e)}"}, status=400
         )
 
-    github_username = response.json().get("login")
-
-    # Verify repository existence
-    repo_check_url = f"{GITHUB_API_BASE}/repos/{github_username}/{repo_name}"
-    repo_response = requests.get(repo_check_url, headers=headers)
-    if repo_response.status_code != 200:
+    # Split repository name and validate format
+    try:
+        owner, repo = repo_name.split("/")
+        if not owner or not repo:
+            raise ValueError("Invalid repository format")
+        logger.debug(f"Repository format validated: owner={owner}, repo={repo}")
+    except ValueError as e:
+        logger.error(f"Invalid repository format: {repo_name}")
         return JsonResponse(
-            {"error": "Repository not found or access denied"}, status=404
+            {"error": "Invalid repository format. Expected format: owner/repo"}, status=400
+        )
+
+    # Verify repository existence and access
+    repo_check_url = f"{GITHUB_API_BASE}/repos/{owner}/{repo}"
+    try:
+        logger.debug(f"Verifying repository existence: {repo_check_url}")
+        repo_response = requests.get(repo_check_url, headers=headers, timeout=5)
+        if repo_response.status_code == 404:
+            logger.error(f"Repository not found: {repo_name}")
+            return JsonResponse(
+                {"error": "Repository not found or you don't have access to it"}, status=404
+            )
+        repo_response.raise_for_status()
+        logger.debug(f"Repository verification successful: {repo_name}")
+    except requests.RequestException as e:
+        logger.error(f"Failed to verify repository {repo_name}: {str(e)}")
+        return JsonResponse(
+            {"error": f"Failed to verify repository: {str(e)}"}, status=400
         )
 
     # Generate a unique webhook secret
     webhook_secret = secrets.token_hex(32)
-    print(webhook_secret)  # For debugging purposes, remove in production
+    logger.debug("Generated webhook secret")
 
     # Webhook URL
-    webhook_url = f"{settings.HOST}/github/webhook"
+    webhook_url = f"{settings.HOST}/api/v1/github/webhook/"
 
     payload = {
         "name": "web",
@@ -188,31 +228,63 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
     }
 
     try:
+        logger.info(f"Creating webhook for repository {repo_name}")
         webhook_response = requests.post(
-            f"https://api.github.com/repos/{github_username}/{repo_name}/hooks",
+            f"{GITHUB_API_BASE}/repos/{owner}/{repo}/hooks",
             headers=headers,
             json=payload,
             timeout=5,
         )
+        
+        if webhook_response.status_code == 404:
+            logger.error(f"Failed to create webhook for {repo_name}: Repository not found or insufficient permissions")
+            return JsonResponse(
+                {"error": "Repository not found or you don't have permission to create webhooks"}, 
+                status=404
+            )
+        elif webhook_response.status_code == 422:
+            error_details = webhook_response.json()
+            logger.error(f"Failed to create webhook for {repo_name}: Validation error. Details: {error_details}")
+            return JsonResponse(
+                {
+                    "error": "Failed to create webhook: Validation error",
+                    "details": error_details
+                }, 
+                status=422
+            )
         webhook_response.raise_for_status()
 
         # Store webhook details in the database
         webhook_data = webhook_response.json()
-        if webhook_response.status_code == 201:
-            # Successfully created webhook, save to database
-            Webhook.objects.create(
-                user=user,
-                repository=f"{github_username}/{repo_name}",
-                webhook_id=webhook_data.get("id"),
-                stack=stack,
-                secret=webhook_secret,
-            )
-        else:
-            # Handle unexpected response
-            return JsonResponse({"error": "Failed to create webhook"}, status=400)
+        logger.debug(f"Webhook created successfully, storing in database: {webhook_data.get('id')}")
+        Webhook.objects.create(
+            user=user,
+            repository=f"{owner}/{repo}",
+            webhook_id=webhook_data.get("id"),
+            stack=stack,
+            secret=webhook_secret,
+        )
+        logger.info(f"Webhook successfully created and stored for repository {repo_name}")
+
     except requests.RequestException as e:
+        error_message = str(e)
+        if hasattr(e, 'response') and e.response is not None:
+            try:
+                error_details = e.response.json()
+                logger.error(f"Failed to create webhook for {repo_name}: {error_message}. Response: {error_details}")
+                return JsonResponse(
+                    {
+                        "error": f"Failed to create webhook: {error_message}",
+                        "details": error_details
+                    }, 
+                    status=e.response.status_code
+                )
+            except ValueError:
+                logger.error(f"Failed to create webhook for {repo_name}: {error_message}")
+        else:
+            logger.error(f"Failed to create webhook for {repo_name}: {error_message}")
         return JsonResponse(
-            {"error": f"Failed to create webhook: {str(e)}"}, status=400
+            {"error": f"Failed to create webhook: {error_message}"}, status=400
         )
 
     return JsonResponse(
@@ -230,8 +302,8 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "Invalid request"}, status=400)
 
     try:
-        signature, webhook_id, event_type, repository_name, ref, payload  = request_helpers.assertRequestFields(
-            request, ["X-Hub-Signature-256", "X-GitHub-Hook-ID", "X-GitHub-Event", "repository", "ref", "payload"], body_or_header="header"
+        signature, webhook_id, event_type, repository_name, ref = request_helpers.assertRequestFields(
+            request, ["X-Hub-Signature-256", "X-GitHub-Hook-ID", "X-GitHub-Event", "repository", "ref"], body_or_header="header"
         )
     except request_helpers.MissingFieldError as e:
         return e.to_response()
@@ -247,7 +319,11 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
         return JsonResponse({"error": "Invalid signature"}, status=403)
 
     # Parse webhook payload
-    repository_name = payload.get("repository", {}).get("full_name", "unknown/repo")
+    try:
+        payload = json.loads(request.body)
+        repository_name = payload.get("repository", {}).get("full_name", "unknown/repo")
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON payload"}, status=400)
 
     # Check if this involves the main branch
     if not ref or not ref.endswith("/main"):
@@ -313,3 +389,22 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
         ).start()
 
     return JsonResponse({"status": "success", "event_type": event_type}, status=200)
+
+
+@oauth_required()
+def get_repos_json(request: AuthHttpRequest) -> JsonResponse:
+    """Fetch user repositories and return as JSON."""
+    user = request.auth_user
+    github_token = get_object_or_404(Token, user=user).get_token()
+
+    repo_response = requests.get(
+        GITHUB_REPOS_URL,
+        headers={"Authorization": f"token {github_token}"},
+        params={"per_page": 100},
+    )
+
+    if repo_response.status_code != 200:
+        return JsonResponse({"error": "Failed to fetch repositories"}, status=400)
+
+    repos = repo_response.json()
+    return JsonResponse({"repositories": repos})

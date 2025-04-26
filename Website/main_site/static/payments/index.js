@@ -11,10 +11,18 @@ fetch("/api/v1/payments/config")
     document.querySelectorAll("#submitBtn").forEach((button) => {
       button.addEventListener("click", () => {
         const stack_id = button.getAttribute("data-stack-id");
-        const org_id = document.getElementById("org_choice").value;
+        const org_id = document.getElementById("org_dropdown").value;
         const project_id = document.getElementById("project_dropdown").value;
-        console.log(org_id);
-        console.log(stack_id);
+
+        // Validate selections
+        if (!org_id) {
+          alert("Please select an organization before purchasing");
+          return;
+        }
+        if (!project_id) {
+          alert("Please select a project before purchasing");
+          return;
+        }
 
         // Get Checkout Session ID
         fetch(`/api/v1/payments/checkout/create/${org_id}/`, {

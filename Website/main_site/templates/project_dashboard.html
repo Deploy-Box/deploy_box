@@ -31,28 +31,20 @@
                 <div id="stacksList" class="space-y-4">
                     <!-- Stacks will be loaded here dynamically -->
                     {% for stack in stacks %}
-                    <div class="bg-zinc-50 p-4 rounded-lg">
+                    <a href="{% url 'main_site:stack_dashboard' organization_id project.id stack.id %}"
+                        class="block bg-zinc-50 p-4 rounded-lg hover:bg-zinc-100 transition duration-150">
                         <div class="flex justify-between items-center">
                             <div>
                                 <h3 class="text-lg font-semibold text-zinc-900">{{stack.name}}</h3>
                                 <p class="text-sm text-zinc-500">usage: {{stack.instance_usage}}</p>
-
-                            </div>
-                            <div class="space-x-2">
-                                <a href="/dashboard/org/{{ organization_id }}/proj/{{ project_id }}/stack/{{stack.id}}/" class="flex-1 bg-zinc-100 hover:bg-zinc-200 px-8 py-2 text-sm text-zinc-900 uppercase rounded transition duration-150 text-center">
-                                    Manage Organization
-                                </a>
-                                <!-- <button class="text-emerald-400 hover:text-emerald-500">
-                                    {% if member.role == 'member' %}make admin{% else %}make member{% endif %}
-                                </button> -->
-                                <button class="text-red-500 hover:text-red-600">
-                                    Delete
-                                </button>
                             </div>
                         </div>
-                    </div>
+                    </a>
                     {% empty %}
-                    <div>this org has no stacks</div>
+                    <div class="text-zinc-500">This project has no stacks</div>
+                    <a href="{% url 'main_site:pricing' %}" class="mt-4 inline-block bg-emerald-500 hover:bg-emerald-600 px-6 py-2 text-sm text-white rounded font-medium transition duration-150">
+                        Create a Stack
+                    </a>
                     {% endfor %}
                 </div>
             </div>

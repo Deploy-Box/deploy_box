@@ -8,6 +8,7 @@ from stacks.models import Stack
 from organizations.forms import OrganizationCreateFormWithMembers, OrganizationMemberForm, NonexistantOrganizationMemberForm
 from organizations.services import get_organizations
 from projects.forms import ProjectCreateFormWithMembers
+from stacks.models import PurchasableStack
 
 from core.decorators import oauth_required, AuthHttpRequest
 
@@ -65,8 +66,8 @@ def project_dashboard(request: HttpRequest, organization_id: str, project_id: st
     return render(request, "project_dashboard.html", {"organization_id": organization_id, "project": project, 'stacks': stacks})
 
 @oauth_required()
-def stack_dashboard(request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
-    user = request.user
+def stack_dashboard(request: AuthHttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
+    # TODO: Check if user is a member of the project
     stack = Stack.objects.get(id=stack_id)
     return render(request, "stack_dashboard.html", {"organization_id": organization_id, "project_id": project_id, "stack": stack})
 
@@ -97,7 +98,8 @@ def home_page_view(request: AuthHttpRequest) -> HttpResponse:
     user = request.auth_user
     organizations = get_organizations(user)
     projects = [project for organization in organizations for project in organization.get_projects()]
-    return render(request, "payments/home.html", {"organizations": organizations, "projects":  projects})
+    stack_options = PurchasableStack.objects.all()
+    return render(request, "payments/home.html", {"organizations": organizations, "projects":  projects, "stack_options": stack_options})
 
 
 @oauth_required()

@@ -24,12 +24,15 @@ class GCPUtils:
 
         self.__cloud_platform_creds = None
         self.__initialized = True
+        self.project_id = settings.GCP.get("PROJECT_ID")
+
+        assert self.project_id is not None, "Project ID not found in settings"
 
         self.__load_credentials()
         self.__get_auth_token()
 
     def __load_credentials(self):
-        SERVICE_ACCOUNT_FILE = "key.json"
+        SERVICE_ACCOUNT_FILE = settings.GCP.get("KEY_PATH")
 
         # Scopes needed for Cloud Run
         SCOPES = ["https://www.googleapis.com/auth/cloud-platform"]
@@ -94,7 +97,7 @@ class GCPUtils:
         ).strftime("%Y-%m-%dT00:00:00Z")
 
         SERVICE_URL = (
-            "https://monitoring.googleapis.com/v3/projects/deploy-box/timeSeries"
+            "https://monitoring.googleapis.com/v3/projects/self.project_id/timeSeries"
             '?filter=metric.type="run.googleapis.com/container/billable_instance_time"'
             f"&interval.startTime={start_time}"
             f"&interval.endTime={end_time}"
@@ -108,7 +111,6 @@ class GCPUtils:
     ):
         try:
             # Replace with your project ID
-            project_id = "deploy-box"
             github_url = (
                 f"https://{github_token}:x-oauth-basic@github.com/{github_repo}.git"
             )
@@ -116,7 +118,7 @@ class GCPUtils:
             print(github_url)
             print(github_repo_name)
 
-            image_name = f"us-central1-docker.pkg.dev/{project_id}/deploy-box-repository/{layer}-{stack_id}".lower()
+            image_name = f"us-central1-docker.pkg.dev/{self.project_id}/deploy-box-repository/{layer}-{stack_id}".lower()
 
             # Define the Cloud Build steps
             build_steps = [
@@ -150,7 +152,7 @@ class GCPUtils:
                     "args": [
                         "-c",
                         f"""
-                        service_full_name="projects/{project_id}/locations/us-central1/services/{layer.lower()}-{stack_id}"
+                        service_full_name="projects/{self.project_id}/locations/us-central1/services/{layer.lower()}-{stack_id}"
                         gcloud run services add-iam-policy-binding {layer.lower()}-{stack_id} \
                             --region=us-central1 \
                             --member="allUsers" \
@@ -165,7 +167,7 @@ class GCPUtils:
 
             # API endpoint for creating a build
             api_url = (
-                f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds"
+                f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
             )
 
             # Submit the build
@@ -181,7 +183,7 @@ class GCPUtils:
 
             # Poll for build status
             print("Waiting for build to complete...")
-            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds/{build_id}"
+            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds/{build_id}"
 
             status = "UNKNOWN"
             while True:
@@ -208,12 +210,12 @@ class GCPUtils:
             if status == "SUCCESS":
                 print(f"Build completed successfully: {build_id}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
             else:
                 print(f"Build failed with status: {status}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
 
         except Exception as e:
@@ -236,9 +238,6 @@ class GCPUtils:
         print(env_vars_str)
 
         try:
-            # Replace with your project ID
-            project_id = "deploy-box"
-
             # Define the Cloud Build steps
             build_steps = [
                 {
@@ -263,7 +262,7 @@ class GCPUtils:
                     "args": [
                         "-c",
                         f"""
-                        service_full_name="projects/{project_id}/locations/us-central1/services/{service_name}"
+                        service_full_name="projects/{self.project_id}/locations/us-central1/services/{service_name}"
                         gcloud run services add-iam-policy-binding {service_name} \
                             --region=us-central1 \
                             --member="allUsers" \
@@ -278,7 +277,7 @@ class GCPUtils:
 
             # API endpoint for creating a build
             api_url = (
-                f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds"
+                f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
             )
 
             # Submit the build
@@ -302,7 +301,7 @@ class GCPUtils:
 
             # Poll for build status
             print("Waiting for build to complete...")
-            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds/{build_id}"
+            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds/{build_id}"
 
             status = "UNKNOWN"
             while True:
@@ -329,13 +328,13 @@ class GCPUtils:
             if status == "SUCCESS":
                 print(f"Build completed successfully: {build_id}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
                 return self.get_service_endpoint(service_name)
             else:
                 print(f"Build failed with status: {status}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
 
         except Exception as e:
@@ -356,9 +355,6 @@ class GCPUtils:
         print(env_vars_str)
 
         try:
-            # Replace with your project ID
-            project_id = "deploy-box"
-
             # Define the Cloud Build steps
             build_steps = [
                 {
@@ -384,7 +380,7 @@ class GCPUtils:
 
             # API endpoint for creating a build
             api_url = (
-                f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds"
+                f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
             )
 
             # Submit the build
@@ -408,7 +404,7 @@ class GCPUtils:
 
             # Poll for build status
             print("Waiting for build to complete...")
-            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{project_id}/builds/{build_id}"
+            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds/{build_id}"
 
             status = "UNKNOWN"
             while True:
@@ -435,20 +431,20 @@ class GCPUtils:
             if status == "SUCCESS":
                 print(f"Build completed successfully: {build_id}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
                 return self.get_service_endpoint(service_name)
             else:
                 print(f"Build failed with status: {status}")
                 print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={project_id}"
+                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
                 )
 
         except Exception as e:
             print(f"An error occurred: {e}")
 
     def get_all_services(self) -> dict:
-        url = "https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services"
+        url = f"https://run.googleapis.com/v2/projects/{self.project_id}/locations/us-central1/services"
         response = self.__request_helper(url)
 
         if response is None:
@@ -469,7 +465,7 @@ class GCPUtils:
         return {"status": "success", "data": cleaned_services}
 
     def get_service_endpoint(self, service_name: str) -> str:
-        url = f"https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services/{service_name}"
+        url = f"https://run.googleapis.com/v2/projects/{self.project_id}/locations/us-central1/services/{service_name}"
         response = self.__request_helper(url)
 
         if response is None:
@@ -509,7 +505,7 @@ class GCPUtils:
                 url,
                 method="POST",
                 data={
-                    "resourceNames": ["projects/deploy-box"],
+                    "resourceNames": [f"projects/{self.project_id}"],
                     "filter": f'resource.type="cloud_run_revision" AND resource.labels.service_name="{service_name}" AND resource.labels.location="us-central1"',
                     "orderBy": "timestamp desc",
                     "pageSize": 20,
@@ -549,7 +545,7 @@ class GCPUtils:
         return {"status": "success", "data": cleaned_logs}
 
     def get_service_envs(self, service_name: str) -> dict:
-        url = f"https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services/{service_name}"
+        url = f"https://run.googleapis.com/v2/projects/{self.project_id}/locations/us-central1/services/{service_name}"
         response = self.__request_helper(url)
 
         print(json.dumps(response, indent=4))
@@ -566,7 +562,7 @@ class GCPUtils:
 
     def put_service_envs(self, service_name: str, env_vars: dict) -> dict:
         # Get the existing service definition
-        service_url = f"https://run.googleapis.com/v2/projects/deploy-box/locations/us-central1/services/{service_name}"
+        service_url = f"https://run.googleapis.com/v2/projects/{self.project_id}/locations/us-central1/services/{service_name}"
         service = self.__request_helper(service_url, method="GET")
 
         if not service:
