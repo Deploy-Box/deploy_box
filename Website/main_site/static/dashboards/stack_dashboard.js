@@ -119,7 +119,7 @@ function checkGitHubAuth() {
                         const stack_id = dashboard.getAttribute('data-stack-id');
 
                         // Create webhook
-                        fetch('/api/v1/github/webhooks/create/', {
+                        fetch('/api/v1/github/webhook/create/', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',

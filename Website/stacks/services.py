@@ -137,7 +137,7 @@ def deploy_django_stack(stack: Stack):
     frontend_url = gcp_utils.deploy_service(
         stack_id,
         backend_image,
-        "backend",
+        "django",
         {"DJANGO_SECRET_KEY": django_secret_key},
         port=8080
     )

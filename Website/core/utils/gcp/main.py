@@ -107,8 +107,19 @@ class GCPUtils:
         return self.__request_helper(SERVICE_URL)
 
     def post_build_and_deploy(
-        self, stack_id, github_repo, github_token, layer: str, port: int = 8080
+        self, stack_id, github_repo, github_token, layer: str, name: str = "", root_directory: str = "", port: int = 8080
     ):
+        if name == "":
+            name = layer
+        
+        if root_directory == "":
+            root_directory = layer
+        else:
+            if layer == "":
+                root_directory = f"{root_directory}"
+            else:
+                root_directory = f"{root_directory}/{layer}"
+        
         try:
             # Replace with your project ID
             github_url = (
@@ -118,7 +129,7 @@ class GCPUtils:
             print(github_url)
             print(github_repo_name)
 
-            image_name = f"us-central1-docker.pkg.dev/{self.project_id}/deploy-box-repository/{layer}-{stack_id}".lower()
+            image_name = f"us-central1-docker.pkg.dev/{self.project_id}/deploy-box-repository/{name}-{stack_id}".lower()
 
             # Define the Cloud Build steps
             build_steps = [
@@ -128,7 +139,7 @@ class GCPUtils:
                     "entrypoint": "bash",
                     "args": [
                         "-c",
-                        f"docker build -t {image_name} ./{github_repo_name}/{layer}",
+                        f"docker build -t {image_name} ./{github_repo_name}/{root_directory}",
                     ],
                 },
                 {"name": "gcr.io/cloud-builders/docker", "args": ["push", image_name]},
@@ -138,7 +149,7 @@ class GCPUtils:
                     "args": [
                         "-c",
                         f"""
-                        gcloud run deploy {layer.lower()}-{stack_id} \
+                        gcloud run deploy {name.lower()}-{stack_id} \
                             --image={image_name} \
                             --region=us-central1 \
                             --platform=managed \
@@ -152,8 +163,8 @@ class GCPUtils:
                     "args": [
                         "-c",
                         f"""
-                        service_full_name="projects/{self.project_id}/locations/us-central1/services/{layer.lower()}-{stack_id}"
-                        gcloud run services add-iam-policy-binding {layer.lower()}-{stack_id} \
+                        service_full_name="projects/{self.project_id}/locations/us-central1/services/{name.lower()}-{stack_id}"
+                        gcloud run services add-iam-policy-binding {name.lower()}-{stack_id} \
                             --region=us-central1 \
                             --member="allUsers" \
                             --role="roles/run.invoker"
@@ -174,12 +185,14 @@ class GCPUtils:
             print("Submitting build...")
             response = self.__request_helper(api_url, method="POST", data=build_config)
 
-            if response is None or "name" not in response:
-                print(f"Error creating build: {response}")
-                return
+            response.get("metadata", {})
+            metadata = response.get("metadata", {})
+            build = metadata.get("build", {})
+            build_id = build.get("id", None)
 
-            build_id = response["name"].split("/")[-1]
-            print(f"Build submitted with ID: {build_id}")
+            if not build_id:
+                print(f"Error creating build: {response}")
+                raise Exception("Error creating build")
 
             # Poll for build status
             print("Waiting for build to complete...")

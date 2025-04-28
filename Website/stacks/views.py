@@ -16,10 +16,6 @@ def base_routing(
     # POST: Add a new stack
     elif request.method == "POST":
         return handlers.post_stack(request)
-    
-    # DELETE: Delete a stack
-    elif request.method == "DELETE":
-        return handlers.delete_stack(request)
 
     # If the request method is not handled, return a 405 Method Not Allowed
     return JsonResponse({"error": "Method not allowed."}, status=405)
