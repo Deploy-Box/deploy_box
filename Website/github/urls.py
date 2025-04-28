@@ -15,6 +15,6 @@ urlpatterns = [
     path("repositories/json/", views.get_repos_json, name="repository_list_json"),
 
     # Webhook management
-    path("webhooks/create/", views.create_github_webhook, name="create_webhook"),
-    path("webhooks/", views.github_webhook, name="webhook_handler"),
+    path("webhook/create/", views.create_github_webhook, name="create_webhook"),
+    path("webhook/", views.github_webhook, name="webhook_handler"),
 ]

@@ -31,7 +31,7 @@ def assertRequestFields(
     return_fields = ()
 
     if body_or_header == "header":
-        data = request.headers
+        data = dict(request.headers)
     elif mimetype == "application/json":
         try:
             data = json.loads(request.body)
@@ -44,11 +44,6 @@ def assertRequestFields(
     elif mimetype == "application/x-www-form-urlencoded":
         data = parse_qs(request.body.decode("utf-8"))
         data = {key: value[0] for key, value in data.items()}
-        print(f"Data: {data}")
-    else:
-        return JsonResponse(
-            {"error": "Unsupported"}, status=400
-        )
 
     assert isinstance(data, dict)
 

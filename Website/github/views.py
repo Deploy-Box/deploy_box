@@ -18,6 +18,7 @@ from core.helpers import request_helpers
 from core.utils import GCPUtils
 from github.models import Webhook, Token
 from stacks.models import Stack
+from stacks.services import get_stack
 
 # GitHub OAuth credentials
 CLIENT_ID = settings.GITHUB.get("CLIENT_ID")
@@ -296,18 +297,20 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
 def github_webhook(request: HttpRequest) -> JsonResponse:
     """Handles GitHub webhook events."""
 
-    ALLOWED_EVENTS = {"push"}
+    ALLOWED_EVENTS = {"ping", "push", "pull_request"}
 
     if request.method != "POST":
+        print("Invalid request")
         return JsonResponse({"error": "Invalid request"}, status=400)
 
     try:
-        signature, webhook_id, event_type, repository_name, ref = request_helpers.assertRequestFields(
-            request, ["X-Hub-Signature-256", "X-GitHub-Hook-ID", "X-GitHub-Event", "repository", "ref"], body_or_header="header"
+        signature, webhook_id, event_type = request_helpers.assertRequestFields(
+            request, ["X-Hub-Signature-256", "X-Github-Hook-Id", "X-Github-Event"], body_or_header="header"
         )
+
     except request_helpers.MissingFieldError as e:
         return e.to_response()
-
+    
     webhook = get_object_or_404(Webhook, webhook_id=webhook_id)
 
     computed_signature = (
@@ -322,6 +325,7 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     try:
         payload = json.loads(request.body)
         repository_name = payload.get("repository", {}).get("full_name", "unknown/repo")
+        ref = payload.get("ref", "")
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON payload"}, status=400)
 
@@ -340,53 +344,29 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
 
     github_token = get_object_or_404(Token, user=user).get_token()
 
+
     gcp_wrapper = GCPUtils()
 
-    # TODO: Handle different repository types
-    if repository_name == "Deploy-Box/deploy_box":
-        # Handle the specific repository
-        print("Handling Deploy-Box/deploy_box repository")
+    print(webhook.stack.purchased_stack.type)
 
+    if webhook.stack.purchased_stack.type == "MERN":
         threading.Thread(
             target=gcp_wrapper.post_build_and_deploy,
-            args=(webhook.stack.id, webhook.repository, github_token, "Website"),
-        ).start()
-
-    elif repository_name == "HamzaKhairy/green_toolkit":
-        # Handle the specific repository
-        print("Handling HamzaKhairy/green_toolkit repository")
-
-        threading.Thread(
-            target=gcp_wrapper.post_build_and_deploy,
-            args=(
-                webhook.stack.id,
-                webhook.repository,
-                github_token,
-                "deploybox/MERN/backend",
-            ),
+            args=(webhook.stack.id, webhook.repository, github_token, "backend", "mern-backend", webhook.stack.root_directory),
         ).start()
 
         threading.Thread(
             target=gcp_wrapper.post_build_and_deploy,
-            args=(
-                webhook.stack.id,
-                webhook.repository,
-                github_token,
-                "deploybox/MERN/frontend",
-            ),
+            args=(webhook.stack.id, webhook.repository, github_token, "frontend", "mern-frontend", webhook.stack.root_directory),
         ).start()
 
-    else:
 
+    elif webhook.stack.purchased_stack.type == "Django":
         threading.Thread(
             target=gcp_wrapper.post_build_and_deploy,
-            args=(webhook.stack.id, webhook.repository, github_token, "backend"),
+            args=(webhook.stack.id, webhook.repository, github_token, "", "django", webhook.stack.root_directory),
         ).start()
 
-        threading.Thread(
-            target=gcp_wrapper.post_build_and_deploy,
-            args=(webhook.stack.id, webhook.repository, github_token, "frontend"),
-        ).start()
 
     return JsonResponse({"status": "success", "event_type": event_type}, status=200)
 
