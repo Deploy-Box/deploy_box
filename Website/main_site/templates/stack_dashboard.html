@@ -87,6 +87,22 @@
             <!-- Stack Configuration -->
             <div class="bg-white shadow-2xl rounded-lg py-8 px-8 mb-8">
                 <h2 class="text-xl font-bold text-emerald-400 mb-6">Stack Configuration</h2>
+
+                <!-- Root Directory Configuration -->
+                <div class="mb-6">
+                    <h3 class="text-lg font-semibold text-zinc-900 mb-4">Root Directory</h3>
+                    <div class="flex items-center space-x-4">
+                        <input type="text" id="root-directory" value="{{ stack.root_directory }}"
+                            class="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                            placeholder="Enter root directory path">
+                        <button id="save-root-directory"
+                            class="bg-emerald-400 hover:bg-emerald-500 px-4 py-2 text-sm text-white rounded font-bold transition duration-150">
+                            Save
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2">The root directory where your stack's files are located.</p>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <button
                         class="bg-zinc-100 hover:bg-zinc-200 px-6 py-3 text-sm text-zinc-900 rounded font-bold transition duration-150">
