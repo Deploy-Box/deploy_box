@@ -5,6 +5,7 @@ import secrets
 import threading
 import json
 import logging
+from cryptography.fernet import Fernet
 
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse, HttpRequest
@@ -19,6 +20,7 @@ from core.utils import GCPUtils
 from github.models import Webhook, Token
 from stacks.models import Stack
 from stacks.services import get_stack
+from accounts.models import User
 
 # GitHub OAuth credentials
 CLIENT_ID = settings.GITHUB.get("CLIENT_ID")
@@ -28,17 +30,28 @@ GITHUB_REPOS_URL = "https://api.github.com/user/repos"
 
 logger = logging.getLogger(__name__)
 
+
 def home(_: HttpRequest) -> HttpResponse:
     return HttpResponse(
         "Welcome to Deploy Box! <a href='/api/v1/github/auth/login'>Login with GitHub</a>"
     )
 
 
-def login(request: HttpRequest) -> HttpResponse:
+@oauth_required()
+def login(request: AuthHttpRequest) -> HttpResponse:
     """Redirects users to GitHub OAuth page."""
-    next_url = request.GET.get("next")
-    state = next_url if next_url else ""
-    
+    next_url = request.GET.get("next", "")
+
+    # Create a unique state token that includes user ID and next URL
+    ENCRYPTION_KEY = settings.GITHUB["TOKEN_KEY"]
+
+    if not ENCRYPTION_KEY:
+        raise ValueError("GITHUB_TOKEN_KEY is not set")
+
+    state_data = {"user_id": str(request.auth_user.pk), "next": next_url}
+    cipher = Fernet(ENCRYPTION_KEY)
+    state = cipher.encrypt(json.dumps(state_data).encode())
+
     GITHUB_AUTH_URL = "https://github.com/login/oauth/authorize"
     return redirect(f"{GITHUB_AUTH_URL}?client_id={CLIENT_ID}&scope=repo&state={state}")
 
@@ -46,8 +59,30 @@ def login(request: HttpRequest) -> HttpResponse:
 def callback(request: HttpRequest) -> HttpResponse:
     """Handles GitHub OAuth callback and fetches user info."""
     code = request.GET.get("code")
-    state = request.GET.get("state", "")  # Get the state parameter which contains our next URL
-    
+    state = request.GET.get(
+        "state", ""
+    )  # Get the state parameter which contains our next URL
+
+    if not state:
+        return HttpResponse("No state parameter provided", status=400)
+
+    ENCRYPTION_KEY = settings.GITHUB["TOKEN_KEY"]
+
+    if not ENCRYPTION_KEY:
+        raise ValueError("GITHUB_TOKEN_KEY is not set")
+
+    cipher = Fernet(ENCRYPTION_KEY)
+
+    # Clean up the state parameter by removing b' prefix and single quotes if present
+    if state.startswith("b'") and state.endswith("'"):
+        state = state[2:-1]
+
+    try:
+        state_data = json.loads(cipher.decrypt(state.encode()).decode())
+    except Exception as e:
+        logger.error(f"Failed to decrypt state: {str(e)}")
+        return HttpResponse("Invalid state parameter", status=400)
+
     if not code:
         return HttpResponse("Authorization failed", status=400)
 
@@ -77,8 +112,11 @@ def callback(request: HttpRequest) -> HttpResponse:
     if "id" not in user_data:
         return HttpResponse("Failed to retrieve user info", status=400)
 
-    # Store token securely in database
-    github_token, _ = Token.objects.get_or_create(user=request.user)
+    # Check if user already has a token
+    user = User.objects.get(id=state_data["user_id"])
+
+    # Check if user already has a token
+    github_token, _ = Token.objects.get_or_create(user=user)
     github_token.set_token(access_token)
     github_token.save()
 
@@ -89,9 +127,9 @@ def callback(request: HttpRequest) -> HttpResponse:
     print("access_token:", access_token)  # For debugging purposes, remove in production
 
     # Use the state parameter as the return URL
-    if state:
-        return redirect(state)
-    
+    if state_data["next"]:
+        return redirect(state_data["next"])
+
     return redirect(reverse("main_site:dashboard"))
 
 
@@ -160,11 +198,13 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
         repo_name, stack_id = request_helpers.assertRequestFields(
             request, ["repo-name", "stack-id"]
         )
-        logger.info(f"Received webhook creation request for repository {repo_name} and stack {stack_id}")
+        logger.info(
+            f"Received webhook creation request for repository {repo_name} and stack {stack_id}"
+        )
     except request_helpers.MissingFieldError as e:
         logger.error(f"Missing required fields in webhook creation request: {str(e)}")
         return e.to_response()
-    
+
     stack = stack_services.get_stack(stack_id)
     github_token = get_object_or_404(Token, user=user).get_token()
 
@@ -189,7 +229,8 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
     except ValueError as e:
         logger.error(f"Invalid repository format: {repo_name}")
         return JsonResponse(
-            {"error": "Invalid repository format. Expected format: owner/repo"}, status=400
+            {"error": "Invalid repository format. Expected format: owner/repo"},
+            status=400,
         )
 
     # Verify repository existence and access
@@ -200,7 +241,8 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
         if repo_response.status_code == 404:
             logger.error(f"Repository not found: {repo_name}")
             return JsonResponse(
-                {"error": "Repository not found or you don't have access to it"}, status=404
+                {"error": "Repository not found or you don't have access to it"},
+                status=404,
             )
         repo_response.raise_for_status()
         logger.debug(f"Repository verification successful: {repo_name}")
@@ -236,28 +278,36 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
             json=payload,
             timeout=5,
         )
-        
+
         if webhook_response.status_code == 404:
-            logger.error(f"Failed to create webhook for {repo_name}: Repository not found or insufficient permissions")
+            logger.error(
+                f"Failed to create webhook for {repo_name}: Repository not found or insufficient permissions"
+            )
             return JsonResponse(
-                {"error": "Repository not found or you don't have permission to create webhooks"}, 
-                status=404
+                {
+                    "error": "Repository not found or you don't have permission to create webhooks"
+                },
+                status=404,
             )
         elif webhook_response.status_code == 422:
             error_details = webhook_response.json()
-            logger.error(f"Failed to create webhook for {repo_name}: Validation error. Details: {error_details}")
+            logger.error(
+                f"Failed to create webhook for {repo_name}: Validation error. Details: {error_details}"
+            )
             return JsonResponse(
                 {
                     "error": "Failed to create webhook: Validation error",
-                    "details": error_details
-                }, 
-                status=422
+                    "details": error_details,
+                },
+                status=422,
             )
         webhook_response.raise_for_status()
 
         # Store webhook details in the database
         webhook_data = webhook_response.json()
-        logger.debug(f"Webhook created successfully, storing in database: {webhook_data.get('id')}")
+        logger.debug(
+            f"Webhook created successfully, storing in database: {webhook_data.get('id')}"
+        )
         Webhook.objects.create(
             user=user,
             repository=f"{owner}/{repo}",
@@ -265,23 +315,29 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
             stack=stack,
             secret=webhook_secret,
         )
-        logger.info(f"Webhook successfully created and stored for repository {repo_name}")
+        logger.info(
+            f"Webhook successfully created and stored for repository {repo_name}"
+        )
 
     except requests.RequestException as e:
         error_message = str(e)
-        if hasattr(e, 'response') and e.response is not None:
+        if hasattr(e, "response") and e.response is not None:
             try:
                 error_details = e.response.json()
-                logger.error(f"Failed to create webhook for {repo_name}: {error_message}. Response: {error_details}")
+                logger.error(
+                    f"Failed to create webhook for {repo_name}: {error_message}. Response: {error_details}"
+                )
                 return JsonResponse(
                     {
                         "error": f"Failed to create webhook: {error_message}",
-                        "details": error_details
-                    }, 
-                    status=e.response.status_code
+                        "details": error_details,
+                    },
+                    status=e.response.status_code,
                 )
             except ValueError:
-                logger.error(f"Failed to create webhook for {repo_name}: {error_message}")
+                logger.error(
+                    f"Failed to create webhook for {repo_name}: {error_message}"
+                )
         else:
             logger.error(f"Failed to create webhook for {repo_name}: {error_message}")
         return JsonResponse(
@@ -305,12 +361,14 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
 
     try:
         signature, webhook_id, event_type = request_helpers.assertRequestFields(
-            request, ["X-Hub-Signature-256", "X-Github-Hook-Id", "X-Github-Event"], body_or_header="header"
+            request,
+            ["X-Hub-Signature-256", "X-Github-Hook-Id", "X-Github-Event"],
+            body_or_header="header",
         )
 
     except request_helpers.MissingFieldError as e:
         return e.to_response()
-    
+
     webhook = get_object_or_404(Webhook, webhook_id=webhook_id)
 
     computed_signature = (
@@ -331,7 +389,8 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
 
     # Check if this involves the main branch
     if not ref or not ref.endswith("/main"):
-        return JsonResponse({"message": "Ignored - not main branch"}, status=200)
+        if event_type != "ping":
+            return JsonResponse({"message": "Ignored - not main branch"}, status=200)
 
     # Ignore events that aren't in the allowed list
     if event_type not in ALLOWED_EVENTS:
@@ -344,7 +403,6 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
 
     github_token = get_object_or_404(Token, user=user).get_token()
 
-
     gcp_wrapper = GCPUtils()
 
     print(webhook.stack.purchased_stack.type)
@@ -352,21 +410,40 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     if webhook.stack.purchased_stack.type == "MERN":
         threading.Thread(
             target=gcp_wrapper.post_build_and_deploy,
-            args=(webhook.stack.id, webhook.repository, github_token, "backend", "mern-backend", webhook.stack.root_directory),
+            args=(
+                webhook.stack.id,
+                webhook.repository,
+                github_token,
+                "backend",
+                "mern-backend",
+                webhook.stack.root_directory,
+            ),
         ).start()
 
         threading.Thread(
             target=gcp_wrapper.post_build_and_deploy,
-            args=(webhook.stack.id, webhook.repository, github_token, "frontend", "mern-frontend", webhook.stack.root_directory),
+            args=(
+                webhook.stack.id,
+                webhook.repository,
+                github_token,
+                "frontend",
+                "mern-frontend",
+                webhook.stack.root_directory,
+            ),
         ).start()
-
 
     elif webhook.stack.purchased_stack.type == "Django":
         threading.Thread(
             target=gcp_wrapper.post_build_and_deploy,
-            args=(webhook.stack.id, webhook.repository, github_token, "", "django", webhook.stack.root_directory),
+            args=(
+                webhook.stack.id,
+                webhook.repository,
+                github_token,
+                "",
+                "django",
+                webhook.stack.root_directory,
+            ),
         ).start()
-
 
     return JsonResponse({"status": "success", "event_type": event_type}, status=200)
 
