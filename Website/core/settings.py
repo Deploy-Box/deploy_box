@@ -139,9 +139,9 @@ DATABASES = {
         "PASSWORD": os.environ.get("DB_PASSWORD"),
         "HOST": os.environ.get("DB_HOST"),
         "PORT": os.environ.get("DB_PORT"),
-        "OPTIONS": {
-            "sslrootcert": os.environ.get("DB_SSL_CERT"),
-        },
+        # "OPTIONS": {
+        #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
+        # },
         "CONN_MAX_AGE": 600,
     }
 }

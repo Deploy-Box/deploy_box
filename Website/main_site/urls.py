@@ -53,7 +53,7 @@ urlpatterns = [
         name="password_reset_confirm",
     ),
     # Payment pages
-    path("payments/", views.home_page_view, name="payments_home"),
+    path("payments/<str:variant>", views.home_page_view, name="payments_home"),
     path("payments/cards/add/", views.add_card_view, name="card_add"),
     path("payments/checkout/success/", views.success_view, name="checkout_success"),
     path(
