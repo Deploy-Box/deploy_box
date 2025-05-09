@@ -18,6 +18,7 @@ from projects.models import Project
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 
+
 def stripe_config(request: HttpRequest) -> JsonResponse:
     if request.method != "GET":
         # Handle non-GET requests
@@ -29,22 +30,33 @@ def stripe_config(request: HttpRequest) -> JsonResponse:
     stripe_config = {"public_key": STRIPE_PUBLISHABLE_KEY}
     return JsonResponse(stripe_config, status=200)
 
+
 def save_stripe_payment_method(request: AuthHttpRequest) -> JsonResponse:
     if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method. Only POST is allowed."}, status=405)
+        return JsonResponse(
+            {"error": "Invalid request method. Only POST is allowed."}, status=405
+        )
 
     try:
         data = json.loads(request.body)
         payment_method_id = data.get("payment_method_id")
-        organization_id = data.get("organization_id")  # Assuming organizationId is used as customerId
+        organization_id = data.get(
+            "organization_id"
+        )  # Assuming organizationId is used as customerId
 
         organization = get_object_or_404(Organization, id=organization_id)
         customer_id = organization.stripe_customer_id
 
-        print(f"Payment Method ID: {payment_method_id}, Customer ID: {customer_id}", "Organization ID:", organization_id)
+        print(
+            f"Payment Method ID: {payment_method_id}, Customer ID: {customer_id}",
+            "Organization ID:",
+            organization_id,
+        )
 
         if not payment_method_id or not customer_id:
-            return JsonResponse({"error": "Missing paymentMethodId or customerId"}, status=400)
+            return JsonResponse(
+                {"error": "Missing paymentMethodId or customerId"}, status=400
+            )
 
         # Attach the payment method to the customer
         stripe.PaymentMethod.attach(
@@ -58,13 +70,18 @@ def save_stripe_payment_method(request: AuthHttpRequest) -> JsonResponse:
             invoice_settings={"default_payment_method": payment_method_id},
         )
 
-        return JsonResponse({"message": "Payment method saved successfully."}, status=200)
+        return JsonResponse(
+            {"message": "Payment method saved successfully."}, status=200
+        )
 
     except stripe.error.StripeError as e:
         return JsonResponse({"error": str(e)}, status=400)
 
     except Exception as e:
-        return JsonResponse({"error": "An error occurred while saving the payment method."}, status=400)
+        return JsonResponse(
+            {"error": "An error occurred while saving the payment method."}, status=400
+        )
+
 
 @oauth_required()
 def create_checkout_session(request: AuthHttpRequest, org_id: str) -> JsonResponse:
@@ -81,7 +98,9 @@ def create_checkout_session(request: AuthHttpRequest, org_id: str) -> JsonRespon
     domain_url = settings.HOST
 
     try:
-        stack_id, project_id = request_helpers.assertRequestFields(request, ["stack_id", "project_id"])
+        stack_id, project_id = request_helpers.assertRequestFields(
+            request, ["stack_id", "project_id"]
+        )
     except request_helpers.MissingFieldError as e:
         return e.to_response()
 
@@ -134,10 +153,10 @@ def record_usage(subscription_item_id, quantity):
 
 def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
     # Use `stripe listen --forward-to http://127.0.0.1:8000/api/v1/payments/webhook/` to listen for events
-    # WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
-    WEBHOOK_SECRET = (
-        "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
-    )
+    WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
+    # WEBHOOK_SECRET = (
+    #     "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
+    # )
 
     payload = request.body
     sig_header = request.headers.get("Stripe-Signature")
@@ -165,17 +184,11 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
         organization_id = metadata.get("organization_id")
 
         # Fetch the user based on the Stripe Customer ID
-        organization = get_object_or_404(
-            Organization, id=organization_id
-        )
+        organization = get_object_or_404(Organization, id=organization_id)
 
-        project = get_object_or_404(
-            Project, id=project_id, organization=organization
-        )
+        project = get_object_or_404(Project, id=project_id, organization=organization)
 
-        purchased_stack = get_object_or_404(
-            PurchasableStack, id=purchasable_stack_id
-        )
+        purchased_stack = get_object_or_404(PurchasableStack, id=purchasable_stack_id)
 
         list_of_adjectives = [
             "Superb",
@@ -209,7 +222,7 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
             "Structure",
             "Configuration",
         ]
-        
+
         # Generate a random name for the stack
         random_adjective = random.choice(list_of_adjectives)
         random_noun = random.choice(list_of_nouns)
@@ -334,7 +347,9 @@ def get_price_item_by_name(request: HttpRequest, name: str) -> JsonResponse:
 
 def get_payment_method(request: HttpRequest) -> JsonResponse:
     if request.method != "GET":
-        return JsonResponse({"error": "Invalid request method. Only GET is allowed."}, status=405)
+        return JsonResponse(
+            {"error": "Invalid request method. Only GET is allowed."}, status=405
+        )
 
     try:
         organization_id = request.GET.get("organization_id")
@@ -345,10 +360,14 @@ def get_payment_method(request: HttpRequest) -> JsonResponse:
         customer_id = organization.stripe_customer_id
 
         if not customer_id:
-            return JsonResponse({"error": "No Stripe customer found for this organization"}, status=404)
+            return JsonResponse(
+                {"error": "No Stripe customer found for this organization"}, status=404
+            )
 
         # Retrieve the customer's default payment method
-        customer = stripe.Customer.retrieve(customer_id, expand=['invoice_settings.default_payment_method'])
+        customer = stripe.Customer.retrieve(
+            customer_id, expand=["invoice_settings.default_payment_method"]
+        )
         default_payment_method = customer.invoice_settings.default_payment_method
 
         if not default_payment_method:
@@ -367,12 +386,17 @@ def get_payment_method(request: HttpRequest) -> JsonResponse:
     except stripe.error.StripeError as e:
         return JsonResponse({"error": str(e)}, status=400)
     except Exception as e:
-        return JsonResponse({"error": "An error occurred while retrieving the payment method."}, status=400)
+        return JsonResponse(
+            {"error": "An error occurred while retrieving the payment method."},
+            status=400,
+        )
 
 
 def delete_payment_method(request: HttpRequest) -> JsonResponse:
     if request.method != "DELETE":
-        return JsonResponse({"error": "Invalid request method. Only DELETE is allowed."}, status=405)
+        return JsonResponse(
+            {"error": "Invalid request method. Only DELETE is allowed."}, status=405
+        )
 
     try:
         organization_id = request.GET.get("organization_id")
@@ -383,18 +407,19 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
         customer_id = organization.stripe_customer_id
 
         if not customer_id:
-            return JsonResponse({"error": "No Stripe customer found for this organization"}, status=404)
+            return JsonResponse(
+                {"error": "No Stripe customer found for this organization"}, status=404
+            )
 
         # Get all payment methods for the customer
-        payment_methods = stripe.PaymentMethod.list(
-            customer=customer_id,
-            type='card'
-        )
+        payment_methods = stripe.PaymentMethod.list(customer=customer_id, type="card")
 
         if len(payment_methods.data) <= 1:
             return JsonResponse(
-                {"error": "Cannot remove the only payment method. Please add another payment method first."},
-                status=400
+                {
+                    "error": "Cannot remove the only payment method. Please add another payment method first."
+                },
+                status=400,
             )
 
         # Get the default payment method
@@ -408,20 +433,33 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
             # Set the next available payment method as default
             if payment_methods.data:
                 next_payment_method = next(
-                    (pm for pm in payment_methods.data if pm.id != default_payment_method_id),
-                    None
+                    (
+                        pm
+                        for pm in payment_methods.data
+                        if pm.id != default_payment_method_id
+                    ),
+                    None,
                 )
                 if next_payment_method:
                     stripe.Customer.modify(
                         customer_id,
-                        invoice_settings={"default_payment_method": next_payment_method.id}
+                        invoice_settings={
+                            "default_payment_method": next_payment_method.id
+                        },
                     )
 
-            return JsonResponse({"message": "Payment method removed successfully."}, status=200)
+            return JsonResponse(
+                {"message": "Payment method removed successfully."}, status=200
+            )
         else:
-            return JsonResponse({"error": "No default payment method found"}, status=404)
+            return JsonResponse(
+                {"error": "No default payment method found"}, status=404
+            )
 
     except stripe.error.StripeError as e:
         return JsonResponse({"error": str(e)}, status=400)
     except Exception as e:
-        return JsonResponse({"error": "An error occurred while removing the payment method."}, status=400)
+        return JsonResponse(
+            {"error": "An error occurred while removing the payment method."},
+            status=400,
+        )

@@ -6,7 +6,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-HOST = os.environ.get("HOST")
+HOST = os.environ.get("HOST", "localhost")
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
@@ -18,7 +18,14 @@ ALLOWED_HOSTS = [
     "deploy-box.kalebwbishop.com",
 ]
 if DEBUG:
-    ALLOWED_HOSTS.extend(["127.0.0.1", "localhost", "10.11.230.216"])
+    ALLOWED_HOSTS.extend(
+        [
+            "127.0.0.1",
+            "localhost",
+            "10.11.230.216",
+            HOST.replace("https://", "").replace("http://", ""),
+        ]
+    )
 
 ROOT_URLCONF = "core.urls"
 
