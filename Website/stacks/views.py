@@ -38,8 +38,13 @@ def specific_routing(
     elif request.method == "DELETE":
         return handlers.delete_stack(request, stack_id)
 
+    # UPDATE: Update a specific stack
+    elif request.method == "PATCH":
+        return handlers.patch_stack(request, stack_id)
+
     # If the request method is not handled, return a 405 Method Not Allowed
     return JsonResponse({"error": "Method not allowed."}, status=405)
+
 
 @oauth_required()
 def purchasable_stack_routing(
@@ -52,6 +57,27 @@ def purchasable_stack_routing(
     # POST: Add a new purchasable stack
     elif request.method == "POST":
         return handlers.post_purchasable_stack(request)
+
+    # If the request method is not handled, return a 405 Method Not Allowed
+    return JsonResponse({"error": "Method not allowed."}, status=405)
+
+
+@oauth_required()
+def stack_env_routing(
+    request: AuthHttpRequest,
+    stack_id: str,
+) -> JsonResponse:
+    # GET: Fetch environment variables for a specific stack
+    if request.method == "GET":
+        return handlers.get_stack_env(request, stack_id)
+
+    # POST: Update environment variables for a specific stack
+    elif request.method == "POST":
+        return handlers.post_stack_env(request, stack_id)
+
+    # DELETE: Delete environment variables for a specific stack
+    elif request.method == "DELETE":
+        return handlers.delete_stack_env(request, stack_id)
 
     # If the request method is not handled, return a 405 Method Not Allowed
     return JsonResponse({"error": "Method not allowed."}, status=405)

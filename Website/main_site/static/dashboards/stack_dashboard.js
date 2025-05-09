@@ -171,6 +171,15 @@ window.onload = function () {
 
     // Set up event listeners for log controls
     setupLogControls();
+
+    // Set up root directory save functionality
+    const saveRootDirectoryBtn = document.getElementById('save-root-directory');
+    if (saveRootDirectoryBtn) {
+        saveRootDirectoryBtn.addEventListener('click', () => {
+            const rootDirectory = document.getElementById('root-directory').value;
+            saveRootDirectory(organizationId, projectId, stackId, rootDirectory);
+        });
+    }
 };
 
 async function getStackInfo(organizationId, projectId, stackId) {
@@ -558,3 +567,41 @@ const deleteStackBtn = document.getElementById('delete-stack-btn');
 deleteStackBtn.addEventListener('click', () => {
     deleteStack(deleteStackBtn.dataset.stackId);
 });
+
+async function saveRootDirectory(organizationId, projectId, stackId, rootDirectory) {
+    try {
+        const response = await fetch(`/api/v1/stacks/${stackId}/`, {
+            method: 'PATCH',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                root_directory: rootDirectory
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update root directory');
+        }
+
+        const data = await response.json();
+
+        // Show success message
+        const saveButton = document.getElementById('save-root-directory');
+        const originalText = saveButton.textContent;
+        saveButton.textContent = 'Saved!';
+        saveButton.classList.remove('bg-emerald-400', 'hover:bg-emerald-500');
+        saveButton.classList.add('bg-green-600');
+
+        // Reset button after 2 seconds
+        setTimeout(() => {
+            saveButton.textContent = originalText;
+            saveButton.classList.remove('bg-green-600');
+            saveButton.classList.add('bg-emerald-400', 'hover:bg-emerald-500');
+        }, 2000);
+
+    } catch (error) {
+        console.error('Error saving root directory:', error);
+        alert('Failed to update root directory. Please try again.');
+    }
+}

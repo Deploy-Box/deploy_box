@@ -44,6 +44,13 @@ def get_stack(stack_id: str) -> Stack:
     return Stack.objects.get(id=stack_id)
 
 
+def update_stack(stack: Stack, root_directory: str | None = None) -> bool:
+    if root_directory:
+        stack.root_directory = root_directory
+    stack.save()
+    return True
+
+
 def delete_stack(stack: Stack) -> bool:
     try:
         stack.delete()
@@ -181,3 +188,9 @@ def post_purchasable_stack(
         return JsonResponse(
             {"error": f"Failed to create purchasable stack: {str(e)}"}, status=500
         )
+
+
+def get_stack_env(stack_id: str) -> dict:
+    stack = Stack.objects.get(id=stack_id)
+
+    return stack.env

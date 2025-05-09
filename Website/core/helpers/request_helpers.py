@@ -3,6 +3,7 @@ from typing import Literal
 from urllib.parse import parse_qs
 from django.http import HttpRequest, JsonResponse
 
+
 class MissingFieldError(Exception):
     def __init__(self, message: str, status: int = 400):
         self.message = message
@@ -12,8 +13,15 @@ class MissingFieldError(Exception):
     def to_response(self) -> JsonResponse:
         return JsonResponse({"error": self.message}, status=self.status)
 
+
 def assertRequestFields(
-    request: HttpRequest, required_fields: list[str], optional_fields: list[str] = [], body_or_header: Literal["body", "header"] = "body", mimetype: Literal["application/json", "application/x-www-form-urlencoded"] = "application/json"
+    request: HttpRequest,
+    required_fields: list[str] = [],
+    optional_fields: list[str] = [],
+    body_or_header: Literal["body", "header"] = "body",
+    mimetype: Literal[
+        "application/json", "application/x-www-form-urlencoded"
+    ] = "application/json",
 ) -> tuple[str, ...]:
     """
     Check if the request contains all required fields.
@@ -37,9 +45,7 @@ def assertRequestFields(
             data = json.loads(request.body)
             print(f"Data: {data}")
         except json.JSONDecodeError:
-            raise MissingFieldError(
-                "Invalid JSON", status=400
-            )
+            raise MissingFieldError("Invalid JSON", status=400)
 
     elif mimetype == "application/x-www-form-urlencoded":
         data = parse_qs(request.body.decode("utf-8"))
@@ -49,9 +55,7 @@ def assertRequestFields(
 
     for field in required_fields:
         if field not in data.keys():
-            raise MissingFieldError(
-                f"Missing required field: {field}", status=400
-            )
+            raise MissingFieldError(f"Missing required field: {field}", status=400)
 
         value = data.get(field)
         return_fields += (str(value) if value is not None else "",)
@@ -61,6 +65,8 @@ def assertRequestFields(
             value = data.get(field)
             return_fields += (str(value) if value is not None else "",)
         else:
-            return_fields += ("",)  # Return empty string instead of None for optional fields
+            return_fields += (
+                "",
+            )  # Return empty string instead of None for optional fields
 
     return return_fields

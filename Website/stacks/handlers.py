@@ -27,8 +27,17 @@ def post_stack(request: AuthHttpRequest) -> JsonResponse:
     return services.add_stack(project, purchasable_stack, name)
 
 
-def patch_stack(request: AuthHttpRequest) -> JsonResponse:
-    return JsonResponse({"error": "Not implemented"}, status=501)
+def patch_stack(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
+    stack = get_object_or_404(Stack, id=stack_id)
+
+    try:
+        (root_directory,) = request_helpers.assertRequestFields(
+            request, optional_fields=["root_directory"]
+        )
+    except request_helpers.MissingFieldError as e:
+        return e.to_response()
+
+    return JsonResponse({"success": services.update_stack(stack, root_directory)})
 
 
 def delete_stack(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
@@ -38,8 +47,10 @@ def delete_stack(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
 
     if not stack_deleted:
         return JsonResponse({"error": "Failed to delete stack."}, status=500)
-    
-    return JsonResponse({"success": True, "message": "Stack deleted successfully."}, status=200)
+
+    return JsonResponse(
+        {"success": True, "message": "Stack deleted successfully."}, status=200
+    )
 
 
 def get_stack_usage(request: AuthHttpRequest) -> JsonResponse:
@@ -53,10 +64,12 @@ def get_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
 def post_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
 
     try:
-        type, variant, version, price_id = request_helpers.assertRequestFields(request, ["type", "variant", "version", "price_id"])
+        type, variant, version, price_id = request_helpers.assertRequestFields(
+            request, ["type", "variant", "version", "price_id"]
+        )
     except request_helpers.MissingFieldError as e:
         return e.to_response()
-    
+
     # Check if the purchasable stack already exists
     purchasable_stack = PurchasableStack.objects.filter(price_id=price_id).first()
 
@@ -71,4 +84,16 @@ def patch_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
 
 
 def delete_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
+    return JsonResponse({"error": "Not implemented"}, status=501)
+
+
+def get_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
+    return JsonResponse({"error": "Not implemented"}, status=501)
+
+
+def post_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
+    return JsonResponse({"error": "Not implemented"}, status=501)
+
+
+def delete_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
     return JsonResponse({"error": "Not implemented"}, status=501)
