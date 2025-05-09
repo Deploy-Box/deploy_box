@@ -173,8 +173,6 @@ STRIPE = {
     "WEBHOOK_SECRET": os.environ.get("STRIPE_WEBHOOK_SECRET"),
 }
 
-print(os.environ.get("STRIPE_PUBLISHABLE_KEY"))
-
 MONGO_DB = {
     "ORG_ID": os.environ.get("MONGODB_ORG_ID"),
     "PROJECT_ID": os.environ.get("MONGODB_PROJECT_ID"),
