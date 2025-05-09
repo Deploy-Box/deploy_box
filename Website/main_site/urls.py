@@ -46,6 +46,12 @@ urlpatterns = [
         name="login",
     ),
     path("signup/", views.signup, name="signup"),
+    path("password_reset/", views.password_reset, name="password_reset"),
+    path(
+        "password_reset/confirm/<str:uidb64>/<str:token>/",
+        views.password_reset_confirm,
+        name="password_reset_confirm",
+    ),
     # Payment pages
     path("payments/", views.home_page_view, name="payments_home"),
     path("payments/cards/add/", views.add_card_view, name="card_add"),
