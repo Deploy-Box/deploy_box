@@ -1,261 +1,527 @@
-
-{% extends 'base.html' %}
-{% load static %}
-
-{% block content %}
-    <div x-data="{ 
-        billingType: 'Stack', 
+{% extends 'base.html' %} {% load static %} {% block content %}
+<div
+  x-data="{
+        billingType: 'Stack',
         basicPrice: '0',
         premiumPrice: '2.50',
         proPrice: '5.00'
-    }" class="min-h-full pb-12">
-    <div class="w-full bg-zinc-950 pt-16 pb-24 text-center">
-        <h4 class="text-2xl text-gray-100 mt-10">Choose the right plan for you</h4>
-        <p class="text-md text-gray-100 mt-2">Each of our stacks has a version based on the below 3 pricing models. Simply select the Stack you want and make a one time payment to access your prebuilt stack ready for you to develop!</p>
-    </div>
-    <div class="w-full 2xl:w-3/4 flex items-center justify-center px-8 md:px-32 lg:px-16 2xl:px-0 mx-auto -mt-10">
-        <div class="w-full grid grid-cols-1 xl:grid-cols-3 gap-8">
-            <div class="bg-white shadow-2xl rounded-lg py-4">
-                <p class="text-xl text-center font-bold text-emerald-400">Free</p>
-                <p class="text-center py-8">
-                    <span class="text-4xl font-bold text-zinc-950">
-                        $<span x-text="basicPrice">0</span>    
-                    </span>
-                    <span class="text-xs uppercase text-zinc-900">
-                        / <span x-text="billingType">container</span>
-                    </span>
-                </p>
-                <ul class="border-t border-gray-300 py-8 space-y-6">
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Frontend Setup</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Backend Setup</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Pre Integrated Database</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Setup Instructions and Guidance</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-gray-300 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-gray-400 capitalize">Built in Authentication Support</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-gray-300 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-gray-400 capitalize">Persistantly Available Hosting</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-gray-300 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-gray-400 capitalize">Payment Processing Integration</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-gray-300 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-gray-400 capitalize">API Access</span>
-                    </li>
-                </ul>
-                <div class="flex items-center justify-center mt-6">
-                    <a href="/payments" class="bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150" title="Purchase">Choose A Container</a>
-                </div>
-            </div>
-            <div class="bg-white shadow-2xl rounded-lg py-4">
-                <p class="text-xl text-center font-bold text-emerald-400">Premium</p>
-                <p class="text-center py-8">
-                    <span class="text-4xl font-bold text-zinc-950">
-                        $<span x-text="premiumPrice">2.50</span>
-                    </span>
-                    <span class="text-xs uppercase text-zinc-900">
-                        / <span x-text="billingType">container</span>
-                    </span>
-                </p>
-                <ul class="border-t border-gray-300 py-8 space-y-6">
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Frontend Setup</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Backend Setup</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Pre Integrated Database</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Setup Instructions And Guidance</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Built in Authentication Support</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Persistantly Available Hosting</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-gray-300 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-gray-400 capitalize">Payment Processing Integration</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-gray-300 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-gray-400 capitalize">API Access</span>
-                    </li>
-                </ul>
-                <div class="flex items-center justify-center mt-6">
-                    <a href="#" class="bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150" title="Purchase">Choose A Container</a>
-                </div>
-            </div>
-            <div class="bg-white shadow-2xl rounded-lg py-4">
-                <p class="text-xl text-center font-bold text-emerald-400">Pro</p>
-                <p class="text-center py-8">
-                    <span class="text-4xl font-bold text-zinc-950">
-                        $<span x-text="proPrice">5.00</span>
-                    </span>
-                    <span class="text-xs uppercase text-zinc-900">
-                        / <span x-text="billingType">container</span>
-                    </span>
-                </p>
-                <ul class="border-t border-gray-300 py-8 space-y-6">
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Frontend Setup</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Backend Setup</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Pre Integrated Database</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Setup Instructions And Guidance</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Built in Authentication Support</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Persistantly Available Hosting</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">Payment Processing Integration</span>
-                    </li>
-                    <li class="flex items-center space-x-2 px-8">
-                        <span class="bg-emerald-400 rounded-full p-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                            </svg>
-                        </span>
-                        <span class="text-zinc-900 capitalize">API Access</span>
-                    </li>
-                </ul>
-                <div class="flex items-center justify-center mt-6">
-                    <a href="#" class="bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150" title="Purchase">Choose A Container</a>
-                </div>
-            </div>
+    }"
+  class="min-h-full pb-12"
+>
+  <div class="w-full bg-zinc-950 pt-16 pb-24 text-center">
+    <h4 class="text-2xl text-gray-100 mt-10">Choose the right plan for you</h4>
+    <p class="text-md text-gray-100 mt-2">
+      Each of our stacks has a version based on the below 3 pricing models.
+      Simply select the Stack you want and make a one time payment to access
+      your prebuilt stack ready for you to develop!
+    </p>
+  </div>
+  <div
+    class="w-full 2xl:w-3/4 flex items-center justify-center px-8 md:px-32 lg:px-16 2xl:px-0 mx-auto -mt-10"
+  >
+    <div class="w-full grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div class="bg-white shadow-2xl rounded-lg py-4">
+        <p class="text-xl text-center font-bold text-emerald-400">Free</p>
+        <p class="text-center py-8">
+          <span class="text-4xl font-bold text-zinc-950">
+            $<span x-text="basicPrice">0</span>
+          </span>
+          <span class="text-xs uppercase text-zinc-900">
+            / <span x-text="billingType">container</span>
+          </span>
+        </p>
+        <ul class="border-t border-gray-300 py-8 space-y-6">
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize">Frontend Setup</span>
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize">Backend Setup</span>
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Pre Integrated Database</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Setup Instructions and Guidance</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-gray-300 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-gray-400 capitalize"
+              >Built in Authentication Support</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-gray-300 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-gray-400 capitalize"
+              >Persistantly Available Hosting</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-gray-300 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-gray-400 capitalize"
+              >Payment Processing Integration</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-gray-300 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-gray-400 capitalize">API Access</span>
+          </li>
+        </ul>
+        <div class="flex items-center justify-center mt-6">
+          <a
+            href="{% url 'main_site:payments_home' variant='FREE' %}"
+            class="bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150"
+            title="Purchase"
+            >Choose A Container</a
+          >
         </div>
+      </div>
+      <div class="bg-white shadow-2xl rounded-lg py-4">
+        <p class="text-xl text-center font-bold text-emerald-400">Premium</p>
+        <p class="text-center py-8">
+          <span class="text-4xl font-bold text-zinc-950">
+            $<span x-text="premiumPrice">2.50</span>
+          </span>
+          <span class="text-xs uppercase text-zinc-900">
+            / <span x-text="billingType">container</span>
+          </span>
+        </p>
+        <ul class="border-t border-gray-300 py-8 space-y-6">
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize">Frontend Setup</span>
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize">Backend Setup</span>
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Pre Integrated Database</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Setup Instructions And Guidance</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Built in Authentication Support</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Persistantly Available Hosting</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-gray-300 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-gray-400 capitalize"
+              >Payment Processing Integration</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-gray-300 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-gray-400 capitalize">API Access</span>
+          </li>
+        </ul>
+        <div class="flex items-center justify-center mt-6">
+          <a
+            href="{% url 'main_site:payments_home' variant='PRO' %}"
+            class="bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150"
+            title="Purchase"
+            >Choose A Container</a
+          >
+        </div>
+      </div>
+      <div class="bg-white shadow-2xl rounded-lg py-4">
+        <p class="text-xl text-center font-bold text-emerald-400">Pro</p>
+        <p class="text-center py-8">
+          <span class="text-4xl font-bold text-zinc-950">
+            $<span x-text="proPrice">5.00</span>
+          </span>
+          <span class="text-xs uppercase text-zinc-900">
+            / <span x-text="billingType">container</span>
+          </span>
+        </p>
+        <ul class="border-t border-gray-300 py-8 space-y-6">
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize">Frontend Setup</span>
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize">Backend Setup</span>
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Pre Integrated Database</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Setup Instructions And Guidance</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Built in Authentication Support</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Persistantly Available Hosting</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize"
+              >Payment Processing Integration</span
+            >
+          </li>
+          <li class="flex items-center space-x-2 px-8">
+            <span class="bg-emerald-400 rounded-full p-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-3 w-3 text-white"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+            </span>
+            <span class="text-zinc-900 capitalize">API Access</span>
+          </li>
+        </ul>
+        <div class="flex items-center justify-center mt-6">
+          <a
+            href="{% url 'main_site:payments_home' variant='PREMIUM' %}"
+            class="bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150"
+            title="Purchase"
+            >Choose A Container</a
+          >
+        </div>
+      </div>
     </div>
+  </div>
 </div>
 {% endblock %}

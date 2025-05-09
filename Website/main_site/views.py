@@ -156,9 +156,10 @@ STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
 
 
 @oauth_required()
-def home_page_view(request: AuthHttpRequest) -> HttpResponse:
+def home_page_view(request: AuthHttpRequest, variant: str) -> HttpResponse:
     user = request.auth_user
     organizations = get_organizations(user)
+<<<<<<< Updated upstream
     projects = [
         project
         for organization in organizations
@@ -174,6 +175,11 @@ def home_page_view(request: AuthHttpRequest) -> HttpResponse:
             "stack_options": stack_options,
         },
     )
+=======
+    projects = [project for organization in organizations for project in organization.get_projects()]
+    stack_options = PurchasableStack.objects.filter(variant=variant)
+    return render(request, "payments/home.html", {"organizations": organizations, "projects":  projects, "stack_options": stack_options})
+>>>>>>> Stashed changes
 
 
 @oauth_required()
