@@ -32,7 +32,7 @@ def add_stack(
                 return deploy_django_stack(stack)
             else:
                 return JsonResponse({"error": "Stack type not supported."}, status=400)
-            
+
     except Exception as e:
         logger.error(f"Failed to create and deploy stack: {str(e)}")
         return JsonResponse(
@@ -43,6 +43,7 @@ def add_stack(
 def get_stack(stack_id: str) -> Stack:
     return Stack.objects.get(id=stack_id)
 
+
 def delete_stack(stack: Stack) -> bool:
     try:
         stack.delete()
@@ -51,6 +52,7 @@ def delete_stack(stack: Stack) -> bool:
         return False
 
     return True
+
 
 def get_stacks(user: User) -> list[Stack]:
     projects = Project.objects.filter(projectmember__user=user)
@@ -78,11 +80,7 @@ def deploy_MERN_stack(stack: Stack) -> JsonResponse:
     backend_image = f"gcr.io/{gcp_utils.project_id}/mern-backend"
     print(f"Deploying backend with image: {backend_image}")
     backend_url = gcp_utils.deploy_service(
-        stack_id,
-        backend_image,
-        "backend",
-        {"MONGO_URI": mongo_db_uri},
-        port=5000
+        stack_id, backend_image, "backend", {"MONGO_URI": mongo_db_uri}, port=5000
     )
 
     stack_backend = StackBackend.objects.create(
@@ -98,7 +96,7 @@ def deploy_MERN_stack(stack: Stack) -> JsonResponse:
         frontend_image,
         "frontend",
         {"REACT_APP_BACKEND_URL": backend_url},
-        port=8080
+        port=8080,
     )
 
     stack_frontend = StackFrontend.objects.create(
@@ -125,6 +123,7 @@ def deploy_MERN_stack(stack: Stack) -> JsonResponse:
         status=201,
     )
 
+
 def deploy_django_stack(stack: Stack):
     gcp_utils = GCPUtils()
 
@@ -139,10 +138,12 @@ def deploy_django_stack(stack: Stack):
         backend_image,
         "django",
         {"DJANGO_SECRET_KEY": django_secret_key},
-        port=8080
+        port=8080,
     )
 
-    gcp_utils.put_service_envs(f"backend-{stack_id}", {"DJANGO_ALLOWED_HOSTS": frontend_url.split("//")[-1]})
+    gcp_utils.put_service_envs(
+        f"django-{stack_id}", {"DJANGO_ALLOWED_HOSTS": frontend_url.split("//")[-1]}
+    )
 
     stack_frontend = StackFrontend.objects.create(
         stack=stack,
@@ -162,7 +163,6 @@ def deploy_django_stack(stack: Stack):
         },
         status=201,
     )
-
 
 
 def post_purchasable_stack(
