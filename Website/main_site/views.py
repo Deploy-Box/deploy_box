@@ -5,7 +5,11 @@ from accounts.forms import CustomUserCreationForm
 from organizations.models import Organization, OrganizationMember
 from projects.models import Project
 from stacks.models import Stack
-from organizations.forms import OrganizationCreateFormWithMembers, OrganizationMemberForm, NonexistantOrganizationMemberForm
+from organizations.forms import (
+    OrganizationCreateFormWithMembers,
+    OrganizationMemberForm,
+    NonexistantOrganizationMemberForm,
+)
 from organizations.services import get_organizations
 from projects.forms import ProjectCreateFormWithMembers
 from stacks.models import PurchasableStack
@@ -29,47 +33,91 @@ def pricing(request: HttpRequest) -> HttpResponse:
 def profile(request: HttpRequest) -> HttpResponse:
     return render(request, "profile.html", {})
 
+
 @oauth_required()
 def dashboard(request: HttpRequest) -> HttpResponse:
     user = request.user
-    organizations = Organization.objects.filter(organizationmember__user = user)
-    projects = Project.objects.filter(projectmember__user = user)
-    return render(request, "dashboard.html", {'user': user, 'organizations': organizations, 'projects': projects})
+    organizations = Organization.objects.filter(organizationmember__user=user)
+    projects = Project.objects.filter(projectmember__user=user)
+    return render(
+        request,
+        "dashboard.html",
+        {"user": user, "organizations": organizations, "projects": projects},
+    )
+
 
 @oauth_required()
 def organization_dashboard(request: HttpRequest, organization_id: str) -> HttpResponse:
-    user=request.user
+    user = request.user
     organization = Organization.objects.get(id=organization_id)
     members = OrganizationMember.objects.filter(organization=organization)
     projects = Project.objects.filter(organization_id=organization_id)
-    is_admin = OrganizationMember.objects.filter(organization=organization, user=user, role='admin').exists()
-    return render(request, "organization_dashboard.html", {'user': user, 'organization': organization, 'members': members, 'is_admin': is_admin, 'projects': projects})
+    is_admin = OrganizationMember.objects.filter(
+        organization=organization, user=user, role="admin"
+    ).exists()
+    return render(
+        request,
+        "organization_dashboard.html",
+        {
+            "user": user,
+            "organization": organization,
+            "members": members,
+            "is_admin": is_admin,
+            "projects": projects,
+        },
+    )
+
 
 @oauth_required()
 def add_org_members(request: HttpRequest, organization_id: str) -> HttpResponse:
     user = request.user
     organization = Organization.objects.get(id=organization_id)
     form = OrganizationMemberForm()
-    return render(request, "accounts/invite_org_member.html",{'organization': organization, 'user': user, 'form': form})
+    return render(
+        request,
+        "accounts/invite_org_member.html",
+        {"organization": organization, "user": user, "form": form},
+    )
 
-def add_nonexistant_org_members(request: HttpRequest, organization_id: str) -> HttpResponse:
+
+def add_nonexistant_org_members(
+    request: HttpRequest, organization_id: str
+) -> HttpResponse:
     user = request.user
     organization = Organization.objects.get(id=organization_id)
     form = NonexistantOrganizationMemberForm()
-    return render(request, "accounts/invite_nonexistant_org_member.html",{'organization': organization, 'user': user, 'form': form})
+    return render(
+        request,
+        "accounts/invite_nonexistant_org_member.html",
+        {"organization": organization, "user": user, "form": form},
+    )
+
 
 @oauth_required()
-def project_dashboard(request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
+def project_dashboard(
+    request: HttpRequest, organization_id: str, project_id: str
+) -> HttpResponse:
     user = request.user
     project = Project.objects.get(id=project_id)
     stacks = Stack.objects.filter(project_id=project_id)
-    return render(request, "project_dashboard.html", {"organization_id": organization_id, "project": project, 'stacks': stacks})
+    return render(
+        request,
+        "project_dashboard.html",
+        {"organization_id": organization_id, "project": project, "stacks": stacks},
+    )
+
 
 @oauth_required()
-def stack_dashboard(request: AuthHttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
+def stack_dashboard(
+    request: AuthHttpRequest, organization_id: str, project_id: str, stack_id: str
+) -> HttpResponse:
     # TODO: Check if user is a member of the project
     stack = Stack.objects.get(id=stack_id)
-    return render(request, "stack_dashboard.html", {"organization_id": organization_id, "project_id": project_id, "stack": stack})
+    return render(
+        request,
+        "stack_dashboard.html",
+        {"organization_id": organization_id, "project_id": project_id, "stack": stack},
+    )
 
 
 def maintenance(request: HttpRequest) -> HttpResponse:
@@ -79,6 +127,20 @@ def maintenance(request: HttpRequest) -> HttpResponse:
 # Authentication Routes
 def login(request: HttpRequest) -> HttpResponse:
     return render(request, "accounts/login.html", {})
+
+
+def password_reset(request: HttpRequest) -> HttpResponse:
+    return render(request, "accounts/password_reset.html", {})
+
+
+def password_reset_confirm(
+    request: HttpRequest, uidb64: str, token: str
+) -> HttpResponse:
+    return render(
+        request,
+        "accounts/password_reset_confirm.html",
+        {"uidb64": uidb64, "token": token},
+    )
 
 
 def signup(request: HttpRequest) -> HttpResponse:
@@ -97,9 +159,21 @@ STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
 def home_page_view(request: AuthHttpRequest) -> HttpResponse:
     user = request.auth_user
     organizations = get_organizations(user)
-    projects = [project for organization in organizations for project in organization.get_projects()]
+    projects = [
+        project
+        for organization in organizations
+        for project in organization.get_projects()
+    ]
     stack_options = PurchasableStack.objects.all()
-    return render(request, "payments/home.html", {"organizations": organizations, "projects":  projects, "stack_options": stack_options})
+    return render(
+        request,
+        "payments/home.html",
+        {
+            "organizations": organizations,
+            "projects": projects,
+            "stack_options": stack_options,
+        },
+    )
 
 
 @oauth_required()
@@ -120,12 +194,18 @@ def success_view(request: HttpRequest) -> HttpResponse:
 def cancelled_view(request: HttpRequest) -> HttpResponse:
     return render(request, "payments/cancelled.html")
 
+
 @oauth_required()
 def create_organization_form(request: HttpRequest) -> HttpResponse:
     form = OrganizationCreateFormWithMembers()
-    return render(request, 'accounts/create_organization_form.html', {'form': form})
+    return render(request, "accounts/create_organization_form.html", {"form": form})
+
 
 @oauth_required()
 def create_project_form(request: HttpRequest, organization_id: str) -> HttpResponse:
     form = ProjectCreateFormWithMembers()
-    return render(request, 'accounts/create_project_form.html', {'form': form, 'organization_id': organization_id})
+    return render(
+        request,
+        "accounts/create_project_form.html",
+        {"form": form, "organization_id": organization_id},
+    )
