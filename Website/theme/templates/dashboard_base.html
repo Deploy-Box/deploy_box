@@ -1,0 +1,57 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Deploy Box</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% tailwind_css %}
+    {% block extra_head %}
+    {% endblock %}
+</head>
+
+<body class="bg-gray-100">
+    {% include 'dashboard_navbar.html'%}
+    <!-- Main Content -->
+    <div id="mainContent" class="flex-1 transition-all duration-300 ease-in-out ml-64">
+        <div class="p-8">
+            {% block content %}
+            <div class="container mx-auto">
+                <section class="flex items-center justify-center min-h-screen">
+                    <h1 class="text-5xl">Django + Tailwind = ❤️</h1>
+                </section>
+            </div>
+            {% endblock %}
+        </div>
+        {% include 'footer.html'%}
+    </div>
+
+    <script>
+        // Update main content margin when sidebar is toggled
+        document.addEventListener('DOMContentLoaded', function () {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+
+            function updateMainContentWidth() {
+                if (sidebar.getAttribute('data-expanded') === 'false') {
+                    mainContent.classList.add('ml-0');
+                    mainContent.classList.remove('ml-64');
+                } else {
+                    mainContent.classList.remove('ml-0');
+                    mainContent.classList.add('ml-64');
+                }
+            }
+
+            // Initial check
+            updateMainContentWidth();
+
+            // Listen for sidebar toggle
+            const sidebarToggle = document.getElementById('sidebarToggle');
+            sidebarToggle.addEventListener('click', updateMainContentWidth);
+        });
+    </script>
+</body>
+
+</html>

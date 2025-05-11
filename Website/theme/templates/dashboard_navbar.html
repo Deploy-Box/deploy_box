@@ -1,0 +1,171 @@
+<!-- Sidebar -->
+<div id="sidebar" class="fixed top-0 left-0 z-40 h-screen bg-white shadow-lg transition-all duration-300 ease-in-out"
+    data-expanded="true">
+    <div class="flex flex-col h-full">
+        <div class="p-4 border-b flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <img src="https://avatars.githubusercontent.com/u/205388835?s=200&v=4" alt="Deploy Box Logo"
+                    class="w-8 h-8 rounded-full">
+                <h2 class="text-xl font-bold sidebar-text">Deploy Box</h2>
+            </div>
+            <button id="sidebarToggle"
+                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors duration-200">
+                <span class="material-symbols-outlined text-sm">menu</span>
+            </button>
+        </div>
+        <nav class="flex-1 overflow-y-auto py-4">
+            <ul class="space-y-1 px-3">
+                <!-- Organization Section -->
+                <li class="mb-4">
+                    <div class="flex items-center gap-3 p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
+                        </svg>
+                        <span class="sidebar-text font-semibold">Organization</span>
+                    </div>
+                    <div class="ml-8 mt-2 space-y-1">
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Org
+                            Overview</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Members</a>
+                    </div>
+                </li>
+
+                <div class="border-b border-gray-200 my-4"></div>
+
+                <!-- Project Section -->
+                <li class="mb-4">
+                    <div class="flex items-center gap-3 p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+                        </svg>
+                        <span class="sidebar-text font-semibold">Project</span>
+                    </div>
+                    <div class="ml-8 mt-2 space-y-1">
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Project
+                            Overview</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Settings</a>
+                    </div>
+                </li>
+
+                <div class="border-b border-gray-200 my-4"></div>
+
+                <!-- Stack Section -->
+                <li class="mb-4">
+                    <div class="flex items-center gap-3 p-3">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                            stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round"
+                                d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
+                        </svg>
+                        <span class="sidebar-text font-semibold">Stack</span>
+                    </div>
+                    <div class="ml-8 mt-2 space-y-1">
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Profile</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Security</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Preferences</a>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+        <div class="p-4 border-t">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                        stroke="currentColor" class="size-6">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+
+                </div>
+                <div class="sidebar-text">
+                    <p class="font-medium">Admin</p>
+                    <p class="text-sm text-gray-500">Administrator</p>
+                </div>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                    stroke="currentColor" class="w-8 h-8">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overlay for mobile -->
+<div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
+
+<style>
+    #sidebar[data-expanded="false"] {
+        width: 5rem;
+    }
+
+    #sidebar[data-expanded="true"] {
+        width: 16rem;
+    }
+
+    #sidebar[data-expanded="false"] .sidebar-text {
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        #sidebar[data-expanded="true"] {
+            width: 16rem;
+            position: absolute;
+            z-index: 40;
+            height: 100%;
+        }
+
+        #sidebar[data-expanded="false"] {
+            width: 0;
+            overflow: hidden;
+        }
+    }
+</style>
+
+<!-- JavaScript for sidebar functionality -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const sidebar = document.getElementById('sidebar');
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const sidebarOverlay = document.getElementById('sidebarOverlay');
+        let isExpanded = true;
+
+        function toggleSidebar() {
+            isExpanded = !isExpanded;
+            sidebar.setAttribute('data-expanded', isExpanded);
+            if (isExpanded) {
+                sidebarOverlay.classList.add('hidden');
+            } else {
+                sidebarOverlay.classList.remove('hidden');
+            }
+        }
+
+        sidebarToggle.addEventListener('click', toggleSidebar);
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+
+        // Handle responsive behavior
+        function handleResize() {
+            if (window.innerWidth < 768) {
+                sidebar.setAttribute('data-expanded', 'false');
+                isExpanded = false;
+            } else {
+                sidebar.setAttribute('data-expanded', 'true');
+                isExpanded = true;
+            }
+        }
+
+        window.addEventListener('resize', handleResize);
+        handleResize(); // Initial check
+    });
+</script>
