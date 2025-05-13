@@ -8,10 +8,6 @@
                     class="w-8 h-8 rounded-full">
                 <h2 class="text-xl font-bold sidebar-text">Deploy Box</h2>
             </div>
-            <button id="sidebarToggle"
-                class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors duration-200">
-                <span class="material-symbols-outlined text-sm">menu</span>
-            </button>
         </div>
         <nav class="flex-1 overflow-y-auto py-4">
             <ul class="space-y-1 px-3">
@@ -78,7 +74,21 @@
                 </li>
             </ul>
         </nav>
-        <div class="p-4 border-t">
+        <button id="sidebarToggle"
+            class="absolute bottom-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors duration-200 shadow-lg">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="size-6 sidebar-expanded-icon">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
+            </svg>
+
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                stroke="currentColor" class="size-6 sidebar-collapsed-icon hidden">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
+            </svg>
+        </button>
+        <div class="p-4 border-t relative">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -118,6 +128,13 @@
         display: none;
     }
 
+    #sidebarToggle {
+        position: absolute;
+        bottom: 1rem;
+        right: 1rem;
+        z-index: 50;
+    }
+
     @media (max-width: 768px) {
         #sidebar[data-expanded="true"] {
             width: 16rem;
@@ -136,23 +153,64 @@
 <!-- JavaScript for sidebar functionality -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Cookie utility functions
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
         const sidebar = document.getElementById('sidebar');
         const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebarOverlay = document.getElementById('sidebarOverlay');
-        let isExpanded = true;
+        const expandedIcon = sidebarToggle.querySelector('.sidebar-expanded-icon');
+        const collapsedIcon = sidebarToggle.querySelector('.sidebar-collapsed-icon');
+        let isExpanded = sidebar.getAttribute('data-expanded') === 'true';
+        let hoverTimeout = null;
+        let tempExpanded = false;
+
+        // On load, check cookie for sidebar state
+        let cookieState = getCookie('sidebarExpanded');
+        if (cookieState !== null) {
+            isExpanded = cookieState === 'true';
+            sidebar.setAttribute('data-expanded', isExpanded);
+        } else {
+            isExpanded = false;
+            sidebar.setAttribute('data-expanded', 'false');
+        }
+
+        function updateChevronIcons() {
+            if (isExpanded) {
+                expandedIcon.classList.remove('hidden');
+                collapsedIcon.classList.add('hidden');
+            } else {
+                expandedIcon.classList.add('hidden');
+                collapsedIcon.classList.remove('hidden');
+            }
+        }
 
         function toggleSidebar() {
             isExpanded = !isExpanded;
             sidebar.setAttribute('data-expanded', isExpanded);
-            if (isExpanded) {
-                sidebarOverlay.classList.add('hidden');
-            } else {
-                sidebarOverlay.classList.remove('hidden');
-            }
+            setCookie('sidebarExpanded', isExpanded, 30); // Store for 30 days
+            updateChevronIcons();
         }
 
         sidebarToggle.addEventListener('click', toggleSidebar);
-        sidebarOverlay.addEventListener('click', toggleSidebar);
 
         // Handle responsive behavior
         function handleResize() {
@@ -163,9 +221,31 @@
                 sidebar.setAttribute('data-expanded', 'true');
                 isExpanded = true;
             }
+            setCookie('sidebarExpanded', isExpanded, 30);
+            updateChevronIcons();
         }
 
         window.addEventListener('resize', handleResize);
         handleResize(); // Initial check
+
+        // Hover to temporarily expand sidebar
+        sidebar.addEventListener('mouseenter', function () {
+            if (!isExpanded) {
+                hoverTimeout = setTimeout(() => {
+                    sidebar.setAttribute('data-expanded', 'true');
+                    tempExpanded = true;
+                    updateChevronIcons();
+                }, 450); // 0.45 seconds
+            }
+        });
+
+        sidebar.addEventListener('mouseleave', function () {
+            clearTimeout(hoverTimeout);
+            if (tempExpanded) {
+                sidebar.setAttribute('data-expanded', 'false');
+                tempExpanded = false;
+                updateChevronIcons();
+            }
+        });
     });
 </script>
