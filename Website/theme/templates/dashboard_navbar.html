@@ -1,6 +1,6 @@
 <!-- Sidebar -->
 <div id="sidebar" class="fixed top-0 left-0 z-40 h-screen bg-white shadow-lg transition-all duration-300 ease-in-out"
-    data-expanded="true">
+    data-expanded="false">
     <div class="flex flex-col h-full">
         <div class="p-4 border-b flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -13,20 +13,20 @@
             <ul class="space-y-1 px-3">
                 <!-- Organization Section -->
                 <li class="mb-4">
-                    <div class="flex items-center gap-3 p-3">
+                    <a class="flex items-center gap-3 p-3 sidebar-button">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                             stroke="currentColor" class="size-6">
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
                         </svg>
                         <span class="sidebar-text font-semibold">Organization</span>
-                    </div>
+                    </a>
                     <div class="ml-8 mt-2 space-y-1">
                         <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Org
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Org
                             Overview</a>
                         <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Members</a>
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Members</a>
                     </div>
                 </li>
 
@@ -34,7 +34,7 @@
 
                 <!-- Project Section -->
                 <li class="mb-4">
-                    <div class="flex items-center gap-3 p-3">
+                    <div class="flex items-center gap-3 p-3 sidebar-button">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                             stroke="currentColor" class="size-6">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -44,10 +44,10 @@
                     </div>
                     <div class="ml-8 mt-2 space-y-1">
                         <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Project
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Project
                             Overview</a>
                         <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Settings</a>
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
                     </div>
                 </li>
 
@@ -55,7 +55,7 @@
 
                 <!-- Stack Section -->
                 <li class="mb-4">
-                    <div class="flex items-center gap-3 p-3">
+                    <div class="flex items-center gap-3 p-3 sidebar-button">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                             stroke="currentColor" class="size-6">
                             <path stroke-linecap="round" stroke-linejoin="round"
@@ -65,30 +65,16 @@
                     </div>
                     <div class="ml-8 mt-2 space-y-1">
                         <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Profile</a>
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Profile</a>
                         <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Security</a>
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Security</a>
                         <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text">Preferences</a>
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Preferences</a>
                     </div>
                 </li>
             </ul>
         </nav>
-        <button id="sidebarToggle"
-            class="absolute bottom-4 right-4 w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors duration-200 shadow-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                stroke="currentColor" class="size-6 sidebar-expanded-icon">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="m18.75 4.5-7.5 7.5 7.5 7.5m-6-15L5.25 12l7.5 7.5" />
-            </svg>
-
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                stroke="currentColor" class="size-6 sidebar-collapsed-icon hidden">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                    d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
-            </svg>
-        </button>
-        <div class="p-4 border-t relative">
+        <a href="{% url 'main_site:profile' %}" class="p-4 border-t relative sidebar-button">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -102,13 +88,8 @@
                     <p class="font-medium">Admin</p>
                     <p class="text-sm text-gray-500">Administrator</p>
                 </div>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                    stroke="currentColor" class="w-8 h-8">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
-                </svg>
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
@@ -126,6 +107,30 @@
 
     #sidebar[data-expanded="false"] .sidebar-text {
         display: none;
+    }
+
+    /* Add smooth transitions for all properties */
+    #sidebar {
+        transition: width 0.3s ease-in-out;
+    }
+
+    /* Prevent text wrapping and ensure consistent height */
+    .sidebar-text {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-height: 1.5em;
+        display: block;
+    }
+
+    /* Ensure consistent height for menu items */
+    .flex.items-center.gap-3 {
+        min-height: 2.5rem;
+    }
+
+    /* Ensure consistent spacing for nested items */
+    .ml-8.mt-2.space-y-1 {
+        min-height: 2rem;
     }
 
     #sidebarToggle {
@@ -147,6 +152,21 @@
             width: 0;
             overflow: hidden;
         }
+    }
+
+    /* Sidebar button hover animation */
+    .sidebar-button,
+    .sidebar-link {
+        transition: background 0.2s, transform 0.15s;
+        border-radius: 0.5rem;
+    }
+
+    .sidebar-button:hover,
+    .sidebar-link:hover {
+        background: #f3f4f6;
+        /* Tailwind gray-100 */
+        transform: scale(1.03);
+        box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
     }
 </style>
 
@@ -176,9 +196,6 @@
         }
 
         const sidebar = document.getElementById('sidebar');
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const expandedIcon = sidebarToggle.querySelector('.sidebar-expanded-icon');
-        const collapsedIcon = sidebarToggle.querySelector('.sidebar-collapsed-icon');
         let isExpanded = sidebar.getAttribute('data-expanded') === 'true';
         let hoverTimeout = null;
         let tempExpanded = false;
@@ -193,24 +210,13 @@
             sidebar.setAttribute('data-expanded', 'false');
         }
 
-        function updateChevronIcons() {
-            if (isExpanded) {
-                expandedIcon.classList.remove('hidden');
-                collapsedIcon.classList.add('hidden');
-            } else {
-                expandedIcon.classList.add('hidden');
-                collapsedIcon.classList.remove('hidden');
-            }
-        }
 
         function toggleSidebar() {
             isExpanded = !isExpanded;
             sidebar.setAttribute('data-expanded', isExpanded);
             setCookie('sidebarExpanded', isExpanded, 30); // Store for 30 days
-            updateChevronIcons();
         }
 
-        sidebarToggle.addEventListener('click', toggleSidebar);
 
         // Handle responsive behavior
         function handleResize() {
@@ -218,11 +224,11 @@
                 sidebar.setAttribute('data-expanded', 'false');
                 isExpanded = false;
             } else {
-                sidebar.setAttribute('data-expanded', 'true');
-                isExpanded = true;
+                // Keep collapsed by default on desktop
+                sidebar.setAttribute('data-expanded', 'false');
+                isExpanded = false;
             }
             setCookie('sidebarExpanded', isExpanded, 30);
-            updateChevronIcons();
         }
 
         window.addEventListener('resize', handleResize);
@@ -234,8 +240,7 @@
                 hoverTimeout = setTimeout(() => {
                     sidebar.setAttribute('data-expanded', 'true');
                     tempExpanded = true;
-                    updateChevronIcons();
-                }, 450); // 0.45 seconds
+                }, 200); // 0.45 seconds
             }
         });
 
@@ -244,7 +249,6 @@
             if (tempExpanded) {
                 sidebar.setAttribute('data-expanded', 'false');
                 tempExpanded = false;
-                updateChevronIcons();
             }
         });
     });
