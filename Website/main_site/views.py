@@ -41,7 +41,7 @@ def dashboard(request: HttpRequest) -> HttpResponse:
     projects = Project.objects.filter(projectmember__user=user)
     return render(
         request,
-        "dashboard.html",
+        "dashboard/base_dashboard.html",
         {"user": user, "organizations": organizations, "projects": projects},
     )
 
@@ -57,7 +57,7 @@ def organization_dashboard(request: HttpRequest, organization_id: str) -> HttpRe
     ).exists()
     return render(
         request,
-        "organization_dashboard.html",
+        "dashboard/organization_dashboard.html",
         {
             "user": user,
             "organization": organization,
@@ -102,7 +102,7 @@ def project_dashboard(
     stacks = Stack.objects.filter(project_id=project_id)
     return render(
         request,
-        "project_dashboard.html",
+        "dashboard/project_dashboard.html",
         {"organization_id": organization_id, "project": project, "stacks": stacks},
     )
 
@@ -115,7 +115,7 @@ def stack_dashboard(
     stack = Stack.objects.get(id=stack_id)
     return render(
         request,
-        "stack_dashboard.html",
+        "dashboard/stack_dashboard.html",
         {"organization_id": organization_id, "project_id": project_id, "stack": stack},
     )
 

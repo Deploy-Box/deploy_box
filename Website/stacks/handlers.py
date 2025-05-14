@@ -62,7 +62,6 @@ def get_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
 
 
 def post_purchasable_stack(request: AuthHttpRequest) -> JsonResponse:
-
     try:
         type, variant, version, price_id = request_helpers.assertRequestFields(
             request, ["type", "variant", "version", "price_id"]

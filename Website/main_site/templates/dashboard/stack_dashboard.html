@@ -1,0 +1,342 @@
+{% extends 'dashboard_base.html' %}
+{%load static%}
+
+{% block extra_head %}
+<div id="dashboard" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
+    data-stack-id="{{ stack.id }}">
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="fixed top-24 left-8">
+    <a href="{% url 'main_site:project_dashboard' organization_id project_id %}"
+        class="inline-flex items-center px-4 py-2 bg-white hover:bg-zinc-50 text-sm text-zinc-900 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl border border-zinc-200">
+        <svg class="w-4 h-4 mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Project
+    </a>
+</div>
+
+<div class="w-full bg-gray-50">
+    <header class="bg-zinc-950 pt-16 pb-24 text-center">
+        <h1 class="text-2xl font-bold text-gray-100 mb-2">Stack Dashboard</h1>
+        <p class="text-md text-gray-100 max-w-2xl mx-auto">
+            Monitor, manage, and optimize your deployment stack resources
+        </p>
+    </header>
+    <main class="w-full max-w-4xl mx-auto px-4 -mt-10 pb-12">
+        <div id="metadata" class="hidden" data-organization-id="{{ organization_id }}"
+            data-project-id="{{ project_id }}" data-stack-id="{{ stack.id }}"></div>
+
+        <!-- Stack Overview -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-emerald-400 mb-4">Stack Overview</h2>
+                <div id="stack-info" class="mb-4">
+                    <div class="animate-pulse h-8 w-3/4 bg-gray-200 rounded mb-4"></div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div
+                        class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+                        <span class="text-sm text-gray-500">Last Updated</span>
+                        <p class="font-semibold text-lg">{{stack.created_at}}</p>
+                    </div>
+                    <div
+                        class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+                        <span class="text-sm text-gray-500">Status</span>
+                        <p class="font-semibold text-lg flex items-center">
+                            <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 mr-2"></span> Running
+                        </p>
+                    </div>
+                    <div
+                        class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+                        <span class="text-sm text-gray-500">Services</span>
+                        <p class="font-semibold text-lg">4 active</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CPU Usage Graph -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M3 3a1 1 0 000 2h14a1 1 0 100-2H3zm0 6a1 1 0 000 2h14a1 1 0 100-2H3zm0 6a1 1 0 000 2h14a1 1 0 100-2H3z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    CPU Usage Over Time
+                </h2>
+                <div class="h-64 w-full bg-zinc-50 rounded-lg overflow-hidden">
+                    <canvas id="cpuUsageChart" class="w-full h-full"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Cost Analysis -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    Cost Analysis
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div
+                        class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+                        <span class="text-sm text-gray-500">Current Cost</span>
+                        <p class="font-semibold text-lg">$245.67</p>
+                        <span class="text-xs text-gray-500">This month</span>
+                    </div>
+                    <div
+                        class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+                        <span class="text-sm text-gray-500">Cost Trend</span>
+                        <p class="font-semibold text-lg flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-1"
+                                viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            +12.4%
+                        </p>
+                        <span class="text-xs text-gray-500">vs last month</span>
+                    </div>
+                    <div
+                        class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+                        <span class="text-sm text-gray-500">Projected Cost</span>
+                        <p class="font-semibold text-lg">$275.15</p>
+                        <span class="text-xs text-gray-500">End of month</span>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
+                        <h3 class="text-md font-semibold mb-2">Monthly Cost</h3>
+                        <div class="h-52 w-full">
+                            <canvas id="monthlyCostChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
+                        <h3 class="text-md font-semibold mb-2">Daily Breakdown</h3>
+                        <div class="h-52 w-full">
+                            <canvas id="dailyCostChart" class="w-full h-full"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stack Configuration -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    Stack Configuration
+                </h2>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <button
+                        class="bg-zinc-100 hover:bg-zinc-200 p-4 rounded-lg text-center transition-all duration-300 group">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 mx-auto mb-2 text-gray-600 group-hover:text-gray-800" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+                            </path>
+                        </svg>
+                        <span class="font-medium">Environment Variables</span>
+                    </button>
+                    <button
+                        class="bg-zinc-100 hover:bg-zinc-200 p-4 rounded-lg text-center transition-all duration-300 group">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 mx-auto mb-2 text-gray-600 group-hover:text-gray-800" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z">
+                            </path>
+                        </svg>
+                        <span class="font-medium">Resource Limits</span>
+                    </button>
+                    <button
+                        class="bg-zinc-100 hover:bg-zinc-200 p-4 rounded-lg text-center transition-all duration-300 group">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 mx-auto mb-2 text-gray-600 group-hover:text-gray-800" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9">
+                            </path>
+                        </svg>
+                        <span class="font-medium">Network Settings</span>
+                    </button>
+                    <button
+                        class="bg-zinc-100 hover:bg-zinc-200 p-4 rounded-lg text-center transition-all duration-300 group">
+                        <svg xmlns="http://www.w3.org/2000/svg"
+                            class="h-6 w-6 mx-auto mb-2 text-gray-600 group-hover:text-gray-800" fill="none"
+                            viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                            </path>
+                        </svg>
+                        <span class="font-medium">Security Settings</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Live Logs Terminal -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400"
+                            viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        Live Logs Terminal
+                    </h2>
+                    <div class="flex space-x-2">
+                        <button id="clear-logs-btn"
+                            class="bg-zinc-100 hover:bg-zinc-200 px-3 py-1 rounded text-sm transition-all duration-300">
+                            Clear
+                        </button>
+                        <button id="pause-logs-btn"
+                            class="bg-zinc-100 hover:bg-zinc-200 px-3 py-1 rounded text-sm transition-all duration-300">
+                            Pause
+                        </button>
+                    </div>
+                </div>
+                <div class="flex mb-3">
+                    <select id="service-selector"
+                        class="bg-zinc-100 border border-zinc-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm">
+                        <option value="all">All Services</option>
+                        <!-- Service options will be populated dynamically -->
+                    </select>
+                </div>
+                <div id="logs-container"
+                    class="bg-zinc-900 border border-zinc-700 rounded-lg p-4 font-mono text-sm text-green-400 h-64 overflow-y-auto scroll-smooth">
+                    <!-- Logs will be populated here dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Stack Actions -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    Stack Actions
+                </h2>
+                <div class="mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+                    <h3 class="text-md font-semibold mb-3">GitHub Integration</h3>
+                    <div class="flex items-center">
+                        <div id="github-connect" class="hidden">
+                            <a href="{% url 'github:login' %}?next={% url 'main_site:stack_dashboard' organization_id project_id stack.id %}"
+                                class="flex items-center bg-gray-800 hover:bg-gray-900 text-white py-2 px-4 rounded transition-all duration-300">
+                                <svg class="h-5 w-5 mr-2" viewBox="0 0 16 16" fill="currentColor">
+                                    <path fill-rule="evenodd"
+                                        d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                                    </path>
+                                </svg>
+                                Connect GitHub
+                            </a>
+                        </div>
+                        <div id="github-repos" class="hidden">
+                            <div class="relative">
+                                <button id="repo-dropdown-btn"
+                                    class="bg-zinc-900 hover:bg-zinc-800 px-6 py-3 text-sm text-white rounded font-bold transition duration-150 flex items-center justify-center w-full">
+                                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                                        <path
+                                            d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                                    </svg>
+                                    Select Repository
+                                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                </button>
+                                <div id="repo-dropdown"
+                                    class="hidden absolute z-10 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200">
+                                    <div class="py-2 max-h-60 overflow-y-auto">
+                                        <!-- Repository list will be populated here -->
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                    <button
+                        class="bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        Restart Stack
+                    </button>
+                    <button id="delete-stack-btn" data-stack-id="{{ stack.id }}"
+                        class="bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        Delete Stack
+                    </button>
+                    <button
+                        class="bg-zinc-500 hover:bg-zinc-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+                                clip-rule="evenodd"></path>
+                        </svg>
+                        View Logs
+                    </button>
+                    <button
+                        class="bg-zinc-500 hover:bg-zinc-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                            fill="currentColor">
+                            <path
+                                d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z">
+                            </path>
+                        </svg>
+                        Backup Stack
+                    </button>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'dashboards/stack_dashboard.js' %}"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
