@@ -107,11 +107,20 @@ class GCPUtils:
         return self.__request_helper(SERVICE_URL)
 
     def post_build_and_deploy(
-        self, stack_id, github_repo, github_token, layer: str, name: str = "", root_directory: str = "", port: int = 8080
+        self,
+        stack_id,
+        github_repo,
+        github_token,
+        layer: str,
+        name: str = "",
+        root_directory: str = "",
+        port: int = 8080,
     ):
         if name == "":
             name = layer
-        
+
+        root_directory_without_layer = root_directory
+
         if root_directory == "":
             root_directory = layer
         else:
@@ -119,7 +128,7 @@ class GCPUtils:
                 root_directory = f"{root_directory}"
             else:
                 root_directory = f"{root_directory}/{layer}"
-        
+
         try:
             # Replace with your project ID
             github_url = (
@@ -134,6 +143,19 @@ class GCPUtils:
             # Define the Cloud Build steps
             build_steps = [
                 {"name": "gcr.io/cloud-builders/git", "args": ["clone", github_url]},
+                {
+                    "name": "gcr.io/cloud-builders/gcloud",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        f"""
+                        apt-get update && apt-get install -y zip && \
+                        cd {github_repo_name}/{root_directory_without_layer} && \
+                        zip -r source.zip . && \
+                        gsutil cp source.zip gs://{self.project_id}-source-code/{stack_id}/source.zip
+                        """,
+                    ],
+                },
                 {
                     "name": "gcr.io/cloud-builders/docker",
                     "entrypoint": "bash",
@@ -177,9 +199,7 @@ class GCPUtils:
             build_config = {"steps": build_steps, "timeout": "600s"}
 
             # API endpoint for creating a build
-            api_url = (
-                f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
-            )
+            api_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
 
             # Submit the build
             print("Submitting build...")
@@ -289,9 +309,7 @@ class GCPUtils:
             build_config = {"steps": build_steps, "timeout": "600s"}
 
             # API endpoint for creating a build
-            api_url = (
-                f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
-            )
+            api_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
 
             # Submit the build
             print("Submitting build...")
@@ -353,7 +371,6 @@ class GCPUtils:
         except Exception as e:
             print(f"An error occurred: {e}")
 
-
     def redeploy_service(
         self,
         service_name: str,
@@ -392,9 +409,7 @@ class GCPUtils:
             build_config = {"steps": build_steps, "timeout": "600s"}
 
             # API endpoint for creating a build
-            api_url = (
-                f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
-            )
+            api_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
 
             # Submit the build
             print("Submitting build...")
@@ -483,7 +498,7 @@ class GCPUtils:
 
         if response is None:
             raise Exception("Service not found")
-        
+
         print(json.dumps(response, indent=4))
 
         service = response.get("urls", [""])[0]

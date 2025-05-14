@@ -22,7 +22,7 @@ if DEBUG:
         [
             "127.0.0.1",
             "localhost",
-            "10.11.230.216",
+            "b74d-152-117-84-227.ngrok-free.app",
             HOST.replace("https://", "").replace("http://", ""),
         ]
     )
