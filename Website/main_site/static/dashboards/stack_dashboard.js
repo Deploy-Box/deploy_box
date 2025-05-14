@@ -82,6 +82,75 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // Add event listener for download button
+    const downloadButton = document.querySelector('[data-download-url]');
+    if (downloadButton) {
+        downloadButton.addEventListener('click', async function (e) {
+            e.preventDefault();
+
+            // Get elements
+            const buttonText = this.querySelector('.button-text');
+            const loadingSpinner = this.querySelector('.loading-spinner');
+            const downloadIcon = this.querySelector('svg:not(.loading-spinner)');
+
+            // Show loading state
+            this.disabled = true;
+            buttonText.textContent = 'Downloading...';
+            downloadIcon.classList.add('hidden');
+            loadingSpinner.classList.remove('hidden');
+
+            try {
+                // Get the download URL
+                const downloadUrl = this.getAttribute('data-download-url');
+
+                // Fetch the file
+                const response = await fetch(downloadUrl);
+                if (!response.ok) throw new Error('Download failed');
+
+                // Get the blob from the response
+                const blob = await response.blob();
+
+                // Create a download link
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'stack.zip'; // or whatever the filename should be
+                document.body.appendChild(a);
+                a.click();
+
+                // Clean up
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+
+                // Show success state briefly
+                buttonText.textContent = 'Downloaded!';
+                setTimeout(() => {
+                    // Reset button state
+                    this.disabled = false;
+                    buttonText.textContent = 'Download Stack';
+                    downloadIcon.classList.remove('hidden');
+                    loadingSpinner.classList.add('hidden');
+                }, 2000);
+            } catch (error) {
+                console.error('Download error:', error);
+                // Show error state
+                buttonText.textContent = 'Download Failed';
+                this.classList.add('bg-red-500', 'hover:bg-red-600');
+                this.classList.remove('bg-zinc-500', 'hover:bg-zinc-600');
+
+                // Reset after 2 seconds
+                setTimeout(() => {
+                    this.disabled = false;
+                    buttonText.textContent = 'Download Stack';
+                    downloadIcon.classList.remove('hidden');
+                    loadingSpinner.classList.add('hidden');
+                    this.classList.remove('bg-red-500', 'hover:bg-red-600');
+                    this.classList.add('bg-zinc-500', 'hover:bg-zinc-600');
+                }, 2000);
+            }
+        });
+    }
 });
 
 function checkGitHubAuth() {
