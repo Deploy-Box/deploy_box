@@ -63,11 +63,12 @@ def purchasable_stack_routing(
     return JsonResponse({"error": "Method not allowed."}, status=405)
 
 
-@oauth_required()
+# @oauth_required()
 def stack_env_routing(
     request: AuthHttpRequest,
     stack_id: str,
 ) -> JsonResponse:
+    print(request.FILES)
     # GET: Fetch environment variables for a specific stack
     if request.method == "GET":
         return handlers.get_stack_env(request, stack_id)

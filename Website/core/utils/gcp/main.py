@@ -119,8 +119,11 @@ class GCPUtils:
         if name == "":
             name = layer
 
+<<<<<<< Updated upstream
         root_directory_without_layer = root_directory
 
+=======
+>>>>>>> Stashed changes
         if root_directory == "":
             root_directory = layer
         else:
@@ -378,7 +381,7 @@ class GCPUtils:
         env_vars: dict | None = None,
         **kwargs,
     ) -> str:
-        port = kwargs.get("port", 8080) if kwargs else 8080
+        port = kwargs.get("port", 8000) if kwargs else 8000
         env_vars_str = (
             ",".join([f'{k}="{v}"' for k, v in env_vars.items()]) if env_vars else ""
         )
@@ -592,6 +595,7 @@ class GCPUtils:
         # Get the existing service definition
         service_url = f"https://run.googleapis.com/v2/projects/{self.project_id}/locations/us-central1/services/{service_name}"
         service = self.__request_helper(service_url, method="GET")
+        print(service)
 
         if not service:
             raise Exception(f"Could not fetch service: {service_name}")
