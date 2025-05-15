@@ -42,8 +42,17 @@ def assertRequestFields(
         data = dict(request.headers)
     elif mimetype == "application/json":
         try:
-            data = json.loads(request.body)
-            print(f"Data: {data}")
+            # If body is already a string, try to parse it
+            if isinstance(request.body, str):
+                data = json.loads(request.body)
+            else:
+                # If body is bytes, decode it first
+                body_str = (
+                    request.body.decode("utf-8")
+                    if isinstance(request.body, bytes)
+                    else str(request.body)
+                )
+                data = json.loads(body_str)
         except json.JSONDecodeError:
             raise MissingFieldError("Invalid JSON", status=400)
 

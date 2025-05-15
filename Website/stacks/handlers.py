@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
 
 from .forms import EnvFileUploadForm
@@ -7,6 +7,7 @@ import stacks.services as services
 from projects.models import Project
 from stacks.models import PurchasableStack, Stack
 from core.helpers import request_helpers
+from .serializers import StackDatabaseSerializer
 
 
 def get_stack(request: AuthHttpRequest) -> JsonResponse:
@@ -106,3 +107,30 @@ def post_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
 
 def delete_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
     return JsonResponse({"error": "Not implemented"}, status=501)
+
+
+def get_all_stack_databases() -> JsonResponse:
+    stack_databases = services.get_all_stack_databases()
+    serializer = StackDatabaseSerializer(stack_databases, many=True)
+
+    return JsonResponse(
+        {"success": True, "data": serializer.data},
+        status=200,
+    )
+
+
+def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:
+    try:
+        (data,) = request_helpers.assertRequestFields(request, ["data"])
+
+    except request_helpers.MissingFieldError as e:
+        return e.to_response()
+
+    success = services.update_stack_databases_usages(data)
+
+    if not success:
+        return JsonResponse(
+            {"error": "Failed to update stack databases usages."}, status=500
+        )
+
+    return JsonResponse({"success": True}, status=200)
