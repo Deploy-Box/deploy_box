@@ -200,6 +200,7 @@ def get_stack_env(stack_id: str) -> dict:
 
     return stack.env
 
+#TODO: show loading indicator
 def post_stack_env(stack_id: str, selected_frameworks, selected_locations, uploaded_file):
 
     env_file = uploaded_file
@@ -227,5 +228,5 @@ def post_stack_env(stack_id: str, selected_frameworks, selected_locations, uploa
     os.remove('temp.env')
 
     # You can now use the env_dict to update your Google Cloud build instance or whatever you need
-    return JsonResponse({'status': 'success', 'env_dict': env_dict})
+    return JsonResponse({'status': 'success'})
 
