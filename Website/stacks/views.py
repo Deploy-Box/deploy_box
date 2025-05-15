@@ -140,3 +140,11 @@ def download_stack(request: HttpRequest, stack_id: str):
 
     except Exception as e:
         return JsonResponse({"error": f"Failed to download file: {str(e)}"}, status=500)
+
+
+def get_all_stack_databases(request: HttpRequest) -> JsonResponse:
+    return handlers.get_all_stack_databases()
+
+
+def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:
+    return handlers.update_stack_databases_usages(request)

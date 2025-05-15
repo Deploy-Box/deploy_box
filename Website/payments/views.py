@@ -1,6 +1,7 @@
 import json
 import time
 import stripe
+from stripe import error as stripe_error
 import random
 
 from django.conf import settings
@@ -74,7 +75,7 @@ def save_stripe_payment_method(request: AuthHttpRequest) -> JsonResponse:
             {"message": "Payment method saved successfully."}, status=200
         )
 
-    except stripe.error.StripeError as e:
+    except stripe_error.StripeError as e:  # type: ignore
         return JsonResponse({"error": str(e)}, status=400)
 
     except Exception as e:
@@ -168,7 +169,7 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
         # Invalid payload
         print(f"Error parsing webhook payload: {e}")
         return HttpResponse("Invalid payload", status=400)
-    except stripe.error.SignatureVerificationError as e:
+    except stripe_error.SignatureVerificationError as e:  # type: ignore
         # Invalid signature
         print(f"Error verifying signature: {e}")
         return HttpResponse("Invalid signature", status=400)
@@ -262,7 +263,7 @@ def create_invoice(request: HttpRequest) -> JsonResponse:
 
             return JsonResponse({"invoice_id": invoice.id, "status": invoice.status})
 
-        except stripe.error.StripeError as e:
+        except stripe_error.StripeError as e:  # type: ignore
             return JsonResponse({"error": str(e)}, status=400)
 
         except Exception as e:
@@ -345,18 +346,17 @@ def get_price_item_by_name(request: HttpRequest, name: str) -> JsonResponse:
     return pricing_services.get_price_item_by_name(request, name)
 
 
-def get_payment_method(request: HttpRequest) -> JsonResponse:
+def get_payment_method(request: HttpRequest, org_id: str) -> JsonResponse:
     if request.method != "GET":
         return JsonResponse(
             {"error": "Invalid request method. Only GET is allowed."}, status=405
         )
 
     try:
-        organization_id = request.GET.get("organization_id")
-        if not organization_id:
+        if not org_id:
             return JsonResponse({"error": "organization_id is required"}, status=400)
 
-        organization = get_object_or_404(Organization, id=organization_id)
+        organization = get_object_or_404(Organization, id=org_id)
         customer_id = organization.stripe_customer_id
 
         if not customer_id:
@@ -368,22 +368,29 @@ def get_payment_method(request: HttpRequest) -> JsonResponse:
         customer = stripe.Customer.retrieve(
             customer_id, expand=["invoice_settings.default_payment_method"]
         )
-        default_payment_method = customer.invoice_settings.default_payment_method
 
-        if not default_payment_method:
+        if not customer:
+            return JsonResponse({"error": "No customer found"}, status=404)
+
+        if not customer.invoice_settings:
+            return JsonResponse({"error": "Invoice settings not found"}, status=404)
+
+        default_payment_method_id = customer.invoice_settings.default_payment_method  # type: ignore
+
+        if not default_payment_method_id:
             return JsonResponse({"error": "No payment method found"}, status=404)
 
         # Format the card information
         card_info = {
-            "brand": default_payment_method.card.brand,
-            "last4": default_payment_method.card.last4,
-            "exp_month": default_payment_method.card.exp_month,
-            "exp_year": default_payment_method.card.exp_year,
+            "brand": default_payment_method_id.card.brand,  # type: ignore
+            "last4": default_payment_method_id.card.last4,  # type: ignore
+            "exp_month": default_payment_method_id.card.exp_month,  # type: ignore
+            "exp_year": default_payment_method_id.card.exp_year,  # type: ignore
         }
 
         return JsonResponse(card_info, status=200)
 
-    except stripe.error.StripeError as e:
+    except stripe_error.StripeError as e:  # type: ignore
         return JsonResponse({"error": str(e)}, status=400)
     except Exception as e:
         return JsonResponse(
@@ -456,7 +463,7 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
                 {"error": "No default payment method found"}, status=404
             )
 
-    except stripe.error.StripeError as e:
+    except stripe_error.StripeError as e:  # type: ignore
         return JsonResponse({"error": str(e)}, status=400)
     except Exception as e:
         return JsonResponse(

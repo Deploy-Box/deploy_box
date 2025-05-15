@@ -1,5 +1,6 @@
 import logging
 import secrets
+import json
 from django.http import JsonResponse
 from django.db import transaction
 
@@ -190,7 +191,40 @@ def post_purchasable_stack(
         )
 
 
+def get_all_stack_databases() -> list[StackDatabase]:
+    return list(StackDatabase.objects.all())
+
+
 def get_stack_env(stack_id: str) -> dict:
     stack = Stack.objects.get(id=stack_id)
 
     return stack.env
+
+
+def update_stack_databases_usages(data) -> bool:
+    """
+    Updates the usage of multiple stack databases.
+
+    Args:
+        data (dict): Dictionary containing the data with stack database updates
+
+    Returns:
+        bool: True if all updates were successful
+    """
+    print("Data: ", data)
+    print(type(data))
+    try:
+        data = json.loads(data)
+        print("Data: ")
+        print("Data: ", data.get("data"))
+        print(type(data.get("data")))
+        data = json.loads(data.get("data"))
+        print("Data: ", data)
+        for stack_database_id, usage in data.items():
+            stack_database = StackDatabase.objects.get(pk=stack_database_id)
+            stack_database.current_usage = usage
+            stack_database.save()
+        return True
+    except Exception as e:
+        logger.error(f"Failed to update stack databases usages: {str(e)}")
+        return False
