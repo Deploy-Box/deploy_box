@@ -3,6 +3,8 @@ import secrets
 import json
 from django.http import JsonResponse
 from django.db import transaction
+from requests import request
+import requests
 
 from stacks.models import (
     Stack,
@@ -14,6 +16,9 @@ from stacks.models import (
 from projects.models import Project
 from core.utils import GCPUtils, MongoDBUtils
 from accounts.models import User
+from .forms import EnvFileUploadForm
+from dotenv import dotenv_values
+import os
 
 logger = logging.getLogger(__name__)
 
@@ -199,6 +204,39 @@ def get_stack_env(stack_id: str) -> dict:
     stack = Stack.objects.get(id=stack_id)
 
     return stack.env
+
+
+# TODO: show loading indicator
+def post_stack_env(
+    stack_id: str, selected_frameworks, selected_locations, uploaded_file
+):
+
+    env_file = uploaded_file
+
+    if selected_locations == "none":
+
+        total_stack_id = selected_frameworks + "-" + stack_id
+
+    else:
+        total_stack_id = selected_frameworks + "-" + selected_locations + "-" + stack_id
+
+    # Save the file temporarily
+    with open("temp.env", "wb") as f:
+        for chunk in env_file.chunks():
+            f.write(chunk)
+
+    # Parse the .env file into a dictionary
+    env_dict = dotenv_values("temp.env")
+
+    Cloud = GCPUtils()
+
+    Cloud.put_service_envs(total_stack_id, env_dict)
+
+    # Clean up temporary file
+    os.remove("temp.env")
+
+    # You can now use the env_dict to update your Google Cloud build instance or whatever you need
+    return JsonResponse({"status": "success"})
 
 
 def update_stack_databases_usages(data) -> bool:
