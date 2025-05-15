@@ -119,11 +119,8 @@ class GCPUtils:
         if name == "":
             name = layer
 
-<<<<<<< Updated upstream
         root_directory_without_layer = root_directory
 
-=======
->>>>>>> Stashed changes
         if root_directory == "":
             root_directory = layer
         else:
