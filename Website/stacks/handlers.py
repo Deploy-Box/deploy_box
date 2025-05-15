@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
+from .forms import EnvFileUploadForm
 from core.decorators import AuthHttpRequest
 import stacks.services as services
 from projects.models import Project
@@ -91,7 +92,16 @@ def get_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
 
 
 def post_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
-    return JsonResponse({"error": "Not implemented"}, status=501)
+
+    form = EnvFileUploadForm(request.POST, request.FILES)
+    if form.is_valid():
+        selected_frameworks = form.cleaned_data['framework']
+        selected_locations = form.cleaned_data['select_location']
+        uploaded_file = form.cleaned_data['env_file']
+
+        return services.post_stack_env(stack_id, selected_frameworks, selected_locations, uploaded_file)
+    else:
+        return JsonResponse({"message": "you must upload a valid form"})
 
 
 def delete_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
