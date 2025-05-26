@@ -200,7 +200,13 @@ const WebSocket = () => {
 
     const handleDeleteRoom = async () => {
         try {
-            const roomId = availableRooms.find(room => room.name === currentRoom)?._id;
+            const roomId = currentRoom?._id;
+
+            if (!roomId) {
+                alert("Please select a room to delete");
+                return;
+            }
+
             console.log("Deleting room:", roomId);
             const token = localStorage.getItem('accessToken');
             const response = await fetch(`${window.env.REACT_APP_BACKEND_URL}/api/rooms/${roomId}`, {
@@ -213,6 +219,9 @@ const WebSocket = () => {
             if (!response.ok) {
                 throw new Error('Failed to delete room');
             }
+
+            setCurrentRoom('');
+            setMessages([]);
 
             // Note: Room list update will be handled by the websocket event
         } catch (error) {

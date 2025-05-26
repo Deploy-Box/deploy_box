@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Room = require('../models/roomModel');
+const Chat = require('../models/chatModel');
 const { protect } = require('../middleware/authMiddleware');
 const { io } = require('../middleware/websocket_middleware');
 
@@ -8,12 +9,6 @@ const { io } = require('../middleware/websocket_middleware');
 router.post('/', protect, async (req, res) => {
     try {
         const { name } = req.body;
-
-        // Check if room already exists
-        const existingRoom = await Room.findOne({ name: name.toLowerCase() });
-        if (existingRoom) {
-            return res.status(400).json({ message: 'Room already exists' });
-        }
 
         // Create new room
         const room = new Room({
@@ -49,6 +44,7 @@ router.delete('/:roomId', protect, async (req, res) => {
 
         console.log("Deleting room:", roomId);
 
+        
         const room = await Room.findOne({ 
             _id: roomId,
         });
@@ -57,6 +53,7 @@ router.delete('/:roomId', protect, async (req, res) => {
             return res.status(404).json({ message: 'Room not found or unauthorized' });
         }
 
+        await Chat.deleteMany({ roomId: roomId });
         await room.deleteOne();
         
         // Emit websocket event to all clients about the deleted room
