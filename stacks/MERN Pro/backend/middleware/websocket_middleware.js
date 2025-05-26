@@ -1,6 +1,7 @@
 const { Server } = require("socket.io");
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const chatModel = require("../models/chatModel");
 
 const port = process.env.PORT || 5500;
 
@@ -47,15 +48,17 @@ io.on("connection", (socket) => {
   console.log(`User ${socket.id} connected (${socket.user.email})`);
 
   // Handle joining a room
-  socket.on("joinRoom", (room) => {
+  socket.on("joinRoom", async (room) => {
     socket.join(room);
-    console.log(`User ${socket.id} (${socket.user.email}) joined room: ${room}`);
+    console.log(
+      `User ${socket.id} (${socket.user.email}) joined room: ${room}`
+    );
     socket.emit("roomJoined", room);
-    
+
     const joinMessage = {
-      type: 'system',
+      type: "system",
       content: `${socket.user.email} joined ${room}`,
-      room: room
+      room: room,
     };
     io.to(room).emit("message", joinMessage);
   });
@@ -64,30 +67,76 @@ io.on("connection", (socket) => {
   socket.on("leaveRoom", (room) => {
     socket.leave(room);
     console.log(`User ${socket.id} (${socket.user.email}) left room: ${room}`);
-    
+
     const leaveMessage = {
-      type: 'system',
+      type: "system",
       content: `${socket.user.email} left ${room}`,
-      room: room
+      room: room,
     };
     io.to(room).emit("message", leaveMessage);
   });
 
   // Handle messages in a specific room
-  socket.on("message", ({ room, message }) => {
-    console.log(`Message received in room ${room} from ${socket.user.email}: ${message}`);
+  socket.on("message", async ({ room, message }) => {
+    console.log(
+      `Message received in room ${room} from ${socket.user.email}: ${message}`
+    );
+    await sendMessageToDB(room, socket.user.email, message);
     const chatMessage = {
-      type: 'chat',
+      type: "chat",
       content: message,
       sender: socket.user.email,
-      room: room
+      room: room,
     };
     io.to(room).emit("message", chatMessage);
+  });
+
+  socket.on("requestChatHistory", async (roomId) => {
+    const messagesFromDB = await getMessagesFromDB(roomId);
+    console.log(`messages: ${messagesFromDB}`);
+    const formatted = messagesFromDB.map((msg) => ({
+      type: "chat",
+      content: msg.messageContent,
+      sender: msg.senderUserId,
+      timeStamp: msg.timeStamp,
+    }));
+    socket.emit("chatHistory", formatted);
   });
 
   socket.on("disconnect", () => {
     console.log(`User ${socket.id} (${socket.user.email}) disconnected`);
   });
 });
+
+async function sendMessageToDB(roomId, senderUserId, messageContent) {
+  try {
+    const chatMessage = new chatModel({
+      roomId,
+      senderUserId,
+      messageContent,
+      timeStamp: new Date(), // stores the current time as a Date object
+    });
+
+    const savedMessage = await chatMessage.save();
+    return savedMessage; // optional: return the saved document
+  } catch (error) {
+    console.error("Error saving message to DB:", error);
+    throw error;
+  }
+}
+
+async function getMessagesFromDB(roomId, limit = 100) {
+  try {
+    const messages = await chatModel
+      .find({ roomId })
+      .sort({ timeStamp: 1 }) // oldest to newest
+      .limit(limit);
+
+    return messages;
+  } catch (error) {
+    console.error("Error fetching messages from DB:", error);
+    throw error;
+  }
+}
 
 module.exports = { io, app, expressServer };

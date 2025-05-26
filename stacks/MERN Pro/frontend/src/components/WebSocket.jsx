@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import './WebSocket.css';
@@ -36,6 +36,10 @@ const WebSocket = () => {
             setMessages(prevMessages => [...prevMessages, data]);
         });
 
+        socketRef.current.on("chatHistory", (history) => {
+            setMessages(history);
+        });
+
         // Listen for room joined confirmation
         socketRef.current.on("roomJoined", (room) => {
             setCurrentRoom(room);
@@ -63,6 +67,8 @@ const WebSocket = () => {
             socketRef.current.emit("leaveRoom", currentRoom);
         }
         socketRef.current.emit("joinRoom", room);
+        socketRef.current.emit("requestChatHistory", room);
+
     };
 
     const handleCreateRoom = (e) => {
@@ -131,7 +137,7 @@ const WebSocket = () => {
                     </button>
                 </div>
             </div>
-            
+
             <div className="chat-section">
                 <div className="messages-container">
                     <h2>{currentRoom ? `Chat Messages - ${currentRoom}` : 'Select a Room'}</h2>
@@ -140,7 +146,7 @@ const WebSocket = () => {
                         <div ref={messagesEndRef} />
                     </div>
                 </div>
-                
+
                 <form onSubmit={sendMessage} className="message-form">
                     <input
                         type="text"
