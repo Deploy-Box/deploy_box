@@ -1,17 +1,19 @@
 .websocket-container {
     display: flex;
-    gap: 20px;
-    height: calc(100vh - 100px);
     padding: 20px;
-    background-color: #f5f7fb;
+    gap: 20px;
+    height: 100vh;
 }
 
 .rooms-section {
+    display: flex;
+    flex-direction: column;
     width: 250px;
     background: white;
     padding: 20px;
-    border-radius: 10px;
+    border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    height: 100%;
 }
 
 .rooms-section h3 {
@@ -26,53 +28,61 @@
     flex-direction: column;
     gap: 10px;
     margin-bottom: 20px;
+    flex: 1;
+    overflow-y: auto;
 }
 
 .room-button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    background-color: #f0f2f5;
-    color: #2c3e50;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    background: white;
     cursor: pointer;
-    transition: all 0.2s ease;
-    text-align: left;
+    transition: all 0.2s;
 }
 
 .room-button:hover {
-    background-color: #e4e6e9;
+    background: #f7fafc;
 }
 
 .room-button.active {
-    background-color: #3498db;
+    background: #4299e1;
     color: white;
+    border-color: #4299e1;
 }
 
 .create-room-form {
     display: flex;
     flex-direction: column;
     gap: 10px;
+    margin-top: auto;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 20px;
 }
 
 .room-input {
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
+    padding: 8px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
 }
 
 .create-room-button {
-    padding: 8px 12px;
-    background-color: #2ecc71;
+    padding: 8px;
+    background: #4299e1;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background 0.2s;
 }
 
 .create-room-button:hover {
-    background-color: #27ae60;
+    background: #3182ce;
+}
+
+.create-room-button:disabled {
+    background: #cbd5e0;
+    cursor: not-allowed;
 }
 
 .chat-section {
@@ -80,17 +90,15 @@
     display: flex;
     flex-direction: column;
     background: white;
-    border-radius: 10px;
+    border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     overflow: hidden;
 }
 
 .messages-container {
     flex: 1;
-    display: flex;
-    flex-direction: column;
     padding: 20px;
-    overflow: hidden;
+    overflow-y: auto;
 }
 
 .messages-container h2 {
@@ -101,72 +109,84 @@
 }
 
 .messages-list {
-    flex: 1;
-    overflow-y: auto;
-    padding-right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .message {
-    padding: 10px 15px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    color: #2c3e50;
+    padding: 10px;
+    border-radius: 6px;
+    max-width: 80%;
 }
 
 .system-message {
-    background-color: #f8f9fa;
-    color: #6c757d;
+    background: #f7fafc;
+    color: #4a5568;
+    align-self: center;
     font-style: italic;
-    text-align: center;
-    font-size: 0.9em;
 }
 
 .chat-message {
-    background-color: #f0f2f5;
+    background: #ebf8ff;
+    align-self: flex-start;
 }
 
-.chat-message .sender {
-    color: #3498db;
+.sender {
     font-weight: bold;
-    margin-right: 5px;
+    color: #2b6cb0;
 }
 
 .message-form {
     display: flex;
     gap: 10px;
     padding: 20px;
-    background-color: #f8f9fa;
-    border-top: 1px solid #eee;
+    border-top: 1px solid #e2e8f0;
 }
 
 .message-input {
     flex: 1;
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 14px;
-}
-
-.message-input:disabled {
-    background-color: #f5f5f5;
-    cursor: not-allowed;
+    padding: 10px;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
 }
 
 .send-button {
-    padding: 12px 24px;
-    background-color: #3498db;
+    padding: 10px 20px;
+    background: #4299e1;
     color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 6px;
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: background 0.2s;
 }
 
-.send-button:hover:not(:disabled) {
-    background-color: #2980b9;
+.send-button:hover {
+    background: #3182ce;
 }
 
 .send-button:disabled {
-    background-color: #bdc3c7;
+    background: #cbd5e0;
     cursor: not-allowed;
-} 
+}
+
+.logout-section {
+    margin-top: auto;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.logout-button {
+    width: 100%;
+    padding: 10px;
+    background: #f56565;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.logout-button:hover {
+    background: #e53e3e;
+}

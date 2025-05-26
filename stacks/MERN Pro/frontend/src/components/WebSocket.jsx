@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import './WebSocket.css';
 
 const WebSocket = () => {
+    const navigate = useNavigate();
     const [messages, setMessages] = useState([]);
     const [inputValue, setInputValue] = useState('');
     const [currentRoom, setCurrentRoom] = useState('');
@@ -20,8 +22,13 @@ const WebSocket = () => {
     }, [messages]);
 
     useEffect(() => {
-        // Initialize socket connection
-        socketRef.current = io(window.env.REACT_APP_BACKEND_URL);
+        // Initialize socket connection with auth token
+        const token = localStorage.getItem('accessToken');
+        socketRef.current = io(window.env.REACT_APP_BACKEND_URL, {
+            auth: {
+                token
+            }
+        });
 
         // Listen for messages
         socketRef.current.on("message", (data) => {
@@ -45,6 +52,11 @@ const WebSocket = () => {
             }
         };
     }, []);
+
+    const handleLogout = () => {
+        localStorage.removeItem('accessToken');
+        navigate('/login');
+    };
 
     const joinRoom = (room) => {
         if (currentRoom) {
@@ -113,6 +125,11 @@ const WebSocket = () => {
                     />
                     <button type="submit" className="create-room-button">Create Room</button>
                 </form>
+                <div className="logout-section">
+                    <button onClick={handleLogout} className="logout-button">
+                        Logout
+                    </button>
+                </div>
             </div>
             
             <div className="chat-section">
@@ -142,4 +159,4 @@ const WebSocket = () => {
     );
 };
 
-export default WebSocket; 
+export default WebSocket;
