@@ -1,10 +1,13 @@
 from django.db import models
 from django.db.models import UniqueConstraint
 from projects.models import Project
+
 from core.fields import ShortUUIDField
+from core.models.requestable_model import RequestableModel
+from core.utils import GCPUtils
 
 
-class PurchasableStack(models.Model):
+class PurchasableStack(RequestableModel):
     id = ShortUUIDField(primary_key=True)
     type = models.CharField(max_length=10)
     variant = models.CharField(max_length=10)
@@ -19,7 +22,7 @@ class PurchasableStack(models.Model):
         return self.type
 
 
-class Stack(models.Model):
+class Stack(RequestableModel):
     id = ShortUUIDField(primary_key=True)
     name = models.CharField(max_length=100)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
@@ -30,12 +33,18 @@ class Stack(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    class Meta:
-        constraints = [
-            UniqueConstraint(
-                fields=["project", "name"], name="unique_stack_name_per_project"
-            )
-        ]
+    @classmethod
+    def get_service(cls, **kwargs):
+        import stacks.services as stack_services
+
+        return stack_services.get_stack(**kwargs)
+
+    # class Meta:
+    #     constraints = [
+    #         UniqueConstraint(
+    #             fields=["project", "name"], name="unique_stack_name_per_project"
+    #         )
+    #     ]
 
     def __str__(self):
         return self.project.name + " - " + self.name
@@ -78,3 +87,75 @@ class StackDatabase(models.Model):
 
     def __str__(self):
         return self.uri
+
+
+class StackState(models.TextChoices):
+    STOPPED = "STOPPED"
+    RUNNING = "RUNNING"
+    STARTING = "STARTING"
+    STOPPING = "STOPPING"
+    DELETING = "DELETING"
+    UPDATING = "UPDATING"
+    ERROR = "ERROR"
+
+
+class StackGoogleCloudRun(RequestableModel):
+    id = ShortUUIDField(primary_key=True)
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    url = models.URLField()
+    image_url = models.URLField()
+    state = models.CharField(
+        max_length=100, default="STARTING", choices=StackState.choices
+    )
+    build_status_url = models.URLField(default="")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name
+
+
+class StackMongoDB(RequestableModel):
+    id = ShortUUIDField(primary_key=True)
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
+    uri = models.URLField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.uri
+
+
+class StackRedis(RequestableModel):
+    id = ShortUUIDField(primary_key=True)
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
+    uri = models.URLField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.uri
+
+
+class StackPostgreSQL(RequestableModel):
+    id = ShortUUIDField(primary_key=True)
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
+    uri = models.URLField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.uri
+
+
+class GoogleCloudBucket(RequestableModel):
+    id = ShortUUIDField(primary_key=True)
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    url = models.URLField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.name

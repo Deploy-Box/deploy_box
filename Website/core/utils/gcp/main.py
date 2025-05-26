@@ -261,7 +261,7 @@ class GCPUtils:
         layer: str,
         env_vars: dict | None = None,
         **kwargs,
-    ) -> str:
+    ) -> dict:
         service_name = f"{layer.lower()}-{stack_id.lower()}"
 
         port = kwargs.get("port", 8080) if kwargs else 8080
@@ -317,7 +317,11 @@ class GCPUtils:
 
             if response is None:
                 print(f"Error creating build: {response}")
-                raise Exception("Error creating build")
+                return {
+                    "url": None,
+                    "build_status_url": None,
+                    "status": "ERROR",
+                }
 
             response.get("metadata", {})
             metadata = response.get("metadata", {})
@@ -326,7 +330,11 @@ class GCPUtils:
 
             if not build_id:
                 print(f"Error creating build: {response}")
-                raise Exception("Error creating build")
+                return {
+                    "url": None,
+                    "build_status_url": None,
+                    "status": "ERROR",
+                }
 
             print(f"Build submitted with ID: {build_id}")
 
@@ -334,42 +342,19 @@ class GCPUtils:
             print("Waiting for build to complete...")
             build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds/{build_id}"
 
-            status = "UNKNOWN"
-            while True:
-                build_status = self.__request_helper(build_status_url)
-                if build_status is None:
-                    print("Error getting build status")
-                    break
-
-                status = build_status.get("status", "UNKNOWN")
-                print(f"Build status: {status}")
-
-                if status in [
-                    "SUCCESS",
-                    "FAILURE",
-                    "INTERNAL_ERROR",
-                    "TIMEOUT",
-                    "CANCELLED",
-                    "EXPIRED",
-                ]:
-                    break
-
-                time.sleep(10)  # Wait 10 seconds before checking again
-
-            if status == "SUCCESS":
-                print(f"Build completed successfully: {build_id}")
-                print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
-                )
-                return self.get_service_endpoint(service_name)
-            else:
-                print(f"Build failed with status: {status}")
-                print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
-                )
+            return {
+                "url": None,
+                "build_status_url": build_status_url,
+                "status": "STARTING",
+            }
 
         except Exception as e:
             print(f"An error occurred: {e}")
+            return {
+                "url": None,
+                "build_status_url": None,
+                "status": "ERROR",
+            }
 
     def redeploy_service(
         self,
@@ -607,6 +592,29 @@ class GCPUtils:
             service["template"]["containers"][0]["image"],
             env_vars=merged_envs,
         )
+
+    def get_build_status(self, build_status_url: str) -> str:
+        response = self.__request_helper(build_status_url)
+
+        if response is None:
+            return "UNKNOWN"
+
+        status = response.get("status", "UNKNOWN")
+
+        if status == "SUCCESS":
+            return "SUCCESS"
+        elif status == "FAILURE":
+            return "ERROR"
+        elif status == "INTERNAL_ERROR":
+            return "ERROR"
+        elif status == "TIMEOUT":
+            return "ERROR"
+        elif status == "CANCELLED":
+            return "ERROR"
+        elif status == "EXPIRED":
+            return "ERROR"
+
+        return status
 
 
 if __name__ == "__main__":

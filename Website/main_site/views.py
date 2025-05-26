@@ -13,7 +13,7 @@ from organizations.forms import (
 from organizations.services import get_organizations
 from projects.forms import ProjectCreateFormWithMembers
 from stacks.forms import EnvFileUploadForm
-from stacks.models import PurchasableStack
+from stacks.models import PurchasableStack, StackGoogleCloudRun
 
 from core.decorators import oauth_required, AuthHttpRequest
 
@@ -114,11 +114,31 @@ def stack_dashboard(
 ) -> HttpResponse:
     # TODO: Check if user is a member of the project
     stack = Stack.objects.get(id=stack_id)
+    stack_google_cloud_run = StackGoogleCloudRun.objects.filter(stack=stack).first()
+    print(f"Stack: {stack}")
+    print(f"Stack Google Cloud Run: {stack_google_cloud_run}")
+    return render(
+        request,
+        "dashboard/stack_dashboard.html",
+        {
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "stack": stack,
+            "stack_google_cloud_run": stack_google_cloud_run,
+        },
+    )
+
     form = EnvFileUploadForm()
     return render(
         request,
         "dashboard/stack_dashboard.html",
-        {"organization_id": organization_id, "project_id": project_id, "stack": stack, "form": form},
+        {
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "stack": stack,
+            "form": form,
+            "stack_google_cloud_run": stack_google_cloud_run,
+        },
     )
 
 

@@ -5,13 +5,13 @@ from django.http import JsonResponse
 from django.db import transaction
 from requests import request
 import requests
-
 from stacks.models import (
     Stack,
     PurchasableStack,
     StackDatabase,
     StackBackend,
     StackFrontend,
+    StackGoogleCloudRun,
 )
 from projects.models import Project
 from core.utils import GCPUtils, MongoDBUtils
@@ -46,8 +46,19 @@ def add_stack(
         )
 
 
-def get_stack(stack_id: str) -> Stack:
-    return Stack.objects.get(id=stack_id)
+def get_stack(**kwargs):
+    print(f"Getting stack: {kwargs}")
+    stack = Stack.objects.get(pk=kwargs.get("pk"))
+    stack_google_cloud_run = StackGoogleCloudRun.objects.filter(stack=stack).first()
+    if stack_google_cloud_run:
+        gcp_utils = GCPUtils()
+        build_status = gcp_utils.get_build_status(
+            stack_google_cloud_run.build_status_url
+        )
+        print(f"Build status: {build_status}")
+        stack_google_cloud_run.state = build_status
+        stack_google_cloud_run.save()
+    return Stack.objects.filter(pk=stack.id)
 
 
 def update_stack(stack: Stack, root_directory: str | None = None) -> bool:
@@ -146,32 +157,28 @@ def deploy_django_stack(stack: Stack):
 
     backend_image = f"gcr.io/{gcp_utils.project_id}/django"
     print(f"Deploying backend with image: {backend_image}")
-    frontend_url = gcp_utils.deploy_service(
+    response = gcp_utils.deploy_service(
         stack_id,
         backend_image,
         "django",
         {"DJANGO_SECRET_KEY": django_secret_key},
-        port=8080,
+        port=8000,
     )
 
-    gcp_utils.put_service_envs(
-        f"django-{stack_id}", {"DJANGO_ALLOWED_HOSTS": frontend_url.split("//")[-1]}
-    )
-
-    stack_frontend = StackFrontend.objects.create(
+    stack_google_cloud_run = StackGoogleCloudRun.objects.create(
         stack=stack,
-        url=frontend_url,
         image_url=backend_image,
+        build_status_url=response.get("build_status_url", ""),
     )
 
-    stack_frontend.save()
+    stack_google_cloud_run.save()
 
     return JsonResponse(
         {
             "message": "Django stack deployed successfully.",
             "data": {
                 "stack_id": stack_id,
-                "frontend_url": frontend_url,
+                "build_status_url": response.get("build_status_url", ""),
             },
         },
         status=201,
@@ -198,12 +205,6 @@ def post_purchasable_stack(
 
 def get_all_stack_databases() -> list[StackDatabase]:
     return list(StackDatabase.objects.all())
-
-
-def get_stack_env(stack_id: str) -> dict:
-    stack = Stack.objects.get(id=stack_id)
-
-    return stack.env
 
 
 # TODO: show loading indicator
