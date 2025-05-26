@@ -48,47 +48,47 @@ io.on("connection", (socket) => {
   console.log(`User ${socket.id} connected (${socket.user.email})`);
 
   // Handle joining a room
-  socket.on("joinRoom", async (room) => {
-    socket.join(room);
+  socket.on("joinRoom", async (roomId) => {
+    socket.join(roomId);
     console.log(
-      `User ${socket.id} (${socket.user.email}) joined room: ${room}`
+      `User ${socket.id} (${socket.user.email}) joined room: ${roomId}`
     );
-    socket.emit("roomJoined", room);
+    socket.emit("roomJoined", roomId);
 
     const joinMessage = {
       type: "system",
-      content: `${socket.user.email} joined ${room}`,
-      room: room,
+      content: `${socket.user.email} joined ${roomId}`,
+      room: roomId,
     };
-    io.to(room).emit("message", joinMessage);
+    io.to(roomId).emit("message", joinMessage);
   });
 
   // Handle leaving a room
-  socket.on("leaveRoom", (room) => {
-    socket.leave(room);
-    console.log(`User ${socket.id} (${socket.user.email}) left room: ${room}`);
+  socket.on("leaveRoom", (roomId) => {
+    socket.leave(roomId);
+    console.log(`User ${socket.id} (${socket.user.email}) left room: ${roomId}`);
 
     const leaveMessage = {
       type: "system",
-      content: `${socket.user.email} left ${room}`,
-      room: room,
+      content: `${socket.user.email} left ${roomId}`,
+      room: roomId,
     };
-    io.to(room).emit("message", leaveMessage);
+    io.to(roomId).emit("message", leaveMessage);
   });
 
   // Handle messages in a specific room
-  socket.on("message", async ({ room, message }) => {
+  socket.on("message", async ({ roomId, message }) => {
     console.log(
-      `Message received in room ${room} from ${socket.user.email}: ${message}`
+      `Message received in room ${roomId} from ${socket.user.email}: ${message}`
     );
-    await sendMessageToDB(room, socket.user.email, message);
+    await sendMessageToDB(roomId, socket.user.email, message);
     const chatMessage = {
       type: "chat",
       content: message,
       sender: socket.user.email,
-      room: room,
+      room: roomId,
     };
-    io.to(room).emit("message", chatMessage);
+    io.to(roomId).emit("message", chatMessage);
   });
 
   socket.on("requestChatHistory", async (roomId) => {

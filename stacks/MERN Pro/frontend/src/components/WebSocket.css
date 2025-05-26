@@ -190,3 +190,35 @@
 .logout-button:hover {
     background: #e53e3e;
 }
+
+.room-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.delete-room-button {
+    margin-left: 8px;
+    background-color: #ff4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    padding: 0;
+    transition: background-color 0.2s ease;
+}
+
+.delete-room-button:hover {
+    background-color: #cc0000;
+}
+
+.delete-room-button:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(255, 68, 68, 0.5);
+}

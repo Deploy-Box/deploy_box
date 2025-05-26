@@ -2,8 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const itemRoutes = require("./routes/items");
 const { DB_Connect } = require('./database');
-const auth = require("./routes/auth.routes");
+const auth = require("./routes/authRoutes");
 const { app, io, expressServer } = require('./middleware/websocket_middleware');
+const roomRoutes = require("./routes/roomRoutes");
 
 const corsOptions = {
   origin: "*", // Allow all origins (for testing)
@@ -27,6 +28,7 @@ DB_Connect()
   });
 
 app.use("/api/items", itemRoutes);
+app.use("/api/rooms", roomRoutes);
 app.use("/api/auth", auth);
 
 app.use("/", (req, res) => {

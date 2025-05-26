@@ -6,15 +6,15 @@ const { registerValidation, loginValidation } = require("../middleware/middlewar
 //Importing functions from auth controller
 const { login, register, userProfile, users } = require("../controllers/auth.controller");
 //Importing the JWT verifier from auth middleware 
-const verifyToken = require("../middleware/auth.middleware");
+const { protect } = require("../middleware/authMiddleware");
 
 //Register route with register validation 
 router.post("/register", registerValidation, register);
 //Login route with register validation
 router.post("/login", loginValidation, login);
 //Profile route with register validation
-router.get("/profile/:id", verifyToken, userProfile);
+router.get("/profile/:id", protect, userProfile);
 //all users route with 
-router.get("/users", verifyToken, users);
+router.get("/users", protect, users);
 
 module.exports = router;
