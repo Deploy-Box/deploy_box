@@ -20,7 +20,7 @@ from core.decorators import oauth_required, AuthHttpRequest
 
 # Basic Routes
 def home(request: HttpRequest) -> HttpResponse:
-    return render(request, "home.html", {})
+    return render(request, "home.html", {"show_footer": False})
 
 
 def stacks(request: HttpRequest) -> HttpResponse:
