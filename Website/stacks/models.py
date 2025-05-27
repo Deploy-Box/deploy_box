@@ -39,6 +39,12 @@ class Stack(RequestableModel):
 
         return stack_services.get_stack(**kwargs)
 
+    @classmethod
+    def post_service(cls, **kwargs):
+        import stacks.services as stack_services
+
+        return stack_services.add_stack(**kwargs)
+
     # class Meta:
     #     constraints = [
     #         UniqueConstraint(

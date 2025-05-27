@@ -56,7 +56,7 @@ class RequestableModel(models.Model):
 
     @classmethod
     def delete_service(cls, **kwargs):
-        cls.objects.delete(**kwargs)
+        cls.objects.filter(**kwargs).delete()
 
     @classmethod
     def handle_get_request(cls, request: HttpRequest, pk=None) -> JsonResponse:

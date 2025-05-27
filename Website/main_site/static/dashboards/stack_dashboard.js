@@ -15,53 +15,53 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Get the chart canvas
-    const ctx = document.getElementById('cpuUsageChart').getContext('2d');
+    // const ctx = document.getElementById('cpuUsageChart').getContext('2d');
 
     // Create the chart
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: timeLabels,
-            datasets: [{
-                label: 'CPU Usage (%)',
-                data: cpuData,
-                borderColor: 'rgb(16, 185, 129)', // emerald-500
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'CPU Usage (%)'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Time'
-                    }
-                }
-            }
-        }
-    });
+    // new Chart(ctx, {
+    //     type: 'line',
+    //     data: {
+    //         labels: timeLabels,
+    //         datasets: [{
+    //             label: 'CPU Usage (%)',
+    //             data: cpuData,
+    //             borderColor: 'rgb(16, 185, 129)', // emerald-500
+    //             backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    //             tension: 0.4,
+    //             fill: true
+    //         }]
+    //     },
+    //     options: {
+    //         responsive: true,
+    //         maintainAspectRatio: false,
+    //         plugins: {
+    //             legend: {
+    //                 display: true,
+    //                 position: 'top',
+    //             },
+    //             tooltip: {
+    //                 mode: 'index',
+    //                 intersect: false,
+    //             }
+    //         },
+    //         scales: {
+    //             y: {
+    //                 beginAtZero: true,
+    //                 max: 100,
+    //                 title: {
+    //                     display: true,
+    //                     text: 'CPU Usage (%)'
+    //                 }
+    //             },
+    //             x: {
+    //                 title: {
+    //                     display: true,
+    //                     text: 'Time'
+    //                 }
+    //             }
+    //         }
+    //     }
+    // });
 
     // Check GitHub authorization status
     checkGitHubAuth();
