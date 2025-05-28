@@ -653,20 +653,11 @@ class GCPUtils:
         self,
         service_names: list[str],
     ) -> dict:
-        service_names = [name.lower() for name in service_names]
-        service_names = [name.replace(" ", "-") for name in service_names]
-
         cleaned_logs = {}
 
+        service_names = [f"service-{name}" for name in service_names]
+
         for service_name in service_names:
-
-            if not (
-                service_name.startswith("backend")
-                or service_name.startswith("frontend")
-                or service_name.startswith("database")
-            ):
-                continue
-
             url = f"https://logging.googleapis.com/v2/entries:list"
             response = self.__request_helper(
                 url,
@@ -847,9 +838,16 @@ class GCPUtils:
 
         return f"Uploaded {len(uploaded_files)} files to {destination_blob_name}"
 
+    def get_all_services(self) -> list[dict]:
+        url = f"https://run.googleapis.com/v2/projects/{self.project_id}/locations/us-central1/services"
+        response = self.__request_helper(url)
 
-# if __name__ == "__main__":
-# gcp_wrapper = GCPUtils()
+        if response is None:
+            return []
 
-# print(gcp_wrapper.upload_folder("/Users/kalebbishop/Documents/repos/MERN-Pro/source_code/frontend/build", ""))
-# # gcp_wrapper.configure_bucket()
+        return response.get("services", [])
+
+
+gcp_wrapper = GCPUtils()
+
+print(json.dumps(gcp_wrapper.stream_logs(["aee8eaa04833491e"]), indent=4))
