@@ -23,18 +23,18 @@ import os
 logger = logging.getLogger(__name__)
 
 
-def add_stack(
-    **kwargs
-) -> Stack:
+def add_stack(**kwargs) -> Stack:
     name = kwargs.get("name")
     project_id = kwargs.get("project_id")
     purchasable_stack_id = kwargs.get("purchasable_stack_id")
 
     project = Project.objects.get(pk=project_id)
     purchasable_stack = PurchasableStack.objects.get(pk=purchasable_stack_id)
-    
+
     with transaction.atomic():
-        
+
+        print(f"Variant: {purchasable_stack.variant}")
+
         stack = Stack.objects.create(
             name=name, project=project, purchased_stack=purchasable_stack
         )
@@ -49,7 +49,6 @@ def add_stack(
             JsonResponse({"error": "Stack type not supported."}, status=400)
 
     return stack
-
 
 
 def get_stack(**kwargs):
@@ -122,24 +121,32 @@ def deploy_MERN_stack(stack: Stack, variant: str):
         build_status_url="",
     )
 
+    env_dict = {
+        "MONGO_URI": mongo_db_uri,
+    }
+
+    if variant == "premium" or variant == "pro":
+        env_dict["JWT_SECRET"] = secrets.token_urlsafe(50)
+
     response = gcp_utils.deploy_mern_service(
         stack_google_cloud_run_frontend.id,
         stack_google_cloud_run_backend.id,
         frontend_image,
         backend_image,
-        {"MONGO_URI": mongo_db_uri},
+        env_dict,
     )
 
-    stack_google_cloud_run_backend.build_status_url = response.get("build_status_url", "")
+    stack_google_cloud_run_backend.build_status_url = response.get(
+        "build_status_url", ""
+    )
     stack_google_cloud_run_backend.save()
 
-
-    stack_google_cloud_run_frontend.build_status_url = response.get("build_status_url", "")
+    stack_google_cloud_run_frontend.build_status_url = response.get(
+        "build_status_url", ""
+    )
     stack_google_cloud_run_frontend.save()
 
     stack_database.save()
-
-    
 
 
 def deploy_django_stack(stack: Stack, variant: str):

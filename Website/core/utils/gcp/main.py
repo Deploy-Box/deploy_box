@@ -47,9 +47,11 @@ class GCPUtils:
                 SERVICE_ACCOUNT_FILE, scopes=SCOPES
             )
         )
-        
+
         # Print debug info
-        print(f"Using service account: {self.__cloud_platform_creds.service_account_email}")
+        print(
+            f"Using service account: {self.__cloud_platform_creds.service_account_email}"
+        )
         print(f"Project ID: {self.project_id}")
         print(f"Service account file path: {SERVICE_ACCOUNT_FILE}")
 
@@ -93,13 +95,13 @@ class GCPUtils:
 
             print(f"Response status code: {response.status_code}")
             print(f"Response headers: {response.headers}")
-            
+
             if response.status_code >= 400:
                 print(f"Error response: {response.text}")
                 return None
-                
+
             return response.json()
-            
+
         except Exception as e:
             print(f"Request failed: {str(e)}")
             return None
@@ -284,7 +286,9 @@ class GCPUtils:
         **kwargs,
     ) -> dict:
         backend_env_vars_str = (
-            ",".join([f'{k}="{v}"' for k, v in backend_env_vars.items()]) if backend_env_vars else ""
+            ",".join([f'{k}="{v}"' for k, v in backend_env_vars.items()])
+            if backend_env_vars
+            else ""
         )
 
         try:
@@ -403,7 +407,6 @@ class GCPUtils:
                 "build_status_url": "ERROR",
                 "status": "ERROR",
             }
-
 
     def deploy_service(
         self,
@@ -707,7 +710,7 @@ class GCPUtils:
 
         print(json.dumps(cleaned_logs, indent=4))
         return {"status": "success", "data": cleaned_logs}
-    
+
     def get_service_url(self, service_name: str) -> str:
         url = f"https://run.googleapis.com/v2/projects/{self.project_id}/locations/us-central1/services/service-{service_name}"
         response = self.__request_helper(url)
@@ -778,34 +781,38 @@ class GCPUtils:
             return "ERROR"
 
         return status
-    
+
     def upload_file(self, source_file_path: str, destination_blob_name: str) -> str:
-        self.client = storage.Client(project=self.project_id, credentials=self.__cloud_platform_creds)
+        self.client = storage.Client(
+            project=self.project_id, credentials=self.__cloud_platform_creds
+        )
         self.bucket = self.client.bucket("deploy-box-c5fb282126574ccd")
         blob = self.bucket.blob(destination_blob_name)
         blob.upload_from_filename(source_file_path)
         return f"File {source_file_path} uploaded to {destination_blob_name}."
-    
+
     def configure_bucket(self) -> str:
         # # Configure the bucket for website hosting
-# gsutil web set -m index.html -e index.html gs://YOUR_BUCKET_NAME
-        self.client = storage.Client(project=self.project_id, credentials=self.__cloud_platform_creds)
+        # gsutil web set -m index.html -e index.html gs://YOUR_BUCKET_NAME
+        self.client = storage.Client(
+            project=self.project_id, credentials=self.__cloud_platform_creds
+        )
         self.bucket = self.client.bucket("deploy-box-c5fb282126574ccd")
-        
+
         # Configure bucket for website hosting
-        self.bucket.configure_website(main_page_suffix='index.html', not_found_page='index.html')
-        
+        self.bucket.configure_website(
+            main_page_suffix="index.html", not_found_page="index.html"
+        )
+
         # Make bucket public
         policy = self.bucket.get_iam_policy()
-        policy.bindings.append({
-            "role": "roles/storage.objectViewer",
-            "members": ["allUsers"]
-        })
+        policy.bindings.append(
+            {"role": "roles/storage.objectViewer", "members": ["allUsers"]}
+        )
         self.bucket.set_iam_policy(policy)
-        
+
         return f"Bucket {self.bucket.name} configured for website hosting."
 
-    
     def upload_folder(self, source_file_path: str, destination_blob_name: str) -> str:
         """
         Upload a folder and its contents to GCS bucket.
@@ -815,7 +822,9 @@ class GCPUtils:
         Returns:
             Status message string
         """
-        self.client = storage.Client(project=self.project_id, credentials=self.__cloud_platform_creds)
+        self.client = storage.Client(
+            project=self.project_id, credentials=self.__cloud_platform_creds
+        )
         self.bucket = self.client.bucket("deploy-box-c5fb282126574ccd")
 
         # Walk through the source directory
@@ -824,25 +833,23 @@ class GCPUtils:
             for file in files:
                 # Get full local path
                 local_file = os.path.join(root, file)
-                
+
                 # Get relative path from source directory
                 relative_path = os.path.relpath(local_file, source_file_path)
-                
+
                 # Construct destination blob path
                 blob_path = os.path.join(destination_blob_name, relative_path)
-                
+
                 # Create blob and upload file
                 blob = self.bucket.blob(blob_path)
                 blob.upload_from_filename(local_file)
                 uploaded_files.append(blob_path)
 
         return f"Uploaded {len(uploaded_files)} files to {destination_blob_name}"
-    
-
 
 
 # if __name__ == "__main__":
-gcp_wrapper = GCPUtils()
+# gcp_wrapper = GCPUtils()
 
-print(gcp_wrapper.upload_folder("/Users/kalebbishop/Documents/repos/MERN-Pro/source_code/frontend/build", ""))
-# gcp_wrapper.configure_bucket()
+# print(gcp_wrapper.upload_folder("/Users/kalebbishop/Documents/repos/MERN-Pro/source_code/frontend/build", ""))
+# # gcp_wrapper.configure_bucket()
