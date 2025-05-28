@@ -24,7 +24,7 @@ def home(request: HttpRequest) -> HttpResponse:
 
 
 def stacks(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks.html", {})
+    return render(request, "stacks.html", {"show_footer": False})
 
 def mern_stack(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks/mern_stack.html", {"show_footer": False})
@@ -43,7 +43,7 @@ def mevn_stack(request: HttpRequest) -> HttpResponse:
 
 
 def pricing(request: HttpRequest) -> HttpResponse:
-    return render(request, "pricing.html", {})
+    return render(request, "pricing.html", {"show_footer": False})
 
 
 def profile(request: HttpRequest) -> HttpResponse:
