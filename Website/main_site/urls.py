@@ -8,6 +8,7 @@ urlpatterns = [
     # Public pages
     path("", views.home, name="home"),
     path("stacks/", views.stacks, name="stacks"),
+    path("stacks/mern/", views.mern_stack, name="mern_stack"),
     path("pricing/", views.pricing, name="pricing"),
     path("contact/", views.maintenance, name="contact"),
     # User profile

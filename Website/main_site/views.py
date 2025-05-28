@@ -26,6 +26,9 @@ def home(request: HttpRequest) -> HttpResponse:
 def stacks(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks.html", {})
 
+def mern_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/mern_stack.html", {"show_footer": False})
+
 
 def pricing(request: HttpRequest) -> HttpResponse:
     return render(request, "pricing.html", {})

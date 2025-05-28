@@ -1,0 +1,208 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+
+<div
+  id="main-hero"
+  class="w-full min-h-screen py-16 px-4 bg-gradient-to-r from-emerald-900 via-emerald-800 to-gray-950"
+>
+  <div
+    class="max-w-7xl mx-auto text-center bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 mb-12"
+  >
+    <h1
+      class="text-5xl md:text-6xl font-extrabold text-emerald-300 mb-4 tracking-tight drop-shadow-lg"
+    >
+      MERN Stack
+    </h1>
+    <p class="text text-gray-200 mb-2">
+      <span class="font-bold text-emerald-300">MongoDB</span>,
+      <span class="font-bold text-emerald-300">Express.js</span>,
+      <span class="font-bold text-emerald-300">React</span>, and
+      <span class="font-bold text-emerald-300">Node.js</span>
+    </p>
+    <p class="text-lg text-gray-100">
+      <br />
+      The modern JavaScript stack for rapid, scalable web app development.<br />
+      Choose the version that fits your needs.<br />
+    </p>
+  </div>
+  <!-- Why Choose MERN and ASCII Art side by side -->
+  <div
+    class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 items-center my-8"
+  >
+    <!-- Left: Why Choose MERN Card -->
+    <div
+      class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-xl w-full mx-auto"
+    >
+      <h2 class="text-3xl font-bold text-emerald-400 mb-4">Why Choose MERN?</h2>
+      <p class="text-gray-200 text-lg mb-4">
+        The MERN stack offers a unified JavaScript development experience,
+        allowing you to use a single language for both client and server code.
+        This streamlines your workflow, reduces context switching, and makes it
+        easier to share code and logic across your application.
+      </p>
+      <p class="text-gray-200 text-lg">
+        With React, you can build fast, interactive user interfaces, while
+        Node.js and Express provide a scalable, high-performance backend.
+        MongoDB offers flexible, JSON-like data storage that integrates
+        seamlessly with JavaScript. All components are open source and benefit
+        from strong community support, making MERN a powerful and future-proof
+        choice for modern web development.
+      </p>
+    </div>
+    <!-- Right: ASCII Art -->
+    <div class="flex justify-center items-center w-full relative">
+      <div class="w-full pl-20">
+        <pre
+          class="text-emerald-200 text-xs md:text-base select-none font-mono m-0 p-0 bg-transparent shadow-none w-full overflow-hidden"
+          style="line-height: 1.1; display: inline-block"
+        >
+
+ /$$      /$$/$$$$$$$$/$$$$$$$ /$$   /$$
+| $$$    /$$| $$_____| $$__  $| $$$ | $$
+| $$$$  /$$$| $$     | $$  \ $| $$$$| $$
+| $$ $$/$$ $| $$$$$  | $$$$$$$| $$ $$ $$
+| $$  $$$| $| $$__/  | $$__  $| $$  $$$$
+| $$\  $ | $| $$     | $$  \ $| $$\  $$$
+| $$ \/  | $| $$$$$$$| $$  | $| $$ \  $$
+|__/     |__|________|__/  |__|__/  \__/<span class="blinking-cursor" style="display:inline-block;width:1ch;vertical-align:bottom;">|</span></pre>
+      </div>
+      <style>
+        .blinking-cursor {
+          animation: blink 1s steps(2, start) infinite;
+          color: #6ee7b7; /* Tailwind emerald-300 */
+          font-weight: bold;
+          font-family: monospace;
+          font-size: 1em;
+        }
+        @keyframes blink {
+          0%,
+          49% {
+            opacity: 1;
+          }
+          50%,
+          100% {
+            opacity: 0;
+          }
+        }
+      </style>
+    </div>
+  </div>
+  <!-- Plans Section INSIDE main-hero for shared background -->
+  <div class="w-full flex flex-col items-center z-10 mt-8">
+    <div
+      class="mb-10 text-center mx-auto bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-7xl w-full"
+    >
+      <h1
+        class="text-5xl md:text-6xl font-extrabold text-emerald-400 mb-10 tracking-tight drop-shadow-lg"
+      >
+        Choose Your Plan
+      </h1>
+      <p class="text-center w-full md:w-1/2 mx-auto text-gray-200 text-lg">
+        Select the plan that fits your needs. All plans come with containerized
+        stacks, easy deployment, and community support.
+      </p>
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center items-stretch mt-10"
+      >
+        <!-- Basic Plan Card (no outline, same size as others) -->
+        <div
+          class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105"
+        >
+          <p
+            class="text-sm font-bold text-emerald-300 mb-2 uppercase tracking-wider"
+          >
+            Best Value
+          </p>
+          <h3 class="text-4xl font-extrabold text-emerald-400 mb-2 drop-shadow">
+            Basic
+          </h3>
+          <p class="text-lg text-gray-200 mb-6 flex-grow">
+            Perfect for individuals and small teams starting out.
+          </p>
+          <ul class="text-base space-y-2 mb-6">
+            <li class="font-semibold text-emerald-300">
+              ✔ 1 Containerized Stack
+            </li>
+            <li class="font-semibold text-emerald-300">✔ Community Support</li>
+            <li class="font-semibold text-emerald-300">
+              ✔ Unlimited Deployments
+            </li>
+            <li class="text-gray-400 line-through">Premium Stacks</li>
+            <li class="text-gray-400 line-through">Priority Support</li>
+            <li class="text-gray-400 line-through">Marketplace Access</li>
+          </ul>
+          <button
+            class="bg-emerald-400 text-emerald-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-emerald-300 transition text-lg"
+            type="button"
+          >
+            Get Started
+          </button>
+        </div>
+        <!-- Premium Plan Card (now amber/gold) -->
+        <div
+          class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col aspect-square border-4 border-amber-400 transition duration-300 hover:-translate-y-2 hover:scale-105"
+        >
+          <p
+            class="text-sm font-bold text-amber-300 mb-2 uppercase tracking-wider"
+          >
+            Most Popular
+          </p>
+          <h3 class="text-4xl font-extrabold text-amber-400 mb-2 drop-shadow">
+            Premium
+          </h3>
+          <p class="text-lg text-gray-200 mb-6 flex-grow">
+            For growing teams and businesses needing more flexibility.
+          </p>
+          <ul class="text-base space-y-2 mb-6">
+            <li class="font-semibold text-amber-300">✔ All Basic Features</li>
+            <li class="font-semibold text-amber-300">✔ Premium Stacks</li>
+            <li class="font-semibold text-amber-300">✔ Priority Support</li>
+            <li class="font-semibold text-amber-300">✔ Marketplace Access</li>
+            <li class="text-gray-400 line-through">
+              Dedicated Account Manager
+            </li>
+          </ul>
+          <button
+            class="bg-amber-400 text-amber-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-amber-300 transition text-lg"
+            type="button"
+          >
+            Get Premium
+          </button>
+        </div>
+        <!-- Pro Plan Card (unchanged) -->
+        <div
+          class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105"
+        >
+          <p
+            class="text-sm font-bold text-purple-300 mb-2 uppercase tracking-wider"
+          >
+            For Power Users
+          </p>
+          <h3 class="text-4xl font-extrabold text-purple-300 mb-2">Pro</h3>
+          <p class="text-lg text-gray-200 mb-6 flex-grow">
+            Designed for enterprises and agencies with advanced needs.
+          </p>
+          <ul class="text-base space-y-2 mb-6">
+            <li class="font-semibold text-purple-300">
+              ✔ All Premium Features
+            </li>
+            <li class="font-semibold text-purple-300">
+              ✔ Dedicated Account Manager
+            </li>
+            <li class="font-semibold text-purple-300">✔ Custom Integrations</li>
+            <li class="font-semibold text-purple-300">
+              ✔ Early Access to New Stacks
+            </li>
+          </ul>
+          <button
+            class="bg-purple-400 text-purple-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-purple-300 transition text-lg"
+            type="button"
+          >
+            Get Pro
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% include 'footer.html' %}
+</div>
+{% endblock %}
