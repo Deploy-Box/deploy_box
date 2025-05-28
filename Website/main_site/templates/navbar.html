@@ -1,8 +1,17 @@
 {% load static %}
-<nav id="navbar" class="bg-zinc-950 fixed top-0 left-0 right-0 z-20 border-gray-200 mb-16 p-2">
-  <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+<nav
+  id="navbar"
+  class="bg-zinc-950 fixed top-0 left-0 right-0 z-20 border-gray-200 mb-2"
+>
+  <div
+    class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4"
+  >
     <a href="/" class="flex items-center space-x-3 rtl:space-x-reverse">
-      <span id="navbar-text" class="self-center text-2xl font-semibold whitespace-nowrap text-white">Deploy Box</span>
+      <span
+        id="navbar-text"
+        class="self-center text-2xl font-semibold whitespace-nowrap text-white"
+        >Deploy Box</span
+      >
     </a>
     <!-- <button data-collapse-toggle="navbar-dropdown" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200" aria-controls="navbar-dropdown" aria-expanded="false">
           <span class="sr-only">Open main menu</span>
@@ -12,37 +21,59 @@
       </button> -->
     <div class="hidden w-full md:block md:w-auto" id="navbar-dropdown">
       <ul
-        class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-transparent md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-transparent">
+        class="flex flex-col font-medium p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-transparent md:space-x-8 rtl:space-x-reverse md:flex-row md:mt-0 md:border-0 md:bg-transparent items-center"
+      >
         <li>
-          <a id="home" href="/"
+          <a
+            id="home"
+            href="/"
             class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/' %} text-emerald-400 {% else %} text-white {% endif %}"
-            aria-current="page">Home</a>
+            aria-current="page"
+            >Home</a
+          >
         </li>
         <li>
-          <a id="stacks" href="/stacks"
-            class="block py-2 px-3 bg-black rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/stacks/' %} text-emerald-400 {% else %} text-white {% endif %}">Stacks</a>
+          <a
+            id="stacks"
+            href="/stacks"
+            class="block py-2 px-3 bg-black rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/stacks/' %} text-emerald-400 {% else %} text-white {% endif %}"
+            >Stacks</a
+          >
         </li>
         <li>
-          <a id="pricing" href="/pricing"
-            class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/pricing/' %} text-emerald-400 {% else %} text-white {% endif %}">Pricing</a>
+          <a
+            id="pricing"
+            href="/pricing"
+            class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/pricing/' %} text-emerald-400 {% else %} text-white {% endif %}"
+            >Pricing</a
+          >
         </li>
         <li>
-          <a id="contact" href="/contact"
-            class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/contact/' %} text-emerald-400 {% else %} text-white {% endif %}">Contact</a>
+          <a
+            id="contact"
+            href="/contact"
+            class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/contact/' %} text-emerald-400 {% else %} text-white {% endif %}"
+            >Contact</a
+          >
         </li>
         <li>
-          <a id="login"
-            class="px-6 py-2 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring"
+          <a
+            id="login"
+            class="px-6 py-1 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring flex items-center justify-center"
             href="{% if user.is_authenticated %}{% url 'main_site:profile' %}{% else %}{% url 'main_site:login' %}{% endif %}"
-            id="login-button">
+            id="login-button"
+          >
             {% if user.is_authenticated %} Visit Account {%else%} Login
             {%endif%}
           </a>
         </li>
         <li>
-          <a id="login"
-            class="px-6 py-2 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring"
-            href="{% if user.is_authenticated %}/dashboard{% else %}/signup{% endif %}" id="login-button">
+          <a
+            id="signup"
+            class="px-6 py-1 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring flex items-center justify-center"
+            href="{% if user.is_authenticated %}/dashboard{% else %}/signup{% endif %}"
+            id="signup-button"
+          >
             {% if user.is_authenticated %} Visit Dashboard {% else %} Signup
             {%endif%}
           </a>

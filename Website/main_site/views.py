@@ -21,15 +21,30 @@ from core.utils.gcp.main import GCPUtils
 
 # Basic Routes
 def home(request: HttpRequest) -> HttpResponse:
-    return render(request, "home.html", {})
+    return render(request, "home.html", {"show_footer": False})
 
 
 def stacks(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks.html", {})
+    return render(request, "stacks.html", {"show_footer": False})
+
+def mern_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/mern_stack.html", {"show_footer": False})
+
+def django_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/django_stack.html", {"show_footer": False})
+
+def mean_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/mean_stack.html", {"show_footer": False})
+
+def lamp_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/lamp_stack.html", {"show_footer": False})
+
+def mevn_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/mevn_stack.html", {"show_footer": False})
 
 
 def pricing(request: HttpRequest) -> HttpResponse:
-    return render(request, "pricing.html", {})
+    return render(request, "pricing.html", {"show_footer": False})
 
 
 def profile(request: HttpRequest) -> HttpResponse:
