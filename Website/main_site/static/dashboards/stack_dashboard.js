@@ -15,53 +15,53 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Get the chart canvas
-    const ctx = document.getElementById('cpuUsageChart').getContext('2d');
+    // const ctx = document.getElementById('cpuUsageChart').getContext('2d');
 
     // Create the chart
-    new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: timeLabels,
-            datasets: [{
-                label: 'CPU Usage (%)',
-                data: cpuData,
-                borderColor: 'rgb(16, 185, 129)', // emerald-500
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                },
-                tooltip: {
-                    mode: 'index',
-                    intersect: false,
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    title: {
-                        display: true,
-                        text: 'CPU Usage (%)'
-                    }
-                },
-                x: {
-                    title: {
-                        display: true,
-                        text: 'Time'
-                    }
-                }
-            }
-        }
-    });
+    // new Chart(ctx, {
+    //     type: 'line',
+    //     data: {
+    //         labels: timeLabels,
+    //         datasets: [{
+    //             label: 'CPU Usage (%)',
+    //             data: cpuData,
+    //             borderColor: 'rgb(16, 185, 129)', // emerald-500
+    //             backgroundColor: 'rgba(16, 185, 129, 0.1)',
+    //             tension: 0.4,
+    //             fill: true
+    //         }]
+    //     },
+    //     options: {
+    //         responsive: true,
+    //         maintainAspectRatio: false,
+    //         plugins: {
+    //             legend: {
+    //                 display: true,
+    //                 position: 'top',
+    //             },
+    //             tooltip: {
+    //                 mode: 'index',
+    //                 intersect: false,
+    //             }
+    //         },
+    //         scales: {
+    //             y: {
+    //                 beginAtZero: true,
+    //                 max: 100,
+    //                 title: {
+    //                     display: true,
+    //                     text: 'CPU Usage (%)'
+    //                 }
+    //             },
+    //             x: {
+    //                 title: {
+    //                     display: true,
+    //                     text: 'Time'
+    //                 }
+    //             }
+    //         }
+    //     }
+    // });
 
     // Check GitHub authorization status
     checkGitHubAuth();
@@ -232,8 +232,6 @@ window.onload = function () {
     const projectId = dashboard.dataset.projectId;
     const stackId = dashboard.dataset.stackId;
 
-    // Call the function to fetch and display stack info
-    getStackInfo(organizationId, projectId, stackId);
 
     // Initialize logs functionality
     initLogs(organizationId, projectId, stackId);
@@ -249,38 +247,30 @@ window.onload = function () {
             saveRootDirectory(organizationId, projectId, stackId, rootDirectory);
         });
     }
-};
 
-async function getStackInfo(organizationId, projectId, stackId) {
-    try {
-        const response = await fetch(`/api/stack/${organizationId}/${projectId}/${stackId}/`);
+    // Root Directory Input Handler
+    const rootDirectoryInput = document.getElementById('root-directory');
+    const stackIdMetadata = document.getElementById('metadata').dataset.stackId;
 
-        if (!response.ok) {
-            throw new Error('Stack not found');
-        }
+    if (saveRootDirectoryBtn && rootDirectoryInput) {
+        saveRootDirectoryBtn.addEventListener('click', async function () {
+            const rootDirectory = rootDirectoryInput.value.trim();
+            if (rootDirectory) {
+                await saveRootDirectory(stackIdMetadata, rootDirectory);
+            }
+        });
 
-        const stack = await response.json();
-
-        // Populate the HTML with the stack information
-        const stackInfoDiv = document.getElementById('stack-info');
-
-        if (stack.error) {
-            stackInfoDiv.innerHTML = `<p>Error: ${stack.error}</p>`;
-        } else {
-            stackInfoDiv.innerHTML = `
-                <h2>${stack.name}</h2>
-                <p><strong>Description:</strong> ${stack.description}</p>
-                <p><strong>Project:</strong> ${stack.project}</p>
-                <p><strong>Created At:</strong> ${stack.created_at}</p>
-                <p><strong>Updated At:</strong> ${stack.updated_at}</p>
-            `;
-        }
-    } catch (error) {
-        console.error('Error fetching stack info:', error);
-        const stackInfoDiv = document.getElementById('stack-info');
-        stackInfoDiv.innerHTML = `<p class="text-red-500">Error: ${error.message}</p>`;
+        // Also save on Enter key press
+        rootDirectoryInput.addEventListener('keypress', async function (e) {
+            if (e.key === 'Enter') {
+                const rootDirectory = rootDirectoryInput.value.trim();
+                if (rootDirectory) {
+                    await saveRootDirectory(stackIdMetadata, rootDirectory);
+                }
+            }
+        });
     }
-}
+};
 
 // Logs functionality
 let logsInterval = null;
@@ -637,15 +627,18 @@ deleteStackBtn.addEventListener('click', () => {
     deleteStack(deleteStackBtn.dataset.stackId);
 });
 
-async function saveRootDirectory(organizationId, projectId, stackId, rootDirectory) {
+async function saveRootDirectory(stackId, rootDirectory) {
     try {
+        // Ensure the root directory starts with ./
+        const formattedRootDirectory = rootDirectory.startsWith('./') ? rootDirectory : `./${rootDirectory}`;
+
         const response = await fetch(`/api/v1/stacks/${stackId}/`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                root_directory: rootDirectory
+                root_directory: formattedRootDirectory
             })
         });
 
@@ -655,18 +648,25 @@ async function saveRootDirectory(organizationId, projectId, stackId, rootDirecto
 
         const data = await response.json();
 
-        // Show success message
+        // Show success message and indicator
         const saveButton = document.getElementById('save-root-directory');
+        const saveIndicator = document.getElementById('save-indicator');
         const originalText = saveButton.textContent;
+
+        // Show the checkmark indicator
+        saveIndicator.classList.remove('hidden');
+
+        // Change button text and style
         saveButton.textContent = 'Saved!';
         saveButton.classList.remove('bg-emerald-400', 'hover:bg-emerald-500');
         saveButton.classList.add('bg-green-600');
 
-        // Reset button after 2 seconds
+        // Reset button and hide indicator after 2 seconds
         setTimeout(() => {
             saveButton.textContent = originalText;
             saveButton.classList.remove('bg-green-600');
             saveButton.classList.add('bg-emerald-400', 'hover:bg-emerald-500');
+            saveIndicator.classList.add('hidden');
         }, 2000);
 
     } catch (error) {

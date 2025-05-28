@@ -16,6 +16,7 @@ DEBUG = ENV == "dev"
 ALLOWED_HOSTS = [
     "deploy-box.onrender.com",
     "deploy-box.kalebwbishop.com",
+    "deploy-box.com",
 ]
 if DEBUG:
     ALLOWED_HOSTS.extend(

@@ -13,9 +13,10 @@ from organizations.forms import (
 from organizations.services import get_organizations
 from projects.forms import ProjectCreateFormWithMembers
 from stacks.forms import EnvFileUploadForm
-from stacks.models import PurchasableStack
+from stacks.models import PurchasableStack, StackGoogleCloudRun
 
 from core.decorators import oauth_required, AuthHttpRequest
+from core.utils.gcp.main import GCPUtils
 
 
 # Basic Routes
@@ -129,11 +130,43 @@ def stack_dashboard(
 ) -> HttpResponse:
     # TODO: Check if user is a member of the project
     stack = Stack.objects.get(id=stack_id)
+    stack_google_cloud_runs = list(StackGoogleCloudRun.objects.filter(stack=stack))
+
+    for stack_google_cloud_run in stack_google_cloud_runs:
+        if not stack_google_cloud_run.url:
+            gcp_utils = GCPUtils()
+            stack_google_cloud_run.url = gcp_utils.get_service_url(stack_google_cloud_run.id)
+            stack_google_cloud_run.save()
+
+        if stack_google_cloud_run.state == "STARTING":
+            gcp_utils = GCPUtils()
+            stack_google_cloud_run.state = gcp_utils.get_build_status(stack_google_cloud_run.build_status_url)
+            stack_google_cloud_run.save()
+
+    print(f"Stack: {stack}")
+    print(f"Stack Google Cloud Run: {stack_google_cloud_runs}")
+    return render(
+        request,
+        "dashboard/stack_dashboard.html",
+        {
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "stack": stack,
+            "stack_google_cloud_runs": stack_google_cloud_runs,
+        },
+    )
+
     form = EnvFileUploadForm()
     return render(
         request,
         "dashboard/stack_dashboard.html",
-        {"organization_id": organization_id, "project_id": project_id, "stack": stack, "form": form},
+        {
+            "organization_id": organization_id,
+            "project_id": project_id,
+            "stack": stack,
+            "form": form,
+            "stack_google_cloud_run": stack_google_cloud_run,
+        },
     )
 
 

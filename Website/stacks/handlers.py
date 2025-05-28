@@ -11,7 +11,12 @@ from .serializers import StackDatabaseSerializer
 
 
 def get_stack(request: AuthHttpRequest) -> JsonResponse:
-    return services.get_stack(request)
+    print(f"Getting stack: {request.GET}")
+    stack_id = request.GET.get("stack_id")
+    if not stack_id:
+        return JsonResponse({"error": "Stack ID is required"}, status=400)
+    stack = services.get_stack(stack_id)
+    return JsonResponse(stack)
 
 
 def post_stack(request: AuthHttpRequest) -> JsonResponse:
@@ -96,11 +101,13 @@ def post_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
 
     form = EnvFileUploadForm(request.POST, request.FILES)
     if form.is_valid():
-        selected_frameworks = form.cleaned_data['framework']
-        selected_locations = form.cleaned_data['select_location']
-        uploaded_file = form.cleaned_data['env_file']
+        selected_frameworks = form.cleaned_data["framework"]
+        selected_locations = form.cleaned_data["select_location"]
+        uploaded_file = form.cleaned_data["env_file"]
 
-        return services.post_stack_env(stack_id, selected_frameworks, selected_locations, uploaded_file)
+        return services.post_stack_env(
+            stack_id, selected_frameworks, selected_locations, uploaded_file
+        )
     else:
         return JsonResponse({"message": "you must upload a valid form"})
 
