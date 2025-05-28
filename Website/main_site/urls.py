@@ -9,6 +9,10 @@ urlpatterns = [
     path("", views.home, name="home"),
     path("stacks/", views.stacks, name="stacks"),
     path("stacks/mern/", views.mern_stack, name="mern_stack"),
+    path("stacks/django/", views.django_stack, name="django_stack"),
+    path("stacks/mean/", views.mean_stack, name="mean_stack"),
+    path("stacks/lamp/", views.lamp_stack, name="lamp_stack"),
+    path("stacks/mevn/", views.mevn_stack, name="mevn_stack"),
     path("pricing/", views.pricing, name="pricing"),
     path("contact/", views.maintenance, name="contact"),
     # User profile
