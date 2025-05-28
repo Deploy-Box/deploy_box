@@ -205,7 +205,7 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
         logger.error(f"Missing required fields in webhook creation request: {str(e)}")
         return e.to_response()
 
-    stack = stack_services.get_stack(stack_id)
+    stack = Stack.objects.get(pk=stack_id)
     github_token = get_object_or_404(Token, user=user).get_token()
 
     headers = {"Authorization": f"token {github_token}"}
@@ -404,8 +404,6 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     github_token = get_object_or_404(Token, user=user).get_token()
 
     gcp_wrapper = GCPUtils()
-
-    print(webhook.stack.purchased_stack.type)
 
     if webhook.stack.purchased_stack.type == "MERN":
         threading.Thread(

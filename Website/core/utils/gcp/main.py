@@ -2,10 +2,12 @@ import requests
 import time
 import datetime
 import json
+import os
 
 from django.conf import settings
 from google.oauth2 import service_account
 import google.auth.transport.requests
+from google.cloud import storage
 
 
 class GCPUtils:
@@ -31,6 +33,8 @@ class GCPUtils:
         self.__load_credentials()
         self.__get_auth_token()
 
+        print(f"Successfully initialized GCP utils")
+
     def __load_credentials(self):
         SERVICE_ACCOUNT_FILE = settings.GCP.get("KEY_PATH")
 
@@ -43,6 +47,13 @@ class GCPUtils:
                 SERVICE_ACCOUNT_FILE, scopes=SCOPES
             )
         )
+
+        # Print debug info
+        print(
+            f"Using service account: {self.__cloud_platform_creds.service_account_email}"
+        )
+        print(f"Project ID: {self.project_id}")
+        print(f"Service account file path: {SERVICE_ACCOUNT_FILE}")
 
     def __get_auth_token(self):
         # Refresh and get token
@@ -68,21 +79,32 @@ class GCPUtils:
             "Content-Type": "application/json",
         }
 
-        if method == "GET":
-            response = requests.get(url, headers=headers)
-            print(response.status_code)
-            return response.json()
-        elif method == "POST":
-            return requests.post(url, headers=headers, json=data).json()
-        elif method == "PUT":
-            response = requests.get(url, headers=headers)
-            if response.status_code == 404:
-                print("Service not found")
+        response = None
+        try:
+            if method == "GET":
+                response = requests.get(url, headers=headers)
+            elif method == "POST":
+                response = requests.post(url, headers=headers, json=data)
+            elif method == "PUT":
+                response = requests.get(url, headers=headers)
+            elif method == "DELETE":
+                response = requests.delete(url, headers=headers)
+
+            if response is None:
                 return None
-            print(response.status_code)
+
+            print(f"Response status code: {response.status_code}")
+            print(f"Response headers: {response.headers}")
+
+            if response.status_code >= 400:
+                print(f"Error response: {response.text}")
+                return None
+
             return response.json()
-        elif method == "DELETE":
-            return requests.delete(url, headers=headers).json()
+
+        except Exception as e:
+            print(f"Request failed: {str(e)}")
+            return None
 
     def get_billable_instance_time(self, epoch: float):
         epoch = int(epoch)
@@ -254,6 +276,138 @@ class GCPUtils:
         except Exception as e:
             print(f"An error occurred: {e}")
 
+    def deploy_mern_service(
+        self,
+        frontend_service_id: str,
+        backend_service_id: str,
+        frontend_image_name: str,
+        backend_image_name: str,
+        backend_env_vars: dict | None = None,
+        **kwargs,
+    ) -> dict:
+        backend_env_vars_str = (
+            ",".join([f'{k}="{v}"' for k, v in backend_env_vars.items()])
+            if backend_env_vars
+            else ""
+        )
+
+        try:
+            # Define the Cloud Build steps
+            build_steps = [
+                {
+                    "name": "gcr.io/google.com/cloudsdktool/cloud-sdk",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        f"""
+                        gcloud run deploy service-{backend_service_id} \
+                            --image={backend_image_name} \
+                            --region=us-central1 \
+                            --platform=managed \
+                            --allow-unauthenticated \
+                            --port=5000 \
+                            --set-env-vars={backend_env_vars_str}
+                            """,
+                    ],
+                },
+                {
+                    "name": "gcr.io/google.com/cloudsdktool/cloud-sdk",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        f"""
+                        service_full_name="projects/{self.project_id}/locations/us-central1/services/{backend_service_id}"
+                        gcloud run services add-iam-policy-binding service-{backend_service_id} \
+                            --region=us-central1 \
+                            --member="allUsers" \
+                            --role="roles/run.invoker"
+                        """,
+                    ],
+                },
+                {
+                    "name": "gcr.io/google.com/cloudsdktool/cloud-sdk",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        f"""
+                        backend_url=$(gcloud run services describe service-{backend_service_id} --region=us-central1 --format='value(status.url)')
+                        gcloud run deploy service-{frontend_service_id} \
+                            --image={frontend_image_name} \
+                            --region=us-central1 \
+                            --platform=managed \
+                            --allow-unauthenticated \
+                            --port=8080 \
+                            --set-env-vars="REACT_APP_BACKEND_URL=$backend_url"
+                            """,
+                    ],
+                },
+                {
+                    "name": "gcr.io/google.com/cloudsdktool/cloud-sdk",
+                    "entrypoint": "bash",
+                    "args": [
+                        "-c",
+                        f"""
+                        service_full_name="projects/{self.project_id}/locations/us-central1/services/{frontend_service_id}"
+                        gcloud run services add-iam-policy-binding service-{frontend_service_id} \
+                            --region=us-central1 \
+                            --member="allUsers" \
+                            --role="roles/run.invoker"
+                        """,
+                    ],
+                },
+            ]
+
+            # Define the build configuration
+            build_config = {"steps": build_steps, "timeout": "600s"}
+
+            # API endpoint for creating a build
+            api_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds"
+
+            # Submit the build
+            print("Submitting build...")
+            response = self.__request_helper(api_url, method="POST", data=build_config)
+
+            if response is None:
+                print(f"Error creating build: {response}")
+                return {
+                    "url": None,
+                    "build_status_url": "ERROR",
+                    "status": "ERROR",
+                }
+
+            response.get("metadata", {})
+            metadata = response.get("metadata", {})
+            build = metadata.get("build", {})
+            build_id = build.get("id", None)
+
+            if not build_id:
+                print(f"Error creating build: {response}")
+                return {
+                    "url": None,
+                    "build_status_url": "ERROR",
+                    "status": "ERROR",
+                }
+
+            print(f"Build submitted with ID: {build_id}")
+
+            # Poll for build status
+            print("Waiting for build to complete...")
+            build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds/{build_id}"
+
+            return {
+                "url": None,
+                "build_status_url": build_status_url,
+                "status": "STARTING",
+            }
+
+        except Exception as e:
+            print(f"An error occurred: {e}")
+            return {
+                "url": None,
+                "build_status_url": "ERROR",
+                "status": "ERROR",
+            }
+
     def deploy_service(
         self,
         stack_id: str,
@@ -261,7 +415,7 @@ class GCPUtils:
         layer: str,
         env_vars: dict | None = None,
         **kwargs,
-    ) -> str:
+    ) -> dict:
         service_name = f"{layer.lower()}-{stack_id.lower()}"
 
         port = kwargs.get("port", 8080) if kwargs else 8080
@@ -317,7 +471,11 @@ class GCPUtils:
 
             if response is None:
                 print(f"Error creating build: {response}")
-                raise Exception("Error creating build")
+                return {
+                    "url": None,
+                    "build_status_url": None,
+                    "status": "ERROR",
+                }
 
             response.get("metadata", {})
             metadata = response.get("metadata", {})
@@ -326,7 +484,11 @@ class GCPUtils:
 
             if not build_id:
                 print(f"Error creating build: {response}")
-                raise Exception("Error creating build")
+                return {
+                    "url": None,
+                    "build_status_url": None,
+                    "status": "ERROR",
+                }
 
             print(f"Build submitted with ID: {build_id}")
 
@@ -334,42 +496,19 @@ class GCPUtils:
             print("Waiting for build to complete...")
             build_status_url = f"https://cloudbuild.googleapis.com/v1/projects/{self.project_id}/builds/{build_id}"
 
-            status = "UNKNOWN"
-            while True:
-                build_status = self.__request_helper(build_status_url)
-                if build_status is None:
-                    print("Error getting build status")
-                    break
-
-                status = build_status.get("status", "UNKNOWN")
-                print(f"Build status: {status}")
-
-                if status in [
-                    "SUCCESS",
-                    "FAILURE",
-                    "INTERNAL_ERROR",
-                    "TIMEOUT",
-                    "CANCELLED",
-                    "EXPIRED",
-                ]:
-                    break
-
-                time.sleep(10)  # Wait 10 seconds before checking again
-
-            if status == "SUCCESS":
-                print(f"Build completed successfully: {build_id}")
-                print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
-                )
-                return self.get_service_endpoint(service_name)
-            else:
-                print(f"Build failed with status: {status}")
-                print(
-                    f"Build log URL: https://console.cloud.google.com/cloud-build/builds/{build_id}?project={self.project_id}"
-                )
+            return {
+                "url": None,
+                "build_status_url": build_status_url,
+                "status": "STARTING",
+            }
 
         except Exception as e:
             print(f"An error occurred: {e}")
+            return {
+                "url": None,
+                "build_status_url": None,
+                "status": "ERROR",
+            }
 
     def redeploy_service(
         self,
@@ -572,6 +711,18 @@ class GCPUtils:
         print(json.dumps(cleaned_logs, indent=4))
         return {"status": "success", "data": cleaned_logs}
 
+    def get_service_url(self, service_name: str) -> str:
+        url = f"https://run.googleapis.com/v2/projects/{self.project_id}/locations/us-central1/services/service-{service_name}"
+        response = self.__request_helper(url)
+
+        if response is None:
+            return ""
+
+        print(json.dumps(response, indent=4))
+
+        # The uri field is at the root level of the response, not in template
+        return response.get("uri", "")
+
     def get_service_envs(self, service_name: str) -> dict:
         url = f"https://run.googleapis.com/v2/projects/{self.project_id}/locations/us-central1/services/{service_name}"
         response = self.__request_helper(url)
@@ -608,18 +759,97 @@ class GCPUtils:
             env_vars=merged_envs,
         )
 
+    def get_build_status(self, build_status_url: str) -> str:
+        response = self.__request_helper(build_status_url)
 
-if __name__ == "__main__":
-    gcp_wrapper = GCPUtils()
+        if response is None:
+            return "UNKNOWN"
 
-    print(gcp_wrapper.get_service_endpoint("backend-e1d72d93b09944e5"))
-    # print(gcp_wrapper.put_service_envs("backend-9a77369a03984b9a", {"TEST": "TEST"}))
+        status = response.get("status", "UNKNOWN")
 
-    # backend_image = "gcr.io/deploy-box/mern-backend"
-    # backend_url = gcp_wrapper.deploy_service(
-    #         "testing-1234",
-    #         backend_image,
-    #         "backend",
-    #         {"MONGO_URI": "mongodb+srv://deployBoxUser-e9c9afbc1c0942c8:f45bdc78db0a@cluster0.yjaoi.mongodb.net/db-e9c9afbc1c0942c8?retryWrites=true&w=majority&appName=Cluster0"},
-    #         port=5001
-    #     )
+        if status == "SUCCESS":
+            return "SUCCESS"
+        elif status == "FAILURE":
+            return "ERROR"
+        elif status == "INTERNAL_ERROR":
+            return "ERROR"
+        elif status == "TIMEOUT":
+            return "ERROR"
+        elif status == "CANCELLED":
+            return "ERROR"
+        elif status == "EXPIRED":
+            return "ERROR"
+
+        return status
+
+    def upload_file(self, source_file_path: str, destination_blob_name: str) -> str:
+        self.client = storage.Client(
+            project=self.project_id, credentials=self.__cloud_platform_creds
+        )
+        self.bucket = self.client.bucket("deploy-box-c5fb282126574ccd")
+        blob = self.bucket.blob(destination_blob_name)
+        blob.upload_from_filename(source_file_path)
+        return f"File {source_file_path} uploaded to {destination_blob_name}."
+
+    def configure_bucket(self) -> str:
+        # # Configure the bucket for website hosting
+        # gsutil web set -m index.html -e index.html gs://YOUR_BUCKET_NAME
+        self.client = storage.Client(
+            project=self.project_id, credentials=self.__cloud_platform_creds
+        )
+        self.bucket = self.client.bucket("deploy-box-c5fb282126574ccd")
+
+        # Configure bucket for website hosting
+        self.bucket.configure_website(
+            main_page_suffix="index.html", not_found_page="index.html"
+        )
+
+        # Make bucket public
+        policy = self.bucket.get_iam_policy()
+        policy.bindings.append(
+            {"role": "roles/storage.objectViewer", "members": ["allUsers"]}
+        )
+        self.bucket.set_iam_policy(policy)
+
+        return f"Bucket {self.bucket.name} configured for website hosting."
+
+    def upload_folder(self, source_file_path: str, destination_blob_name: str) -> str:
+        """
+        Upload a folder and its contents to GCS bucket.
+        Args:
+            source_file_path: Local folder path to upload
+            destination_blob_name: Destination path in bucket
+        Returns:
+            Status message string
+        """
+        self.client = storage.Client(
+            project=self.project_id, credentials=self.__cloud_platform_creds
+        )
+        self.bucket = self.client.bucket("deploy-box-c5fb282126574ccd")
+
+        # Walk through the source directory
+        uploaded_files = []
+        for root, dirs, files in os.walk(source_file_path):
+            for file in files:
+                # Get full local path
+                local_file = os.path.join(root, file)
+
+                # Get relative path from source directory
+                relative_path = os.path.relpath(local_file, source_file_path)
+
+                # Construct destination blob path
+                blob_path = os.path.join(destination_blob_name, relative_path)
+
+                # Create blob and upload file
+                blob = self.bucket.blob(blob_path)
+                blob.upload_from_filename(local_file)
+                uploaded_files.append(blob_path)
+
+        return f"Uploaded {len(uploaded_files)} files to {destination_blob_name}"
+
+
+# if __name__ == "__main__":
+# gcp_wrapper = GCPUtils()
+
+# print(gcp_wrapper.upload_folder("/Users/kalebbishop/Documents/repos/MERN-Pro/source_code/frontend/build", ""))
+# # gcp_wrapper.configure_bucket()

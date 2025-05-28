@@ -19,6 +19,8 @@ class MongoDBUtils:
         if not MongoDBUtils.__mongo_db_token:
             self.__get_token()
 
+        print(f"Successfully initialized MongoDB utils")
+
     def __get_token(self) -> None:
         """ "
         Retrieve a MongoDB token using the OAuth2 client credentials flow."

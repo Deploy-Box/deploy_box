@@ -5,13 +5,13 @@ from django.http import JsonResponse
 from django.db import transaction
 from requests import request
 import requests
-
 from stacks.models import (
     Stack,
     PurchasableStack,
     StackDatabase,
     StackBackend,
     StackFrontend,
+    StackGoogleCloudRun,
 )
 from projects.models import Project
 from core.utils import GCPUtils, MongoDBUtils
@@ -23,31 +23,47 @@ import os
 logger = logging.getLogger(__name__)
 
 
-def add_stack(
-    project: Project, purchasable_stack: PurchasableStack, name: str
-) -> JsonResponse:
-    try:
-        with transaction.atomic():
-            stack = Stack.objects.create(
-                name=name, project=project, purchased_stack=purchasable_stack
-            )
+def add_stack(**kwargs) -> Stack:
+    name = kwargs.get("name")
+    project_id = kwargs.get("project_id")
+    purchasable_stack_id = kwargs.get("purchasable_stack_id")
 
-            if purchasable_stack.type == "MERN":
-                return deploy_MERN_stack(stack)
-            elif purchasable_stack.type == "Django":
-                return deploy_django_stack(stack)
-            else:
-                return JsonResponse({"error": "Stack type not supported."}, status=400)
+    project = Project.objects.get(pk=project_id)
+    purchasable_stack = PurchasableStack.objects.get(pk=purchasable_stack_id)
 
-    except Exception as e:
-        logger.error(f"Failed to create and deploy stack: {str(e)}")
-        return JsonResponse(
-            {"error": f"Failed to create and deploy stack: {str(e)}"}, status=500
+    with transaction.atomic():
+
+        print(f"Variant: {purchasable_stack.variant}")
+
+        stack = Stack.objects.create(
+            name=name, project=project, purchased_stack=purchasable_stack
         )
 
+        variant = purchasable_stack.variant.lower()
 
-def get_stack(stack_id: str) -> Stack:
-    return Stack.objects.get(id=stack_id)
+        if purchasable_stack.type == "MERN":
+            deploy_MERN_stack(stack, variant)
+        elif purchasable_stack.type == "Django":
+            deploy_django_stack(stack, variant)
+        else:
+            JsonResponse({"error": "Stack type not supported."}, status=400)
+
+    return stack
+
+
+def get_stack(**kwargs):
+    print(f"Getting stack: {kwargs}")
+    stack = Stack.objects.get(pk=kwargs.get("pk"))
+    stack_google_cloud_run = StackGoogleCloudRun.objects.filter(stack=stack).first()
+    if stack_google_cloud_run:
+        gcp_utils = GCPUtils()
+        build_status = gcp_utils.get_build_status(
+            stack_google_cloud_run.build_status_url
+        )
+        print(f"Build status: {build_status}")
+        stack_google_cloud_run.state = build_status
+        stack_google_cloud_run.save()
+    return Stack.objects.filter(pk=stack.id)
 
 
 def update_stack(stack: Stack, root_directory: str | None = None) -> bool:
@@ -73,7 +89,7 @@ def get_stacks(user: User) -> list[Stack]:
     return list(Stack.objects.filter(project__in=projects).order_by("-created_at"))
 
 
-def deploy_MERN_stack(stack: Stack) -> JsonResponse:
+def deploy_MERN_stack(stack: Stack, variant: str):
     """
     Deploys a MERN stack by creating the necessary backend and frontend services.
     If any part of the deployment fails, the transaction will be rolled back.
@@ -90,54 +106,50 @@ def deploy_MERN_stack(stack: Stack) -> JsonResponse:
         uri=mongo_db_uri,
     )
 
-    backend_image = f"gcr.io/{gcp_utils.project_id}/mern-backend"
-    print(f"Deploying backend with image: {backend_image}")
-    backend_url = gcp_utils.deploy_service(
-        stack_id, backend_image, "backend", {"MONGO_URI": mongo_db_uri}, port=5000
-    )
+    backend_image = f"gcr.io/{gcp_utils.project_id}/mern-{variant}-backend"
+    frontend_image = f"gcr.io/{gcp_utils.project_id}/mern-{variant}-frontend"
 
-    stack_backend = StackBackend.objects.create(
+    stack_google_cloud_run_backend = StackGoogleCloudRun.objects.create(
         stack=stack,
-        url=backend_url,
         image_url=backend_image,
+        build_status_url="",
     )
 
-    frontend_image = f"gcr.io/{gcp_utils.project_id}/mern-frontend"
-    print(f"Deploying frontend with image: {frontend_image}")
-    frontend_url = gcp_utils.deploy_service(
-        stack_id,
-        frontend_image,
-        "frontend",
-        {"REACT_APP_BACKEND_URL": backend_url},
-        port=8080,
-    )
-
-    stack_frontend = StackFrontend.objects.create(
+    stack_google_cloud_run_frontend = StackGoogleCloudRun.objects.create(
         stack=stack,
-        url=frontend_url,
         image_url=frontend_image,
+        build_status_url="",
     )
+
+    env_dict = {
+        "MONGO_URI": mongo_db_uri,
+    }
+
+    if variant == "premium" or variant == "pro":
+        env_dict["JWT_SECRET"] = secrets.token_urlsafe(50)
+
+    response = gcp_utils.deploy_mern_service(
+        stack_google_cloud_run_frontend.id,
+        stack_google_cloud_run_backend.id,
+        frontend_image,
+        backend_image,
+        env_dict,
+    )
+
+    stack_google_cloud_run_backend.build_status_url = response.get(
+        "build_status_url", ""
+    )
+    stack_google_cloud_run_backend.save()
+
+    stack_google_cloud_run_frontend.build_status_url = response.get(
+        "build_status_url", ""
+    )
+    stack_google_cloud_run_frontend.save()
 
     stack_database.save()
-    stack_backend.save()
-    stack_frontend.save()
-
-    # Return the response with the deployed URLs
-    return JsonResponse(
-        {
-            "message": "MERN stack deployed successfully.",
-            "data": {
-                "stack_id": stack_id,
-                "mongo_db_uri": mongo_db_uri,
-                "backend_url": backend_url,
-                "frontend_url": frontend_url,
-            },
-        },
-        status=201,
-    )
 
 
-def deploy_django_stack(stack: Stack):
+def deploy_django_stack(stack: Stack, variant: str):
     gcp_utils = GCPUtils()
 
     stack_id = stack.id
@@ -146,32 +158,28 @@ def deploy_django_stack(stack: Stack):
 
     backend_image = f"gcr.io/{gcp_utils.project_id}/django"
     print(f"Deploying backend with image: {backend_image}")
-    frontend_url = gcp_utils.deploy_service(
+    response = gcp_utils.deploy_service(
         stack_id,
         backend_image,
         "django",
         {"DJANGO_SECRET_KEY": django_secret_key},
-        port=8080,
+        port=8000,
     )
 
-    gcp_utils.put_service_envs(
-        f"django-{stack_id}", {"DJANGO_ALLOWED_HOSTS": frontend_url.split("//")[-1]}
-    )
-
-    stack_frontend = StackFrontend.objects.create(
+    stack_google_cloud_run = StackGoogleCloudRun.objects.create(
         stack=stack,
-        url=frontend_url,
         image_url=backend_image,
+        build_status_url=response.get("build_status_url", ""),
     )
 
-    stack_frontend.save()
+    stack_google_cloud_run.save()
 
     return JsonResponse(
         {
             "message": "Django stack deployed successfully.",
             "data": {
                 "stack_id": stack_id,
-                "frontend_url": frontend_url,
+                "build_status_url": response.get("build_status_url", ""),
             },
         },
         status=201,
@@ -198,12 +206,6 @@ def post_purchasable_stack(
 
 def get_all_stack_databases() -> list[StackDatabase]:
     return list(StackDatabase.objects.all())
-
-
-def get_stack_env(stack_id: str) -> dict:
-    stack = Stack.objects.get(id=stack_id)
-
-    return stack.env
 
 
 # TODO: show loading indicator
