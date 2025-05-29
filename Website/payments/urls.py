@@ -13,7 +13,7 @@ urlpatterns = [
     # Customer management
     path("customers/<str:customer_id>/", views.get_customer_id, name="customer_detail"),
     # Payment method management
-    path("payment-method/", views.get_payment_method, name="get_payment_method"),
+    path("payment-method/<str:payment_method_id>/", views.get_payment_method, name="get_payment_method"),
     path("payment-method/delete/", views.delete_payment_method, name="delete_payment_method"),
     # Price management
     path("prices/", views.create_price_item, name="price_create"),

@@ -9,11 +9,12 @@ document.addEventListener("DOMContentLoaded", function () {
   fetch("/api/v1/payments/config")
     .then((response) => response.json())
     .then((data) => {
-      if (data.publicKey) {
-        const stripe = Stripe(data.publicKey);
+      console.log("Publishable key fetched:", data);
+      if (data.public_key) {
+        const stripe = Stripe(data.public_key);
         const elements = stripe.elements();
         const cardElement = elements.create("card");
-        cardElement.mount("#cardElement");
+        cardElement.mount("#card-element");
 
         const form = document.getElementById("stripePaymentForm");
         form.addEventListener("submit", async (event) => {
