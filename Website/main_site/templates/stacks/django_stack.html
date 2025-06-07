@@ -87,19 +87,18 @@
       class="mb-10 text-center mx-auto bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 max-w-7xl w-full"
     >
       <h1
-        class="text-5xl md:text-6xl font-extrabold text-pink-300 mb-10 tracking-tight drop-shadow-lg"
+        class="text-5xl md:text-6xl font-extrabold text-emerald-400 mb-10 tracking-tight drop-shadow-lg"
       >
         Choose Your Plan
       </h1>
       <p class="text-center w-full md:w-1/2 mx-auto text-gray-200 text-lg">
-        Select the plan that fits your Django project. All plans include
-        containerized Django stacks, PostgreSQL, Gunicorn, Nginx, and community
-        support.
+        Select the plan that fits your needs. All plans come with containerized
+        stacks, easy deployment, and community support.
       </p>
       <div
         class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-center items-stretch mt-10"
       >
-        <!-- Basic Plan Card -->
+        <!-- Basic Plan Card (no outline, same size as others) -->
         <div
           class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105"
         >
@@ -112,24 +111,36 @@
             Basic
           </h3>
           <p class="text-lg text-gray-200 mb-6 flex-grow">
-            Ideal for personal projects and learning Django.
+            Perfect for individuals and small teams starting out.
           </p>
           <ul class="text-base space-y-2 mb-6">
-            <li class="font-semibold text-emerald-300">✔ 1 Django Stack</li>
-            <li class="font-semibold text-emerald-300">✔ Community Support</li>
-            <li class="font-semibold text-emerald-300">✔ Unlimited Deployments</li>
-            <li class="text-gray-400 line-through">Custom Domains</li>
-            <li class="text-gray-400 line-through">Priority Support</li>
-            <li class="text-gray-400 line-through">Automated Backups</li>
+            <li class="font-semibold text-emerald-300">
+              ✔ 1 Containerized Stack
+            </li>
+            <li class="font-semibold text-emerald-300">
+              ✔ Cloud Hosted Frontend/Backend/Database
+            </li>
+            <li class="font-semibold text-emerald-300">
+              ✔ Unlimited Deployments
+            </li>
+            <li class="font-semibold text-emerald-300">✔ Github Integration</li>
+            <li class="text-gray-400 line-through">
+              Authorization/User Accounts
+            </li>
+            <li class="text-gray-400 line-through">
+              Pre Built Websockets for Chat
+            </li>
           </ul>
-          <button
-            class="bg-emerald-400 text-emerald-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-emerald-300 transition text-lg"
-            type="button"
-          >
-            Get Started
-          </button>
+          <a href="{% url 'main_site:pricing' %}">
+            <button
+              class="bg-emerald-400 text-emerald-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-emerald-300 transition text-lg"
+              type="button"
+            >
+              Get Started
+            </button>
+          </a>
         </div>
-        <!-- Premium Plan Card -->
+        <!-- Premium Plan Card (now amber/gold) -->
         <div
           class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col aspect-square border-4 border-amber-400 transition duration-300 hover:-translate-y-2 hover:scale-105"
         >
@@ -142,25 +153,36 @@
             Premium
           </h3>
           <p class="text-lg text-gray-200 mb-6 flex-grow">
-            For growing Django projects and small businesses.
+            For growing teams and businesses needing more flexibility.
           </p>
           <ul class="text-base space-y-2 mb-6">
-            <li class="font-semibold text-amber-300">✔ All Basic Features</li>
-            <li class="font-semibold text-amber-300">✔ Custom Domains</li>
-            <li class="font-semibold text-amber-300">✔ Priority Support</li>
-            <li class="font-semibold text-amber-300">✔ Automated Backups</li>
+            <li class="font-semibold text-amber-300">
+              ✔ 1 Containerized Stack
+            </li>
+            <li class="font-semibold text-amber-300">
+              ✔ Cloud Hosted Frontend/Backend/Database
+            </li>
+            <li class="font-semibold text-amber-300">
+              ✔ Unlimited Deployments
+            </li>
+            <li class="font-semibold text-amber-300">✔ Github Integration</li>
+            <li class="font-semibold text-amber-300">
+              ✔ Authorization/User Accounts
+            </li>
             <li class="text-gray-400 line-through">
-              Dedicated Account Manager
+              Pre Built Websockets for Chat
             </li>
           </ul>
-          <button
-            class="bg-amber-400 text-amber-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-amber-300 transition text-lg"
-            type="button"
-          >
-            Get Premium
-          </button>
+          <a href="{% url 'main_site:pricing' %}">
+            <button
+              class="bg-amber-400 text-amber-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-amber-300 transition text-lg"
+              type="button"
+            >
+              Get Premium
+            </button>
+          </a>
         </div>
-        <!-- Pro Plan Card -->
+        <!-- Pro Plan Card (unchanged) -->
         <div
           class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105"
         >
@@ -171,26 +193,34 @@
           </p>
           <h3 class="text-4xl font-extrabold text-purple-300 mb-2">Pro</h3>
           <p class="text-lg text-gray-200 mb-6 flex-grow">
-            Built for agencies and enterprises with advanced Django needs.
+            Designed for enterprises and agencies with advanced needs.
           </p>
           <ul class="text-base space-y-2 mb-6">
             <li class="font-semibold text-purple-300">
-              ✔ All Premium Features
+              ✔ 1 Containerized Stack
             </li>
             <li class="font-semibold text-purple-300">
-              ✔ Dedicated Account Manager
+              ✔ Cloud Hosted Frontend/Backend/Database
             </li>
-            <li class="font-semibold text-purple-300">✔ Custom Integrations</li>
             <li class="font-semibold text-purple-300">
-              ✔ Early Access to New Features
+              ✔ Unlimited Deployments
+            </li>
+            <li class="font-semibold text-purple-300">✔ Github Integration</li>
+            <li class="font-semibold text-purple-300">
+              ✔ Authorization/User Accounts
+            </li>
+            <li class="font-semibold text-purple-300">
+              ✔ Pre Built Websockets for Chat
             </li>
           </ul>
-          <button
-            class="bg-purple-400 text-purple-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-purple-300 transition text-lg"
-            type="button"
-          >
-            Get Pro
-          </button>
+          <a href="{% url 'main_site:pricing' %}">
+            <button
+              class="bg-purple-400 text-purple-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-purple-300 transition text-lg"
+              type="button"
+            >
+              Get Pro
+            </button>
+          </a>
         </div>
       </div>
     </div>
