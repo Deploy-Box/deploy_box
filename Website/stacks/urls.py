@@ -13,6 +13,7 @@ urlpatterns += [
     path("<str:stack_id>/env/", views.stack_env_routing, name="stack_env"),
     path("purchasable/", views.purchasable_stack_routing, name="purchasable_stack"),
     path("<str:stack_id>/download/", views.download_stack, name="download_stack"),
+    path("get-logs/<str:service_name>/", views.get_logs, name="get_logs"),
     path(
         "admin/databases/",
         views.get_all_stack_databases,

@@ -653,19 +653,9 @@ class GCPUtils:
         self,
         service_names: list[str],
     ) -> dict:
-        service_names = [name.lower() for name in service_names]
-        service_names = [name.replace(" ", "-") for name in service_names]
-
         cleaned_logs = {}
 
         for service_name in service_names:
-
-            if not (
-                service_name.startswith("backend")
-                or service_name.startswith("frontend")
-                or service_name.startswith("database")
-            ):
-                continue
 
             url = f"https://logging.googleapis.com/v2/entries:list"
             response = self.__request_helper(
@@ -678,6 +668,8 @@ class GCPUtils:
                     "pageSize": 20,
                 },
             )
+
+            print(json.dumps(response, indent=4))
 
             if response is None:
                 return {"status": "error", "message": "No logs found"}

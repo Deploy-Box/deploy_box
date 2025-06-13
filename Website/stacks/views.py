@@ -149,3 +149,8 @@ def get_all_stack_databases(request: HttpRequest) -> JsonResponse:
 
 def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:
     return handlers.update_stack_databases_usages(request)
+
+
+def get_logs(request: HttpRequest, service_name: str) -> JsonResponse:
+    gcp_wrapper = GCPUtils()
+    return JsonResponse(gcp_wrapper.stream_logs([service_name]))

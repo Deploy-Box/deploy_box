@@ -231,10 +231,11 @@ window.onload = function () {
     const organizationId = dashboard.dataset.organizationId;
     const projectId = dashboard.dataset.projectId;
     const stackId = dashboard.dataset.stackId;
+    const serviceName = dashboard.dataset.serviceName;
 
 
     // Initialize logs functionality
-    initLogs(organizationId, projectId, stackId);
+    initLogs(organizationId, projectId, stackId, serviceName);
 
     // Set up event listeners for log controls
     setupLogControls();
@@ -279,7 +280,7 @@ let lastTimestamp = null; // Track the last timestamp we've seen
 let allLogs = {}; // Store logs by service
 let selectedService = 'all'; // Default to showing all services
 
-function initLogs(organizationId, projectId, stackId) {
+function initLogs(organizationId, projectId, stackId, serviceName) {
     // Get the logs container
     const logsContainer = document.getElementById('logs-container');
     const serviceSelector = document.getElementById('service-selector');
@@ -294,12 +295,12 @@ function initLogs(organizationId, projectId, stackId) {
     allLogs = {};
 
     // Fetch logs immediately
-    fetchLogs(organizationId, projectId, stackId);
+    fetchLogs(serviceName);
 
     // Set up interval to fetch logs every 30 seconds
     logsInterval = setInterval(() => {
         if (!isPaused) {
-            fetchLogs(organizationId, projectId, stackId);
+            fetchLogs(serviceName);
         }
     }, 30000);
 
@@ -310,10 +311,12 @@ function initLogs(organizationId, projectId, stackId) {
     });
 }
 
-async function fetchLogs(organizationId, projectId, stackId) {
+async function fetchLogs(serviceName) {
     try {
         // Fetch logs from the API
-        const response = await fetch(`/api/stack/${organizationId}/${projectId}/${stackId}/get-logs/`);
+        const response = await fetch(`/api/v1/stacks/get-logs/service-${serviceName}/`);
+
+        console.log(response);
 
         if (!response.ok) {
             throw new Error('Failed to fetch logs');

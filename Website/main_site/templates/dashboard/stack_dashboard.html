@@ -1,6 +1,6 @@
 {% extends 'dashboard_base.html' %} {%load static%} {% block extra_head %}
 <div id="dashboard" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
-  data-stack-id="{{ stack.id }}"></div>
+  data-stack-id="{{ stack.id }}" data-service-name="{{ stack_google_cloud_runs.0.id }}"></div>
 {% endblock %} {% block content %}
 <div class="fixed top-24 left-8">
   <a href="{% url 'main_site:project_dashboard' organization_id project_id %}"
@@ -190,7 +190,7 @@
     </section> -->
 
     <!-- Live Logs Terminal -->
-    <!-- <section class="mb-8">
+    <section class="mb-8">
       <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-xl font-bold flex items-center">
@@ -221,9 +221,9 @@
         </div>
         <div id="logs-container"
           class="bg-zinc-900 border border-zinc-700 rounded-lg p-4 font-mono text-sm text-green-400 h-64 overflow-y-auto scroll-smooth">
-</div>
-</div>
-</section> -->
+        </div>
+      </div>
+    </section>
 
     <!-- Stack Actions -->
     <section class="mb-8">
