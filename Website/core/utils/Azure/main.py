@@ -334,7 +334,14 @@ class AzureDeployBoxIAC:
         if response:
             print(response)
             print(f"Image run queued {image_name} successfully.")
-            return response.get("runId")
+            properties = response.get("properties")
+            run_id = properties.get("runId")
+            if run_id:
+                print(f"Run ID: {run_id}")
+                return run_id
+            else:
+                print("Run ID not found in response.")
+                return None
         else:
             print(f"Failed to queue image {image_name}.")
             return None
@@ -349,18 +356,25 @@ class AzureDeployBoxIAC:
         Returns:
             bool: True if the build succeeded, False otherwise.
         """
-        url = f"https://management.azure.com/subscriptions/{self.subscription_id}/resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/registries/{self.regestry_name}/builds/{run_id}?api-version=2025-04-01"
+        url = f"https://management.azure.com/subscriptions/{self.subscription_id}/resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/registries/{self.regestry_name}/runs/{run_id}?api-version=2019-06-01-preview"
 
         while True:
             response = self.request_helper(url)
-            if response and response.get("status") == "Succeeded":
+            print("wait response", response)
+            if response is None:
+                print("Error: No response received while checking build status.")
+                time.sleep(10)
+                continue
+            properties = response.get("properties", {})
+            if properties.get("status") == "Succeeded":
                 print("Build completed successfully.")
                 return True
-            elif response and response.get("status") in ["Failed", "Canceled"]:
-                print(f"Build failed with status: {response.get('status')}")
+            elif properties.get("status") in ["Failed", "Canceled"]:
+                print(f"Build failed with status: {properties.get('status')}")
                 return False
             else:
-                print("Waiting for build to complete...")
+                status = properties.get("status")
+                print(f"Build is in progress... Current status: {status}")
                 time.sleep(10)
 
     def deploy_container_app(
@@ -504,6 +518,7 @@ if __name__ == "__main__":
         "https://github.com/kalebwbishop/VBHS-music-manager",
         "frontend/dockerfile",
     )
+    print("run id", run_id)
     azure_deploy_box.wait_for_build_completion(run_id)
     azure_deploy_box.deploy_container_app(
         resource_group_name, environment_name, app_name, image
