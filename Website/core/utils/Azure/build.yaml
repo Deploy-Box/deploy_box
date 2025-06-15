@@ -1,0 +1,6 @@
+version: v1.1.0
+steps:
+  - cmd: docker build -t $IMAGE_NAME frontend
+    timeout: 1200
+  - cmd: docker push $IMAGE_NAME
+    timeout: 1200
