@@ -1,22 +1,40 @@
-# deploy_box
+# Deploy Box 🚀📦
 
-Hello! And welcome to Deploy Box. The goal of Deploy Box is to make 
-managing and scaling your applications easier. Our stacks make it simple to quickly
-spin up a full stack web app that is already cloud hosted, secure, and integrated
-with top of the line database providers. That way you can focus on building your 
-unique functionality!
+**Deploy Box** is a platform built to make **deploying, managing, and scaling full-stack web applications** simple and stress-free. Whether you're a solo developer or part of a growing team, Deploy Box aims to remove the friction from cloud infrastructure so you can focus on building great products — not managing DevOps.
 
-Below is a list of the basic init steps to get you started!
+## 🎯 Project Vision
 
-1. Run "pip install deploy-box-cli"
-2. In your terminal type deploy-box-cli to enter our cli
-3. Type "login" this will direct you to our website. If you have an account simply login and then come back to the cli. 
-if not create an account and then come back to the cli and continue.
-4. now you can run the "check_docker" command in the cli to see if you have docker installed and start it if so.
-if you do not have docker installed it should install it for you.
-5. Now you will need to ensure that you have purchased a stack on our website https://deploy-box.onrender.com
-6. Now that you have a stack you can run the "download_sc" command to download the code for your pre-setup stack.
+Deploy Box is designed to:
 
+- Provide **pre-configured, production-ready stacks** (e.g., MERN, MEAN, Django + React, etc.)
+- Offer **secure, cloud-hosted environments** right out of the box
+- Integrate with **best-in-class database providers** like MongoDB, PostgreSQL, and others
+- Help developers **skip the boilerplate** and get straight to shipping custom features
 
-Now you should be setup with your stack. For docs on how to use your stack please visit https://deploy-box.bitdocs.ai/share/d/rOj30y8LuqP5UxIc
+## 🛠️ Current Status
+
+This project is actively under development.
+
+Our goal is to offer:
+
+- A CLI for spinning up and managing your stacks
+- A web interface for browsing, purchasing, and customizing stacks
+- Documentation to support development, scaling, and deployment workflows
+
+The CLI and documentation are currently being rebuilt. In the meantime, feel free to explore the repo or contribute to the vision.
+
+## 💡 Want to Help?
+
+If you're interested in:
+
+- Contributing to the CLI or web interface
+- Building and sharing stack templates
+- Offering feedback on infrastructure workflows
+
+Feel free to open an issue or reach out via the Discussions tab.
+
+---
+
+More updates (and a working CLI) coming soon. Stay tuned!
+
 
