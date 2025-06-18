@@ -2,7 +2,9 @@ import datetime
 import requests
 import time
 import json
+
 # from azure.storage.blob import BlobServiceClient
+
 
 class AzureDeployBoxIAC:
     def __init__(self):
@@ -41,7 +43,7 @@ class AzureDeployBoxIAC:
 
         response = requests.post(url, headers=headers, data=data)
 
-        if response.status_code == 200:
+        if response.status_code in [200, 201]:
             return response.json().get("access_token")
 
         return None
@@ -98,7 +100,8 @@ class AzureDeployBoxIAC:
 
         response = requests.get(url, headers=headers)
 
-        if response.status_code == 200:
+        if response.status_code in [200, 201]:
+            print("response", response.json())
             return response.json().get("properties", {}).get("provisioningState")
 
         print(f"Error getting provisioning state: {response.text}")
@@ -304,8 +307,9 @@ class AzureDeployBoxIAC:
         print(f"Error getting Container App Environment ID: {response.text}")
         return None
 
-
-    def upload_zip_to_blob(self, zip_file_path, storage_account_url, container_name, blob_name, sas_token):
+    def upload_zip_to_blob(
+        self, zip_file_path, storage_account_url, container_name, blob_name, sas_token
+    ):
         """
         Upload a ZIP file to Azure Blob Storage.
 
@@ -319,8 +323,12 @@ class AzureDeployBoxIAC:
         Returns:
             str: URL to the uploaded blob.
         """
-        blob_service_client = BlobServiceClient(account_url=storage_account_url, credential=sas_token)
-        blob_client = blob_service_client.get_blob_client(container=container_name, blob=blob_name)
+        blob_service_client = BlobServiceClient(
+            account_url=storage_account_url, credential=sas_token
+        )
+        blob_client = blob_service_client.get_blob_client(
+            container=container_name, blob=blob_name
+        )
 
         with open(zip_file_path, "rb") as data:
             blob_client.upload_blob(data, overwrite=True)
@@ -340,53 +348,66 @@ class AzureDeployBoxIAC:
             str: The run ID of the queued build, or None if failed.
         """
 
-        # body = {
+        headers = {
+            "Authorization": f"Bearer {self.access_token}",
+            "Content-Type": "application/json",
+        }
 
-        #     "type": "TaskRunRequest",
-        #     "name": "VBHS",  # Name of the task run
-        #     "taskRunRequest": {
+        # ACR Task definition
+        task_definition = {
+            "location": "eastus",
+            "properties": {
+                "status": "Enabled",
+                "platform": {"os": "Linux"},
+                "agentConfiguration": {"cpu": 2},
+                "step": {
+                    "type": "Docker",
+                    "contextPath": "https://github.com/Deploy-Box/MERN.git#main:source_code/backend",
+                    "dockerFilePath": "Dockerfile",
+                    "imageNames": ["mern-app:{{.Run.ID}}"],
+                    "isPushEnabled": True,
+                },
+                "trigger": {
+                    "sourceTriggers": [],
+                    "baseImageTrigger": {
+                        "type": "Runtime",
+                        "baseImageTriggerType": "Runtime",
+                        "name": "defaultBaseimageTrigger",
+                        "status": "Disabled",
+                    },
+                    "timerTriggers": [],
+                },
+            },
+        }
 
-        #         "sourceLocation": "https://github.com/kalebwbishop/VBHS-music-manager",  # URL to the source code location
-        #         "taskYamlPath": "./build.yaml",  # Path to the YAML file in the source location
-        #         "platform": {"os": "Linux"},
-        #         "overrideValues": {
-        #             "IMAGE_NAME": image_name
-        #         },
-        #         "timeout": 1800
-        #     }
-        # }
+        task_name = "build-task-test"
+        api_version = "2025-03-01-preview"
 
-        body = {
-            "type": "FileTaskRunRequest",
-            "TaskFilePath": "./build.yaml",
-            "sourceLocation": "https://deployboxsadev.blob.core.windows.net/main/Archive.zip?sp=r&st=2025-06-15T05:10:58Z&se=2025-07-10T13:10:58Z&spr=https&sv=2024-11-04&sr=b&sig=ims%2BJyhE4XQD5lrXJgIYY5uSmVY%2Bw%2BfBqpU00oNvJcA%3D",
-            "platform": {
-                "os": "Linux"
-            }
-            }
-
-
-        url = (
-            f"https://management.azure.com/subscriptions/{self.subscription_id}/resourceGroups/"
-            f"{self.resource_group}/providers/Microsoft.ContainerRegistry/registries/"
-            f"{self.regestry_name}/scheduleRun?api-version=2025-03-01-preview"
+        # Create task
+        create_url = (
+            f"https://management.azure.com/subscriptions/{self.subscription_id}/"
+            f"resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/"
+            f"registries/{self.regestry_name}/tasks/{task_name}?api-version={api_version}"
         )
 
-        response = self.request_helper(url, method="POST", data=body)
+        response = requests.put(create_url, headers=headers, json=task_definition)
+        print("Create Task Response:", response.status_code, response.json())
 
-        if response:
-            print(response)
-            print(f"Image run queued: {image_name}")
-            run_id = response.get("properties", {}).get("runId")
-            if run_id:
-                print(f"Run ID: {run_id}")
-                return run_id
-            else:
-                print("Run ID not found in response.")
-                return None
-        else:
-            print(f"Failed to queue image: {image_name}")
-            return None
+        # Run task
+        run_definition = {
+            "type": "TaskRunRequest",
+            "taskId": f"/subscriptions/{self.subscription_id}/resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/registries/{self.regestry_name}/tasks/{task_name}",
+        }
+
+        run_url = (
+            f"https://management.azure.com/subscriptions/{self.subscription_id}/"
+            f"resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/"
+            f"registries/{self.regestry_name}/scheduleRun?api-version={api_version}"
+        )
+
+        run_response = requests.post(run_url, headers=headers, json=run_definition)
+
+        return run_response.json().get("properties", {}).get("runId")
 
     def wait_for_build_completion(self, run_id):
         """
@@ -408,6 +429,7 @@ class AzureDeployBoxIAC:
                 time.sleep(10)
                 continue
             properties = response.get("properties", {})
+            print(response)
             if properties.get("status") == "Succeeded":
                 print("Build completed successfully.")
                 return True
@@ -446,9 +468,22 @@ class AzureDeployBoxIAC:
                 "configuration": {
                     "ingress": {
                         "external": True,
-                        "targetPort": 8080,
+                        "targetPort": 5000,
                         "transport": "auto",
-                    }
+                    },
+                    "secrets": [
+                        {
+                            "name": "acr-password",
+                            "value": "",
+                        }
+                    ],
+                    "registries": [
+                        {
+                            "server": "deployboxcrdev.azurecr.io",
+                            "username": self.regestry_name,
+                            "passwordSecretRef": "acr-password",
+                        }
+                    ],
                 },
                 "template": {
                     "containers": [
@@ -456,6 +491,12 @@ class AzureDeployBoxIAC:
                             "name": app_name,
                             "image": image,
                             "resources": {"cpu": 0.25, "memory": "0.5Gi"},
+                            "env": [
+                                {
+                                    "name": "MONGO_URI",
+                                    "value": "mongodb+srv://deployBoxUser-b61c956f6f634710:O5IIWezIuphA1xSa@cluster0.yjaoi.mongodb.net/db-b61c956f6f634710?retryWrites=true&w=majority&appName=Cluster0",
+                                },
+                            ],
                         }
                     ]
                 },
@@ -465,7 +506,7 @@ class AzureDeployBoxIAC:
         response = requests.put(url, headers=headers, json=data)
 
         print(f"Deploying Container App: {response.status_code}")
-        if response.status_code != 200:
+        if response.status_code not in [200, 201]:
             print(f"Error deploying Container App: {response.text}")
             return None
 
@@ -552,20 +593,15 @@ class AzureDeployBoxIAC:
             "timeframe": "MonthToDate",
             "dataset": {
                 "granularity": "Daily",
-                "aggregation": {
-                    "totalCost": {
-                        "name": "PreTaxCost",
-                        "function": "Sum"
-                    }
-                },
+                "aggregation": {"totalCost": {"name": "PreTaxCost", "function": "Sum"}},
                 "filter": {
                     "dimensions": {
                         "name": "resourceGroupName",
                         "operator": "In",
-                        "values": [resource_group_name]
+                        "values": [resource_group_name],
                     }
-                }
-            }
+                },
+            },
         }
         headers = {
             "Authorization": f"Bearer {token}",
@@ -580,8 +616,9 @@ class AzureDeployBoxIAC:
         print(f"Error getting container app usage: {response.text}")
         return None
 
-
-    def add_container_app_envs_as_secrets(self, resource_group_name, app_name, env_vars: dict, container_name=None):
+    def add_container_app_envs_as_secrets(
+        self, resource_group_name, app_name, env_vars: dict, container_name=None
+    ):
         """
         Adds/updates secrets in an Azure Container App and links them as environment variables using secretRef,
         waiting for provisioning to complete between steps.
@@ -625,7 +662,9 @@ class AzureDeployBoxIAC:
         for attempt in range(max_retries):
             response = requests.get(url, headers=headers)
             if response.status_code != 200:
-                print(f"Error fetching container app after secrets update: {response.text}")
+                print(
+                    f"Error fetching container app after secrets update: {response.text}"
+                )
                 return None
             app_def = response.json()
             config = app_def["properties"].get("configuration", {})
@@ -645,13 +684,16 @@ class AzureDeployBoxIAC:
         for container in containers:
             if container_name is None or container["name"] == container_name:
                 # Remove any old env entries with the same name
-                env_list = [e for e in container.get("env", []) if e["name"] not in [k.upper().replace("-", "_") for k in env_vars]]
+                env_list = [
+                    e
+                    for e in container.get("env", [])
+                    if e["name"] not in [k.upper().replace("-", "_") for k in env_vars]
+                ]
                 # Add new secretRef env entries
                 for key in env_vars:
-                    env_list.append({
-                        "name": key.upper().replace("-", "_"),
-                        "secretRef": key
-                    })
+                    env_list.append(
+                        {"name": key.upper().replace("-", "_"), "secretRef": key}
+                    )
                 container["env"] = env_list
                 updated = True
                 break
@@ -682,52 +724,54 @@ if __name__ == "__main__":
     azure_deploy_box = AzureDeployBoxIAC()
 
     # Example usage
-    resource_group_name = "testing-mern-free"
+    resource_group_name = "testing-mern-free4"
     environment_name = "testing-mern-free-cae"
     app_name = "testing-mern-free-frontend"
     image = "kalebwbishop/mern-pro-frontend:latest"
     token = azure_deploy_box.access_token
 
-    # azure_deploy_box.create_resource_group(resource_group_name)
-    # azure_deploy_box.create_log_analytics_workspace(
-    #     resource_group_name, "testing-mern-free-law"
-    # )
-    # workspace_id = azure_deploy_box.get_log_analytics_workspace_id(
-    #     resource_group_name, "testing-mern-free-law"
-    # )
-    # workspace_key = azure_deploy_box.get_log_analytics_workspace_key(
-    #     resource_group_name, "testing-mern-free-law"
-    # )
-    # azure_deploy_box.create_container_app_environment(
-    #     resource_group_name, environment_name, workspace_id, workspace_key
-    # )
+    azure_deploy_box.create_resource_group(resource_group_name)
+    azure_deploy_box.create_log_analytics_workspace(
+        resource_group_name, "testing-mern-free-law"
+    )
+    workspace_id = azure_deploy_box.get_log_analytics_workspace_id(
+        resource_group_name, "testing-mern-free-law"
+    )
+    workspace_key = azure_deploy_box.get_log_analytics_workspace_key(
+        resource_group_name, "testing-mern-free-law"
+    )
+    azure_deploy_box.create_container_app_environment(
+        resource_group_name, environment_name, workspace_id, workspace_key
+    )
     # run_id = azure_deploy_box.build_container_image(
     #     "kalebwbishop/VBHS:latest",
-    #     "https://github.com/kalebwbishop/VBHS-music-manager",
-    #     "dockerfile",
     # )
     # print("run id", run_id)
     # azure_deploy_box.wait_for_build_completion(run_id)
-    # azure_deploy_box.deploy_container_app(
-    #     resource_group_name, environment_name, app_name, image
+    run_id = "ca2n"
+    azure_deploy_box.deploy_container_app(
+        resource_group_name,
+        environment_name,
+        app_name,
+        f"{azure_deploy_box.regestry_name}.azurecr.io/mern-app:{run_id}",
+    )
+
+    # usage_data = azure_deploy_box.get_resource_group_usage(
+    #     azure_deploy_box.subscription_id, resource_group_name, token
     # )
 
-    usage_data = azure_deploy_box.get_resource_group_usage(
-        azure_deploy_box.subscription_id, resource_group_name, token
-    )
+    # print("Usage Data:", usage_data)
 
-    print("Usage Data:", usage_data)
+    # # Example of updating environment variables
+    # env_vars = {
+    #     "node-env": "production_again",
+    #     "api-url": "https://api.example.com",
+    # }
 
-    # Example of updating environment variables
-    env_vars = {
-        "node-env": "production_again",
-        "api-url": "https://api.example.com",
-    }
-
-    # azure_deploy_box.put_service_envs(
-    azure_deploy_box.add_container_app_envs_as_secrets(
-        resource_group_name,
-        app_name,
-        env_vars,
-        container_name="testing-mern-free-frontend",
-    )
+    # # azure_deploy_box.put_service_envs(
+    # azure_deploy_box.add_container_app_envs_as_secrets(
+    #     resource_group_name,
+    #     app_name,
+    #     env_vars,
+    #     container_name="testing-mern-free-frontend",
+    # )
