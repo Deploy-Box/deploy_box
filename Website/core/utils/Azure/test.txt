@@ -1,5 +1,0 @@
-https://github.com/Deploy-Box/MERN
-
-az acr task create --name build-task --registry deployboxcrdev --context https://github.com/Deploy-Box/MERN.git#main:source_code/backend --file Dockerfile --image mern-app:{{.Run.ID}} --commit-trigger-enabled false
-az acr task run --name build-task --registry deployboxcrdev
-

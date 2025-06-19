@@ -48,4 +48,3 @@ class Token(models.Model):
         bytes_token = bytes(self.encrypted_token)
         decrypted_token = cipher.decrypt(bytes_token)
         return decrypted_token.decode()
-
