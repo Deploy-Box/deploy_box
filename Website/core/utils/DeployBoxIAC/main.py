@@ -11,12 +11,12 @@ load_dotenv()
 
 AZURE_STORAGE_CONNECTION_STRING=os.environ.get("AZURE_STORAGE_CONNECTION_STRING")
 CONTAINER_NAME=os.environ.get("CONTAINER_NAME")
-
+RESOURCE_GROUP_NAME="testing-1-rg-dev"
 
 deploy_box_IAC = {
     "azurerm_resource_group": {
         "rg": {
-            "name": "example-containerapp-rg4",
+            "name": RESOURCE_GROUP_NAME,
             "location": "East US"
         }
     },
@@ -39,13 +39,13 @@ deploy_box_IAC = {
     },
     "azurerm_container_app": {
         "app1": {
-            "name": "example-app",
+            "name": "backend",
             "resource_group_name": "${azurerm_resource_group.rg.name}",
             "container_app_environment_id": "${azurerm_container_app_environment.env.id}",
             "revision_mode": "Single",
             "ingress": {
                 "external_enabled": True,
-                "target_port": 5000,
+                "target_port": 5001,
                 "transport": "auto",
                 "traffic_weight": [
                     {
@@ -71,53 +71,72 @@ deploy_box_IAC = {
                 "container": [
                     {
                         "name": "testing-mern",
-                        "image": {
-                            "task": {
-                                "location": "eastus",
-                                "properties": {
-                                    "status": "Enabled",
-                                    "platform": {"os": "Linux"},
-                                    "agentConfiguration": {"cpu": 1},
-                                    "step": {
-                                        "type": "Docker",
-                                        "contextPath": "https://github.com/kalebwbishop/VBHS-music-manager.git#main:backend",
-                                        "dockerFilePath": "dockerfile",
-                                        "imageNames": ["mern-app:{{.Run.ID}}"],
-                                        "isPushEnabled": True,
-                                    },
-                                    "trigger": {
-                                        "sourceTriggers": [],
-                                        "baseImageTrigger": {
-                                            "type": "Runtime",
-                                            "baseImageTriggerType": "Runtime",
-                                            "name": "defaultBaseimageTrigger",
-                                            "status": "Disabled",
-                                        },
-                                        "timerTriggers": [],
-                                    },
-                                },
-                            }
-                        },
+                        "image": "deployboxcrdev.azurecr.io/vbhs-backend:ca3v",
+                        # {
+                        #     "task": {
+                        #         "location": "eastus",
+                        #         "properties": {
+                        #             "status": "Enabled",
+                        #             "platform": {"os": "Linux"},
+                        #             "agentConfiguration": {"cpu": 2},
+                        #             "step": {
+                        #                 "type": "Docker",
+                        #                 "contextPath": "https://github.com/kalebwbishop/VBHS-music-manager.git#main",
+                        #                 "contextDirectory": "backend",
+                        #                 "dockerFilePath": "Dockerfile",
+                        #                 "imageNames": ["vbhs-backend:{{.Run.ID}}"],
+                        #                 "isPushEnabled": True,
+                        #             },
+                        #             "trigger": {
+                        #                 "sourceTriggers": [],
+                        #                 "baseImageTrigger": {
+                        #                     "type": "Runtime",
+                        #                     "baseImageTriggerType": "Runtime",
+                        #                     "name": "defaultBaseimageTrigger",
+                        #                     "status": "Disabled",
+                        #                 },
+                        #                 "timerTriggers": [],
+                        #             },
+                        #         },
+                        #     }
+                        # },
                         "cpu": 0.25,
                         "memory": "0.5Gi",
                         "env": [
                             {
                                 "name": "MONGO_URI",
-                                "value": "mongodb+srv://deployBoxUser-b61c956f6f634710:O5IIWezIuphA1xSa@cluster0.yjaoi.mongodb.net/db-b61c956f6f634710?retryWrites=true&w=majority&appName=Cluster0",
-                            }
+                                "value": "mongodb+srv://deployBoxUser4:935e1ac37359@cluster0.yjaoi.mongodb.net/db-4?retryWrites=true&w=majority&appName=Cluster0",
+                            },
+                            {
+                                "name": "JWT_SECRET",
+                                "value": "2a6aeb55eb785e4c3986c6faacd4fc98e9d7ccd7a070610e2508fd31db72d4c1",
+                            },
+                            {
+                                "name": "REGISTER_TOKEN",
+                                "value": "e6fddf3f",
+                            },
+                            {
+                                "name": "ENCRYPTION_KEY",
+                                "value": "50e04790af03b967926e85db54908d6efcad701668860be8b25701531565badf",
+                            },
+                                                        {
+                                "name": "PORT",
+                                "value": "5001",
+                            },
                         ],
                     }
                 ]
             },
         },
+        
         "app2": {
-            "name": "example-app2",
+            "name": "frontend",
             "resource_group_name": "${azurerm_resource_group.rg.name}",
             "container_app_environment_id": "${azurerm_container_app_environment.env.id}",
             "revision_mode": "Single",
             "ingress": {
                 "external_enabled": True,
-                "target_port": 5000,
+                "target_port": 8080,
                 "transport": "auto",
                 "traffic_weight": [
                     {
@@ -143,39 +162,41 @@ deploy_box_IAC = {
                 "container": [
                     {
                         "name": "testing-mern",
-                        "image": {
-                            "task": {
-                                "location": "eastus",
-                                "properties": {
-                                    "status": "Enabled",
-                                    "platform": {"os": "Linux"},
-                                    "agentConfiguration": {"cpu": 1},
-                                    "step": {
-                                        "type": "Docker",
-                                        "contextPath": "https://github.com/kalebwbishop/VBHS-music-manager.git#main:backend",
-                                        "dockerFilePath": "dockerfile",
-                                        "imageNames": ["mern-app:{{.Run.ID}}"],
-                                        "isPushEnabled": True,
-                                    },
-                                    "trigger": {
-                                        "sourceTriggers": [],
-                                        "baseImageTrigger": {
-                                            "type": "Runtime",
-                                            "baseImageTriggerType": "Runtime",
-                                            "name": "defaultBaseimageTrigger",
-                                            "status": "Disabled",
-                                        },
-                                        "timerTriggers": [],
-                                    },
-                                },
-                            }
-                        },
+                        "image": "deployboxcrdev.azurecr.io/vbhs-frontend:ca3w",
+                        # {
+                        #     "task": {
+                        #         "location": "eastus",
+                        #         "properties": {
+                        #             "status": "Enabled",
+                        #             "platform": {"os": "Linux"},
+                        #             "agentConfiguration": {"cpu": 2},
+                        #             "step": {
+                        #                 "type": "Docker",
+                        #                 "contextPath": "https://github.com/kalebwbishop/VBHS-music-manager.git#main",
+                        #                 "contextDirectory": "frontend",
+                        #                 "dockerFilePath": "dockerfile",
+                        #                 "imageNames": ["vbhs-frontend:{{.Run.ID}}"],
+                        #                 "isPushEnabled": True,
+                        #             },
+                        #             "trigger": {
+                        #                 "sourceTriggers": [],
+                        #                 "baseImageTrigger": {
+                        #                     "type": "Runtime",
+                        #                     "baseImageTriggerType": "Runtime",
+                        #                     "name": "defaultBaseimageTrigger",
+                        #                     "status": "Disabled",
+                        #                 },
+                        #                 "timerTriggers": [],
+                        #             },
+                        #         },
+                        #     }
+                        # },
                         "cpu": 0.25,
                         "memory": "0.5Gi",
                         "env": [
                             {
-                                "name": "MONGO_URI",
-                                "value": "mongodb+srv://deployBoxUser-b61c956f6f634710:O5IIWezIuphA1xSa@cluster0.yjaoi.mongodb.net/db-b61c956f6f634710?retryWrites=true&w=majority&appName=Cluster0",
+                                "name": "REACT_APP_BACKEND_URL",
+                                "value": "https://backend.wittyocean-13982f09.eastus.azurecontainerapps.io",
                             }
                         ],
                     }
@@ -239,27 +260,48 @@ def download_directory_from_blob(blob_prefix, local_dir):
             file.write(blob_data.readall())
 
 # Main logic
-temp_dir = tempfile.mkdtemp()
-print(f"Debugging temp dir: {temp_dir}")
+with tempfile.TemporaryDirectory() as temp_dir:
+    print(f"Debugging temp dir: {temp_dir}")
 
-tf_file = os.path.join(temp_dir, "main.tf.json")
+    # Optionally download from Azure Blob (if restoring from prior state)
+    download_directory_from_blob(RESOURCE_GROUP_NAME, temp_dir)
 
-# Generate TF JSON config
-terraform = AzureDeployBoxIAC().azure_helper({}, deploy_box_IAC)
-print(json.dumps(terraform, indent=3))
-with open(tf_file, "w") as f:
-    json.dump(terraform, f, indent=2)
+    # Create state file if it does not exist
+    state_file = os.path.join(temp_dir, "state.json")
 
-# Optionally download from Azure Blob (if restoring from prior state)
-download_directory_from_blob("terraform4", temp_dir)
+    state = {}
+    if os.path.exists(state_file):
+        with open(state_file, "r") as f:
+            state = json.load(f)
 
-# Run Terraform commands
-run_terraform_cmd(["init"], temp_dir)
-run_terraform_cmd(["plan"], temp_dir)
-run_terraform_cmd(["apply", "-auto-approve"], temp_dir)
+    tf_file = os.path.join(temp_dir, "main.tf.json")
+    tf_plan_file = os.path.join(temp_dir, "plan.tfplan")
 
-# Delete the main.tf.json file
-os.remove(tf_file)
+    # Generate TF JSON config
+    azure_deploy_box_IAC = AzureDeployBoxIAC()
+    terraform = azure_deploy_box_IAC.plan({}, deploy_box_IAC, state)
 
-# Upload results (including .tfstate) to blob storage
-upload_directory_to_blob(temp_dir, blob_prefix="terraform4")
+    with open(tf_file, "w") as f:
+        json.dump(terraform, f, indent=2)
+
+    with open(state_file, "w") as f:
+        json.dump(state, f, indent=2)
+
+    # Run Terraform commands
+    run_terraform_cmd(["init"], temp_dir)
+    run_terraform_cmd(["plan", f"--out={tf_plan_file}"], temp_dir)
+    run_terraform_cmd(["apply", "-auto-approve", tf_plan_file], temp_dir)
+
+    # Delete the tf_file file
+    os.remove(tf_file)
+
+    # Delete the tf_plan_file file
+    os.remove(tf_plan_file)
+
+    # Upload results (including .tfstate) to blob storage
+    upload_directory_to_blob(temp_dir, blob_prefix=RESOURCE_GROUP_NAME)
+
+class DeployBoxIAC():
+    def __init__(self):
+        pass
+

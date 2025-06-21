@@ -21,6 +21,8 @@ class AzureDeployBoxIAC:
         self.resource_group = "deploy-box-rg-dev"
         self.regestry_name = "deployboxcrdev"
 
+        self.state = {}
+
         self.access_token = self.get_azure_token()
 
         self.headers = {
@@ -28,7 +30,9 @@ class AzureDeployBoxIAC:
             "Content-Type": "application/json",
         }
 
-    def azure_helper(self, terraform: dict, deploy_box_IAC: dict) -> dict:
+    def plan(self, terraform: dict, deploy_box_IAC: dict, state: dict) -> dict:
+        self.state = state
+
         provider = terraform.get("provider", {})
         assert isinstance(provider, dict)
 
@@ -53,6 +57,9 @@ class AzureDeployBoxIAC:
             "provider": provider,
             "resource": resource
         }
+    
+    def apply(self):
+        pass
 
     def get_azure_token(self):
         """
@@ -88,12 +95,7 @@ class AzureDeployBoxIAC:
         Returns:
             str: Provisioning state if found, None otherwise.
         """
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json",
-        }
-
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=self.headers)
 
         if response.status_code in [200, 201]:
             print("response", response.json())
@@ -128,6 +130,19 @@ class AzureDeployBoxIAC:
         def build_container_image_helper(task: dict) -> str:
             task_name = "build-task-test"
             api_version = "2025-03-01-preview"
+
+            step = task.get("properties", {}).get("step", {})
+
+            assert isinstance(step, dict) and "contextDirectory" in step.keys(), "properties.step.contextDirectory is required"
+
+            contextDirectory = step.pop("contextDirectory")
+            contextPath = step.get("contextPath")
+
+            # Check if updates have been made
+            response = requests.get(f"https://api.github.com/repos/OWNER/REPO/commits?path=path/to/file.js")
+
+            contextPath = contextPath if contextDirectory == "." else f"{contextPath}:{contextDirectory}"
+            step.update({"contextPath": contextPath})
 
             # Create task
             create_url = (
