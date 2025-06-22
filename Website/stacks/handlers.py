@@ -28,10 +28,16 @@ def post_stack(request: AuthHttpRequest) -> JsonResponse:
     except request_helpers.MissingFieldError as e:
         return e.to_response()
 
-    project = get_object_or_404(Project, id=project_id)
-    purchasable_stack = get_object_or_404(PurchasableStack, id=purchasable_stack_id)
+    get_object_or_404(Project, id=project_id)
+    get_object_or_404(PurchasableStack, id=purchasable_stack_id)
 
-    return services.add_stack(project, purchasable_stack, name)
+    stack = services.add_stack(
+        project_id=project_id,
+        purchasable_stack_id=purchasable_stack_id,
+        name=name,
+    )
+
+    return JsonResponse({"success": True, "stack_id": stack.id})
 
 
 def patch_stack(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
@@ -56,7 +62,7 @@ def delete_stack(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
         return JsonResponse({"error": "Failed to delete stack."}, status=500)
 
     return JsonResponse(
-        {"success": True, "message": "Stack deleted successfully."}, status=200
+        {"success": True, "message": "Stack deleted successfully."}, status=204
     )
 
 

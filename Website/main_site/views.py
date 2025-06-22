@@ -27,17 +27,22 @@ def home(request: HttpRequest) -> HttpResponse:
 def stacks(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks.html", {"show_footer": False})
 
+
 def mern_stack(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks/mern_stack.html", {"show_footer": False})
+
 
 def django_stack(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks/django_stack.html", {"show_footer": False})
 
+
 def mean_stack(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks/mean_stack.html", {"show_footer": False})
 
+
 def lamp_stack(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks/lamp_stack.html", {"show_footer": False})
+
 
 def mevn_stack(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks/mevn_stack.html", {"show_footer": False})
@@ -135,26 +140,30 @@ def stack_dashboard(
     for stack_google_cloud_run in stack_google_cloud_runs:
         if not stack_google_cloud_run.url:
             gcp_utils = GCPUtils()
-            stack_google_cloud_run.url = gcp_utils.get_service_url(stack_google_cloud_run.id)
+            stack_google_cloud_run.url = gcp_utils.get_service_url(
+                stack_google_cloud_run.id
+            )
             stack_google_cloud_run.save()
 
         if stack_google_cloud_run.state == "STARTING":
             gcp_utils = GCPUtils()
-            stack_google_cloud_run.state = gcp_utils.get_build_status(stack_google_cloud_run.build_status_url)
+            stack_google_cloud_run.state = gcp_utils.get_build_status(
+                stack_google_cloud_run.build_status_url
+            )
             stack_google_cloud_run.save()
 
-    print(f"Stack: {stack}")
-    print(f"Stack Google Cloud Run: {stack_google_cloud_runs}")
-    return render(
-        request,
-        "dashboard/stack_dashboard.html",
-        {
-            "organization_id": organization_id,
-            "project_id": project_id,
-            "stack": stack,
-            "stack_google_cloud_runs": stack_google_cloud_runs,
-        },
-    )
+    # print(f"Stack: {stack}")
+    # print(f"Stack Google Cloud Run: {stack_google_cloud_runs}")
+    # return render(
+    #     request,
+    #     "dashboard/stack_dashboard.html",
+    #     {
+    #         "organization_id": organization_id,
+    #         "project_id": project_id,
+    #         "stack": stack,
+    #         "stack_google_cloud_runs": stack_google_cloud_runs,
+    #     },
+    # )
 
     form = EnvFileUploadForm()
     return render(
@@ -165,7 +174,7 @@ def stack_dashboard(
             "project_id": project_id,
             "stack": stack,
             "form": form,
-            "stack_google_cloud_run": stack_google_cloud_run,
+            # "stack_google_cloud_run": stack_google_cloud_run,
         },
     )
 
@@ -214,7 +223,7 @@ def home_page_view(request: AuthHttpRequest, variant: str) -> HttpResponse:
         for organization in organizations
         for project in organization.get_projects()
     ]
-    stack_options = PurchasableStack.objects.filter(variant=variant)
+    stack_options = PurchasableStack.objects.filter(variant=variant.lower())
     return render(
         request,
         "payments/home.html",

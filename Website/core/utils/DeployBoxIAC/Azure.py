@@ -3,12 +3,16 @@ import dotenv
 import requests
 import time
 import json
+import re
 
 dotenv.load_dotenv()
 
 PROVIDER_NAME = "azurerm"
 
+
 class AzureDeployBoxIAC:
+    api_version = "2025-03-01-preview"
+
     def __init__(self):
         """
         Initialize the AzureDeployBoxIAC class with Azure credentials.
@@ -19,7 +23,7 @@ class AzureDeployBoxIAC:
         self.subscription_id = os.getenv("ARM_SUBSCRIPTION_ID")
         self.location = "eastus"
         self.resource_group = "deploy-box-rg-dev"
-        self.regestry_name = "deployboxcrdev"
+        self.registry_name = "deployboxcrdev"
 
         self.state = {}
 
@@ -30,8 +34,8 @@ class AzureDeployBoxIAC:
             "Content-Type": "application/json",
         }
 
-    def plan(self, terraform: dict, deploy_box_IAC: dict, state: dict) -> dict:
-        self.state = state
+    def plan(self, terraform: dict, deploy_box_iac: dict, state: dict):
+        self.state = state.setdefault("azure", {})
 
         provider = terraform.get("provider", {})
         assert isinstance(provider, dict)
@@ -39,27 +43,30 @@ class AzureDeployBoxIAC:
         resource = terraform.get("resource", {})
         assert isinstance(resource, dict)
 
-        provider.update({PROVIDER_NAME: {
-            "features": {},
-            "subscription_id": os.getenv("ARM_SUBSCRIPTION_ID"),
-            "client_id": os.getenv("ARM_CLIENT_ID"),
-            "client_secret": os.getenv("ARM_CLIENT_SECRET"),
-            "tenant_id": os.getenv("ARM_TENANT_ID")
-        }})
+        provider.update(
+            {
+                PROVIDER_NAME: {
+                    "features": {},
+                    "subscription_id": os.getenv("ARM_SUBSCRIPTION_ID"),
+                    "client_id": os.getenv("ARM_CLIENT_ID"),
+                    "client_secret": os.getenv("ARM_CLIENT_SECRET"),
+                    "tenant_id": os.getenv("ARM_TENANT_ID"),
+                }
+            }
+        )
 
-        azure_deploy_box_IAC = {k: v for k, v in deploy_box_IAC.items() if k.startswith(PROVIDER_NAME)}
-
-        azure_deploy_box_IAC = self.build_container_image(azure_deploy_box_IAC)
-
-        resource.update(azure_deploy_box_IAC)
-        
-        return {
-            "provider": provider,
-            "resource": resource
+        azure_deploy_box_iac = {
+            k: v for k, v in deploy_box_iac.items() if k.startswith(PROVIDER_NAME)
         }
-    
-    def apply(self):
-        pass
+
+        azure_deploy_box_iac = self.build_container_image(azure_deploy_box_iac)
+
+        resource.update(azure_deploy_box_iac)
+
+        return {"provider": provider, "resource": resource}
+
+    # def apply(self):
+    #     pass
 
     def get_azure_token(self):
         """
@@ -84,111 +91,194 @@ class AzureDeployBoxIAC:
 
         return None
 
-    def get_provisioning_state(self, url):
+    def check_for_updates(self, context_directory: str, context_path) -> bool:
         """
-        Get the provisioning state of a resource in Azure.
+        Check if updates have been made to the specified context path in the repository.
 
         Args:
-            resource_group_name (str): Name of the resource group.
-            resource_name (str): Name of the resource.
+            context_directory (str): The directory within the repository to check.
+            context_path (str): The full path to the repository including branch.
 
         Returns:
-            str: Provisioning state if found, None otherwise.
+            bool: True if updates are found, False otherwise.
         """
-        response = requests.get(url, headers=self.headers)
+        result = re.match(r"https:\/\/github\.com\/(.+)\/(.+)\.git#(.+)", context_path)
+        if not result:
+            print("Invalid context path format.")
+            return False
 
-        if response.status_code in [200, 201]:
-            print("response", response.json())
-            return response.json().get("properties", {}).get("provisioningState")
+        owner, repo, _ = result.groups()
+        response = requests.get(
+            f"https://api.github.com/repos/{owner}/{repo}/commits?path={context_directory}"
+        )
+        if response.status_code != 200:
+            print(f"Error fetching commits: {response.status_code} - {response.text}")
+            return False
 
-        print(f"Error getting provisioning state: {response.text}")
-        return None
+        print(f"Response: {response.json()}")
 
-    def wait_for_provisioning(self, url):
+        if self.state.get(f"{context_path}/{context_directory}-sha") == response.json()[
+            0
+        ].get("sha"):
+            print("No updates found since the last check.")
+            return False
+
+        # Update the state with the latest commit SHA
+        self.state[f"{context_path}/{context_directory}-sha"] = response.json()[0].get(
+            "sha"
+        )
+        print("Updates found in the specified path.")
+        return True
+
+    def create_github_source_trigger(self, github_token, repo_url, branch="main"):
         """
-        Wait for the provisioning state of a resource to be 'Succeeded'.
+        Create a GitHub source trigger for ACR tasks with private repo access.
+
         Args:
+            github_token (str): GitHub personal access token
+            repo_url (str): GitHub repository URL (e.g., "https://github.com/owner/repo")
+            branch (str): Branch to monitor for changes
+
         Returns:
-            bool: True if provisioning succeeded, False otherwise.
+            dict: Source trigger configuration
         """
+        return {
+            "name": "github-trigger",
+            "sourceRepository": {
+                "sourceControlType": "Github",
+                "repositoryUrl": repo_url,
+                "branch": branch,
+                "sourceControlAuthProperties": {
+                    "tokenType": "PAT",
+                    "token": github_token,
+                },
+            },
+            "sourceTriggerEvents": [],
+            "status": "Enabled",
+        }
 
-        while True:
-            state = self.get_provisioning_state(url)
-            if state == "Succeeded":
-                print("Provisioning succeeded.")
-                return True
-            elif state in ["Failed", "Canceled"]:
-                print(f"Provisioning failed with state: {state}")
-                return False
-            else:
-                print(f"Current provisioning state: {state}. Waiting...")
-            time.sleep(10)  # Wait for 10 seconds before checking again
+    def build_container_image(self, azure_deploy_box_iac: dict) -> dict:
+        """ """
 
-    def build_container_image(self, azure_deploy_box_IAC: dict) -> dict:
-        """
-        """
-        def build_container_image_helper(task: dict) -> str:
-            task_name = "build-task-test"
-            api_version = "2025-03-01-preview"
+        def build_container_image_helper(task: dict, github_token: str = None) -> str:
+            task_name = f"build-task-{int(time.time())}"  # Unique task name
 
             step = task.get("properties", {}).get("step", {})
 
-            assert isinstance(step, dict) and "contextDirectory" in step.keys(), "properties.step.contextDirectory is required"
+            assert (
+                isinstance(step, dict) and "contextDirectory" in step.keys()
+            ), "properties.step.contextDirectory is required"
 
-            contextDirectory = step.pop("contextDirectory")
-            contextPath = step.get("contextPath")
+            context_directory = step.pop("contextDirectory")
+            context_path = step.get("contextPath")
 
-            # Check if updates have been made
-            response = requests.get(f"https://api.github.com/repos/OWNER/REPO/commits?path=path/to/file.js")
+            if not context_path:
+                raise ValueError("contextPath is required in the step definition")
 
-            contextPath = contextPath if contextDirectory == "." else f"{contextPath}:{contextDirectory}"
-            step.update({"contextPath": contextPath})
+            # Parse GitHub URL to get repo info
+            result = re.match(
+                r"https:\/\/github\.com\/(.+)\/(.+)\.git(?:#(.+))?", context_path
+            )
+            if not result:
+                raise ValueError("Invalid GitHub repository URL format")
+
+            owner, repo, branch = result.groups()
+            branch = branch or "main"
+            repo_url = f"https://github.com/{owner}/{repo}#{branch}:{context_directory}"
+
+            # Create task configuration for private repo
+            task_config = {
+                "location": self.location,
+                "properties": {
+                    "status": "Enabled",
+                    "platform": {"os": "Linux", "architecture": "amd64"},
+                    "agentConfiguration": {"cpu": 2},
+                    "step": {
+                        "type": "Docker",
+                        "dockerFilePath": step.get("dockerFilePath", "Dockerfile"),
+                        "contextPath": repo_url,
+                        "contextAccessToken": github_token,  # GitHub token for private repo access
+                        "imageNames": step.get("imageNames", []),
+                        "isPushEnabled": True,
+                        "noCache": False,
+                        "arguments": step.get("arguments", []),
+                    },
+                },
+            }
+
+            # Add source trigger if GitHub token is provided
+            if github_token:
+                task_config["properties"]["trigger"] = {
+                    "sourceTriggers": [
+                        self.create_github_source_trigger(
+                            github_token, repo_url, branch
+                        )
+                    ]
+                }
 
             # Create task
             create_url = (
                 f"https://management.azure.com/subscriptions/{self.subscription_id}/"
                 f"resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/"
-                f"registries/{self.regestry_name}/tasks/{task_name}?api-version={api_version}"
+                f"registries/{self.registry_name}/tasks/{task_name}?api-version={AzureDeployBoxIAC.api_version}"
             )
 
-            response = requests.put(create_url, headers=self.headers, json=task)
-            print("Create Task Response:", response.status_code, response.json())
+            response = requests.put(create_url, headers=self.headers, json=task_config)
 
-            # Run task
+            if response.status_code not in [200, 201]:
+                raise Exception(
+                    f"Failed to create task: {response.status_code} - {response.text}"
+                )
+
+            print("Task created successfully:", response.json())
+
+            # Run task manually
             run_definition = {
                 "type": "TaskRunRequest",
-                "taskId": f"/subscriptions/{self.subscription_id}/resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/registries/{self.regestry_name}/tasks/{task_name}",
+                "taskId": f"/subscriptions/{self.subscription_id}/resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/registries/{self.registry_name}/tasks/{task_name}",
+                "values": [
+                    {
+                        "name": "sourceLocation",
+                        "value": f"{repo_url}#{branch}:{context_directory}",
+                    }
+                ],
             }
 
             run_url = (
                 f"https://management.azure.com/subscriptions/{self.subscription_id}/"
                 f"resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/"
-                f"registries/{self.regestry_name}/scheduleRun?api-version={api_version}"
+                f"registries/{self.registry_name}/scheduleRun?api-version={AzureDeployBoxIAC.api_version}"
             )
 
-            run_response = requests.post(run_url, headers=self.headers, json=run_definition)
+            run_response = requests.post(
+                run_url, headers=self.headers, json=run_definition
+            )
+
+            if run_response.status_code not in [200, 201]:
+                raise Exception(
+                    f"Failed to run task: {run_response.status_code} - {run_response.text}"
+                )
 
             return run_response.json().get("properties", {}).get("runId")
 
-
         # Find all `task` definitions
-        for app in azure_deploy_box_IAC.get("azurerm_container_app", {}).values():
+        for app in azure_deploy_box_iac.get("azurerm_container_app", {}).values():
             containers = app.get("template", {}).get("container", [])
             for container in containers:
                 image = container.get("image")
-                
+
                 if not isinstance(image, dict):
                     continue
 
                 task = image.get("task")
                 if task:
-                    run_id = f"{build_container_image_helper(task=task)}"
+                    run_id = (
+                        f"{build_container_image_helper(task=task, github_token="")}"
+                    )
                     image = self.wait_for_build_completion(run_id)
                     container.update({"image": image})
 
-        return azure_deploy_box_IAC
-
-        
+        return azure_deploy_box_iac
 
     def wait_for_build_completion(self, run_id):
         """
@@ -200,10 +290,16 @@ class AzureDeployBoxIAC:
         Returns:
             bool: True if the build succeeded, False otherwise.
         """
-        url = f"https://management.azure.com/subscriptions/{self.subscription_id}/resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/registries/{self.regestry_name}/runs/{run_id}?api-version=2019-06-01-preview"
+        url = f"https://management.azure.com/subscriptions/{self.subscription_id}/resourceGroups/{self.resource_group}/providers/Microsoft.ContainerRegistry/registries/{self.registry_name}/runs/{run_id}?api-version=2019-06-01-preview"
 
         while True:
-            response = requests.get(url, headers=self.headers).json()
+            response = requests.get(url, headers=self.headers)
+            if response.status_code != 200:
+                print(
+                    f"Error checking build status: {response.status_code} - {response.text}"
+                )
+                return
+            response = response.json()
             print("wait response", response)
             if response is None:
                 print("Error: No response received while checking build status.")
@@ -214,7 +310,7 @@ class AzureDeployBoxIAC:
             if properties.get("status") == "Succeeded":
                 print("Build completed successfully.")
                 output_image = properties.get("outputImages", [{}])[0]
-                return f"{output_image.get('registry')}/{output_image.get('repository')}:{run_id}"
+                return f"{output_image.get('registry')}/{output_image.get('repository')}:latest"
             elif properties.get("status") in ["Failed", "Canceled"]:
                 print(f"Build failed with status: {properties.get('status')}")
                 return
@@ -266,105 +362,57 @@ class AzureDeployBoxIAC:
         print(f"Error getting container app usage: {response.text}")
         return None
 
+    def delete_resource_group(self, resource_group_name):
+        url = f"https://management.azure.com/subscriptions/{self.subscription_id}/resourceGroups/{resource_group_name}?api-version=2023-03-01"
+        response = requests.delete(url, headers=self.headers)
+        if response.status_code == 200:
+            return response.json()
+        print(f"Error deleting resource group: {response.text}")
+        return None
+
     def add_container_app_envs_as_secrets(
-        self, resource_group_name, app_name, env_vars: dict, container_name=None
+        self, iac, app_name, env_vars: dict, container_name=None
     ):
-        """
-        Adds/updates secrets in an Azure Container App and links them as environment variables using secretRef,
-        waiting for provisioning to complete between steps.
-        """
-        url = (
-            f"https://management.azure.com/subscriptions/{self.subscription_id}/resourceGroups/"
-            f"{resource_group_name}/providers/Microsoft.App/containerApps/{app_name}?api-version=2022-03-01"
+        secrets = (
+            iac.get("azurerm_container_app", {}).get(app_name, {}).get("secret", [])
         )
-        headers = {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json",
-        }
+        config = (
+            iac.get("azurerm_container_app", {})
+            .get(app_name, {})
+            .get("template", {})
+            .get("container", [{}])[0]
+            .setdefault("env", [])
+        )
 
-        # Step 1: Fetch current app definition
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            print(f"Error fetching container app: {response.text}")
-            return None
-        app_def = response.json()
-
-        # Step 2: Merge new secrets with existing ones
-        config = app_def["properties"].setdefault("configuration", {})
-        existing_secrets = {s["name"]: s for s in config.get("secrets", [])}
         for key, value in env_vars.items():
-            existing_secrets[key] = {"name": key, "value": value}
-        config["secrets"] = list(existing_secrets.values())
-
-        # Step 3: PUT updated secrets
-        put_response = requests.put(url, headers=headers, json=app_def)
-        if put_response.status_code not in [200, 201]:
-            print(f"Error updating app secrets: {put_response.text}")
-            return None
-        print("Secrets added. Waiting for provisioning to complete...")
-        print("put response", json.dumps(put_response.json(), indent=2))
-
-        # Step 4: Wait for provisioning to complete
-        self.wait_for_provisioning(url)
-
-        # Step 5: Wait until secrets are visible in GET response
-        max_retries = 12  # Wait up to 2 minutes (12 * 10s)
-        for attempt in range(max_retries):
-            response = requests.get(url, headers=headers)
-            if response.status_code != 200:
-                print(
-                    f"Error fetching container app after secrets update: {response.text}"
+            secret_key = key.lower().replace("_", "-")
+            # Check if the secret already exists
+            existing_secret = next(
+                (s for s in secrets if s["name"] == secret_key), None
+            )
+            if existing_secret:
+                # Update the existing secret value
+                existing_secret["value"] = value
+            else:
+                # Add a new secret
+                secrets.append(
+                    {
+                        "name": key.lower().replace("_", "-"),
+                        "value": value,
+                    }
                 )
-                return None
-            app_def = response.json()
-            config = app_def["properties"].get("configuration", {})
-            current_secrets = {s["name"] for s in config.get("secrets", [])}
-            if all(key in current_secrets for key in env_vars):
-                print("Secrets are now present in the app definition.")
-                break
-            print("Secrets not yet present in app definition. Waiting...")
-            time.sleep(10)
-        else:
-            print("Timed out waiting for secrets to appear in app definition.")
-            return None
 
-        # Step 6: Add secretRef envs to the container
-        containers = app_def["properties"]["template"]["containers"]
-        updated = False
-        for container in containers:
-            if container_name is None or container["name"] == container_name:
-                # Remove any old env entries with the same name
-                env_list = [
-                    e
-                    for e in container.get("env", [])
-                    if e["name"] not in [k.upper().replace("-", "_") for k in env_vars]
-                ]
-                # Add new secretRef env entries
-                for key in env_vars:
-                    env_list.append(
-                        {"name": key.upper().replace("-", "_"), "secretRef": key}
-                    )
-                container["env"] = env_list
-                updated = True
-                break
+            env_entry = {
+                "name": key,
+                "secret_name": secret_key,
+            }
 
-        if not updated:
-            print(f"Container '{container_name}' not found.")
-            return None
+            # Find the index of the existing env variable
+            index = next((i for i, e in enumerate(config) if e["name"] == key), None)
 
-        # Step 7: Ensure secrets have values before PUT
-        # Always include the values for the secrets you want to keep
-        config = app_def["properties"].setdefault("configuration", {})
-        existing_secrets = {s["name"]: s for s in config.get("secrets", [])}
-        for key, value in env_vars.items():
-            existing_secrets[key] = {"name": key, "value": value}
-        config["secrets"] = list(existing_secrets.values())
+            if index is not None:
+                config[index] = env_entry  # Replace the existing entry
+            else:
+                config.append(env_entry)  # Add new entry
 
-        # Now PUT updated envs and secrets
-        put_response = requests.put(url, headers=headers, json=app_def)
-        if put_response.status_code not in [200, 201]:
-            print(f"Error updating app envs: {put_response.text}")
-            return None
-
-        print("Secrets linked to container environment successfully.")
-        return put_response.json()
+        return True

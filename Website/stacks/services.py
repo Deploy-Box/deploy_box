@@ -3,22 +3,21 @@ import secrets
 import json
 from django.http import JsonResponse
 from django.db import transaction
-from requests import request
-import requests
 from stacks.models import (
     Stack,
     PurchasableStack,
     StackDatabase,
-    StackBackend,
-    StackFrontend,
     StackGoogleCloudRun,
 )
 from projects.models import Project
-from core.utils import GCPUtils, MongoDBUtils
+from core.utils import MongoDBUtils
+from core.utils.DeployBoxIAC.main import DeployBoxIAC
 from accounts.models import User
-from .forms import EnvFileUploadForm
 from dotenv import dotenv_values
 import os
+from stacks.MERN_IAC import get_MERN_IAC
+from stacks.Django_IAC import get_Django_IAC
+from core.utils.DeployBoxIAC.main import main
 
 logger = logging.getLogger(__name__)
 
@@ -42,28 +41,13 @@ def add_stack(**kwargs) -> Stack:
         variant = purchasable_stack.variant.lower()
 
         if purchasable_stack.type == "MERN":
-            deploy_MERN_stack(stack, variant)
-        elif purchasable_stack.type == "Django":
-            deploy_django_stack(stack, variant)
+            deploy_MERN_stack(project, stack, variant)
+        elif purchasable_stack.type == "DJANGO":
+            deploy_django_stack(project, stack, variant)
         else:
             JsonResponse({"error": "Stack type not supported."}, status=400)
 
     return stack
-
-
-def get_stack(**kwargs):
-    print(f"Getting stack: {kwargs}")
-    stack = Stack.objects.get(pk=kwargs.get("pk"))
-    stack_google_cloud_run = StackGoogleCloudRun.objects.filter(stack=stack).first()
-    if stack_google_cloud_run:
-        gcp_utils = GCPUtils()
-        build_status = gcp_utils.get_build_status(
-            stack_google_cloud_run.build_status_url
-        )
-        print(f"Build status: {build_status}")
-        stack_google_cloud_run.state = build_status
-        stack_google_cloud_run.save()
-    return Stack.objects.filter(pk=stack.id)
 
 
 def update_stack(stack: Stack, root_directory: str | None = None) -> bool:
@@ -75,7 +59,11 @@ def update_stack(stack: Stack, root_directory: str | None = None) -> bool:
 
 def delete_stack(stack: Stack) -> bool:
     try:
-        stack.delete()
+        print(f"Deleting stack: {stack.id}")
+        resource_group_name = stack.id + "-rg"
+        cloud = DeployBoxIAC()
+        cloud.deploy(resource_group_name, {})
+        # stack.delete()
     except Exception as e:
         logger.error(f"Failed to delete stack: {str(e)}")
         return False
@@ -89,101 +77,46 @@ def get_stacks(user: User) -> list[Stack]:
     return list(Stack.objects.filter(project__in=projects).order_by("-created_at"))
 
 
-def deploy_MERN_stack(stack: Stack, variant: str):
+def deploy_MERN_stack(project: Project, stack: Stack, variant: str):
     """
     Deploys a MERN stack by creating the necessary backend and frontend services.
     If any part of the deployment fails, the transaction will be rolled back.
     """
-    gcp_utils = GCPUtils()
     mongodb_utils = MongoDBUtils()
 
     stack_id = stack.id
 
     # Create deployment database
     mongo_db_uri = mongodb_utils.deploy_mongodb_database(stack_id)
-    stack_database = StackDatabase.objects.create(
-        stack=stack,
-        uri=mongo_db_uri,
+
+    resource_group_name, mern_iac = get_MERN_IAC(
+        stack_id, project.id, project.organization.id, mongo_db_uri
     )
 
-    backend_image = f"gcr.io/{gcp_utils.project_id}/mern-{variant}-backend"
-    frontend_image = f"gcr.io/{gcp_utils.project_id}/mern-{variant}-frontend"
+    stack.iac = mern_iac
 
-    stack_google_cloud_run_backend = StackGoogleCloudRun.objects.create(
-        stack=stack,
-        image_url=backend_image,
-        build_status_url="",
-    )
+    main(resource_group_name, mern_iac)
 
-    stack_google_cloud_run_frontend = StackGoogleCloudRun.objects.create(
-        stack=stack,
-        image_url=frontend_image,
-        build_status_url="",
-    )
+    stack.save()
 
-    env_dict = {
-        "MONGO_URI": mongo_db_uri,
-    }
-
-    if variant == "premium" or variant == "pro":
-        env_dict["JWT_SECRET"] = secrets.token_urlsafe(50)
-
-    response = gcp_utils.deploy_mern_service(
-        stack_google_cloud_run_frontend.id,
-        stack_google_cloud_run_backend.id,
-        frontend_image,
-        backend_image,
-        env_dict,
-    )
-
-    stack_google_cloud_run_backend.build_status_url = response.get(
-        "build_status_url", ""
-    )
-    stack_google_cloud_run_backend.save()
-
-    stack_google_cloud_run_frontend.build_status_url = response.get(
-        "build_status_url", ""
-    )
-    stack_google_cloud_run_frontend.save()
-
-    stack_database.save()
+    # if variant == "premium" or variant == "pro":
+    #     env_dict["JWT_SECRET"] = secrets.token_urlsafe(50)
 
 
-def deploy_django_stack(stack: Stack, variant: str):
-    gcp_utils = GCPUtils()
-
+def deploy_django_stack(project: Project, stack: Stack, variant: str):
     stack_id = stack.id
 
     django_secret_key = secrets.token_urlsafe(50)
 
-    backend_image = f"gcr.io/{gcp_utils.project_id}/django"
-    print(f"Deploying backend with image: {backend_image}")
-    response = gcp_utils.deploy_service(
-        stack_id,
-        backend_image,
-        "django",
-        {"DJANGO_SECRET_KEY": django_secret_key},
-        port=8000,
+    resource_group_name, django_iac = get_Django_IAC(
+        stack_id, project.id, project.organization.id, django_secret_key
     )
 
-    stack_google_cloud_run = StackGoogleCloudRun.objects.create(
-        stack=stack,
-        image_url=backend_image,
-        build_status_url=response.get("build_status_url", ""),
-    )
+    stack.iac = django_iac
 
-    stack_google_cloud_run.save()
+    main(resource_group_name, django_iac)
 
-    return JsonResponse(
-        {
-            "message": "Django stack deployed successfully.",
-            "data": {
-                "stack_id": stack_id,
-                "build_status_url": response.get("build_status_url", ""),
-            },
-        },
-        status=201,
-    )
+    stack.save()
 
 
 def post_purchasable_stack(
@@ -212,32 +145,54 @@ def get_all_stack_databases() -> list[StackDatabase]:
 def post_stack_env(
     stack_id: str, selected_frameworks, selected_locations, uploaded_file
 ):
-
-    env_file = uploaded_file
-
-    if selected_locations == "none":
-
-        total_stack_id = selected_frameworks + "-" + stack_id
-
-    else:
-        total_stack_id = selected_frameworks + "-" + selected_locations + "-" + stack_id
-
-    # Save the file temporarily
+    """
+    Uploads an env file and sets its values as secrets and environment variables
+    in the corresponding Azure Container App using AzureDeployBoxIAC.
+    """
+    # Save the uploaded file temporarily
     with open("temp.env", "wb") as f:
-        for chunk in env_file.chunks():
+        for chunk in uploaded_file.chunks():
             f.write(chunk)
 
     # Parse the .env file into a dictionary
     env_dict = dotenv_values("temp.env")
 
-    Cloud = GCPUtils()
-
-    Cloud.put_service_envs(total_stack_id, env_dict)
-
     # Clean up temporary file
     os.remove("temp.env")
 
-    # You can now use the env_dict to update your Google Cloud build instance or whatever you need
+    # Determine resource group and app name
+    if selected_locations == "none":
+        app_name = f"{selected_frameworks}-{stack_id}"
+    else:
+        app_name = f"{selected_frameworks}-{selected_locations}-{stack_id}"
+
+    resource_group_name = stack_id + "-rg"  # Or derive dynamically if needed
+
+    stack = Stack.objects.get(id=stack_id)
+    if not stack:
+        return JsonResponse(
+            {"status": "error", "message": "Stack not found."}, status=404
+        )
+
+    iac = stack.iac
+    # Add secrets and environment variables to the Azure Container App
+    cloud = AzureDeployBoxIAC()
+    result = cloud.add_container_app_envs_as_secrets(
+        iac, app_name, env_dict, "testing-mern"
+    )
+
+    if result is None:
+        return JsonResponse(
+            {"status": "error", "message": "Failed to update secrets."}, status=500
+        )
+
+    # Update the stack with the new IAC
+    stack.iac = iac
+
+    main(resource_group_name, iac)
+
+    stack.save()
+
     return JsonResponse({"status": "success"})
 
 

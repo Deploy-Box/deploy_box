@@ -155,9 +155,10 @@ def record_usage(subscription_item_id, quantity):
 def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
     # Use `stripe listen --forward-to http://127.0.0.1:8000/api/v1/payments/webhook/` to listen for events
     WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
-    # WEBHOOK_SECRET = (
-    #     "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
-    # )
+    print(f"Webhook secret: {WEBHOOK_SECRET}")
+    WEBHOOK_SECRET = (
+        "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
+    )
 
     payload = request.body
     sig_header = request.headers.get("Stripe-Signature")
@@ -230,7 +231,11 @@ def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
         random_name = f"{random_adjective} {random_noun}"
 
         # Create a stack entry for the user
-        return stack_services.add_stack(project, purchased_stack, random_name)
+        stack_services.add_stack(
+            name=random_name,
+            project_id=project.id,
+            purchasable_stack_id=purchased_stack.id,
+        )
 
     return HttpResponse(status=200)
 

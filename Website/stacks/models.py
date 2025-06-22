@@ -30,6 +30,7 @@ class Stack(RequestableModel):
     root_directory = models.CharField(max_length=100, default="")
     instance_usage = models.FloatField(default=0)
     instance_usage_bill_amount = models.FloatField(default=0)
+    iac = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

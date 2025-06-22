@@ -19,7 +19,8 @@ from core.helpers import request_helpers
 from core.utils import GCPUtils
 from github.models import Webhook, Token
 from stacks.models import Stack
-from stacks.services import get_stack
+
+# from stacks.services import get_stack
 from accounts.models import User
 
 # GitHub OAuth credentials
@@ -29,12 +30,6 @@ GITHUB_API_BASE = "https://api.github.com"
 GITHUB_REPOS_URL = "https://api.github.com/user/repos"
 
 logger = logging.getLogger(__name__)
-
-
-def home(_: HttpRequest) -> HttpResponse:
-    return HttpResponse(
-        "Welcome to Deploy Box! <a href='/api/v1/github/auth/login'>Login with GitHub</a>"
-    )
 
 
 @oauth_required()
