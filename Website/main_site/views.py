@@ -15,9 +15,18 @@ from projects.forms import ProjectCreateFormWithMembers
 from stacks.forms import EnvFileUploadForm
 from stacks.models import PurchasableStack, StackGoogleCloudRun
 
-from core.decorators import oauth_required, AuthHttpRequest
-from core.utils.gcp.main import GCPUtils
+from core.decorators import oauth_required
 
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication, TokenHasReadWriteScope
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.views.generic import TemplateView
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from rest_framework.permissions import IsAuthenticated
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
 
 # Basic Routes
 def home(request: HttpRequest) -> HttpResponse:
@@ -57,7 +66,7 @@ def profile(request: HttpRequest) -> HttpResponse:
 
 
 @oauth_required()
-def dashboard(request: HttpRequest) -> HttpResponse:
+def dashboard(request):
     user = request.user
     organizations = Organization.objects.filter(organizationmember__user=user)
     projects = Project.objects.filter(projectmember__user=user)
@@ -131,7 +140,7 @@ def project_dashboard(
 
 @oauth_required()
 def stack_dashboard(
-    request: AuthHttpRequest, organization_id: str, project_id: str, stack_id: str
+    request: HttpRequest, organization_id: str, project_id: str, stack_id: str
 ) -> HttpResponse:
     # TODO: Check if user is a member of the project
     stack = Stack.objects.get(id=stack_id)
@@ -139,18 +148,20 @@ def stack_dashboard(
 
     for stack_google_cloud_run in stack_google_cloud_runs:
         if not stack_google_cloud_run.url:
-            gcp_utils = GCPUtils()
-            stack_google_cloud_run.url = gcp_utils.get_service_url(
-                stack_google_cloud_run.id
-            )
-            stack_google_cloud_run.save()
+            pass
+            # gcp_utils = GCPUtils()
+            # stack_google_cloud_run.url = gcp_utils.get_service_url(
+            #     stack_google_cloud_run.id
+            # )
+            # stack_google_cloud_run.save()
 
         if stack_google_cloud_run.state == "STARTING":
-            gcp_utils = GCPUtils()
-            stack_google_cloud_run.state = gcp_utils.get_build_status(
-                stack_google_cloud_run.build_status_url
-            )
-            stack_google_cloud_run.save()
+            pass
+            # gcp_utils = GCPUtils()
+            # stack_google_cloud_run.state = gcp_utils.get_build_status(
+            #     stack_google_cloud_run.build_status_url
+            # )
+            # stack_google_cloud_run.save()
 
     # print(f"Stack: {stack}")
     # print(f"Stack Google Cloud Run: {stack_google_cloud_runs}")
@@ -215,8 +226,8 @@ STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
 
 
 @oauth_required()
-def home_page_view(request: AuthHttpRequest, variant: str) -> HttpResponse:
-    user = request.auth_user
+def home_page_view(request: HttpRequest, variant: str) -> HttpResponse:
+    user = request.user
     organizations = get_organizations(user)
     projects = [
         project

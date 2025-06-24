@@ -4,7 +4,6 @@ from projects.models import Project
 
 from core.fields import ShortUUIDField
 from core.models.requestable_model import RequestableModel
-from core.utils import GCPUtils
 
 
 class PurchasableStack(RequestableModel):
@@ -13,8 +12,8 @@ class PurchasableStack(RequestableModel):
     variant = models.CharField(max_length=10)
     version = models.CharField(max_length=10)
     price_id = models.CharField(max_length=50)
-    description = models.CharField(default="check out this stack")
-    name = models.CharField(default="this is a stack")
+    description = models.CharField(default="check out this stack", max_length=512)
+    name = models.CharField(default="this is a stack", max_length=128)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -38,7 +37,6 @@ class Stack(RequestableModel):
     def get_service(cls, **kwargs):
         import stacks.services as stack_services
 
-        return stack_services.get_stack(**kwargs)
 
     @classmethod
     def post_service(cls, **kwargs):

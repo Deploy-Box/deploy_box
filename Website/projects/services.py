@@ -2,15 +2,16 @@ import logging
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
+from typing import Union
 
 from projects.models import Project, ProjectMember
-from accounts.models import User
+from accounts.models import UserProfile
 from organizations.models import Organization, OrganizationMember
 
 logger = logging.getLogger(__name__)
 
 
-def get_projects(user: User) -> JsonResponse:
+def get_projects(user: UserProfile) -> JsonResponse:
     project_members = ProjectMember.objects.filter(user=user).values_list("project", flat=True)
     projects = Project.objects.filter(id__in=project_members).values(
         "id",
@@ -26,7 +27,7 @@ def get_projects(user: User) -> JsonResponse:
 
     return JsonResponse({"data": list(projects)})
 
-def get_project(user: User, project_id: str) -> Project | None:
+def get_project(user: UserProfile, project_id: str) -> Union[Project, None]:
     project = Project.objects.filter(user=user, id=project_id).first()
     if not project:
         return None
@@ -34,7 +35,7 @@ def get_project(user: User, project_id: str) -> Project | None:
     return project
 
 
-def create_project(user: User, name: str, description: str, organization_id: str) -> JsonResponse | HttpResponse:
+def create_project(user: UserProfile, name: str, description: str, organization_id: str) -> Union[JsonResponse, HttpResponse]:
     try:
         # Check if the user is a member of the organization
         organization = get_object_or_404(Organization, id=organization_id)
@@ -58,7 +59,7 @@ def create_project(user: User, name: str, description: str, organization_id: str
     except Exception as e:
         return JsonResponse({"message": f'an unexpected error occured {e}'}, status=400)
 
-def update_project(project_id: int, name: str, description: str, user: User) -> JsonResponse:
+def update_project(project_id: int, name: str, description: str, user: UserProfile) -> JsonResponse:
     try:
         project = Project.objects.get(id=project_id)
     except Project.DoesNotExist:
@@ -81,7 +82,7 @@ def update_project(project_id: int, name: str, description: str, user: User) -> 
         "updated_at": project.updated_at,
     })
 
-def delete_project(project_id: str, user: User) -> JsonResponse:
+def delete_project(project_id: str, user: UserProfile) -> JsonResponse:
     try:
         project = Project.objects.get(id=project_id)
     except Project.DoesNotExist:

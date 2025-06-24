@@ -1,104 +1,90 @@
-from oauth2_provider.models import AccessToken
-from django.shortcuts import redirect
-from django.http import JsonResponse
-from django.http import HttpRequest
+# core/decorators.py
 from functools import wraps
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Union
+
+from rest_framework.request import Request
+from rest_framework.response import Response
+from rest_framework.status import HTTP_401_UNAUTHORIZED
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.authentication import get_authorization_header
+from rest_framework.renderers import JSONRenderer
+
+from django.http import HttpRequest
 from django.utils import timezone
+from django.shortcuts import redirect
 from django.conf import settings
+from django.http import HttpResponseRedirect, HttpResponsePermanentRedirect
 
-from accounts.models import UserProfile, User
+from oauth2_provider.contrib.rest_framework import OAuth2Authentication
+from accounts.models import UserProfile
 
+class AuthHttpRequest(HttpRequest):
+    pass
 
-def oauth_required(allowed_applications: List[str] | None = None):
+def oauth_required(allowed_applications: Union[List[str], None] = None):
+    """
+    DRF-based decorator to authenticate access using OAuth2 tokens.
+    Supports optional application restrictions and profile binding.
+    """
 
     def decorator(view_func: Callable[..., Any]) -> Callable[..., Any]:
-        """Decorator to ensure that the user is authenticated and has a valid access token."""
 
         @wraps(view_func)
-        def _wrapped_view(
-            request: HttpRequest, *args: tuple[Any, ...], **kwargs: dict[str, Any]
-        ):
-            # Determine if the request is an API call
+        def _wrapped_view(request: Request, *args: Any, **kwargs: Any):
             is_api_call = request.path.startswith("/api/")
             access_token = request.session.get("access_token")
 
             if not access_token:
-                # Retrieve the access token from the Authorization header
-                auth_header = request.headers.get("Authorization", "")
-                if auth_header.startswith("Bearer "):
-                    access_token = auth_header.split(" ")[1]
-                else:
-                    access_token = None
+                auth = get_authorization_header(request).decode("utf-8")
+                if auth.startswith("Bearer "):
+                    access_token = auth.split(" ")[1]
 
             if not access_token:
-                # If no access token is provided, return an error
-                error_message = "No access token provided."
-                return decide_return(is_api_call, error_message, request)
+                return _unauthorized_response(is_api_call, "No access token provided.", request)
+
+            authenticator = OAuth2Authentication()
 
             try:
-                # Fetch the AccessToken from the database
-                token = AccessToken.objects.get(token=access_token)
+                user_auth_tuple = authenticator.authenticate(request)
+                if not user_auth_tuple:
+                    return _unauthorized_response(is_api_call, "Invalid or expired token.", request)
 
-                # Check if the token is expired
+                user, token = user_auth_tuple
+
                 if token.expires < timezone.now():
-                    error_message = "Access token has expired."
-                    return decide_return(is_api_call, error_message, request)
+                    return _unauthorized_response(is_api_call, "Access token has expired.", request)
 
-            except AccessToken.DoesNotExist:
-                error_message = "Invalid access token."
-                return decide_return(is_api_call, error_message, request)
-
-            # Check if the token's application is in the allowed applications
-            if allowed_applications:
-                if token.application.name not in allowed_applications:
-                    error_message = (
-                        f"Application '{token.application.name}' is not allowed."
-                    )
-                    return JsonResponse(
-                        {
-                            "error": f"Application '{token.application.name}' is not allowed."
-                        },
-                        status=401,
+                if allowed_applications and token.application.name not in allowed_applications:
+                    return _unauthorized_response(
+                        is_api_call,
+                        f"Application '{token.application.name}' is not allowed.",
+                        request
                     )
 
-            auth_user = token.user
+                try:
+                    user_profile = UserProfile.objects.get(user=user)
+                except UserProfile.DoesNotExist:
+                    return _unauthorized_response(is_api_call, "User profile not found.", request)
 
-            if not auth_user:
-                error_message = "User not found."
-                return decide_return(is_api_call, error_message, request)
+                setattr(request, "auth_user", user_profile)
+                request.user = user
+                request.auth = token
+                print(request.user)
 
-            user_profile = UserProfile.objects.get(user=auth_user)
+            except AuthenticationFailed as e:
+                print("UNauthorized")
+                return _unauthorized_response(is_api_call, str(e), request)
 
-            if not user_profile:
-                error_message = "User profile not found."
-                return decide_return(is_api_call, error_message, request)
-
-            auth_request = AuthHttpRequest(auth_user, request)
-
-            # If the token is valid, continue with the view
-            return view_func(auth_request, *args, **kwargs)
+            return view_func(request, *args, **kwargs)
 
         return _wrapped_view
 
     return decorator
 
-class AuthHttpRequest(HttpRequest):
-    auth_user: User
 
-    def __init__(self, user: User, request: HttpRequest):
-        super().__init__()
-        self.__dict__.update(request.__dict__)
-        self.auth_user = user
-
-
-def decide_return(is_api_call: bool, error: str, request: HttpRequest) -> Any:
-    """
-    Helper function to decide the return type based on whether it's an API call or not.
-    """
+def _unauthorized_response(
+    is_api_call: bool, error: str, request: Request
+) -> Union[Response, HttpResponseRedirect, HttpResponsePermanentRedirect]:
     if is_api_call:
-        # Return a JSON response for API calls
-        return JsonResponse({"error": error}, status=401)
-    else:
-        # Redirect to login for non-API calls
-        return redirect(f"{settings.HOST}/login/?next={request.path}")
+        return Response({"error": error}, status=HTTP_401_UNAUTHORIZED)
+    return redirect(f"{settings.HOST}/login/?next={request.path}")

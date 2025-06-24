@@ -2,12 +2,13 @@ from django.http import HttpResponse, JsonResponse, FileResponse
 
 from core.decorators import oauth_required, AuthHttpRequest
 import projects.handlers as handlers
+from typing import Union
 
 
 @oauth_required()
 def base_routing(
     request: AuthHttpRequest,
-) -> JsonResponse | HttpResponse:
+) -> Union[JsonResponse, HttpResponse]:
     if request.method == "GET":
         return handlers.get_projects(request)
 

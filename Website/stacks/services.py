@@ -12,12 +12,13 @@ from stacks.models import (
 from projects.models import Project
 from core.utils import MongoDBUtils
 from core.utils.DeployBoxIAC.main import AzureDeployBoxIAC
-from accounts.models import User
+from accounts.models import UserProfile
 from dotenv import dotenv_values
 import os
+from typing import Union
 from stacks.MERN_IAC import get_MERN_IAC
 from stacks.Django_IAC import get_Django_IAC
-from core.utils.DeployBoxIAC.main import main
+from core.utils.DeployBoxIAC.main import main, DeployBoxIAC
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +51,7 @@ def add_stack(**kwargs) -> Stack:
     return stack
 
 
-def update_stack(stack: Stack, root_directory: str | None = None) -> bool:
+def update_stack(stack: Stack, root_directory: Union[str, None] = None) -> bool:
     if root_directory:
         stack.root_directory = root_directory
     stack.save()
@@ -71,7 +72,7 @@ def delete_stack(stack: Stack) -> bool:
     return True
 
 
-def get_stacks(user: User) -> list[Stack]:
+def get_stacks(user: UserProfile) -> list[Stack]:
     projects = Project.objects.filter(projectmember__user=user)
 
     return list(Stack.objects.filter(project__in=projects).order_by("-created_at"))

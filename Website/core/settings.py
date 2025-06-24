@@ -6,7 +6,8 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-HOST = os.environ.get("HOST", "localhost")
+HOST = os.environ.get("HOST")
+assert HOST is not None, "HOST env must be set"
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
@@ -27,6 +28,14 @@ if DEBUG:
             HOST.replace("https://", "").replace("http://", ""),
         ]
     )
+OAUTH2_AUTHORIZATION_CODE = {
+    "client_id": "G8Hh2GFOoqRPMJRvqCWsLzMg1YmOLKtHv7PWaXKz",
+    "client_secret": "TrsaS52OswHPN1Z55Ve5V9qB3uYzr1GEDoTq8kkukyvLA3fB6XgEfCSDmqhLTluZAXbRlIJ9wIT6TKoRYSkG5tEBbA6dop5zcmsLzYXva8T8E4g4tRNzRx7gEiINlTHR",
+    "authorization_url": "https://provider.com/oauth2/authorize",
+    "token_url": "https://provider.com/oauth2/token",
+    "redirect_uri": "http://localhost:8000/api/oauth/callback/",
+    "scope": ["openid", "profile", "email"],
+}
 
 ROOT_URLCONF = "core.urls"
 
@@ -42,6 +51,8 @@ INSTALLED_APPS = [
     "oauth2_provider",
     "tailwind",
     "theme",
+    'rest_framework',
+
     # Custom Apps
     "main_site",
     "accounts",
@@ -59,6 +70,12 @@ if DEBUG:
             "django_extensions",
         ]
     )
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',  # Or OAuth2
+    ]
+}
 
 
 # Authentication
@@ -139,20 +156,28 @@ MIDDLEWARE = [
 ]
 
 # Database
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.environ.get("DB_NAME"),
+#         "USER": os.environ.get("DB_USER"),
+#         "PASSWORD": os.environ.get("DB_PASSWORD"),
+#         "HOST": os.environ.get("DB_HOST"),
+#         "PORT": os.environ.get("DB_PORT"),
+#         # "OPTIONS": {
+#         #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
+#         # },
+#         "CONN_MAX_AGE": 600,
+#     }
+# }
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
-        # "OPTIONS": {
-        #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
-        # },
-        "CONN_MAX_AGE": 600,
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
 
 # Static & Media Files
 STATIC_URL = "/static/"
@@ -231,6 +256,8 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+AUTH_USER_MODEL = "accounts.UserProfile"
 
 # Internationalization
 LANGUAGE_CODE = "en-us"

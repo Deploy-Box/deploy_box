@@ -16,12 +16,11 @@ from django.template.loader import render_to_string
 import stacks.services as stack_services
 from core.decorators import oauth_required, AuthHttpRequest
 from core.helpers import request_helpers
-from core.utils import GCPUtils
 from github.models import Webhook, Token
 from stacks.models import Stack
 
 # from stacks.services import get_stack
-from accounts.models import User
+from accounts.models import UserProfile
 
 # GitHub OAuth credentials
 CLIENT_ID = settings.GITHUB.get("CLIENT_ID")
@@ -108,7 +107,7 @@ def callback(request: HttpRequest) -> HttpResponse:
         return HttpResponse("Failed to retrieve user info", status=400)
 
     # Check if user already has a token
-    user = User.objects.get(id=state_data["user_id"])
+    user = UserProfile.objects.get(id=state_data["user_id"])
 
     # Check if user already has a token
     github_token, _ = Token.objects.get_or_create(user=user)

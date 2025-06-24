@@ -1,0 +1,96 @@
+{
+  "info": {
+    "name": "Django OAuth2 Client Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Sign up (POST /api/signup/)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/signup/", "host": ["{{base_url}}"], "path": ["api","signup",""] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password1\": \"Secret123!\",\n  \"password2\": \"Secret123!\",\n  \"organization_name\": \"TestOrg\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Password Grant Login (POST /api/login/)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/login/", "host": ["{{base_url}}"], "path": ["api","login",""] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"Secret123!\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Start Auth Code PKCE Flow (GET /oauth/authorize/)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{base_url}}/oauth/authorize/?client_id={{client_id}}&redirect_uri={{redirect_uri}}&response_type=code&code_challenge={{code_challenge}}&code_challenge_method=S256", "host": ["{{base_url}}"], "path": ["oauth","authorize",""], "query": [
+          { "key": "client_id", "value": "{{client_id}}" },
+          { "key": "redirect_uri", "value": "{{redirect_uri}}" },
+          { "key": "response_type", "value": "code" },
+          { "key": "code_challenge", "value": "{{code_challenge}}" },
+          { "key": "code_challenge_method", "value": "S256" }
+        ]}
+      },
+      "response": []
+    },
+    {
+      "name": "Callback Token Exchange (GET /api/oauth/callback/?code=…)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": { "raw": "{{base_url}}/api/oauth/callback/?code={{auth_code}}", "host": ["{{base_url}}"], "path": ["api","oauth","callback",""], "query": [
+          { "key": "code", "value": "{{auth_code}}" }
+        ] }
+      },
+      "response": []
+    },
+    {
+      "name": "Refresh Token (POST token endpoint)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+        ],
+        "url": { "raw": "{{token_url}}", "host": ["{{token_url}}"] },
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "grant_type", "value": "refresh_token" },
+            { "key": "refresh_token", "value": "{{refresh_token}}" },
+            { "key": "client_id", "value": "{{client_id}}" },
+            { "key": "client_secret", "value": "{{client_secret}}" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API Call with Access Token",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "url": { "raw": "{{base_url}}/api/protected/", "host": ["{{base_url}}"], "path": ["api","protected",""] }
+      },
+      "response": []
+    }
+  ],
+  "protocolProfileBehavior": {}
+}
