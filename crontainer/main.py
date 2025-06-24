@@ -17,14 +17,19 @@ def send_data(data, token):
 
 def check_db_size():
     data = make_authenticated_api_request(
-        "/api/v1/stacks/admin/databases/"
+        "http://localhost:8000/api/v1/stacks/admin/databases/"
     )
+
+    # Ensure data is a dict and contains "data" key
+    if not isinstance(data, dict) or "data" not in data:
+        print("Error: API response is not a dictionary or missing 'data' key.")
+        return
 
     print(json.dumps(data, indent=4))
 
     storage_amounts_dict = {}
 
-    for database in data.get("data"):
+    for database in data.get("data", []):
         stack_id = database.get("stack")
         uri = database.get("uri")
 

@@ -134,7 +134,7 @@ def get_all_stack_databases() -> JsonResponse:
 
 def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:
     try:
-        (data,) = request_helpers.assertRequestFields(request, ["data"])
+        (data) = request_helpers.assertRequestFields(request, ["data"])
 
     except request_helpers.MissingFieldError as e:
         return e.to_response()

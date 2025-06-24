@@ -19,8 +19,9 @@ class DeployBoxIAC:
 
     def run_terraform_cmd(self, command, cwd):
         """Run terraform command and return result"""
+        exe_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "my_program.exe")
         result = subprocess.run(
-            ["terraform"] + command,
+            [exe_path] + command,
             cwd=cwd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

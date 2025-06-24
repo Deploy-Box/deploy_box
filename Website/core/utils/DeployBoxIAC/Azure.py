@@ -2,13 +2,11 @@ import os
 import dotenv
 import requests
 import time
-import json
 import re
 
 dotenv.load_dotenv()
 
 PROVIDER_NAME = "azurerm"
-
 
 class AzureDeployBoxIAC:
     api_version = "2025-03-01-preview"
@@ -160,7 +158,7 @@ class AzureDeployBoxIAC:
     def build_container_image(self, azure_deploy_box_iac: dict) -> dict:
         """ """
 
-        def build_container_image_helper(task: dict, github_token: str = None) -> str:
+        def build_container_image_helper(task: dict, github_token: str = "") -> str:
             task_name = f"build-task-{int(time.time())}"  # Unique task name
 
             step = task.get("properties", {}).get("step", {})
@@ -272,9 +270,7 @@ class AzureDeployBoxIAC:
 
                 task = image.get("task")
                 if task:
-                    run_id = (
-                        f"{build_container_image_helper(task=task, github_token="")}"
-                    )
+                    run_id = (f"{build_container_image_helper(task=task, github_token='')}")
                     image = self.wait_for_build_completion(run_id)
                     container.update({"image": image})
 

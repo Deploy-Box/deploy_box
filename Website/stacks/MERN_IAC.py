@@ -1,7 +1,9 @@
 import os
+import time
+import hashlib
 
 
-def get_MERN_IAC(stack_id: str, project_id: str, org_id: str, mongo_uri: str):
+def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
     """
     Returns the stack name for the MERN IAC stack.
     """
@@ -9,6 +11,20 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str, mongo_uri: str):
     resource_group_name = f"{stack_id}-rg"
 
     return resource_group_name, {
+        "mongodbatlas_database_user": {
+            "user": {
+                "username": f"deployBoxUser{stack_id}",
+                "password": hashlib.sha256(str(time.time()).encode()).hexdigest()[:12],
+                "project_id": "67b8c16290da0876c07a781b",
+                "auth_database_name": "admin",
+                "roles": [
+                {
+                    "role_name": "readWrite",
+                    "database_name": f"db-{stack_id}"
+                }
+                ]
+            }
+            },
         "azurerm_resource_group": {
             "rg": {
                 "name": resource_group_name,
@@ -63,42 +79,13 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str, mongo_uri: str):
                     "container": [
                         {
                             "name": "testing-mern",
-                            "image":
-                            #   "deployboxcrdev.azurecr.io/1f102b02298e494a1:latest",
-                            {
-                                "task": {
-                                    "location": "eastus",
-                                    "properties": {
-                                        "status": "Enabled",
-                                        "platform": {"os": "Linux"},
-                                        "agentConfiguration": {"cpu": 2},
-                                        "step": {
-                                            "type": "Docker",
-                                            "contextPath": "https://github.com/Deploy-Box/MERN.git#main",
-                                            "contextDirectory": "source_code/backend",
-                                            "dockerFilePath": "Dockerfile",
-                                            "imageNames": [f"{stack_id}1:latest"],
-                                            "isPushEnabled": True,
-                                        },
-                                        "trigger": {
-                                            "sourceTriggers": [],
-                                            "baseImageTrigger": {
-                                                "type": "Runtime",
-                                                "baseImageTriggerType": "Runtime",
-                                                "name": "defaultBaseimageTrigger",
-                                                "status": "Disabled",
-                                            },
-                                            "timerTriggers": [],
-                                        },
-                                    },
-                                }
-                            },
+                            "image": "deployboxcrdev.azurecr.io/mern-backend:latest",
                             "cpu": 0.25,
                             "memory": "0.5Gi",
                             "env": [
                                 {
                                     "name": "MONGO_URI",
-                                    "value": mongo_uri,
+                                    "value": "mongodb+srv://${mongodbatlas_database_user.user.username}:${mongodbatlas_database_user.user.password}@cluster0.yjaoi.mongodb.net/",
                                 }
                             ],
                         }
@@ -130,35 +117,7 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str, mongo_uri: str):
                     "container": [
                         {
                             "name": "testing-mern",
-                            "image": "deployboxcrdev.azurecr.io/1f102b02298e494a2:latest",
-                            # {
-                            #     "task": {
-                            #         "location": "eastus",
-                            #         "properties": {
-                            #             "status": "Enabled",
-                            #             "platform": {"os": "Linux"},
-                            #             "agentConfiguration": {"cpu": 2},
-                            #             "step": {
-                            #                 "type": "Docker",
-                            #                 "contextPath": "https://github.com/Deploy-Box/MERN.git#main",
-                            #                 "contextDirectory": "source_code/frontend",
-                            #                 "dockerFilePath": "dockerfile",
-                            #                 "imageNames": [f"{stack_id}2:latest"],
-                            #                 "isPushEnabled": True,
-                            #             },
-                            #             "trigger": {
-                            #                 "sourceTriggers": [],
-                            #                 "baseImageTrigger": {
-                            #                     "type": "Runtime",
-                            #                     "baseImageTriggerType": "Runtime",
-                            #                     "name": "defaultBaseimageTrigger",
-                            #                     "status": "Disabled",
-                            #                 },
-                            #                 "timerTriggers": [],
-                            #             },
-                            #         },
-                            #     }
-                            # },
+                            "image": "deployboxcrdev.azurecr.io/mern-frontend:latest",
                             "cpu": 0.25,
                             "memory": "0.5Gi",
                             "env": [

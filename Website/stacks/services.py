@@ -11,7 +11,7 @@ from stacks.models import (
 )
 from projects.models import Project
 from core.utils import MongoDBUtils
-from core.utils.DeployBoxIAC.main import DeployBoxIAC
+from core.utils.DeployBoxIAC.main import AzureDeployBoxIAC
 from accounts.models import User
 from dotenv import dotenv_values
 import os
@@ -82,15 +82,15 @@ def deploy_MERN_stack(project: Project, stack: Stack, variant: str):
     Deploys a MERN stack by creating the necessary backend and frontend services.
     If any part of the deployment fails, the transaction will be rolled back.
     """
-    mongodb_utils = MongoDBUtils()
+    # mongodb_utils = MongoDBUtils()
 
     stack_id = stack.id
 
     # Create deployment database
-    mongo_db_uri = mongodb_utils.deploy_mongodb_database(stack_id)
+    # mongo_db_uri = mongodb_utils.deploy_mongodb_database(stack_id)
 
     resource_group_name, mern_iac = get_MERN_IAC(
-        stack_id, project.id, project.organization.id, mongo_db_uri
+        stack_id, project.id, project.organization.id
     )
 
     stack.iac = mern_iac
