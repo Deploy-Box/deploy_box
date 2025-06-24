@@ -5,6 +5,7 @@ import os
 from azure.storage.blob import BlobServiceClient
 
 from core.utils.DeployBoxIAC.Azure import AzureDeployBoxIAC
+from core.utils.DeployBoxIAC.MongoDBAtlas import MongoDBAtlasDeployBoxIAC
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,9 +20,9 @@ class DeployBoxIAC:
 
     def run_terraform_cmd(self, command, cwd):
         """Run terraform command and return result"""
-        exe_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "my_program.exe")
+        # exe_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "my_program.exe")
         result = subprocess.run(
-            [exe_path] + command,
+            ["terraform"] + command,
             cwd=cwd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
@@ -98,12 +99,13 @@ class DeployBoxIAC:
 
             # Generate TF JSON config
             azure_deploy_box_iac = AzureDeployBoxIAC()
+            mongodb_atlas_deploy_box_iac = MongoDBAtlasDeployBoxIAC()
+
             terraform = azure_deploy_box_iac.plan({}, iac, state)
+            terraform = mongodb_atlas_deploy_box_iac.plan(terraform, iac, state)
 
             if not terraform.get("resource"):
                 del terraform["resource"]
-
-            print(f"Terraform: {json.dumps(terraform, indent=2)}")
 
             with open(tf_file, "w") as f:
                 json.dump(terraform, f, indent=2)
