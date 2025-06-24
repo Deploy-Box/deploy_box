@@ -4,39 +4,66 @@ import random
 import string
 import requests
 from django.conf import settings
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.contrib.auth import authenticate, login
 from django.http import (
     JsonResponse,
     HttpRequest,
     HttpResponseRedirect,
     HttpResponsePermanentRedirect,
+    HttpResponse,
 )
+from django.core.mail import send_mail
+from django.contrib.auth.tokens import default_token_generator
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.utils.encoding import force_bytes
+from django.contrib.auth import get_user_model
+from django.contrib import messages
 
-from accounts.forms import CustomUserCreationForm
-from payments.views import create_stripe_user
-from accounts.models import UserProfile
-from core.decorators import oauth_required
-from accounts.models import Organization, Project
-from accounts.services import get_project, organization_services, project_services
+from accounts.forms import CustomUserCreationForm, OrganizationSignUpForm, User
+from organizations.models import PendingInvites, OrganizationMember, Organization
 
 
 # Authentication
 def signup(request: HttpRequest):
     if request.method == "POST":
-        form = CustomUserCreationForm(request.POST)
-        if form.is_valid():
-            user = form.save()
-            birthdate = form.cleaned_data["birthdate"]
+        print(request.POST)
+        user_form = CustomUserCreationForm(request.POST)
+        org_form = OrganizationSignUpForm(request.POST)
 
-            # Create a stripe customer
-            stripe_customer_id = create_stripe_user(user)
+        if user_form.is_valid() and org_form.is_valid():
 
-            UserProfile.objects.create(
-                user=user, birthdate=birthdate, stripe_customer_id=stripe_customer_id
-            )
+            email = user_form.cleaned_data["email"]
+            invites = PendingInvites.objects.filter(email__iexact=email)
 
-            return redirect("/accounts/login")
+            user = user_form.save()
+            organization = org_form.save(user=user)
+
+            if (
+                invites.exists()
+            ):  # Better to use `.exists()` to avoid loading all records into memory
+                for invite in invites:
+                    org_id = invite.organization_id  # type: ignore
+                    org_to_add = Organization.objects.get(id=org_id)
+                    organization_member = OrganizationMember.objects.create(
+                        user=user, organization=org_to_add, role="member"
+                    )
+                    print(organization_member)
+                    invite.delete()
+            else:
+                # Optional: handle the case where no invites are found (if needed)
+                pass
+
+            print(f"Created user {user} and organization {organization}")
+
+            return redirect("/login")
+
+        return JsonResponse(
+            {
+                "message": f"Invalid form data {user_form.is_valid()}{user_form.errors}, {org_form.is_valid()}"
+            },
+            status=400,
+        )
 
     return JsonResponse({"message": "POST request required for signup"}, status=400)
 
@@ -195,7 +222,7 @@ def oauth_callback(request: HttpRequest) -> JsonResponse:
     return JsonResponse(tokens)
 
 
-def logout_view(request: HttpRequest) -> JsonResponse:
+def logout_view(request: HttpRequest) -> JsonResponse | HttpResponseRedirect:
     """
     Handle user logout by clearing the session and redirecting to the login page.
     """
@@ -206,95 +233,98 @@ def logout_view(request: HttpRequest) -> JsonResponse:
     return HttpResponseRedirect("/")
 
 
-@oauth_required()
-def get_organizations(request: HttpRequest) -> JsonResponse:
-    """
-    Fetch the list of organizations for the authenticated user.
-    """
-    user = request.user
-    organizations = Organization.objects.filter(
-        organizationmember__user=user
-    ).distinct()
+def password_reset(request: HttpRequest) -> HttpResponse:
+    if request.method == "POST":
+        email = request.POST.get("email")
+        if not email:
+            messages.error(request, "Email is required.")
+            return render(request, "accounts/password_reset.html", {})
 
-    organization_list = [
-        {
-            "id": org.id,
-            "name": org.name,
-            "created_at": org.created_at,
-            "updated_at": org.updated_at,
-        }
-        for org in organizations
-    ]
-    return JsonResponse({"organizations": organization_list})
+        try:
+            user = User.objects.get(email=email)
+            # Generate token
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
 
+            # Create reset link
+            reset_link = f"{request.scheme}://{request.get_host()}/password_reset/confirm/{uid}/{token}/"
 
-@oauth_required()
-def get_projects(request: HttpRequest) -> JsonResponse:
-    """
-    Fetch the list of projects for the authenticated user.
-    """
-    user = request.user
-    projects = get_project(user)
+            # Send email
+            subject = "Password Reset Request"
+            message = f"""
+            Hello {user.username},
 
-    project_list = [
-        {
-            "id": project.id,
-            "name": project.name,
-            "description": project.description,
-            "organization": project.organization.name,
-            "created_at": project.created_at,
-            "updated_at": project.updated_at,
-        }
-        for project in projects
-    ]
-    return JsonResponse({"projects": project_list})
+            You're receiving this email because you requested a password reset for your Deploy Box account.
 
+            Please go to the following page and choose a new password:
+            {reset_link}
 
-@oauth_required()
-def create_organization(request: HttpRequest) -> JsonResponse:
-    return organization_services.create_organization(request)
+            If you didn't request this, you can safely ignore this email.
 
+            Best regards,
+            Deploy Box Team
+            """
 
-@oauth_required()
-def update_organization(request: HttpRequest) -> JsonResponse:
-    return organization_services.update_organization(request)
+            from_email = settings.EMAIL_HOST_USER
+            recipient_list = [user.email]
 
+            send_mail(subject, message, from_email, recipient_list, fail_silently=False)
 
-@oauth_required()
-def delete_organization(request: HttpRequest) -> JsonResponse:
-    return organization_services.delete_organization(request)
+            print("Reset link: ", reset_link)
+            print(f"Password reset email sent to {user.email} from {from_email}")
+
+            messages.success(
+                request, "Password reset email has been sent. Please check your inbox."
+            )
+            return redirect("main_site:login")
+
+        except User.DoesNotExist:
+            # Don't reveal that the user doesn't exist
+            messages.success(
+                request,
+                "If an account exists with this email, you will receive a password reset link.",
+            )
+            print(f"Email {email} does not exist")
+            return redirect("main_site:login")
+
+    return render(request, "accounts/password_reset.html", {})
 
 
-@oauth_required()
-def add_org_members(request: HttpRequest) -> JsonResponse:
-    return organization_services.add_collaborator(request)
+def password_reset_confirm(
+    request: HttpRequest, uidb64: str, token: str
+) -> HttpResponse:
+    try:
+        uid = urlsafe_base64_decode(uidb64).decode()
+        user = User.objects.get(pk=uid)
+    except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+        user = None
 
+    if user is not None and default_token_generator.check_token(user, token):
+        if request.method == "POST":
+            new_password1 = request.POST.get("new_password1")
+            new_password2 = request.POST.get("new_password2")
 
-@oauth_required()
-def remove_org_member(request: HttpRequest) -> JsonResponse:
-    return organization_services.remove_collaborator(request)
+            if not new_password1 or not new_password2:
+                messages.error(request, "Both password fields are required.")
+                return render(request, "accounts/password_reset_confirm.html", {})
 
+            if new_password1 != new_password2:
+                messages.error(request, "The two password fields didn't match.")
+                return render(request, "accounts/password_reset_confirm.html", {})
 
-@oauth_required()
-def create_project(request: HttpRequest) -> JsonResponse:
-    return project_services.create_project(request)
+            if len(new_password1) < 8:
+                messages.error(request, "Password must be at least 8 characters long.")
+                return render(request, "accounts/password_reset_confirm.html", {})
 
+            user.set_password(new_password1)
+            user.save()
+            messages.success(
+                request,
+                "Your password has been successfully reset. You can now log in with your new password.",
+            )
+            return redirect("main_site:login")
 
-@oauth_required()
-def update_project(request: HttpRequest) -> JsonResponse:
-    return project_services.update_project(request)
-
-
-@oauth_required()
-def delete_project(request: HttpRequest) -> JsonResponse:
-    return project_services.delete_project(request)
-
-
-@oauth_required()
-def add_project_members(request: HttpRequest) -> JsonResponse:
-    return project_services.add_project_members(request)
-
-
-@oauth_required()
-def delete_project_member(request: HttpRequest) -> JsonResponse:
-    return project_services.delete_project_member(request)
+        return render(request, "accounts/password_reset_confirm.html", {})
+    else:
+        messages.error(request, "The password reset link is invalid or has expired.")
+        return redirect("main_site:password_reset")

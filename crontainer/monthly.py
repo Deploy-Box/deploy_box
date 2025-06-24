@@ -2,11 +2,16 @@ import requests
 import json
 from pymongo import MongoClient
 import os
-
 import requests
+# from Website.core.helpers.exchange_client_credentials import exchange_client_credentials_for_token
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
-def exchange_client_credentials_for_token(client_id, client_secret, token_url):
+def exchange_client_credentials_for_token(
+    client_id, client_secret, token_url
+) -> dict | None:
     """Exchanges client credentials for an access token."""
     data = {
         "grant_type": "client_credentials",
@@ -37,19 +42,19 @@ def invoice(data, token):
     return response
 
 
-def get_customer_id(user_id, token):
+def get_customer_id(org_id, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "https://deploy-box.onrender.com/payments/get_customer_id"
+    url = "https://localhost:8000/payments/get_customer_id"
 
-    user_id = {"user_id": user_id}
-    user_id = json.dumps(user_id)
+    org_id = {"org_id": org_id}
+    org_id = json.dumps(org_id)
 
-    return requests.post(url, user_id, headers=headers)
+    return requests.post(url, org_id, headers=headers)
 
 
 def update_invoice_billing(stack_id, cost, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "https://deploy-box.onrender.com/payments/update_invoice_billing"
+    url = "https://localhost:8000/payments/update_invoice_billing"
 
     data = {"stack_id": stack_id, "cost": cost}
     data = json.dumps(data)
@@ -61,28 +66,33 @@ def update_invoice_billing(stack_id, cost, token):
 
 def charge_customer():
 
-    token_url = "https://deploy-box.onrender.com/o/token/"
+    token_url = "http://localhost:8000/o/token/"
 
     token = exchange_client_credentials_for_token(
-        os.environ.get("CLIENT_ID"), os.environ.get("CLIENT_SECRET"), token_url
+        os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID"), os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET"), token_url
     )
+    if token is None:
+        raise ValueError("Failed to obtain token from exchange_client_credentials_for_token")
     token = token.get("access_token")
 
     headers = {"Authorization": f"Bearer {token}"}
-    data = requests.get(
-        "https://deploy-box.onrender.com/api/stack/get_stack_usage_from_db",
+    data = requests.post(
+        "http://localhost:8000/admin/databases/update_database_usage/",
         headers=headers,
     )
+    if data == None:
+        raise ValueError("Failed to retrieve data from the API")
+
     print("data: ", data.json())
 
     for stack_id, values in data.json().get("stacks").items():
-        user_id, usage = values
+        org_id, usage = values
         cost = (
             int(round(((usage / 1_000_000) * 0.01) * 100, 0))
             if int(round(((usage / 1_000_000) * 0.01) * 100, 0)) >= 50
             else 50
         )
-        customer_id = get_customer_id(user_id=user_id, token=token)
+        customer_id = get_customer_id(org_id=org_id, token=token)
         customer_id = customer_id.json().get("customer_id")
 
         data = {

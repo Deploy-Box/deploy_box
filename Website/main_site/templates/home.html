@@ -3,126 +3,216 @@
 {% load static %}
 
 {% block content%}
-<!-- forked from: https://codepen.io/cuonoj/pen/JjPmMaB -->
-<section id= "hero" class="relative h-screen flex flex-col items-center justify-center text-center text-white">
-    <div class="absolute top-0 left-0 w-full h-full overflow-hidden">
-        <video class="min-w-full min-h-full absolute object-cover"
-            src="https://videos.pexels.com/video-files/2943126/2943126-uhd_2560_1440_24fps.mp4"
-            type="video/mp4" autoplay muted loop></video>
-    </div>
-    <div class="absolute top-0 left-0 w-full h-full bg-black opacity-40"></div>
-    <div class="video-content space-y-2 z-10">
-        <h1 class="font-light text-6xl">Ship your Projects Faster</h1>
-        <h3 class="font-light text-3xl">with Deploy Box</h3>
-    </div>
-</section>
-<section class="m-10 flex flex-col items-center">
-  <div class="mb-10 text-center lg:w-1/2">
-    <h1 class="text-6xl mb-10">Current Stacks</h1>
-    <p> Stacks are our way of delivering easy to use containerized <a href="/stacks" class="text-emerald-400 font-bold">tech-stacks</a> that are ready out of the box. We support all popular stacks, including some of our own. We also have a diverse community of stack developers for entreprenuers looking for full stack support to help bring thier ideas to life. Check out some of our current stacks below.</p>
-  </div>
-    <div
-      class="p-10 rounded-l-xl border border-blue-gray-100 rounded-xl bg-no-repeat lg:bg-contain bg-cover bg-right mb-5 w-2/3"
-    >
-      <p
-        class="block antialiased font-sans text-sm font-light leading-normal text-blue-gray-900 font-bold mb-2"
-      >
-        Most Popuar Stack
-      </p>
-      <h3
-        class="block antialiased tracking-normal font-sans text-3xl font-semibold leading-snug text-blue-gray-900"
-      >
-        MERN
-      </h3>
-      <p
-        class="block antialiased font-sans text-base font-light leading-relaxed text-inherit mt-2 mb-6 !text-base font-normal text-gray-500"
-      >
-        MERN stands for MondoDB, Express.js, React, and Node.js. It is a modern stack that uses a combination of modern frameworks and a no sql database to ensure you spin up your webapp as quicky as possible.
-      </p>
-      <a href="/stacks">
-        <button
-          class="align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg border border-gray-900 text-gray-900 hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] flex-shrink-0"
-          type="button"
-          data-ripple-dark="true"
-        >
-          Download Container
-        </button>
-      </a>
-      <button
-      class="align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg border border-gray-900 text-gray-900 hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] flex-shrink-0 mt-4 md:mt-0"
-      type="button"
-      data-ripple-dark="true"
-    >
-      Find MERN Devs
-    </button>
-    </div>
+  <!-- forked from: https://codepen.io/cuonoj/pen/JjPmMaB -->
+  <section id= "hero" class="relative h-screen flex flex-col items-center justify-center text-center text-white">
+      <div class="absolute top-0 left-0 w-full h-full overflow-hidden">
+          <video class="min-w-full min-h-full absolute object-cover"
+              src="https://videos.pexels.com/video-files/2943126/2943126-uhd_2560_1440_24fps.mp4"
+              type="video/mp4" autoplay muted loop></video>
+      </div>
+      <div class="absolute top-0 left-0 w-full h-full bg-black opacity-40"></div>
+      <div class="video-content space-y-2 z-10">
+          <h1 class="font-bold text-6xl">Ship your Projects Faster</h1>
+          <h3 class="text-3xl">with Deploy Box</h3>
+      </div>
+  </section>
+  <section class="w-full flex flex-col items-center z-10" style="background: linear-gradient(to bottom right, #074e3b 50%, #09090b 100%);">
 
-      <div
-      class="p-10 rounded-l-xl border border-blue-gray-100 rounded-xl bg-no-repeat lg:bg-contain bg-cover bg-right mb-5 w-2/3"
-    >
-      <p
-        class="block antialiased font-sans text-sm font-light leading-normal text-blue-gray-900 font-bold mb-2"
-      >
-        For Angular Fans
+    <div class="overflow-hidden w-full -mt-20">
+    <svg class="w-full h-24 relative z-10" viewBox="0 0 1440 320" preserveAspectRatio="none">
+      <path fill="#074e3b" d="M0,64L48,85.3C96,107,192,149,288,170.7C384,192,480,192,576,170.7C672,149,768,107,864,106.7C960,107,1056,149,1152,170.7C1248,192,1344,192,1392,192L1440,192L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+    </svg>
+  </div>
+    <!-- Current Stacks -->
+    <div class="mb-10 text-center mx-auto mt-16">
+      <h1 class="text-5xl md:text-6xl font-extrabold text-emerald-400 mb-10 tracking-tight drop-shadow-lg">Current Stacks</h1>
+      <p class="text-center w-1/2 mx-auto text-white">
+        Stacks are our way of delivering easy to use containerized
+        <a href="/stacks" class="text-emerald-400 font-bold underline decoration-wavy text-lg">tech-stacks</a>
+        that are ready out of the box. We support all popular stacks, including some of our own. We also have a diverse community of stack developers for entreprenuers looking for full stack support to help bring thier ideas to life. Check out some of our current stacks below.
       </p>
-      <h3
-        class="block antialiased tracking-normal font-sans text-3xl font-semibold leading-snug text-blue-gray-900"
-      >
-        MEAN
-      </h3>
-      <p
-        class="block antialiased font-sans text-base font-light leading-relaxed text-inherit mt-2 mb-6 !text-base font-normal text-gray-500"
-      >
-        MEAN stands for MondoDB, Express.js, Angular, and Node.js. It is one of the most used tech stacks but requires a slightly higher learning curve than our MERN stack.
-      </p>
-      <a href="/stacks">
+    </div>
+  <div class="container mx-auto grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 justify-center items-stretch px-4">
+  <!-- MERN Stack Card -->
+  <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-6 flex flex-col aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105">
+    <p class="text-sm font-bold text-emerald-300 mb-2">Most Popular Stack</p>
+    <h3 class="text-3xl font-semibold text-emerald-200 mb-2">MERN</h3>
+    <p class="text-lg text-gray-200 mb-6 flex-grow">
+      MERN stands for MongoDB, Express.js, React, and Node.js. It is a modern stack that uses a combination of modern frameworks and a no sql database to ensure you spin up your webapp as quickly as possible.
+    </p>
+    <div class="flex flex-wrap gap-4 mt-auto">
+      <a href="{% url 'main_site:mern_stack' %}">
         <button
-          class="align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg border border-gray-900 text-gray-900 hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] flex-shrink-0"
+          class="bg-emerald-400 text-emerald-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-emerald-500 transition"
           type="button"
-          data-ripple-dark="true"
         >
           Download Container
         </button>
       </a>
       <button
-      class="align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg border border-gray-900 text-gray-900 hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] flex-shrink-0 mt-4 md:mt-0"
-      type="button"
-      data-ripple-dark="true"
-    >
-      Find MEAN Devs
-    </button>
+        class="border border-emerald-400 text-emerald-400 font-bold py-2 px-6 rounded-lg hover:bg-emerald-400 hover:text-emerald-950 transition"
+        type="button"
+      >
+        Find MERN Devs
+      </button>
     </div>
-    <a href="/stacks">
+  </div>
+  <!-- MEAN Stack Card -->
+  <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-6 flex flex-col aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105">
+    <p class="text-sm font-bold text-blue-300 mb-2">For Angular Fans</p>
+    <h3 class="text-3xl font-semibold text-blue-200 mb-2">MEAN</h3>
+    <p class="text-lg text-gray-200 mb-6 flex-grow">
+      MEAN stands for MongoDB, Express.js, Angular, and Node.js. It is one of the most used tech stacks but requires a slightly higher learning curve than our MERN stack.
+    </p>
+    <div class="flex flex-wrap gap-4 mt-auto">
+      <a href="{% url 'main_site:mean_stack' %}">
         <button
-        class="align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg border border-gray-900 text-gray-900 hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] flex-shrink-0 sm:mt-2"
+          class="bg-blue-400 text-blue-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-blue-500 transition"
+          type="button"
+        >
+          Download Container
+        </button>
+      </a>
+      <button
+        class="border border-blue-400 text-blue-400 font-bold py-2 px-6 rounded-lg hover:bg-blue-400 hover:text-blue-950 transition"
+        type="button"
+      >
+        Find MEAN Devs
+      </button>
+    </div>
+  </div>
+  <!-- DJANGO Stack Card -->
+  <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-6 flex flex-col aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105">
+    <p class="text-sm font-bold text-pink-300 mb-2">Full Stack Python</p>
+    <h3 class="text-3xl font-semibold text-pink-300 mb-2">DJANGO</h3>
+    <p class="text-lg text-gray-200 mb-6 flex-grow">
+      DJANGO is a high-level Python web framework that encourages rapid development and clean, pragmatic design. It’s perfect for building robust web applications quickly.
+    </p>
+    <div class="flex flex-wrap gap-4 mt-auto">
+      <a href="{% url 'main_site:django_stack' %}">
+        <button
+          class="bg-pink-400 text-pink-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-pink-500 transition"
+          type="button"
+        >
+          Download Container
+        </button>
+      </a>
+      <button
+        class="border border-pink-400 text-pink-400 font-bold py-2 px-6 rounded-lg hover:bg-pink-400 hover:text-pink-950 transition"
+        type="button"
+      >
+        Find MEAN Devs
+      </button>
+    </div>
+  </div>
+  <!-- LAMP Stack Card -->
+    <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-6 flex flex-col aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105">
+    <p class="text-sm font-bold text-yellow-300 mb-2">Classic Web Stack</p>
+    <h3 class="text-3xl font-semibold text-yellow-200 mb-2">LAMP</h3>
+    <p class="text-lg text-gray-200 mb-6 flex-grow">
+      LAMP stands for Linux, Apache, MySQL, and PHP. It’s a proven open-source stack for building dynamic websites and web apps, trusted by millions of developers for its stability and flexibility.
+    </p>
+    <div class="flex flex-wrap gap-4 mt-auto">
+      <a href="{% url 'main_site:lamp_stack' %}">
+        <button
+          class="bg-yellow-400 text-yellow-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-yellow-500 transition"
+          type="button"
+        >
+          Download Container
+        </button>
+      </a>
+      <button
+        class="border border-yellow-400 text-yellow-400 font-bold py-2 px-6 rounded-lg hover:bg-yellow-400 hover:text-yellow-950 transition"
+        type="button"
+      >
+        Find LAMP Devs
+      </button>
+    </div>
+  </div>
+  <!-- MEVN Stack Card: spans all 4 columns -->
+  <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-6 flex flex-col md:col-span-4 aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105">
+    <p class="text-sm font-bold text-purple-300 mb-2">Vue.js Stack</p>
+    <h3 class="text-3xl font-semibold text-purple-200 mb-2">MEVN</h3>
+    <p class="text-lg text-gray-200 mb-6 flex-grow">
+      MEVN stands for MongoDB, Express.js, Vue.js, and Node.js. It’s a modern JavaScript stack that leverages Vue for a progressive frontend experience and Node/Express for a robust backend
+    </p>
+    <div class="flex flex-wrap gap-4 mt-auto">
+      <a href="{% url 'main_site:mevn_stack' %}">
+        <button
+          class="bg-purple-400 text-purple-950 font-bold py-2 px-6 rounded-lg shadow hover:bg-purple-500 transition"
+          type="button"
+        >
+          Download Container
+        </button>
+      </a>
+      <button
+        class="border border-purple-400 text-purple-400 font-bold py-2 px-6 rounded-lg hover:bg-purple-400 hover:text-purple-950 transition"
+        type="button"
+      >
+        Find MEVN Devs
+      </button>
+    </div>
+  </div>
+</div>
+
+
+  <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-6 md:p-8 flex justify-center mx-auto m-4">
+    <a href="/stacks">
+      <button
+        class="bg-emerald-400 text-emerald-950 font-bold py-3 px-8 rounded-lg shadow hover:bg-emerald-500 transition text-lg"
         type="button"
         data-ripple-dark="true"
       >
         View our Full Selection
       </button>
     </a>
-    <div class="flex justify-center items-center bg-zinc-950">
+  </div>
+    <div class="flex justify-center items-center bg-zinc-950 mt-10">
       <div class="w-2/3 border-t-2 border-zinc-950"></div>
-    </div>  
-  </section>
-      <!-- about us section -->
-  <section>
-    <div class="flex flex-col md:flex-row h-auto">
-      <div class="w-full md:w-1/2 p-10 flex jsutify-center items-center">
-        <div class="text center">
-          <h2 class=" text-6xl mb-10 text-center">Our Team</h2>
-          <p class=" text-center mb-5 text-lg">We are a dynamic team of recent college graduates who are passionate about <a class="text-emerald-400 font-bold">simplifying the development process</a> and bridging the gap between skilled developers and exciting career opportunities. Our journey began with a shared vision: to create a platform that not only empowers developers but also accelerates the way companies <a class="text-emerald-400 font-bold">build, deploy, and scale</a> their applications.</p>
-          <p class=" text-center mb-5 text-lg">Our company provides <a class="text-emerald-400 font-bold">pre-containerized</a> versions of the most popular tech stacks, enabling developers to bypass the time-consuming setup process and focus on what really matters—writing code and building innovative solutions. By offering these ready-to-go development environments, we remove the friction of configuring software, dependencies, and infrastructure, allowing developers to spin up environments in a matter of minutes instead of hours or days.</p>
-          <p class=" text-center mb-5 text-lg">In addition to providing powerful tools for developers, we also operate a <a class="text-emerald-400 font-bold">marketplace</a> designed to connect <a class="text-emerald-400 font-bold">full-stack developers</a> with companies looking for top-tier talent. Whether you’re a developer seeking your next freelance project, a remote position, or a full-time opportunity, our platform helps you connect with businesses that align with your skills and career goals. Companies, on the other hand, benefit from a curated pool of talented developers ready to contribute to their projects, saving time and effort in the hiring process.</p>
-          <p class=" text-center mb-5 text-lg">Our mission is to foster a community where developers can <a class="text-emerald-400 font-bold">grow, collaborate, and thrive</a> while delivering high-quality solutions to businesses in need of innovation. We're dedicated to making development more accessible, streamlined, and efficient—helping developers and companies alike reach their fullest potential. As recent graduates ourselves, we understand the challenges of navigating the tech world and are committed to empowering others through better tools, meaningful opportunities, and an ecosystem built for success.</p>
+    </div>
+    <!-- About Us Section (no background here, just content) -->
+    <div class="container mx-auto flex flex-col md:flex-row items-center gap-12 px-4 py-16">
+      <div class="w-full md:w-1/2 flex flex-col justify-center items-center md:items-start">
+        <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-10 md:p-14 w-full">
+          <h2 class="text-5xl md:text-6xl font-extrabold text-emerald-400 mb-8 text-center md:text-left tracking-tight drop-shadow-lg">
+            Our Team
+          </h2>
+          <div class="space-y-6 text-lg text-gray-200">
+            <p>
+              We are a dynamic team of recent college graduates passionate about
+              <a class="text-emerald-400 font-bold hover:underline">simplifying the development process</a>
+              and bridging the gap between skilled developers and exciting career opportunities. Our journey began with a shared vision: to create a platform that empowers developers and accelerates how companies
+              <a class="text-emerald-400 font-bold hover:underline">build, deploy, and scale</a>
+              their applications.
+            </p>
+            <p>
+              Our company provides
+              <a class="text-emerald-400 font-bold hover:underline">pre-containerized</a>
+              versions of the most popular tech stacks, enabling developers to bypass the time-consuming setup process and focus on what really matters—writing code and building innovative solutions. By offering these ready-to-go development environments, we remove the friction of configuring software, dependencies, and infrastructure, allowing developers to spin up environments in minutes.
+            </p>
+            <p>
+              In addition to providing powerful tools, we also operate a
+              <a class="text-emerald-400 font-bold hover:underline">marketplace</a>
+              designed to connect
+              <a class="text-emerald-400 font-bold hover:underline">full-stack developers</a>
+              with companies seeking top-tier talent. Whether you’re a developer seeking your next freelance project or a company looking for talent, our platform helps you connect with the right opportunities.
+            </p>
+            <p>
+              Our mission is to foster a community where developers can
+              <a class="text-emerald-400 font-bold hover:underline">grow, collaborate, and thrive</a>
+              while delivering high-quality solutions to businesses. We're dedicated to making development more accessible, streamlined, and efficient—helping everyone reach their fullest potential.
+            </p>
+          </div>
         </div>
       </div>
-      <div class="w-full md:w-1/2 p-4 flex jsutify-center items-center">
-        <img class="rounded-full" src="{% static 'about_image.png' %}"/>
+      <div class="w-full md:w-1/2 flex justify-center items-center">
+        <img class="rounded-3xl shadow-2xl border-4 border-emerald-400 w-128 h-96 object-cover" src="{% static 'about_image.png' %}" alt="About our team"/>
       </div>
-  </div>  
+    </div>
+
+    {% include 'footer.html' %}
   </section>
-  {% endblock %}
+{% endblock %}
 
   <style>
       .video-docker video {

@@ -1,4 +1,3 @@
-from typing import Dict, Union, List, Any
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -7,7 +6,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-HOST = os.environ.get("HOST")
+HOST = os.environ.get("HOST", "localhost")
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
@@ -17,13 +16,17 @@ DEBUG = ENV == "dev"
 ALLOWED_HOSTS = [
     "deploy-box.onrender.com",
     "deploy-box.kalebwbishop.com",
+    "deploy-box.com",
 ]
 if DEBUG:
-    ALLOWED_HOSTS.extend([
-        "127.0.0.1",
-        "localhost",
-        "10.11.230.216"
-    ])
+    ALLOWED_HOSTS.extend(
+        [
+            "127.0.0.1",
+            "localhost",
+            "b74d-152-117-84-227.ngrok-free.app",
+            HOST.replace("https://", "").replace("http://", ""),
+        ]
+    )
 
 ROOT_URLCONF = "core.urls"
 
@@ -36,42 +39,43 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
-    "rest_framework",
-    "rest_framework_simplejwt",
     "oauth2_provider",
     "tailwind",
     "theme",
-    "payments.apps.PaymentsConfig",
-
     # Custom Apps
     "main_site",
-    "api",
     "accounts",
     "github",
+    "stacks",
+    "projects",
+    "organizations",
+    "payments",
 ]
 
 if DEBUG:
-    INSTALLED_APPS.extend([
-        "django_browser_reload",
-        "django_extensions",
-    ])
+    INSTALLED_APPS.extend(
+        [
+            "django_browser_reload",
+            "django_extensions",
+        ]
+    )
 
 
 # Authentication
 OAUTH2_PROVIDER = {
-    'ACCESS_TOKEN_EXPIRE_SECONDS': 3600,  # 1 hour
-    'REFRESH_TOKEN_EXPIRE_SECONDS': 86400,  # 1 day
+    "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,  # 1 hour
+    "REFRESH_TOKEN_EXPIRE_SECONDS": 86400,  # 1 day
     "AUTHORIZATION_CODE_EXPIRATION": 600,  # 10 minutes
-    'ROTATE_REFRESH_TOKENS': True,
-    'GRANT_TYPES': [
-        'authorization_code',
-        'password',
+    "ROTATE_REFRESH_TOKENS": True,
+    "GRANT_TYPES": [
+        "authorization_code",
+        "password",
     ],
-    'SCOPES': {
-        'read': 'Read scope',
-        'write': 'Write scope',
+    "SCOPES": {
+        "read": "Read scope",
+        "write": "Write scope",
     },
-    'PKCE_REQUIRED': True,
+    "PKCE_REQUIRED": True,
 }
 
 OAUTH2_PASSWORD_CREDENTIALS = {
@@ -93,12 +97,20 @@ SESSION_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_SAVE_EVERY_REQUEST = True
 
+# Disable CSRF protection
+CSRF_TRUSTED_ORIGINS: list[str] = []
+
+for host in ALLOWED_HOSTS:
+    CSRF_TRUSTED_ORIGINS.extend([f"https://{host}", f"http://{host}"])
+
+CSRF_COOKIE_SECURE = not DEBUG
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False
+
 SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SECURE_SSL_REDIRECT = not DEBUG
-print(f"SECURE_SSL_REDIRECT: {SECURE_SSL_REDIRECT}")
-CSRF_COOKIE_SECURE = not DEBUG
 
 # Email
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -115,25 +127,12 @@ TAILWIND_APP_NAME = "theme"
 INTERNAL_IPS = ["127.0.0.1"]
 NPM_BIN_PATH = os.environ.get("NPM_BIN_PATH", "/usr/bin/npm")
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://deploy-box.onrender.com",
-    "https://deploy-box.kalebwbishop.com",
-]
-
-if DEBUG:
-    CSRF_TRUSTED_ORIGINS.extend([
-        "http://12.0.0.1:8000",
-        "http://localhost:8000",
-        "http://10.11.230.216:8000",
-    ])
-
 # Middleware
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
-    # "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -148,9 +147,9 @@ DATABASES = {
         "PASSWORD": os.environ.get("DB_PASSWORD"),
         "HOST": os.environ.get("DB_HOST"),
         "PORT": os.environ.get("DB_PORT"),
-        "OPTIONS": {
-            "sslrootcert": os.environ.get("DB_SSL_CERT"),
-        },
+        # "OPTIONS": {
+        #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
+        # },
         "CONN_MAX_AGE": 600,
     }
 }
@@ -191,12 +190,13 @@ MONGO_DB = {
 
 GCP = {
     "KEY_PATH": os.environ.get("GCP_KEY_PATH"),
+    "PROJECT_ID": os.environ.get("GCP_PROJECT_ID"),
 }
 
 GITHUB = {
-    "CLIENT_ID": os.environ.get("GITHUB_CLIENT_ID"),
-    "CLIENT_SECRET": os.environ.get("GITHUB_CLIENT_SECRET"),
-
+    "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
+    "CLIENT_SECRET": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_SECRET"),
+    "TOKEN_KEY": os.environ.get("DEPLOY_BOX_GITHUB_TOKEN_KEY"),
 }
 
 # Templates Configuration

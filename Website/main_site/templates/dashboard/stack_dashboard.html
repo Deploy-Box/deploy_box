@@ -1,0 +1,407 @@
+{% extends 'dashboard_base.html' %} {%load static%} {% block extra_head %}
+<div id="dashboard" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
+  data-stack-id="{{ stack.id }}" data-service-name="{{ stack_google_cloud_runs.0.id }}"></div>
+{% endblock %} {% block content %}
+<div class="fixed top-24 left-8">
+  <a href="{% url 'main_site:project_dashboard' organization_id project_id %}"
+    class="inline-flex items-center px-4 py-2 bg-white hover:bg-zinc-50 text-sm text-zinc-900 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl border border-zinc-200">
+    <svg class="w-4 h-4 mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    Back to Project
+  </a>
+</div>
+
+<div class="w-full bg-gray-50">
+  <header class="bg-zinc-950 pt-16 pb-24 text-center">
+    <h1 class="text-2xl font-bold text-gray-100 mb-2">Stack Dashboard</h1>
+    <p class="text-md text-gray-100 max-w-2xl mx-auto">
+      Monitor, manage, and optimize your deployment stack resources
+    </p>
+  </header>
+  <main class="w-full max-w-4xl mx-auto px-4 -mt-10 pb-12">
+    <div id="metadata" class="hidden" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
+      data-stack-id="{{ stack.id }}"></div>
+
+    <!-- Stack Overview -->
+    <section class="mb-8">
+      <div
+        class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+            fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+              clip-rule="evenodd" />
+          </svg>
+          Stack Overview
+        </h2>
+
+        <!-- Stack Info -->
+        <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 mb-4">
+          <div class="flex flex-wrap gap-4 items-center">
+            <div class="flex items-center">
+              <span class="font-medium text-gray-900">{{stack.name}}</span>
+            </div>
+            <div class="flex items-center text-gray-500">
+              <span class="px-2 py-1 bg-gray-100 rounded text-sm">{{stack.purchased_stack.type}}</span>
+            </div>
+            <div class="flex items-center text-sm text-gray-500">
+              <svg class="h-4 w-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Created {{stack.created_at|date:"M d, Y"}}
+            </div>
+          </div>
+        </div>
+
+        {% for stack_google_cloud_run in stack_google_cloud_runs %}
+        <!-- URL -->
+        <div class="grid grid-cols-1 gap-4 mb-4">
+          <a href="{{stack_google_cloud_run.url}}" target="_blank" rel="noopener noreferrer"
+            class="hover:text-emerald-600 transition-colors">
+            <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+              <div class="flex items-center mb-1">
+                <svg class="h-4 w-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span class="text-sm text-gray-500">URL</span>
+              </div>
+              <p class="font-semibold text-lg text-gray-900 break-all">{{stack_google_cloud_run.url}}</p>
+            </div>
+          </a>
+        </div>
+
+        <!-- Status -->
+        <div class="grid grid-cols-1 gap-4 mb-4">
+          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+            <div class="flex items-center mb-1">
+              <svg class="h-4 w-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="text-sm text-gray-500">Status</span>
+            </div>
+            <p class="font-semibold text-lg text-gray-900 flex items-center">
+              <span class="h-2.5 w-2.5 rounded-full bg-emerald-500 mr-2"></span>
+              {{stack_google_cloud_run.state}}
+            </p>
+          </div>
+        </div>
+        {% endfor %}
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+            <div class="flex items-center mb-1">
+              <svg class="h-4 w-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span class="text-sm text-gray-500">Last Updated</span>
+            </div>
+            <p class="font-semibold text-lg text-gray-900">{{stack.updated_at|date:"M d, Y"}}</p>
+          </div>
+
+          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+            <div class="flex items-center mb-1">
+              <svg class="h-4 w-4 mr-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              <span class="text-sm text-gray-500">Resources</span>
+            </div>
+            <p class="font-semibold text-lg text-gray-900">Active</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CPU Usage Graph -->
+    <!-- <section class="mb-8">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+            fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M3 3a1 1 0 000 2h14a1 1 0 100-2H3zm0 6a1 1 0 000 2h14a1 1 0 100-2H3zm0 6a1 1 0 000 2h14a1 1 0 100-2H3z"
+              clip-rule="evenodd"></path>
+          </svg>
+          CPU Usage Over Time
+        </h2>
+        <div class="h-64 w-full bg-zinc-50 rounded-lg overflow-hidden">
+          <canvas id="cpuUsageChart" class="w-full h-full"></canvas>
+        </div>
+      </div>
+    </section> -->
+
+    <!-- Cost Analysis -->
+    <!-- <section class="mb-8">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+            fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
+              clip-rule="evenodd"></path>
+          </svg>
+          Cost Analysis
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+            <span class="text-sm text-gray-500">Current Cost</span>
+            <p class="font-semibold text-lg">$245.67</p>
+            <span class="text-xs text-gray-500">This month</span>
+          </div>
+          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+            <span class="text-sm text-gray-500">Cost Trend</span>
+            <p class="font-semibold text-lg flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-red-500 mr-1" viewBox="0 0 20 20"
+                fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M12 7a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0V8.414l-4.293 4.293a1 1 0 01-1.414 0L8 10.414l-4.293 4.293a1 1 0 01-1.414-1.414l5-5a1 1 0 011.414 0L11 10.586 14.586 7H12z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              +12.4%
+            </p>
+            <span class="text-xs text-gray-500">vs last month</span>
+          </div>
+          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+            <span class="text-sm text-gray-500">Projected Cost</span>
+            <p class="font-semibold text-lg">$275.15</p>
+            <span class="text-xs text-gray-500">End of month</span>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-md font-semibold mb-2">Monthly Cost</h3>
+            <div class="h-52 w-full">
+              <canvas id="monthlyCostChart" class="w-full h-full"></canvas>
+            </div>
+          </div>
+          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
+            <h3 class="text-md font-semibold mb-2">Daily Breakdown</h3>
+            <div class="h-52 w-full">
+              <canvas id="dailyCostChart" class="w-full h-full"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section> -->
+
+    <!-- Live Logs Terminal -->
+    <section class="mb-8">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold flex items-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+              fill="currentColor">
+              <path fill-rule="evenodd"
+                d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.5 9.134a1 1 0 010 1.732l-3.354 1.935-1.18 4.455a1 1 0 01-1.933 0L9.854 12.8 6.5 10.866a1 1 0 010-1.732l3.354-1.935 1.18-4.455A1 1 0 0112 2z"
+                clip-rule="evenodd"></path>
+            </svg>
+            Live Logs Terminal
+          </h2>
+          <div class="flex space-x-2">
+            <button id="clear-logs-btn"
+              class="bg-zinc-100 hover:bg-zinc-200 px-3 py-1 rounded text-sm transition-all duration-300">
+              Clear
+            </button>
+            <button id="pause-logs-btn"
+              class="bg-zinc-100 hover:bg-zinc-200 px-3 py-1 rounded text-sm transition-all duration-300">
+              Pause
+            </button>
+          </div>
+        </div>
+        <div class="flex mb-3">
+          <select id="service-selector"
+            class="bg-zinc-100 border border-zinc-300 rounded px-3 py-1 focus:outline-none focus:ring-2 focus:ring-emerald-400 text-sm">
+            <option value="all">All Services</option>
+          </select>
+        </div>
+        <div id="logs-container"
+          class="bg-zinc-900 border border-zinc-700 rounded-lg p-4 font-mono text-sm text-green-400 h-64 overflow-y-auto scroll-smooth">
+        </div>
+      </div>
+    </section>
+
+    <!-- Stack Actions -->
+    <section class="mb-8">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+            fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+              clip-rule="evenodd"></path>
+          </svg>
+          Stack Actions
+        </h2>
+        <div class="mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+          <h3 class="text-md font-semibold mb-3">GitHub Integration</h3>
+          <div class="flex items-center">
+            <div id="github-connect" class="hidden">
+              <a href="{% url 'github:login' %}?next={% url 'main_site:stack_dashboard' organization_id project_id stack.id %}"
+                class="flex items-center bg-zinc-900 hover:bg-zinc-800 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                <svg class="h-5 w-5 mr-2" viewBox="0 0 16 16" fill="currentColor">
+                  <path fill-rule="evenodd"
+                    d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+                  </path>
+                </svg>
+                Connect GitHub
+              </a>
+            </div>
+            <div id="github-repos" class="hidden">
+              <div class="relative">
+                <button id="repo-dropdown-btn"
+                  class="bg-zinc-900 hover:bg-zinc-800 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center w-full">
+                  <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                    <path
+                      d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                  </svg>
+                  Select Repository
+                  <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <div id="repo-dropdown"
+                  class="hidden absolute z-10 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200">
+                  <div class="py-2 max-h-60 overflow-y-auto">
+                    <!-- Repository list will be populated here -->
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+          <h3 class="text-md font-semibold mb-3">Root Directory</h3>
+          <div class="flex items-center space-x-4">
+            <div class="flex-1 flex items-center bg-white border border-zinc-300 rounded-lg overflow-hidden">
+              <span class="px-4 py-2 bg-zinc-50 text-zinc-500 border-r border-zinc-300">./</span>
+              <input type="text" id="root-directory"
+                class="flex-1 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                value="{{stack.root_directory|default:'app'}}" placeholder="Enter root directory path">
+            </div>
+            <div class="flex items-center space-x-2">
+              <div id="save-indicator" class="hidden">
+                <svg class="w-5 h-5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <button id="save-root-directory"
+                class="bg-emerald-400 hover:bg-emerald-500 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <button data-download-url="{% url 'stacks:download_stack' stack.id %}"
+            class="bg-zinc-500 hover:bg-zinc-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z">
+              </path>
+            </svg>
+            <span class="button-text">Download Stack</span>
+            <svg class="loading-spinner hidden h-5 w-5 ml-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+              </circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Environment File Upload Section -->
+    <section class="mb-8">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+            fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z"
+              clip-rule="evenodd"></path>
+          </svg>
+          Stack Environment & Configuration
+        </h2>
+        <form method="post" enctype="multipart/form-data" action="{% url 'stacks:stack_env' stack.id %}" class="w-full">
+          {% csrf_token %}
+          <div class="space-y-4">
+            <div class="bg-zinc-50 p-4 rounded-lg border border-zinc-200">
+              <label class="block text-sm font-medium text-zinc-700 mb-2">Choose Framework</label>
+              {{ form.framework|default:stack.purchased_stack.type }}
+            </div>
+            <div class="bg-zinc-50 p-4 rounded-lg border border-zinc-200">
+              <label class="block text-sm font-medium text-zinc-700 mb-2">Select Location</label>
+              {{ form.select_location }}
+            </div>
+            <div class="bg-zinc-50 p-4 rounded-lg border border-zinc-200">
+              <label class="block text-sm font-medium text-zinc-700 mb-2">Environment File</label>
+              <div class="flex items-center space-x-4">
+                <label
+                  class="flex-1 bg-zinc-900 hover:bg-zinc-800 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                    <path fill-rule="evenodd"
+                      d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                      clip-rule="evenodd" />
+                  </svg>
+                  Choose .env File
+                  <input type="file" name="env_file" class="hidden" accept=".env" />
+                </label>
+                <span id="selected-file" class="text-sm text-zinc-600"></span>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Delete Stack Section -->
+    <section class="mb-8">
+      <div
+        class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+          <div class="flex justify-between items-center">
+            <div>
+              <h3 class="text-lg font-semibold text-red-600">
+                Delete Stack
+              </h3>
+              <p class="text-sm text-zinc-500">
+                Permanently delete this stack and all its data
+              </p>
+            </div>
+            <button id="delete-stack-btn"
+              class="inline-flex items-center bg-red-500 hover:bg-red-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300"
+              data-stack-id="{{ stack.id }}">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                <path fill-rule="evenodd"
+                  d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                  clip-rule="evenodd"></path>
+              </svg>
+              Delete Stack
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'dashboards/stack_dashboard.js' %}"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<script>
+  document
+    .querySelector('input[name="env_file"]')
+    .addEventListener("change", function () {
+      this.closest("form").submit();
+    });
+</script>
+{% endblock %}

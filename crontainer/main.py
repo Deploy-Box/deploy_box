@@ -2,69 +2,56 @@ import requests
 import json
 from pymongo import MongoClient
 import os
+from helpers import make_authenticated_api_request
+from dotenv import load_dotenv
 
+load_dotenv()
 
-def exchange_client_credentials_for_token(
-    client_id, client_secret, token_url
-) -> dict | None:
-    """Exchanges client credentials for an access token."""
-    data = {
-        "grant_type": "client_credentials",
-        "client_id": client_id,
-        "client_secret": client_secret,
-    }
-
-    try:
-        response = requests.post(token_url, data=data)
-
-        if response.status_code != 200:
-            print(f"Error obtaining client credentials token: {response.text}")
-            return None
-
-        return response.json()  # Contains the access token
-    except Exception as e:
-        print(f"Error during client credentials token exchange: {str(e)}")
-        return None
-
+BASE_URL = os.getenv("BASE_URL")
 
 def send_data(data, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "https://deploy-box.onrender.com/api/stack/update_database_usage"
+    url = f"{BASE_URL}/api/stack/update_database_usage"
     requests.post(url, data=data, headers=headers)
 
 
 def check_db_size():
-
-    token_url = "https://deploy-box.onrender.com/o/token/"
-
-    token = exchange_client_credentials_for_token(
-        os.environ.get("CLIENT_ID"), os.environ.get("CLIENT_SECRET"), token_url
+    data = make_authenticated_api_request(
+        "http://localhost:8000/api/v1/stacks/admin/databases/"
     )
 
-    assert token is not None, "Token is None"
-    token = token.get("access_token")
+    # Ensure data is a dict and contains "data" key
+    if not isinstance(data, dict) or "data" not in data:
+        print("Error: API response is not a dictionary or missing 'data' key.")
+        return
 
-    headers = {"Authorization": f"Bearer {token}"}
-    data = requests.get(
-        "https://deploy-box.onrender.com/api/stack/get_all_stacks", headers=headers
-    )
+    print(json.dumps(data, indent=4))
 
     storage_amounts_dict = {}
 
-    for stack_id, uris in data.json().get("stacks").items():
-        for uri in uris:
-            client = MongoClient(uri)
-            db = client.get_default_database()
-            stats = db.command("dbstats")
-            storage_size = stats.get("storageSize")
+    for database in data.get("data", []):
+        stack_id = database.get("stack")
+        uri = database.get("uri")
 
-            if stack_id in storage_amounts_dict:
-                storage_amounts_dict[stack_id] += storage_size
-            else:
-                storage_amounts_dict[stack_id] = storage_size
+        print(stack_id, uri)
 
-    json_data = json.dumps(storage_amounts_dict)
-    send_data(json_data, token)
+        client = MongoClient(uri)
+        db = client.get_default_database()
+        stats = db.command("dbstats")
+        storage_size = stats.get("storageSize")
+
+        if stack_id in storage_amounts_dict:
+            storage_amounts_dict[stack_id] += storage_size
+        else:
+            storage_amounts_dict[stack_id] = storage_size
+
+    response = make_authenticated_api_request(
+        "/api/v1/stacks/admin/databases/update_database_usage/",
+        "POST",
+        {"success": True, "data": storage_amounts_dict}
+    )
+
+    print(response)
 
 
 if __name__ == "__main__":

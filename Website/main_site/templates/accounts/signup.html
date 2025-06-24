@@ -1,76 +1,102 @@
-{% extends 'base.html' %}
+<!DOCTYPE html>
+{% load static tailwind_tags %}
 
-{% block content %}
-<section class="flex flex-col items-center justify-center pt-6 h-screen">
-    <div class="text-center w-full bg-white rounded-2xl ring ring-zinc-200 shadow-lg shadow-zinc-400">
-        <div class="p-6 space-y-4 md:space-y-6 sm:p-8">
-            <h1 class="text-xl font-bold leading-tight tracking-tight text-gray-900 md:text-2xl">Create an account</h1>
+{% tailwind_css %}
+<div class="min-h-screen bg-gray-100 flex flex-col justify-center sm:py-12">
+    <div class="p-10 xs:p-0 mx-auto md:w-full md:max-w-md">
+        <h1 class="font-bold text-center text-2xl mb-5">Deploy Box</h1>
+        <div
+            class="bg-white ring-2 ring-gray-200 shadow-2xl shadow-gray-400 w-full rounded-lg divide-y divide-gray-200">
+            <form method="POST" action="{% url 'accounts:signup' %}" class="px-5 py-7">
+                <div class="mb-5">
+                    <label for="org_name" class="font-semibold text-sm text-gray-600 pb-1 block">Organization
+                        Name</label>
+                    <input type="text" name="org_name" id="org_name"
+                        class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
+                        placeholder="Enter organization name" required />
+                    {{ form.org_name }}
+                </div>
 
-            <form method="POST" class="space-y-6" action="{% url 'signup' %}">
-                {% csrf_token %}
-                <div>
-                    <label for="username" class="block text-sm font-medium text-zinc-950">Username</label>
+                <div class="mb-5">
+                    <label for="org_email" class="font-semibold text-sm text-gray-600 pb-1 block">Organization
+                        Email</label>
+                    <input type="email" name="org_email" id="org_email"
+                        class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
+                        placeholder="Enter organization email" required />
+                    {{ form.org_email }}
+                </div>
+
+                <hr class="my-6">
+
+                <div class="mb-5">
+                    <label for="username" class="font-semibold text-sm text-gray-600 pb-1 block">Username</label>
                     <div class="mt-1">
                         {{ form.username }}
                     </div>
                 </div>
 
-                <div>
-                    <label for="username" class="block text-sm font-medium text-zinc-950">Email</label>
+                <div class="mb-5">
+                    <label for="email" class="font-semibold text-sm text-gray-600 pb-1 block">Email</label>
                     <div class="mt-1">
                         {{ form.email }}
                     </div>
                 </div>
 
-                <div>
-                    <label for="name" class="block text-sm font-medium text-zinc-950">First Name</label>
+                <div class="mb-5">
+                    <label for="first_name" class="font-semibold text-sm text-gray-600 pb-1 block">First Name</label>
                     <div class="mt-1">
                         {{ form.first_name }}
                     </div>
                 </div>
 
-                <div>
-                    <label for="name" class="block text-sm font-medium text-zinc-950">Last Name</label>
+                <div class="mb-5">
+                    <label for="last_name" class="font-semibold text-sm text-gray-600 pb-1 block">Last Name</label>
                     <div class="mt-1">
                         {{ form.last_name }}
                     </div>
                 </div>
 
-                <div>
-                    <label for="birthdate" class="block text-sm font-medium text-zinc-950">Birthdate</label>
+                <div class="mb-5">
+                    <label for="birthdate" class="font-semibold text-sm text-gray-600 pb-1 block">Birthdate</label>
                     <div class="mt-1">
                         {{ form.birthdate }}
                     </div>
                 </div>
 
-                <div>
-                    <label for="password1" class="block text-sm font-medium text-zinc-950">Password</label>
+                <div class="mb-5">
+                    <label for="password1" class="font-semibold text-sm text-gray-600 pb-1 block">Password</label>
                     <div class="mt-1">
                         {{ form.password1 }}
                     </div>
                 </div>
 
-                <div>
-                    <label for="password2" class="block text-sm font-medium text-zinc-950">Confirm Password</label>
+                <div class="mb-5">
+                    <label for="password2" class="font-semibold text-sm text-gray-600 pb-1 block">Confirm
+                        Password</label>
                     <div class="mt-1">
                         {{ form.password2 }}
                     </div>
                 </div>
 
-                <div>
-                    <button type="submit" class="w-full text-white bg-emerald-400 hover:bg-emerald-500 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center">
-                        Create an account
-                    </button>
-                </div>
+                <button type="submit"
+                    class="transition duration-200 bg-emerald-400 hover:bg-emerald-500 focus:bg-emerald-600 focus:shadow-sm focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block">
+                    <span class="inline-block mr-2">Create Account</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        class="w-4 h-4 inline-block">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </button>
             </form>
 
-            <p class="text-sm font-light text-gray-500 dark:text-gray-400">
-                Already have an account? 
-                <a class="font-bold text-emerald-400 hover:underline dark:text-blue-500" href="/login">Sign in here</a>
-            </p>
+            <div class="py-5">
+                <div class="text-center">
+                    <a href="{% url 'main_site:login' %}"
+                        class="transition duration-200 text-sm text-gray-500 hover:text-gray-700 focus:outline-none focus:text-gray-700">
+                        Already have an account? Sign in here
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
-</section>
-{% endblock %}
-
-
+</div>

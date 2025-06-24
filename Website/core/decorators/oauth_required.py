@@ -6,7 +6,8 @@ from functools import wraps
 from typing import Any, Callable, List
 from django.utils import timezone
 from django.conf import settings
-from django.contrib.auth.models import User
+
+from accounts.models import UserProfile, User
 
 
 def oauth_required(allowed_applications: List[str] | None = None):
@@ -61,21 +62,34 @@ def oauth_required(allowed_applications: List[str] | None = None):
                         status=401,
                     )
 
+            auth_user = token.user
+
+            if not auth_user:
+                error_message = "User not found."
+                return decide_return(is_api_call, error_message, request)
+
+            user_profile = UserProfile.objects.get(user=auth_user)
+
+            if not user_profile:
+                error_message = "User profile not found."
+                return decide_return(is_api_call, error_message, request)
+
+            auth_request = AuthHttpRequest(auth_user, request)
+
             # If the token is valid, continue with the view
-            return view_func(request, *args, **kwargs)
+            return view_func(auth_request, *args, **kwargs)
 
         return _wrapped_view
 
     return decorator
 
-
 class AuthHttpRequest(HttpRequest):
     auth_user: User
 
-    def __init__(self, auth_user, request):
+    def __init__(self, user: User, request: HttpRequest):
         super().__init__()
         self.__dict__.update(request.__dict__)
-        self.auth_user = auth_user
+        self.auth_user = user
 
 
 def decide_return(is_api_call: bool, error: str, request: HttpRequest) -> Any:

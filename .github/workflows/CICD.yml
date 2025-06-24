@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main  # Run on pushes to the main branch
+  workflow_dispatch:
 jobs:
   migrations:
     runs-on: ubuntu-latest
@@ -31,7 +32,35 @@ jobs:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
           DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{ secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY }}
         run: |
           source venv/bin/activate
           python Website/manage.py makemigrations
           python Website/manage.py migrate
+
+  docker-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Build Docker Image
+        run: |
+          docker build -t us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1 Website/
+
+      - name: Push Docker Image to Google Cloud Container Registry
+        run: |
+          echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > gcp-key.json
+          gcloud auth activate-service-account --key-file=gcp-key.json
+          gcloud auth configure-docker us-central1-docker.pkg.dev
+          docker push us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1
+
+      - name: Redeploy to Google Cloud Run
+        run: |
+          gcloud config set project deploy-box-prod
+          gcloud run deploy website-1 \
+            --image us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1 \
+            --region us-central1 \
+            --platform managed \
+            --allow-unauthenticated
