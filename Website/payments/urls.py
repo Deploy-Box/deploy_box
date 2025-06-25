@@ -11,7 +11,7 @@ urlpatterns = [
     # Invoice management
     path("invoices/create/", views.create_invoice, name="invoice_create"),
     # Customer management
-    path("customers/<str:customer_id>/", views.get_customer_id, name="customer_detail"),
+    path("customers/get_customer_id/", views.get_customer_id, name="customer_detail"),
     # Payment method management
     path("payment-method/<str:payment_method_id>/", views.get_payment_method, name="get_payment_method"),
     path("payment-method/delete/", views.delete_payment_method, name="delete_payment_method"),

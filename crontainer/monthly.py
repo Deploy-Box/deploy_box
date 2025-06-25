@@ -5,6 +5,7 @@ import os
 import requests
 # from Website.core.helpers.exchange_client_credentials import exchange_client_credentials_for_token
 from dotenv import load_dotenv
+from azure_billing import AzureBilling
 
 load_dotenv()
 
@@ -34,9 +35,9 @@ def exchange_client_credentials_for_token(
 
 def invoice(data, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "https://deploy-box.onrender.com/payments/create-invoice"
+    url = "http://localhost:8000/api/v1/payments/invoices/create/"
 
-    response = requests.post(url, data=data, headers=headers)
+    response = requests.post(url, json=data, headers=headers)
     print(response.json())
 
     return response
@@ -44,7 +45,7 @@ def invoice(data, token):
 
 def get_customer_id(org_id, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "https://localhost:8000/payments/get_customer_id"
+    url = "http://localhost:8000/api/v1/payments/customers/get_customer_id/"
 
     org_id = {"org_id": org_id}
     org_id = json.dumps(org_id)
@@ -54,7 +55,7 @@ def get_customer_id(org_id, token):
 
 def update_invoice_billing(stack_id, cost, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "https://localhost:8000/payments/update_invoice_billing"
+    url = "https://localhost:8000/api/v1/payments/update_invoice_billing"
 
     data = {"stack_id": stack_id, "cost": cost}
     data = json.dumps(data)
@@ -63,54 +64,100 @@ def update_invoice_billing(stack_id, cost, token):
 
     return response
 
+def upcharge(data: dict) -> dict:
 
-def charge_customer():
+    for stack_id, usage in data.items():
+        if usage < 1:
+            data[stack_id] = 1
+        else:
+            data[stack_id] = usage * 1.5
 
+    return data
+
+def merg_data(group_name_and_usage: dict, group_name_and_org_id: dict) -> dict:
+
+    data = {}
+
+    for group_name, usage in group_name_and_usage.items():
+        org_id = group_name_and_org_id.get(group_name)
+        data[group_name] = (org_id, usage)
+
+    return data
+
+def create_invoice_data(data: dict) -> dict:
+    """
+    Create invoice data based on the provided usage data.
+
+    Args:
+        data (dict): Dictionary containing stack IDs and their respective usage.
+
+    Returns:
+        dict: Dictionary containing customer IDs, amounts, and descriptions.
+    """
+    invoice_data = {}
+
+    for stack_id, (org_id, usage) in data.items():
+        invoice_data[stack_id] = {
+            "org_id": org_id,
+            "amount": usage,
+            "description": f"Here is your invoice for the database usage totaling {usage}",
+        }
+
+    return invoice_data
+
+
+def charge_customer() -> None:
+    """
+    Charge the customer based on their database usage.
+
+    Args:
+        data (dict): Dictionary containing stack IDs and their respective usage.
+
+    Returns:
+        None
+    """
+
+    # Initialize AzureBilling instance to get resource group usage
+    billing_instance = AzureBilling()
+    resource_groups, resource_group_tags, resource_group_to_org = billing_instance.get_all_resource_groups()
+    usage = billing_instance.get_resource_group_usage(resource_groups)
+
+    #get token for deploy box api
     token_url = "http://localhost:8000/o/token/"
-
     token = exchange_client_credentials_for_token(
         os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID"), os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET"), token_url
     )
-    if token is None:
-        raise ValueError("Failed to obtain token from exchange_client_credentials_for_token")
-    token = token.get("access_token")
 
+    #makes call to update the database usage
     headers = {"Authorization": f"Bearer {token}"}
-    data = requests.post(
-        "http://localhost:8000/admin/databases/update_database_usage/",
+    body = {
+        "data": json.dumps(usage),
+    }
+    response = requests.post(
+        "http://localhost:8000/api/v1/stacks/admin/databases/update_database_usage/",
         headers=headers,
+        json=body,
     )
-    if data == None:
-        raise ValueError("Failed to retrieve data from the API")
 
-    print("data: ", data.json())
+    customer_cost_data = upcharge(usage)
+    customer_cost_data = merg_data(customer_cost_data, resource_group_to_org)
+    invoice_data = create_invoice_data(customer_cost_data)
+    # print("invoice_data: ", invoice_data)
 
-    for stack_id, values in data.json().get("stacks").items():
-        org_id, usage = values
-        cost = (
-            int(round(((usage / 1_000_000) * 0.01) * 100, 0))
-            if int(round(((usage / 1_000_000) * 0.01) * 100, 0)) >= 50
-            else 50
-        )
+    for data in invoice_data.items():
+        stack_id = data[0]
+        org_id = data[1].get('org_id')
         customer_id = get_customer_id(org_id=org_id, token=token)
-        customer_id = customer_id.json().get("customer_id")
+        if customer_id.status_code != 200:
+            invoice_data[stack_id].update({"customer_id": None})
+            continue
+        invoice_data[stack_id].update({"customer_id": customer_id.json().get("customer_id")})
 
-        data = {
-            "customer_id": customer_id,
-            "amount": cost,
-            "description": f"here is your invoice for the database usage totaling {usage}",
-        }
+    # print("invoice_data: ", invoice_data)
 
-        data = json.dumps(data)
-
-        invoice(data, token)
-
-        response = update_invoice_billing(stack_id, cost, token)
-
-        # if response.status_code == 200:
-        #     return response.json()
-        # else:
-        #     return {"error": f"Failed to create invoice for user {user_id} stack {stack_id}. Status code: {response.status_code}"}
+    for item in invoice_data.items():
+        invoice_data = item[1]
+        invoice(invoice_data, token)
 
 
 if __name__ == "__main__":

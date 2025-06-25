@@ -2,6 +2,7 @@ from django.http import JsonResponse, HttpRequest, HttpResponse
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.handlers as handlers
+from django.views.decorators.csrf import csrf_exempt
 
 
 @oauth_required()
@@ -145,9 +146,12 @@ def download_stack(request: HttpRequest, stack_id: str):
 def get_all_stack_databases(request: HttpRequest) -> JsonResponse:
     return handlers.get_all_stack_databases()
 
-
+@csrf_exempt
 def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:
-    return handlers.update_stack_databases_usages(request)
+    if request.method == "POST":
+        return handlers.update_stack_databases_usages(request)
+    else:
+        return JsonResponse({"error": "Method not allowed."}, status=405)
 
 
 def get_logs(request: HttpRequest, service_name: str) -> JsonResponse:

@@ -276,9 +276,6 @@ def create_invoice(request: HttpRequest) -> JsonResponse:
             return JsonResponse(
                 {"error": "An error occurred while creating the invoice."}, status=400
             )
-    return JsonResponse(
-                {"error": "An error occurred while creating the invoice."}, status=400
-            )
 
 
 def get_customer_id(request):

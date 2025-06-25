@@ -8,6 +8,7 @@ from projects.models import Project
 from stacks.models import PurchasableStack, Stack
 from core.helpers import request_helpers
 from .serializers import StackDatabaseSerializer
+from django.views.decorators.csrf import csrf_exempt
 
 
 def get_stack(request: AuthHttpRequest) -> JsonResponse:
@@ -131,10 +132,10 @@ def get_all_stack_databases() -> JsonResponse:
         status=200,
     )
 
-
+@csrf_exempt
 def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:
     try:
-        (data) = request_helpers.assertRequestFields(request, ["data"])
+        (data,) = request_helpers.assertRequestFields(request, ["data"])
 
     except request_helpers.MissingFieldError as e:
         return e.to_response()
