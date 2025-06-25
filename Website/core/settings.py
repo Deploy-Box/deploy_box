@@ -28,14 +28,6 @@ if DEBUG:
             HOST.replace("https://", "").replace("http://", ""),
         ]
     )
-OAUTH2_AUTHORIZATION_CODE = {
-    "client_id": "G8Hh2GFOoqRPMJRvqCWsLzMg1YmOLKtHv7PWaXKz",
-    "client_secret": "TrsaS52OswHPN1Z55Ve5V9qB3uYzr1GEDoTq8kkukyvLA3fB6XgEfCSDmqhLTluZAXbRlIJ9wIT6TKoRYSkG5tEBbA6dop5zcmsLzYXva8T8E4g4tRNzRx7gEiINlTHR",
-    "authorization_url": "https://provider.com/oauth2/authorize",
-    "token_url": "https://provider.com/oauth2/token",
-    "redirect_uri": "http://localhost:8000/api/oauth/callback/",
-    "scope": ["openid", "profile", "email"],
-}
 
 ROOT_URLCONF = "core.urls"
 
@@ -51,8 +43,7 @@ INSTALLED_APPS = [
     "oauth2_provider",
     "tailwind",
     "theme",
-    'rest_framework',
-
+    "rest_framework",
     # Custom Apps
     "main_site",
     "accounts",
@@ -72,8 +63,8 @@ if DEBUG:
     )
 
 REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',  # Or OAuth2
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",  # Or OAuth2
     ]
 }
 
@@ -82,17 +73,16 @@ REST_FRAMEWORK = {
 OAUTH2_PROVIDER = {
     "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,  # 1 hour
     "REFRESH_TOKEN_EXPIRE_SECONDS": 86400,  # 1 day
-    "AUTHORIZATION_CODE_EXPIRATION": 600,  # 10 minutes
     "ROTATE_REFRESH_TOKENS": True,
     "GRANT_TYPES": [
-        "authorization_code",
         "password",
+        "client_credentials",
     ],
     "SCOPES": {
         "read": "Read scope",
         "write": "Write scope",
+        "m2m": "Machine to machine scope",
     },
-    "PKCE_REQUIRED": True,
 }
 
 OAUTH2_PASSWORD_CREDENTIALS = {
@@ -105,7 +95,7 @@ OAUTH2_PASSWORD_CREDENTIALS = {
 OAUTH2_CLIENT_CREDENTIALS = {
     "client_id": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID"),
     "client_secret": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET"),
-    "token_url": f"{HOST}/accounts/o/token/",
+    "token_url": f"{HOST}/o/token/",
 }
 
 # Sessions & Security
@@ -172,9 +162,9 @@ MIDDLEWARE = [
 # }
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
 

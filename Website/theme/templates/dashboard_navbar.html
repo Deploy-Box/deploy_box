@@ -1,6 +1,6 @@
 <!-- Sidebar -->
 <div id="sidebar" class="fixed top-0 left-0 z-40 h-screen bg-white shadow-lg transition-all duration-300 ease-in-out"
-    data-expanded="false">
+    data-expanded="true">
     <div class="flex flex-col h-full">
         <div class="p-4 border-b flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -13,47 +13,100 @@
             <ul class="space-y-1 px-3">
                 <!-- Organization Section -->
                 <li class="mb-4">
-                    <a class="flex items-center gap-3 p-3 sidebar-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
-                        </svg>
-                        <span class="sidebar-text font-semibold">Organization</span>
+                    <a href="{% url 'main_site:organization_dashboard' organization_id=current_organization_id %}" class="block">
+                        <div class="flex items-center gap-3 p-3 sidebar-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
+                            </svg>
+                            <span class="sidebar-text font-semibold">Organization</span>
+                        </div>
                     </a>
-                    <div class="ml-8 mt-2 space-y-1">
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Org
-                            Overview</a>
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Members</a>
-                    </div>
-                </li>
 
-                <div class="border-b border-gray-200 my-4"></div>
+                    <!-- Organization Dropdown -->
+                    {% if user_organizations %}
+                    <div class="mt-2 space-y-1">
+                        <div class="relative">
+                            <select id="organizationSelect"
+                                class="w-full p-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sidebar-text">
+                                {% for org in user_organizations %}
+                                <option value="{{ org.id }}" {% if
+                                    current_organization_id|stringformat:"s"==org.id|stringformat:"s" %}selected{% endif
+                                    %}>
+                                    {{ org.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mt-2 space-y-1">
+                            <a href="{% url 'main_site:organization_dashboard' organization_id=current_organization_id %}"
+                                class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_dashboard' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
+                                Dashboard
+                            </a>
+                            <a href="{% url 'main_site:organization_billing' organization_id=current_organization_id %}"
+                                class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_billing' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
+                                Billing
+                            </a>
+                            <a href="{% url 'main_site:organization_members' organization_id=current_organization_id %}"
+                                class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_members' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
+                                Members
+                            </a>
+                            <a href="{% url 'main_site:organization_settings' organization_id=current_organization_id %}"
+                                class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
+                                Settings
+                            </a>        
+                        </div>                    
+                    </div>
+                    {% endif %}
+                </li>
 
                 <!-- Project Section -->
+                {% if current_project_id %}
                 <li class="mb-4">
-                    <div class="flex items-center gap-3 p-3 sidebar-button">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
-                            stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
-                        </svg>
-                        <span class="sidebar-text font-semibold">Project</span>
+                    <a href="{% url 'main_site:project_dashboard' organization_id=current_organization_id project_id=current_project_id %}" class="block">
+                        <div class="flex items-center gap-3 p-3 sidebar-button">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round"
+                                    d="M2.25 12.75V12A2.25 2.25 0 0 1 4.5 9.75h15A2.25 2.25 0 0 1 21.75 12v.75m-8.69-6.44-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z" />
+                            </svg>
+                            <span class="sidebar-text font-semibold">Project</span>
+                        </div>
+                    </a>
+
+                    <!-- Project Dropdown (show on project and stack dashboards) -->
+                    {% if user_projects %}
+                    <div class="mt-2 space-y-1">
+                        <div class="relative">
+                            <select id="projectSelect"
+                                class="w-full p-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sidebar-text">
+                                {% for proj in user_projects %}
+                                <option value="{{ proj.id }}" {% if current_project_id|stringformat:"s" == proj.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ proj.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if current_project_id and not current_stack_id %}
+                        <div class="mt-2 space-y-1">
+                            <a href="{% url 'main_site:project_dashboard' organization_id=current_organization_id project_id=current_project_id %}"
+                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
+                            <a href="#"
+                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Deployment</a>
+                            <a href="#"
+                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
+                        </div>
+                        {% endif %}
                     </div>
-                    <div class="ml-8 mt-2 space-y-1">
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Project
-                            Overview</a>
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
-                    </div>
+                    {% endif %}
                 </li>
+                {% endif %}
 
                 <div class="border-b border-gray-200 my-4"></div>
 
                 <!-- Stack Section -->
+                {% if current_stack_id %}
                 <li class="mb-4">
                     <div class="flex items-center gap-3 p-3 sidebar-button">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -63,15 +116,38 @@
                         </svg>
                         <span class="sidebar-text font-semibold">Stack</span>
                     </div>
-                    <div class="ml-8 mt-2 space-y-1">
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Profile</a>
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Security</a>
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Preferences</a>
+
+                    <!-- Stack Dropdown (show on stack dashboards) -->
+                    {% if user_stacks %}
+                    <div class="mt-2 space-y-1">
+                        <div class="relative">
+                            <select id="stackSelect"
+                                class="w-full p-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sidebar-text">
+                                {% for stack in user_stacks %}
+                                <option value="{{ stack.id }}" {% if current_stack_id|stringformat:"s" == stack.id|stringformat:"s" %}selected{% endif %}>
+                                    {{ stack.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        {% if current_stack_id %}
+                        <div class="mt-2 space-y-1">
+                            <a href="{% url 'main_site:stack_dashboard' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
+                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
+                            <a href="#"
+                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Usage</a>
+                            <a href="#"
+                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Environment Variables</a>
+                            <a href="#"
+                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Logs</a>
+                            <a href="#"
+                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
+                        </div>
+                        {% endif %}
                     </div>
+                    {% endif %}
                 </li>
+                {% endif %}
             </ul>
         </nav>
         <a href="{% url 'main_site:profile' %}" class="p-4 border-t relative sidebar-button">
@@ -85,7 +161,7 @@
 
                 </div>
                 <div class="sidebar-text">
-                    <p class="font-medium">Admin</p>
+                    <p class="font-medium">{{ user.username }}</p>
                     <p class="text-sm text-gray-500">Administrator</p>
                 </div>
             </div>
@@ -97,16 +173,8 @@
 <div id="sidebarOverlay" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden"></div>
 
 <style>
-    #sidebar[data-expanded="false"] {
-        width: 5rem;
-    }
-
-    #sidebar[data-expanded="true"] {
+    #sidebar {
         width: 16rem;
-    }
-
-    #sidebar[data-expanded="false"] .sidebar-text {
-        display: none;
     }
 
     /* Add smooth transitions for all properties */
@@ -141,16 +209,11 @@
     }
 
     @media (max-width: 768px) {
-        #sidebar[data-expanded="true"] {
+        #sidebar {
             width: 16rem;
             position: absolute;
             z-index: 40;
             height: 100%;
-        }
-
-        #sidebar[data-expanded="false"] {
-            width: 0;
-            overflow: hidden;
         }
     }
 
@@ -168,88 +231,69 @@
         transform: scale(1.03);
         box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.04);
     }
+
+    /* Dropdown styling */
+    #organizationSelect,
+    #projectSelect,
+    #stackSelect {
+        font-size: 0.875rem;
+        line-height: 1.25rem;
+    }
+
+    #organizationSelect:focus,
+    #projectSelect:focus,
+    #stackSelect:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+    }
 </style>
 
 <!-- JavaScript for sidebar functionality -->
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        // Cookie utility functions
-        function setCookie(name, value, days) {
-            let expires = "";
-            if (days) {
-                const date = new Date();
-                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-                expires = "; expires=" + date.toUTCString();
-            }
-            document.cookie = name + "=" + (value || "") + expires + "; path=/";
-        }
-
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) == ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null;
-        }
-
         const sidebar = document.getElementById('sidebar');
-        let isExpanded = sidebar.getAttribute('data-expanded') === 'true';
-        let hoverTimeout = null;
-        let tempExpanded = false;
 
-        // On load, check cookie for sidebar state
-        let cookieState = getCookie('sidebarExpanded');
-        if (cookieState !== null) {
-            isExpanded = cookieState === 'true';
-            sidebar.setAttribute('data-expanded', isExpanded);
-        } else {
-            isExpanded = false;
-            sidebar.setAttribute('data-expanded', 'false');
+        // Organization dropdown functionality
+        const organizationSelect = document.getElementById('organizationSelect');
+        if (organizationSelect) {
+            organizationSelect.addEventListener('change', function () {
+                const selectedOrgId = this.value;
+                if (selectedOrgId) {
+                    window.location.href = `/dashboard/organizations/${selectedOrgId}/`;
+                }
+            });
         }
 
-
-        function toggleSidebar() {
-            isExpanded = !isExpanded;
-            sidebar.setAttribute('data-expanded', isExpanded);
-            setCookie('sidebarExpanded', isExpanded, 30); // Store for 30 days
+        // Project dropdown functionality
+        const projectSelect = document.getElementById('projectSelect');
+        if (projectSelect) {
+            projectSelect.addEventListener('change', function () {
+                const selectedProjectId = this.value;
+                if (selectedProjectId) {
+                    // Get the current organization ID from the context
+                    const currentOrgId = '{{ current_organization_id }}';
+                    if (currentOrgId) {
+                        window.location.href = `/dashboard/organizations/${currentOrgId}/projects/${selectedProjectId}/`;
+                    }
+                }
+            });
         }
 
-
-        // Handle responsive behavior
-        function handleResize() {
-            if (window.innerWidth < 768) {
-                sidebar.setAttribute('data-expanded', 'false');
-                isExpanded = false;
-            } else {
-                // Keep collapsed by default on desktop
-                sidebar.setAttribute('data-expanded', 'false');
-                isExpanded = false;
-            }
-            setCookie('sidebarExpanded', isExpanded, 30);
+        // Stack dropdown functionality
+        const stackSelect = document.getElementById('stackSelect');
+        if (stackSelect) {
+            stackSelect.addEventListener('change', function () {
+                const selectedStackId = this.value;
+                if (selectedStackId) {
+                    // Get the current organization and project IDs from the context
+                    const currentOrgId = '{{ current_organization_id }}';
+                    const currentProjectId = '{{ current_project_id }}';
+                    if (currentOrgId && currentProjectId) {
+                        window.location.href = `/dashboard/organizations/${currentOrgId}/projects/${currentProjectId}/stacks/${selectedStackId}/`;
+                    }
+                }
+            });
         }
-
-        window.addEventListener('resize', handleResize);
-        handleResize(); // Initial check
-
-        // Hover to temporarily expand sidebar
-        sidebar.addEventListener('mouseenter', function () {
-            if (!isExpanded) {
-                hoverTimeout = setTimeout(() => {
-                    sidebar.setAttribute('data-expanded', 'true');
-                    tempExpanded = true;
-                }, 200); // 0.45 seconds
-            }
-        });
-
-        sidebar.addEventListener('mouseleave', function () {
-            clearTimeout(hoverTimeout);
-            if (tempExpanded) {
-                sidebar.setAttribute('data-expanded', 'false');
-                tempExpanded = false;
-            }
-        });
     });
 </script>

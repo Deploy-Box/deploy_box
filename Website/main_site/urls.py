@@ -19,30 +19,45 @@ urlpatterns = [
     # User profile
     path("profile/", views.profile, name="profile"),
     # Dashboard
-    path("dashboard/", views.dashboard, name="dashboard"),
+    path("dashboard/", views.dashboard_view.get, name="dashboard"),
     path(
         "dashboard/organizations/<str:organization_id>/",
-        views.organization_dashboard,
+        views.dashboard_view.organization_dashboard,
         name="organization_dashboard",
     ),
     path(
+        "dashboard/organizations/<str:organization_id>/billing/",
+        views.dashboard_view.organization_billing,
+        name="organization_billing",
+    ),
+    path(
+        "dashboard/organizations/<str:organization_id>/members/",
+        views.dashboard_view.organization_members,
+        name="organization_members",
+    ),
+    path(
+        "dashboard/organizations/<str:organization_id>/settings/",
+        views.dashboard_view.organization_settings,
+        name="organization_settings",
+    ),
+    path(
         "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/",
-        views.project_dashboard,
+        views.dashboard_view.project_dashboard,
         name="project_dashboard",
     ),
     path(
         "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/stacks/<str:stack_id>/",
-        views.stack_dashboard,
+        views.dashboard_view.stack_dashboard,
         name="stack_dashboard",
     ),
     path(
         "dashboard/organizations/<str:organization_id>/add_org_member",
-        views.add_org_members,
+        views.dashboard_view.add_org_members,
         name="add_org_members",
     ),
     path(
         "dashboard/organizations/<str:organization_id>/add_nonexistant_org_member",
-        views.add_nonexistant_org_members,
+        views.dashboard_view.add_nonexistant_org_members,
         name="add_nonexistant_org_members",
     ),
     # Authentication
@@ -51,28 +66,28 @@ urlpatterns = [
         auth_views.LoginView.as_view(template_name="accounts/login.html"),
         name="login",
     ),
-    path("signup/", views.signup, name="signup"),
-    path("password_reset/", views.password_reset, name="password_reset"),
+    path("signup/", views.auth_view.signup, name="signup"),
+    path("password_reset/", views.auth_view.password_reset, name="password_reset"),
     path(
         "password_reset/confirm/<str:uidb64>/<str:token>/",
-        views.password_reset_confirm,
+        views.auth_view.password_reset_confirm,
         name="password_reset_confirm",
     ),
     # Payment pages
-    path("payments/<str:variant>", views.home_page_view, name="payments_home"),
-    path("payments/cards/add/", views.add_card_view, name="card_add"),
-    path("payments/checkout/success/", views.success_view, name="checkout_success"),
+    path("payments/<str:variant>", views.payment_view.home_page_view, name="payments_home"),
+    path("payments/cards/add/", views.payment_view.add_card_view, name="card_add"),
+    path("payments/checkout/success/", views.payment_view.success_view, name="checkout_success"),
     path(
-        "payments/checkout/cancelled/", views.cancelled_view, name="checkout_cancelled"
+        "payments/checkout/cancelled/", views.payment_view.cancelled_view, name="checkout_cancelled"
     ),
     path(
         "dashboard/organizations/create_organization_form",
-        views.create_organization_form,
+        views.dashboard_view.create_organization_form,
         name="create_organization_form",
     ),
     path(
         "dashboard/organizations/<str:organization_id>/create_project_form",
-        views.create_project_form,
+        views.dashboard_view.create_project_form,
         name="create_project_form",
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

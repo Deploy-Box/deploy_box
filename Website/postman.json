@@ -3,6 +3,50 @@
     "name": "Django OAuth2 Client Testing",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string",
+      "description": "Base URL for the Django application"
+    },
+    {
+      "key": "access_token",
+      "value": "your_access_token",
+      "type": "string",
+      "description": "OAuth2 access token for API calls"
+    },
+    {
+      "key": "refresh_token",
+      "value": "your_refresh_token",
+      "type": "string",
+      "description": "OAuth2 refresh token for token renewal"
+    },
+    {
+      "key": "token_url",
+      "value": "http://localhost:8000/o/token/",
+      "type": "string",
+      "description": "OAuth2 token endpoint URL"
+    },
+    {
+      "key": "m2m_client_id",
+      "value": "your_m2m_client_id",
+      "type": "string",
+      "description": "Client ID for machine-to-machine authentication"
+    },
+    {
+      "key": "m2m_client_secret",
+      "value": "your_m2m_client_secret",
+      "type": "string",
+      "description": "Client secret for machine-to-machine authentication"
+    },
+    {
+      "key": "m2m_access_token",
+      "value": "your_m2m_access_token",
+      "type": "string",
+      "description": "Access token for machine-to-machine API calls"
+    }
+  ],
   "item": [
     {
       "name": "Sign up (POST /api/signup/)",
@@ -11,7 +55,7 @@
         "header": [
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "url": { "raw": "{{base_url}}/api/signup/", "host": ["{{base_url}}"], "path": ["api","signup",""] },
+        "url": { "raw": "{{base_url}}/api/v1/accounts/signup/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","signup",""] },
         "body": {
           "mode": "raw",
           "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password1\": \"Secret123!\",\n  \"password2\": \"Secret123!\",\n  \"organization_name\": \"TestOrg\"\n}"
@@ -26,37 +70,11 @@
         "header": [
           { "key": "Content-Type", "value": "application/json" }
         ],
-        "url": { "raw": "{{base_url}}/api/login/", "host": ["{{base_url}}"], "path": ["api","login",""] },
+        "url": { "raw": "{{base_url}}/api/v1/accounts/login/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","login",""] },
         "body": {
           "mode": "raw",
           "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"Secret123!\"\n}"
         }
-      },
-      "response": []
-    },
-    {
-      "name": "Start Auth Code PKCE Flow (GET /oauth/authorize/)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": { "raw": "{{base_url}}/oauth/authorize/?client_id={{client_id}}&redirect_uri={{redirect_uri}}&response_type=code&code_challenge={{code_challenge}}&code_challenge_method=S256", "host": ["{{base_url}}"], "path": ["oauth","authorize",""], "query": [
-          { "key": "client_id", "value": "{{client_id}}" },
-          { "key": "redirect_uri", "value": "{{redirect_uri}}" },
-          { "key": "response_type", "value": "code" },
-          { "key": "code_challenge", "value": "{{code_challenge}}" },
-          { "key": "code_challenge_method", "value": "S256" }
-        ]}
-      },
-      "response": []
-    },
-    {
-      "name": "Callback Token Exchange (GET /api/oauth/callback/?code=…)",
-      "request": {
-        "method": "GET",
-        "header": [],
-        "url": { "raw": "{{base_url}}/api/oauth/callback/?code={{auth_code}}", "host": ["{{base_url}}"], "path": ["api","oauth","callback",""], "query": [
-          { "key": "code", "value": "{{auth_code}}" }
-        ] }
       },
       "response": []
     },
@@ -72,9 +90,7 @@
           "mode": "urlencoded",
           "urlencoded": [
             { "key": "grant_type", "value": "refresh_token" },
-            { "key": "refresh_token", "value": "{{refresh_token}}" },
-            { "key": "client_id", "value": "{{client_id}}" },
-            { "key": "client_secret", "value": "{{client_secret}}" }
+            { "key": "refresh_token", "value": "{{refresh_token}}" }
           ]
         }
       },
@@ -90,6 +106,53 @@
         "url": { "raw": "{{base_url}}/api/protected/", "host": ["{{base_url}}"], "path": ["api","protected",""] }
       },
       "response": []
+    },
+    {
+      "name": "Machine-to-Machine Authentication",
+      "item": [
+        {
+          "name": "M2M Token Request (POST /api/oauth/m2m/)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/api/v1/accounts/oauth/m2m/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","oauth","m2m",""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": \"{{m2m_client_id}}\",\n  \"client_secret\": \"{{m2m_client_secret}}\",\n  \"scope\": \"m2m\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M2M Protected Endpoint (GET /api/m2m/protected/)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{m2m_access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/v1/accounts/m2m/protected/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","m2m","protected",""] }
+          },
+          "response": []
+        },
+        {
+          "name": "M2M Protected Endpoint (POST /api/m2m/protected/)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{m2m_access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/api/v1/accounts/m2m/protected/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","m2m","protected",""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hello from M2M service\",\n  \"timestamp\": \"2024-01-01T12:00:00Z\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
     }
   ],
   "protocolProfileBehavior": {}
