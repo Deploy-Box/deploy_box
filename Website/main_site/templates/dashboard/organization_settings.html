@@ -1,0 +1,28 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="w-full bg-gray-50">
+    <header class="bg-zinc-950 pt-16 pb-24 text-center">
+        <h1 class="text-2xl font-bold text-gray-100 mb-2">Organization Settings</h1>
+        <p class="text-md text-gray-100 max-w-2xl mx-auto">
+            Manage settings for {{ organization.name }}
+        </p>
+    </header>
+    <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
+        <section class="mb-8">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M12 8c0-1.1-.9-2-2-2s-2 .9-2 2 .9 2 2 2 2-.9 2-2zm-2 8c-2.21 0-4-1.79-4-4h2a2 2 0 004 0h2c0 2.21-1.79 4-4 4zm6-4c0 3.31-2.69 6-6 6s-6-2.69-6-6 2.69-6 6-6 6 2.69 6 6z" />
+                    </svg>
+                    Settings
+                </h2>
+                <div class="py-8 text-center text-zinc-500">
+                    <p>Settings content coming soon...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+{% endblock %} 

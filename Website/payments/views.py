@@ -7,6 +7,7 @@ import random
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
+from typing import Union
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.services as stack_services
@@ -152,13 +153,13 @@ def record_usage(subscription_item_id, quantity):
         print(f"Error recording usage: {e}")
 
 
-def stripe_webhook(request: HttpRequest) -> HttpResponse | JsonResponse:
+def stripe_webhook(request: HttpRequest) -> Union[HttpResponse, JsonResponse]:
     # Use `stripe listen --forward-to http://127.0.0.1:8000/api/v1/payments/webhook/` to listen for events
     WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
+    # WEBHOOK_SECRET = (
+    #     "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
+    # )
     print(f"Webhook secret: {WEBHOOK_SECRET}")
-    WEBHOOK_SECRET = (
-        "whsec_cae902cfa6db0bd7ecb8d400c97120467be8afb9304229d650f0dc3f4a24aca2"
-    )
 
     payload = request.body
     sig_header = request.headers.get("Stripe-Signature")
@@ -275,10 +276,6 @@ def create_invoice(request: HttpRequest) -> JsonResponse:
             return JsonResponse(
                 {"error": "An error occurred while creating the invoice."}, status=400
             )
-    else:
-        return JsonResponse(
-            {"error": "Invalid request method. Only POST is allowed."}, status=405
-        )
 
 
 def get_customer_id(request):
@@ -318,9 +315,9 @@ def update_invoice_billing(request):
         updated_count = StackDatabase.objects.filter(stack_id=stack_id).update(
             current_usage=0
         )
-        billing = StackDatabase.objects.filter(stack_id=stack_id).update(
-            pending_billed=F("pending_billed") + cost
-        )
+        # billing = StackDatabase.objects.filter(stack_id=stack_id).update(
+        #     pending_billed=F("pending_billed") + cost
+        # )
 
         # Check if any rows were updated
         if updated_count > 0:
@@ -335,24 +332,24 @@ def update_invoice_billing(request):
             )
 
 
-@oauth_required()
-def create_price_item(request: HttpRequest) -> JsonResponse:
-    return pricing_services.create_price_item(request)
+# @oauth_required()
+# def create_price_item(request: HttpRequest) -> JsonResponse:
+#     return pricing_services.create_price_item(request)
 
 
-@oauth_required()
-def update_price_item(request: HttpRequest) -> JsonResponse:
-    return pricing_services.update_price_item(request)
+# @oauth_required()
+# def update_price_item(request: HttpRequest) -> JsonResponse:
+#     return pricing_services.update_price_item(request)
 
 
-@oauth_required()
-def delete_price_item(request: HttpRequest) -> JsonResponse:
-    return pricing_services.delete_price_item(request)
+# @oauth_required()
+# def delete_price_item(request: HttpRequest) -> JsonResponse:
+#     return pricing_services.delete_price_item(request)
 
 
-@oauth_required()
-def get_price_item_by_name(request: HttpRequest, name: str) -> JsonResponse:
-    return pricing_services.get_price_item_by_name(request, name)
+# @oauth_required()
+# def get_price_item_by_name(request: HttpRequest, name: str) -> JsonResponse:
+#     return pricing_services.get_price_item_by_name(request, name)
 
 
 def get_payment_method(request: HttpRequest, org_id: str) -> JsonResponse:
@@ -440,7 +437,8 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
 
         # Get the default payment method
         customer = stripe.Customer.retrieve(customer_id)
-        default_payment_method_id = customer.invoice_settings.default_payment_method
+        default_payment_method_id = None
+        # default_payment_method_id = customer.invoice_settings.default_payment_method
 
         if default_payment_method_id:
             # Detach the payment method

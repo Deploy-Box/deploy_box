@@ -2,16 +2,17 @@ import logging
 from django.http import JsonResponse
 from django.db import transaction
 from django.shortcuts import get_object_or_404
+from typing import Union
 
 from projects.services import create_project
-from accounts.models import User
+from accounts.models import UserProfile
 from organizations.models import Organization, OrganizationMember, PendingInvites
 from .helpers.email_helpers import invite_org_member
 
 logger = logging.getLogger(__name__)
 
 
-def get_organizations(user: User) -> list[Organization]:
+def get_organizations(user: UserProfile) -> list[Organization]:
     """
     Get organizations for a user.
     """
@@ -23,7 +24,7 @@ def get_organizations(user: User) -> list[Organization]:
 
     return list(organizations)
 
-def get_organization(user: User, organization_id: str) -> Organization | None:
+def get_organization(user: UserProfile, organization_id: str) -> Union[Organization, None]:
     """
     Get organization for a user.
     """
@@ -35,7 +36,7 @@ def get_organization(user: User, organization_id: str) -> Organization | None:
     return organization
 
 
-def create_organization(user: User, name: str, email: str) -> Organization | dict:
+def create_organization(user: UserProfile, name: str, email: str) -> Union[Organization, dict]:
     from payments.services import create_stripe_user
 
     try:
@@ -60,7 +61,7 @@ def create_organization(user: User, name: str, email: str) -> Organization | dic
     return organization
 
 
-def update_organization(user: User, organization_id: str, data: dict) -> JsonResponse:
+def update_organization(user: UserProfile, organization_id: str, data: dict) -> JsonResponse:
     organization = get_object_or_404(Organization, id=organization_id)
 
     # Check if the user is an admin of the organization
@@ -80,7 +81,7 @@ def update_organization(user: User, organization_id: str, data: dict) -> JsonRes
     }, status=200)
 
 
-def delete_organization(user: User, organization_id: str) -> JsonResponse:
+def delete_organization(user: UserProfile, organization_id: str) -> JsonResponse:
     organization = get_object_or_404(Organization, id=organization_id)
 
     # Check if the user is an admin of the organization
@@ -93,7 +94,7 @@ def delete_organization(user: User, organization_id: str) -> JsonResponse:
 
     return JsonResponse({"message": "organization deleted"}, status=200)
 
-def update_user(user: User, organization: object, user_id: str) -> JsonResponse:
+def update_user(user: UserProfile, organization: object, user_id: str) -> JsonResponse:
     permission_check = OrganizationMember.objects.filter(user=user, organization=organization, role="admin").exists()
     multiple_admin_check = OrganizationMember.objects.filter(organization=organization, role="admin")
 
@@ -104,7 +105,7 @@ def update_user(user: User, organization: object, user_id: str) -> JsonResponse:
         return JsonResponse({"message": "in order to downgrade your own permissions there must be more than one admin"}, status=400)
 
     try:
-        org_user = User.objects.get(id=user_id)
+        org_user = UserProfile.objects.get(id=user_id)
         org_member = OrganizationMember.objects.get(organization=organization, user=org_user)
 
         if org_member.role.lower() == "admin":
@@ -123,11 +124,11 @@ def update_user(user: User, organization: object, user_id: str) -> JsonResponse:
         return JsonResponse({"message": f'an unexpected error occured {e}'}, status=400)
 
 
-def add_org_members(member: str, role: str, organization: object, user: User) -> JsonResponse:
+def add_org_members(member: str, role: str, organization: object, user: UserProfile) -> JsonResponse:
     permission_check = OrganizationMember.objects.filter(user_id=user, organization=organization, role='admin').exists()
 
     if permission_check:
-        user_to_add = User.objects.get(username=member)
+        user_to_add = UserProfile.objects.get(username=member)
 
         if not user_to_add:
             return JsonResponse({"message": "user could not be found please ensuer username is correct"}, status=404)
@@ -146,7 +147,7 @@ def add_org_members(member: str, role: str, organization: object, user: User) ->
     else:
         return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)
 
-def remove_org_member(user: User, organization_id: str, user_id: str) -> JsonResponse:
+def remove_org_member(user: UserProfile, organization_id: str, user_id: str) -> JsonResponse:
     permission_check = OrganizationMember.objects.filter(user_id=user, role='admin').exists()
 
     if permission_check:
@@ -168,7 +169,7 @@ def remove_org_member(user: User, organization_id: str, user_id: str) -> JsonRes
     else:
         return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)
 
-def invite_new_user_to_org(user: User, organization: Organization, email: str ):
+def invite_new_user_to_org(user: UserProfile, organization: Organization, email: str ):
     try:
         invite_org_member.send_invite_new_user_to_org(user, organization, email)
         PendingInvites.objects.create(organization=organization, email=email)

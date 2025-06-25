@@ -2,7 +2,6 @@ from django.http import JsonResponse, HttpRequest, HttpResponse
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.handlers as handlers
-from core.utils.gcp.main import GCPUtils
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -156,5 +155,6 @@ def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:
 
 
 def get_logs(request: HttpRequest, service_name: str) -> JsonResponse:
-    gcp_wrapper = GCPUtils()
-    return JsonResponse(gcp_wrapper.stream_logs([service_name]))
+    return JsonResponse({"message", "not implemented"})
+    # gcp_wrapper = GCPUtils()
+    # return JsonResponse(gcp_wrapper.stream_logs([service_name]))

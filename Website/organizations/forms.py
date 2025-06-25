@@ -1,7 +1,7 @@
 from django import forms
 
 from .models import Organization, OrganizationMember, PendingInvites # type: ignore
-from accounts.models import User
+from accounts.models import UserProfile
 
 class OrganizationCreateForm(forms.ModelForm): # type: ignore
     name = forms.CharField()

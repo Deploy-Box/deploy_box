@@ -16,8 +16,8 @@ urlpatterns = [
     path("payment-method/<str:payment_method_id>/", views.get_payment_method, name="get_payment_method"),
     path("payment-method/delete/", views.delete_payment_method, name="delete_payment_method"),
     # Price management
-    path("prices/", views.create_price_item, name="price_create"),
-    path("prices/<str:price_id>/update/", views.update_price_item, name="price_update"),
-    path("prices/<str:price_id>/delete/", views.delete_price_item, name="price_delete"),
-    path("prices/name/<str:name>/", views.get_price_item_by_name, name="price_by_name"),
+    # path("prices/", views.create_price_item, name="price_create"),
+    # path("prices/<str:price_id>/update/", views.update_price_item, name="price_update"),
+    # path("prices/<str:price_id>/delete/", views.delete_price_item, name="price_delete"),
+    # path("prices/name/<str:name>/", views.get_price_item_by_name, name="price_by_name"),
 ]

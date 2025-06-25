@@ -1,0 +1,159 @@
+{
+  "info": {
+    "name": "Django OAuth2 Client Testing",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000",
+      "type": "string",
+      "description": "Base URL for the Django application"
+    },
+    {
+      "key": "access_token",
+      "value": "your_access_token",
+      "type": "string",
+      "description": "OAuth2 access token for API calls"
+    },
+    {
+      "key": "refresh_token",
+      "value": "your_refresh_token",
+      "type": "string",
+      "description": "OAuth2 refresh token for token renewal"
+    },
+    {
+      "key": "token_url",
+      "value": "http://localhost:8000/o/token/",
+      "type": "string",
+      "description": "OAuth2 token endpoint URL"
+    },
+    {
+      "key": "m2m_client_id",
+      "value": "your_m2m_client_id",
+      "type": "string",
+      "description": "Client ID for machine-to-machine authentication"
+    },
+    {
+      "key": "m2m_client_secret",
+      "value": "your_m2m_client_secret",
+      "type": "string",
+      "description": "Client secret for machine-to-machine authentication"
+    },
+    {
+      "key": "m2m_access_token",
+      "value": "your_m2m_access_token",
+      "type": "string",
+      "description": "Access token for machine-to-machine API calls"
+    }
+  ],
+  "item": [
+    {
+      "name": "Sign up (POST /api/signup/)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/v1/accounts/signup/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","signup",""] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"testuser\",\n  \"email\": \"testuser@example.com\",\n  \"password1\": \"Secret123!\",\n  \"password2\": \"Secret123!\",\n  \"organization_name\": \"TestOrg\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Password Grant Login (POST /api/login/)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "url": { "raw": "{{base_url}}/api/v1/accounts/login/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","login",""] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"testuser\",\n  \"password\": \"Secret123!\"\n}"
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Refresh Token (POST token endpoint)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/x-www-form-urlencoded" }
+        ],
+        "url": { "raw": "{{token_url}}", "host": ["{{token_url}}"] },
+        "body": {
+          "mode": "urlencoded",
+          "urlencoded": [
+            { "key": "grant_type", "value": "refresh_token" },
+            { "key": "refresh_token", "value": "{{refresh_token}}" }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "API Call with Access Token",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{access_token}}" }
+        ],
+        "url": { "raw": "{{base_url}}/api/protected/", "host": ["{{base_url}}"], "path": ["api","protected",""] }
+      },
+      "response": []
+    },
+    {
+      "name": "Machine-to-Machine Authentication",
+      "item": [
+        {
+          "name": "M2M Token Request (POST /api/oauth/m2m/)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/api/v1/accounts/oauth/m2m/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","oauth","m2m",""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"client_id\": \"{{m2m_client_id}}\",\n  \"client_secret\": \"{{m2m_client_secret}}\",\n  \"scope\": \"m2m\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "M2M Protected Endpoint (GET /api/m2m/protected/)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{m2m_access_token}}" }
+            ],
+            "url": { "raw": "{{base_url}}/api/v1/accounts/m2m/protected/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","m2m","protected",""] }
+          },
+          "response": []
+        },
+        {
+          "name": "M2M Protected Endpoint (POST /api/m2m/protected/)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{m2m_access_token}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": { "raw": "{{base_url}}/api/v1/accounts/m2m/protected/", "host": ["{{base_url}}"], "path": ["api","v1","accounts","m2m","protected",""] },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Hello from M2M service\",\n  \"timestamp\": \"2024-01-01T12:00:00Z\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "protocolProfileBehavior": {}
+}

@@ -1,5 +1,4 @@
 from django.db import models
-from django.contrib.auth.models import User
 from django.conf import settings
 from cryptography.fernet import Fernet
 
@@ -8,13 +7,13 @@ from core.fields import ShortUUIDField
 
 ENCRYPTION_KEY = settings.GITHUB["TOKEN_KEY"]
 
-if not ENCRYPTION_KEY:
-    raise ValueError("GITHUB_TOKEN_KEY is not set")
+# if not ENCRYPTION_KEY:
+#     raise ValueError("GITHUB_TOKEN_KEY is not set")
 
 
 class Webhook(models.Model):
     id = ShortUUIDField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)  # Link webhook to a user
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Link webhook to a user
     stack = models.ForeignKey(
         Stack, on_delete=models.CASCADE
     )  # Link webhook to a stack
@@ -30,7 +29,7 @@ class Webhook(models.Model):
 
 class Token(models.Model):
     id = ShortUUIDField(primary_key=True)
-    user = models.OneToOneField(User, on_delete=models.CASCADE)  # Link token to user
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)  # Link token to user
     encrypted_token = models.BinaryField()  # Store encrypted token
 
     def set_token(self, token: str):

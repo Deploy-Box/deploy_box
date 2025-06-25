@@ -3,6 +3,7 @@ from django.http import HttpResponse, JsonResponse
 from core.decorators import AuthHttpRequest
 from core.helpers import request_helpers
 import projects.services as services
+from typing import Union
 
 
 def get_projects(request: AuthHttpRequest) -> JsonResponse:
@@ -21,7 +22,7 @@ def get_project(request: AuthHttpRequest, project_id: str) -> JsonResponse:
     return JsonResponse(project, status=200)
 
 
-def create_project(request: AuthHttpRequest) -> JsonResponse | HttpResponse:
+def create_project(request: AuthHttpRequest) -> Union[JsonResponse, HttpResponse]:
     try:
         user = request.auth_user
 

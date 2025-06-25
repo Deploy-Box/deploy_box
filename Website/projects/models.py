@@ -1,6 +1,6 @@
 from django.db import models
 
-from accounts.models import User
+from accounts.models import UserProfile
 from organizations.models import Organization
 from core.fields import ShortUUIDField
 
@@ -18,7 +18,7 @@ class Project(models.Model):
 
 class ProjectMember(models.Model):
     id = ShortUUIDField(primary_key=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     role = models.CharField(
         max_length=50,

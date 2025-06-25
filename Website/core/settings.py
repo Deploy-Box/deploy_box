@@ -6,7 +6,8 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-HOST = os.environ.get("HOST", "localhost")
+HOST = os.environ.get("HOST")
+assert HOST is not None, "HOST env must be set"
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
@@ -42,6 +43,7 @@ INSTALLED_APPS = [
     "oauth2_provider",
     "tailwind",
     "theme",
+    "rest_framework",
     # Custom Apps
     "main_site",
     "accounts",
@@ -60,22 +62,27 @@ if DEBUG:
         ]
     )
 
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",  # Or OAuth2
+    ]
+}
+
 
 # Authentication
 OAUTH2_PROVIDER = {
     "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,  # 1 hour
     "REFRESH_TOKEN_EXPIRE_SECONDS": 86400,  # 1 day
-    "AUTHORIZATION_CODE_EXPIRATION": 600,  # 10 minutes
     "ROTATE_REFRESH_TOKENS": True,
     "GRANT_TYPES": [
-        "authorization_code",
         "password",
+        "client_credentials",
     ],
     "SCOPES": {
         "read": "Read scope",
         "write": "Write scope",
+        "m2m": "Machine to machine scope",
     },
-    "PKCE_REQUIRED": True,
 }
 
 OAUTH2_PASSWORD_CREDENTIALS = {
@@ -88,7 +95,7 @@ OAUTH2_PASSWORD_CREDENTIALS = {
 OAUTH2_CLIENT_CREDENTIALS = {
     "client_id": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID"),
     "client_secret": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET"),
-    "token_url": f"{HOST}/accounts/o/token/",
+    "token_url": f"{HOST}/o/token/",
 }
 
 # Sessions & Security
@@ -139,20 +146,28 @@ MIDDLEWARE = [
 ]
 
 # Database
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.environ.get("DB_NAME"),
+#         "USER": os.environ.get("DB_USER"),
+#         "PASSWORD": os.environ.get("DB_PASSWORD"),
+#         "HOST": os.environ.get("DB_HOST"),
+#         "PORT": os.environ.get("DB_PORT"),
+#         # "OPTIONS": {
+#         #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
+#         # },
+#         "CONN_MAX_AGE": 600,
+#     }
+# }
+
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
-        # "OPTIONS": {
-        #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
-        # },
-        "CONN_MAX_AGE": 600,
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
     }
 }
+
 
 # Static & Media Files
 STATIC_URL = "/static/"
@@ -231,6 +246,8 @@ AUTH_PASSWORD_VALIDATORS = [
         "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
     },
 ]
+
+AUTH_USER_MODEL = "accounts.UserProfile"
 
 # Internationalization
 LANGUAGE_CODE = "en-us"

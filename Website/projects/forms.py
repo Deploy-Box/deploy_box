@@ -2,7 +2,7 @@ from django import forms
 
 from .models import Project, ProjectMember # type: ignor
 from organizations.models import Organization, OrganizationMember
-from accounts.models import User
+from accounts.models import UserProfile
 
 class ProjectCreateForm(forms.ModelForm): # type: ignore
     name = forms.CharField()

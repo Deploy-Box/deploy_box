@@ -17,7 +17,7 @@ urlpatterns = [
             [
                 # User account management
                 path(
-                    "users/", include(("accounts.urls", "accounts"), namespace="users")
+                    "accounts/", include(("accounts.urls", "accounts"), namespace="accounts")
                 ),
                 # Stack management
                 path("stacks/", include(("stacks.urls", "stacks"), namespace="stacks")),

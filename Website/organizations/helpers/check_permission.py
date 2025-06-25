@@ -1,8 +1,9 @@
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404
 
-from accounts.models import User
+from accounts.models import UserProfile
 from organizations.models import Organization, OrganizationMember
+from typing import Union
 
 class OrganizationPermissionsError(Exception):
     def __init__(self, message: str, status: int = 400):
@@ -13,7 +14,7 @@ class OrganizationPermissionsError(Exception):
     def to_response(self) -> JsonResponse:
         return JsonResponse({"error": self.message}, status=self.status)
 
-def check_permisssion(user: User, organization_id, requeired_role: str | None) -> Organization:
+def check_permisssion(user: UserProfile, organization_id, requeired_role: Union[str, None]) -> Organization:
     if requeired_role == None:
         organization = Organization.objects.get(id=organization_id)
         return organization
