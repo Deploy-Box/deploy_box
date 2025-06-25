@@ -275,6 +275,10 @@ def create_invoice(request: HttpRequest) -> JsonResponse:
             return JsonResponse(
                 {"error": "An error occurred while creating the invoice."}, status=400
             )
+    else:
+        return JsonResponse(
+            {"error": "Invalid request method. Only POST is allowed."}, status=405
+        )
 
 
 def get_customer_id(request):

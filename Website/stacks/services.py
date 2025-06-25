@@ -18,6 +18,7 @@ import os
 from stacks.MERN_IAC import get_MERN_IAC
 from stacks.Django_IAC import get_Django_IAC
 from core.utils.DeployBoxIAC.main import main
+from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger(__name__)
 
@@ -195,7 +196,7 @@ def post_stack_env(
 
     return JsonResponse({"status": "success"})
 
-
+@csrf_exempt
 def update_stack_databases_usages(data) -> bool:
     """
     Updates the usage of multiple stack databases.
@@ -206,19 +207,19 @@ def update_stack_databases_usages(data) -> bool:
     Returns:
         bool: True if all updates were successful
     """
-    print("Data: ", data)
-    print(type(data))
+
     try:
         data = json.loads(data)
-        print("Data: ")
-        print("Data: ", data.get("data"))
-        print(type(data.get("data")))
-        data = json.loads(data.get("data"))
         print("Data: ", data)
-        for stack_database_id, usage in data.items():
-            stack_database = StackDatabase.objects.get(pk=stack_database_id)
-            stack_database.current_usage = usage
-            stack_database.save()
+        for stack_id, usage in data.items():
+            stack_id = stack_id.strip('-rg')  # Remove '-rg' suffix if present
+            try:
+                stack_database = Stack.objects.get(pk=stack_id)
+                stack_database.instance_usage = usage
+                stack_database.save()
+            except Stack.DoesNotExist:
+                logger.error(f"Stack with ID {stack_id} does not exist.")
+                continue
         return True
     except Exception as e:
         logger.error(f"Failed to update stack databases usages: {str(e)}")

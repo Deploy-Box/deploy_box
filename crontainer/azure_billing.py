@@ -9,10 +9,10 @@ load_dotenv()
 class AzureBilling:
 
     def __init__(self):
-        self.subscription_id = os.environ.get("AZURE_SUBSCRIPTION_ID")
-        self.tenant_id = os.environ.get("AZURE_TENANT_ID")
-        self.client_id = os.environ.get("AZURE_CLIENT_ID")
-        self.client_secret = os.environ.get("AZURE_CLIENT_SECRET")
+        self.subscription_id = os.environ.get("ARM_SUBSCRIPTION_ID")
+        self.tenant_id = os.environ.get("ARM_TENANT_ID")
+        self.client_id = os.environ.get("ARM_CLIENT_ID")
+        self.client_secret = os.environ.get("ARM_CLIENT_SECRET")
         self.token = self.get_azure_token()
 
 
@@ -86,7 +86,7 @@ class AzureBilling:
         else:
             raise Exception(f"Error retrieving resource group usage: {response.text}")
 
-    def get_all_resource_groups(self) -> list:
+    def get_all_resource_groups(self) -> tuple[list, list, dict]:
         """
         This function retrieves all resource groups in the subscription.
         """
@@ -96,18 +96,22 @@ class AzureBilling:
             "content-type": "application/json",
         }
         response = requests.get(url, headers=headers)
+        print("response: ", json.dumps(response.json(), indent=2))
         if response.status_code == 200:
             value = response.json().get("value")
             resource_groups = [group["name"] for group in value]
-            return resource_groups
+            resource_groups_tags = [group.get("tags", {}).get("org") for group in value]
+            resource_group_to_org = {group["name"]: group.get("tags", {}).get("org") for group in value}
+
+            return resource_groups, resource_groups_tags, resource_group_to_org
         else:
             raise Exception(f"Error retrieving resource groups: {response.text}")
 
 if __name__ == "__main__":
     billing = AzureBilling()
     # Get all resource groups
-    resource_groups = billing.get_all_resource_groups()
-    print(f"Resource Groups: {resource_groups}")
+    resource_groups, resource_group_tags, resource_group_to_org = billing.get_all_resource_groups()
+    # print(f"Resource Groups: {resource_groups}")
     # Get usage for all resource groups
     usage = billing.get_resource_group_usage(resource_groups)
-    print(f"Usage for Resource Groups: {usage}")
+    # print(f"Usage for Resource Groups: {usage}")
