@@ -38,7 +38,10 @@ def oauth_required(required_scope: Union[str, List[str], None] = None, allow_m2m
 
         @wraps(view_func)
         def _wrapped_view(*args: Any, **kwargs: Any):
-            request = args[1]
+            if len(args) > 1:
+                request = args[1]
+            else:
+                request = args[0]
 
             if not isinstance(request, WSGIRequest) and not isinstance(request, Request):
                 print(type(request))

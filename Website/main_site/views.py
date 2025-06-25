@@ -197,7 +197,7 @@ class DashboardView(View):
         # Get all organizations and projects for the user for dropdowns
         user_organizations = Organization.objects.filter(organizationmember__user=user)
         user_projects = Project.objects.filter(projectmember__user=user)
-
+        user_stacks = Stack.objects.filter(project_id=project_id)
         # Get the current project for context
         project = Project.objects.get(id=project_id)
 
@@ -212,8 +212,10 @@ class DashboardView(View):
                 "form": form,
                 "user_organizations": user_organizations,
                 "user_projects": user_projects,
+                "user_stacks": user_stacks,
                 "current_organization_id": organization_id,
                 "current_project_id": project_id,
+                "current_stack_id": stack_id,
             },
         )
 

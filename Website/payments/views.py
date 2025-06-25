@@ -261,7 +261,7 @@ def create_invoice(request: HttpRequest) -> JsonResponse:
             # Step 2: Create the invoice for the customer
             invoice = stripe.Invoice.create(
                 customer=customer_id,
-                auto_advance=True,  # Automatically finalizes and sends the invoice
+                auto_advance=False,  # Automatically finalizes and sends the invoice
             )
 
             # Step 3: Finalize the invoice (send to customer)

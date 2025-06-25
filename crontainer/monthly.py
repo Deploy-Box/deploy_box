@@ -9,6 +9,7 @@ from azure_billing import AzureBilling
 
 load_dotenv()
 
+HOST = "http://localhost:8000"
 
 def exchange_client_credentials_for_token(
     client_id, client_secret, token_url
@@ -35,7 +36,7 @@ def exchange_client_credentials_for_token(
 
 def invoice(data, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "http://localhost:8000/api/v1/payments/invoices/create/"
+    url = f"{HOST}/api/v1/payments/invoices/create/"
 
     response = requests.post(url, json=data, headers=headers)
     print(response.json())
@@ -45,7 +46,7 @@ def invoice(data, token):
 
 def get_customer_id(org_id, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "http://localhost:8000/api/v1/payments/customers/get_customer_id/"
+    url = f"{HOST}/api/v1/payments/customers/get_customer_id/"
 
     org_id = {"org_id": org_id}
     org_id = json.dumps(org_id)
@@ -55,7 +56,7 @@ def get_customer_id(org_id, token):
 
 def update_invoice_billing(stack_id, cost, token):
     headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-    url = "https://localhost:8000/api/v1/payments/update_invoice_billing"
+    url = f"{HOST}/api/v1/payments/update_invoice_billing"
 
     data = {"stack_id": stack_id, "cost": cost}
     data = json.dumps(data)
@@ -123,10 +124,11 @@ def charge_customer() -> None:
     usage = billing_instance.get_resource_group_usage(resource_groups)
 
     #get token for deploy box api
-    token_url = "http://localhost:8000/o/token/"
-    token = exchange_client_credentials_for_token(
-        os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID"), os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET"), token_url
-    )
+    token_url = f"{HOST}/o/token/"
+    # token = exchange_client_credentials_for_token(
+    #     os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID"), os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET"), token_url
+    # )
+    token = "token"
 
     #makes call to update the database usage
     headers = {"Authorization": f"Bearer {token}"}
@@ -134,7 +136,7 @@ def charge_customer() -> None:
         "data": json.dumps(usage),
     }
     response = requests.post(
-        "http://localhost:8000/api/v1/stacks/admin/databases/update_database_usage/",
+        f"{HOST}/api/v1/stacks/admin/databases/update_database_usage/",
         headers=headers,
         json=body,
     )

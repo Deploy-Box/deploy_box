@@ -39,24 +39,6 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        <div class="mt-2 space-y-1">
-                            <a href="{% url 'main_site:organization_dashboard' organization_id=current_organization_id %}"
-                                class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_dashboard' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
-                                Dashboard
-                            </a>
-                            <a href="{% url 'main_site:organization_billing' organization_id=current_organization_id %}"
-                                class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_billing' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
-                                Billing
-                            </a>
-                            <a href="{% url 'main_site:organization_members' organization_id=current_organization_id %}"
-                                class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_members' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
-                                Members
-                            </a>
-                            <a href="{% url 'main_site:organization_settings' organization_id=current_organization_id %}"
-                                class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
-                                Settings
-                            </a>        
-                        </div>                    
                     </div>
                     {% endif %}
                 </li>
@@ -88,25 +70,13 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        {% if current_project_id and not current_stack_id %}
-                        <div class="mt-2 space-y-1">
-                            <a href="{% url 'main_site:project_dashboard' organization_id=current_organization_id project_id=current_project_id %}"
-                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
-                            <a href="#"
-                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Deployment</a>
-                            <a href="#"
-                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
-                        </div>
-                        {% endif %}
                     </div>
                     {% endif %}
                 </li>
                 {% endif %}
 
-                <div class="border-b border-gray-200 my-4"></div>
-
-                <!-- Stack Section -->
-                {% if current_stack_id %}
+                <!-- Stacks Section -->
+                {% if current_project_id and current_stack_id %}
                 <li class="mb-4">
                     <div class="flex items-center gap-3 p-3 sidebar-button">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -114,15 +84,16 @@
                             <path stroke-linecap="round" stroke-linejoin="round"
                                 d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
                         </svg>
-                        <span class="sidebar-text font-semibold">Stack</span>
+                        <span class="sidebar-text font-semibold">Stacks</span>
                     </div>
 
-                    <!-- Stack Dropdown (show on stack dashboards) -->
+                    <!-- Stacks Dropdown -->
                     {% if user_stacks %}
                     <div class="mt-2 space-y-1">
                         <div class="relative">
-                            <select id="stackSelect"
+                            <select id="stacksSelect"
                                 class="w-full p-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sidebar-text">
+                                <option value="">Select a Stack</option>
                                 {% for stack in user_stacks %}
                                 <option value="{{ stack.id }}" {% if current_stack_id|stringformat:"s" == stack.id|stringformat:"s" %}selected{% endif %}>
                                     {{ stack.name }}
@@ -130,22 +101,66 @@
                                 {% endfor %}
                             </select>
                         </div>
-                        {% if current_stack_id %}
-                        <div class="mt-2 space-y-1">
-                            <a href="{% url 'main_site:stack_dashboard' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
-                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
-                            <a href="#"
-                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Usage</a>
-                            <a href="#"
-                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Environment Variables</a>
-                            <a href="#"
-                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Logs</a>
-                            <a href="#"
-                                class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
-                        </div>
-                        {% endif %}
                     </div>
                     {% endif %}
+                </li>
+                {% endif %}
+
+                <div class="border-b-4 border-gray-200 my-4"></div>
+
+                <!-- Organization Submenu -->
+                {% if not current_project_id and not current_stack_id %}
+                <li class="mb-4">
+                    <div class="space-y-1">
+                        <a href="{% url 'main_site:organization_dashboard' organization_id=current_organization_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_dashboard' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
+                            Dashboard
+                        </a>
+                        <a href="{% url 'main_site:organization_billing' organization_id=current_organization_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_billing' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
+                            Billing
+                        </a>
+                        <a href="{% url 'main_site:organization_members' organization_id=current_organization_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_members' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
+                            Members
+                        </a>
+                        <a href="{% url 'main_site:organization_settings' organization_id=current_organization_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
+                            Settings
+                        </a>        
+                    </div>
+                </li>
+                {% endif %}
+
+                <!-- Project Submenu -->
+                {% if current_project_id and not current_stack_id %}
+                <li class="mb-4">
+                    <div class="space-y-1">
+                        <a href="{% url 'main_site:project_dashboard' organization_id=current_organization_id project_id=current_project_id %}"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Deployment</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
+                    </div>
+                </li>
+                {% endif %}
+
+                <!-- Stack Submenu -->
+                {% if current_stack_id %}
+                <li class="mb-4">
+                    <div class="space-y-1">
+                        <a href="{% url 'main_site:stack_dashboard' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Usage</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Environment Variables</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Logs</a>
+                        <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
+                    </div>
                 </li>
                 {% endif %}
             </ul>
@@ -235,14 +250,14 @@
     /* Dropdown styling */
     #organizationSelect,
     #projectSelect,
-    #stackSelect {
+    #stacksSelect {
         font-size: 0.875rem;
         line-height: 1.25rem;
     }
 
     #organizationSelect:focus,
     #projectSelect:focus,
-    #stackSelect:focus {
+    #stacksSelect:focus {
         outline: none;
         border-color: #10b981;
         box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
@@ -280,10 +295,10 @@
             });
         }
 
-        // Stack dropdown functionality
-        const stackSelect = document.getElementById('stackSelect');
-        if (stackSelect) {
-            stackSelect.addEventListener('change', function () {
+        // Stacks dropdown functionality
+        const stacksSelect = document.getElementById('stacksSelect');
+        if (stacksSelect) {
+            stacksSelect.addEventListener('change', function () {
                 const selectedStackId = this.value;
                 if (selectedStackId) {
                     // Get the current organization and project IDs from the context

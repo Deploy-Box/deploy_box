@@ -57,6 +57,7 @@
                     Project Stacks
                 </h2>
                 <div id="stacksList" class="space-y-4">
+                    {% if stacks %}
                     {% for stack in stacks %}
                     <a href="{% url 'main_site:stack_dashboard' organization_id project.id stack.id %}"
                         class="block bg-zinc-50 p-4 rounded-lg border border-gray-200 hover:bg-zinc-100 transition-all duration-300 transform hover:scale-[1.02]">
@@ -81,7 +82,20 @@
                             </svg>
                         </div>
                     </a>
-                    {% empty %}
+                    {% endfor %}
+                    <div class="text-center py-6 border-t border-gray-200">
+                        <a href="{% url 'main_site:pricing' %}"
+                            class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            Add Another Stack
+                        </a>
+                    </div>
+                    {% else %}
                     <div class="text-center py-8">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none"
                             viewBox="0 0 24 24" stroke="currentColor">
@@ -101,7 +115,7 @@
                             Create a Stack
                         </a>
                     </div>
-                    {% endfor %}
+                    {% endif %}
                 </div>
             </div>
         </section>
