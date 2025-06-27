@@ -7,5 +7,6 @@ urlpatterns = [
     path("<str:organization_id>/update_role/<str:user_id>", views.update_user, name="update_user"),
     path("<str:organization_id>/add_org_member", views.add_org_member, name="add_org_member"),
     path("<str:organization_id>/invite_new_user_to_org", views.invite_new_user_to_org, name="invite_new_user_to_org"),
-    path("<str:organization_id>/remove_org_member/<str:user_id>", views.remove_org_member, name="remove_org_member")
+    path("<str:organization_id>/remove_org_member/<str:user_id>", views.remove_org_member, name="remove_org_member"),
+    path("<str:organization_id>/leave_organization", views.leave_organization, name="leave_organization")
 ]

@@ -20,6 +20,14 @@ def send_user_removed_email(user, organization):
 
     send_mail(subject, message, from_email, recipient_list)
 
+def send_user_left_email(user, organization):
+    subject = 'You have left an organization'
+    message = f"Hello {user.username},\n\nYou have successfully left {organization.name}.\n\nBest regards,\nThe Team"
+    from_email = settings.EMAIL_HOST_USER
+    recipient_list = [user.email]
+
+    send_mail(subject, message, from_email, recipient_list)
+
 def send_user_permission_update_emaill(user, organization):
     subject = 'Your permissions have been updated for an organization'
     message = f"Hello {user.username},\n\nYour permissions have been updated for {organization.name}.\n\nBest regards,\nThe Team"

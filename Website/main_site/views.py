@@ -71,6 +71,7 @@ def maintenance(request: HttpRequest) -> HttpResponse:
 class DashboardView(View):
     """Class-based view for all dashboard-related functionality."""
     
+    
     @oauth_required()
     def get(self, request: HttpRequest) -> HttpResponse:
         """Main dashboard view."""
@@ -293,6 +294,14 @@ class DashboardView(View):
         organization = Organization.objects.get(id=organization_id)
         members = OrganizationMember.objects.filter(organization=organization)
         user_organizations = Organization.objects.filter(organizationmember__user=user)
+        
+        # Check if user is admin of this organization
+        is_admin = OrganizationMember.objects.filter(
+            organization=organization, 
+            user=user, 
+            role="admin"
+        ).exists()
+        
         return render(
             request,
             "dashboard/organization_members.html",
@@ -302,6 +311,7 @@ class DashboardView(View):
                 "members": members,
                 "user_organizations": user_organizations,
                 "current_organization_id": organization_id,
+                "is_admin": is_admin,
             },
         )
 

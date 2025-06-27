@@ -36,6 +36,24 @@
                         </a>
                     </div>
                 </div>
+                
+                <!-- Leave Organization Button for Current User -->
+                <div class="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <h3 class="text-lg font-semibold text-amber-800">Leave Organization</h3>
+                            <p class="text-sm text-amber-600">You can leave this organization at any time</p>
+                        </div>
+                        <button id="leaveOrgBtn" 
+                                class="inline-flex items-center bg-amber-500 hover:bg-amber-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                            </svg>
+                            Leave Organization
+                        </button>
+                    </div>
+                </div>
+                
                 <div id="membersList" class="space-y-4">
                     {% for member in members %}
                     <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
@@ -43,9 +61,18 @@
                             <div>
                                 <h3 class="text-lg font-semibold text-zinc-900">{{ member.user.username }}</h3>
                                 <p class="text-sm text-zinc-500">Role: {{ member.role }}</p>
+                                {% if member.user == user %}
+                                <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mt-1">You</span>
+                                {% endif %}
                             </div>
                             <div class="flex items-center space-x-3">
-                                <button class="text-red-500 hover:text-red-600 transition-colors duration-300">Remove</button>
+                                {% if is_admin and member.user != user %}
+                                <button class="remove-member-btn text-red-500 hover:text-red-600 transition-colors duration-300"
+                                        data-member-id="{{ member.id }}"
+                                        data-member-name="{{ member.user.username }}">
+                                    Remove
+                                </button>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
@@ -62,4 +89,91 @@
         </section>
     </main>
 </div>
+
+<!-- Hidden organization ID for JavaScript -->
+<input type="hidden" id="organizationId" value="{{ organization.id }}">
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Leave organization functionality
+    const leaveOrgBtn = document.getElementById('leaveOrgBtn');
+    if (leaveOrgBtn) {
+        leaveOrgBtn.addEventListener('click', function() {
+            if (confirm('Are you sure you want to leave this organization? This action cannot be undone.')) {
+                const organizationId = document.getElementById('organizationId').value;
+                
+                fetch(`/api/v1/organizations/${organizationId}/leave_organization`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        if (response.ok) {
+                            window.location.href = '/dashboard/';
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error leaving organization:', error);
+                    alert('Failed to leave organization. Please try again.');
+                });
+            }
+        });
+    }
+    
+    // Remove member functionality
+    const removeMemberBtns = document.querySelectorAll('.remove-member-btn');
+    removeMemberBtns.forEach(button => {
+        button.addEventListener('click', function() {
+            const memberId = this.getAttribute('data-member-id');
+            const memberName = this.getAttribute('data-member-name');
+            const organizationId = document.getElementById('organizationId').value;
+            
+            if (confirm(`Are you sure you want to remove ${memberName} from this organization?`)) {
+                fetch(`/api/v1/organizations/${organizationId}/remove_org_member/${memberId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        if (response.ok) {
+                            location.reload();
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error removing member:', error);
+                    alert('Failed to remove member. Please try again.');
+                });
+            }
+        });
+    });
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
 {% endblock %}

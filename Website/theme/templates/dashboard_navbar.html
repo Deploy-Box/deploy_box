@@ -33,10 +33,12 @@
                             <select id="organizationSelect"
                                 class="w-full p-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sidebar-text">
                                 {% for org in user_organizations %}
-                                <option value="{{ org.id }}" {% if current_organization_id|stringformat:"s" == org.id|stringformat:"s" %}selected{% endif %}>
+                                <option value="{{ org.id }}" {% if current_organization_id == org.id %}selected{% endif %}>
                                     {{ org.name }}
                                 </option>
                                 {% endfor %}
+                                <option value="" disabled>──────────</option>
+                                <option value="add_org">+ Add Organization</option>
                             </select>
                         </div>
                     </div>
@@ -64,7 +66,7 @@
                             <select id="projectSelect"
                                 class="w-full p-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sidebar-text">
                                 {% for proj in user_projects %}
-                                <option value="{{ proj.id }}" {% if current_project_id|stringformat:"s" == proj.id|stringformat:"s" %}selected{% endif %}>
+                                <option value="{{ proj.id }}" {% if current_project_id == proj.id %}selected{% endif %}>
                                     {{ proj.name }}
                                 </option>
                                 {% endfor %}
@@ -94,7 +96,7 @@
                             <select id="stacksSelect"
                                 class="w-full p-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sidebar-text">
                                 {% for stack in user_stacks %}
-                                <option value="{{ stack.id }}" {% if current_stack_id|stringformat:"s" == stack.id|stringformat:"s" %}selected{% endif %}>
+                                <option value="{{ stack.id }}" {% if current_stack_id == stack.id %}selected{% endif %}>
                                     {{ stack.name }}
                                 </option>
                                 {% endfor %}
@@ -273,7 +275,10 @@
         if (organizationSelect) {
             organizationSelect.addEventListener('change', function () {
                 const selectedOrgId = this.value;
-                if (selectedOrgId) {
+                if (selectedOrgId === 'add_org') {
+                    // Redirect to create organization page
+                    window.location.href = '/dashboard/create_organization_form/';
+                } else if (selectedOrgId) {
                     window.location.href = `/dashboard/organizations/${selectedOrgId}/`;
                 }
             });

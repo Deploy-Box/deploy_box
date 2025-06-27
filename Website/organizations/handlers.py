@@ -79,9 +79,7 @@ def add_org_members(request: AuthHttpRequest, organization_id: str) -> JsonRespo
         return services.add_org_members(member, role, organization, user)
 
 def remove_org_member(request: AuthHttpRequest, organization_id: str, user_id: str) -> JsonResponse:
-
     user = request.auth_user
-
     return services.remove_org_member(user, organization_id, user_id)
 
 def invite_new_user_to_org(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
@@ -100,6 +98,13 @@ def invite_new_user_to_org(request: AuthHttpRequest, organization_id: str) -> Js
         return e.to_response()
 
     return services.invite_new_user_to_org(user, organization, email)
+
+def leave_organization(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
+    """
+    Handler for users to leave an organization themselves.
+    """
+    user = request.auth_user
+    return services.leave_organization(user, organization_id)
 
 
 

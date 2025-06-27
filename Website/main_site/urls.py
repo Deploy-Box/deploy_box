@@ -96,7 +96,7 @@ urlpatterns = [
         "payments/checkout/cancelled/", views.payment_view.cancelled_view, name="checkout_cancelled"
     ),
     path(
-        "dashboard/organizations/create_organization_form",
+        "dashboard/create_organization_form/",
         views.dashboard_view.create_organization_form,
         name="create_organization_form",
     ),

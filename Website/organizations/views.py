@@ -78,3 +78,13 @@ def invite_new_user_to_org(
         return handlers.invite_new_user_to_org(request, organization_id)
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
+
+@oauth_required()
+def leave_organization(
+    request: AuthHttpRequest,
+    organization_id: str
+) -> JsonResponse:
+    if request.method == "POST":
+        return handlers.leave_organization(request, organization_id)
+    else:
+        return JsonResponse({"message": "method not allowed"}, status=405)

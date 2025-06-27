@@ -147,27 +147,116 @@ def add_org_members(member: str, role: str, organization: object, user: UserProf
     else:
         return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)
 
-def remove_org_member(user: UserProfile, organization_id: str, user_id: str) -> JsonResponse:
-    permission_check = OrganizationMember.objects.filter(user_id=user, role='admin').exists()
-
-    if permission_check:
-        user_to_remove = OrganizationMember.objects.filter(id=user_id, organization_id=organization_id).first()
+def remove_org_member(user: UserProfile, organization_id: str, member_id: str) -> JsonResponse:
+    """
+    Remove a member from an organization. Only admins can remove members.
+    """
+    try:
         organization = Organization.objects.get(id=organization_id)
-        print(user_to_remove.user_id) # type: ignore
-        user_to_email = User.objects.get(id=user_to_remove.user_id) # type: ignore
+        
+        # Check if the user is an admin of this organization
+        is_admin = OrganizationMember.objects.filter(
+            user=user, 
+            organization=organization, 
+            role='admin'
+        ).exists()
+        
+        if not is_admin:
+            return JsonResponse({
+                "message": "You must be an admin of this organization to remove members"
+            }, status=403)
+        
+        # Get the member to remove
+        member_to_remove = OrganizationMember.objects.filter(
+            id=member_id, 
+            organization=organization
+        ).first()
+        
+        if not member_to_remove:
+            return JsonResponse({
+                "message": "Member not found in this organization"
+            }, status=404)
+        
+        # Check if trying to remove the last admin
+        admin_count = OrganizationMember.objects.filter(
+            organization=organization, 
+            role='admin'
+        ).count()
+        
+        if member_to_remove.role == 'admin' and admin_count <= 1:
+            return JsonResponse({
+                "message": "Cannot remove the last admin from the organization"
+            }, status=400)
+        
+        # Send email notification
+        invite_org_member.send_user_removed_email(member_to_remove.user, organization)
+        
+        # Remove the member
+        member_to_remove.delete()
+        
+        return JsonResponse({
+            "message": "Member has been removed from the organization"
+        }, status=200)
+        
+    except Organization.DoesNotExist:
+        return JsonResponse({
+            "message": "Organization not found"
+        }, status=404)
+    except Exception as e:
+        logger.error(f"Error removing member: {e}")
+        return JsonResponse({
+            "message": "An unexpected error occurred"
+        }, status=500)
 
-        invite_org_member.send_user_removed_email(user_to_email, organization)
-
-        if not user_to_remove:
-            return JsonResponse({"message", "user could not be found"}, status=404)
-
-
-        user_to_remove.delete()
-
-        return JsonResponse({"message": "user has been removed from organization"}, status=200)
-
-    else:
-        return JsonResponse({"message": "you must be a admin of this org in order to add members"}, status=500)
+def leave_organization(user: UserProfile, organization_id: str) -> JsonResponse:
+    """
+    Allow a user to leave an organization themselves.
+    """
+    try:
+        organization = Organization.objects.get(id=organization_id)
+        
+        # Get the user's membership
+        user_membership = OrganizationMember.objects.filter(
+            user=user, 
+            organization=organization
+        ).first()
+        
+        if not user_membership:
+            return JsonResponse({
+                "message": "You are not a member of this organization"
+            }, status=404)
+        
+        # Check if this is the last admin
+        if user_membership.role == 'admin':
+            admin_count = OrganizationMember.objects.filter(
+                organization=organization, 
+                role='admin'
+            ).count()
+            
+            if admin_count <= 1:
+                return JsonResponse({
+                    "message": "Cannot leave organization as the last admin. Please transfer admin role or delete the organization."
+                }, status=400)
+        
+        # Send email notification
+        invite_org_member.send_user_left_email(user, organization)
+        
+        # Remove the user's membership
+        user_membership.delete()
+        
+        return JsonResponse({
+            "message": "You have successfully left the organization"
+        }, status=200)
+        
+    except Organization.DoesNotExist:
+        return JsonResponse({
+            "message": "Organization not found"
+        }, status=404)
+    except Exception as e:
+        logger.error(f"Error leaving organization: {e}")
+        return JsonResponse({
+            "message": "An unexpected error occurred"
+        }, status=500)
 
 def invite_new_user_to_org(user: UserProfile, organization: Organization, email: str ):
     try:
