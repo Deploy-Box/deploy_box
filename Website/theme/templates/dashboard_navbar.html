@@ -6,7 +6,9 @@
             <div class="flex items-center gap-3">
                 <img src="https://avatars.githubusercontent.com/u/205388835?s=200&v=4" alt="Deploy Box Logo"
                     class="w-8 h-8 rounded-full">
-                <h2 class="text-xl font-bold sidebar-text">Deploy Box</h2>
+                <a href="{% url 'main_site:home' %}">
+                    <h2 class="text-xl font-bold sidebar-text">Deploy Box</h2>
+                </a>
             </div>
         </div>
         <nav class="flex-1 overflow-y-auto py-4">
@@ -127,7 +129,7 @@
                         <a href="{% url 'main_site:organization_settings' organization_id=current_organization_id %}"
                             class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
                             Settings
-                        </a>        
+                        </a>
                     </div>
                 </li>
                 {% endif %}
