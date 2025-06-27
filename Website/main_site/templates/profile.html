@@ -82,7 +82,7 @@
 
         <div class="mt-8 pt-8 border-t border-gray-300">
           <a
-            href="{% url 'accounts:logout' %}"
+            href="{% url 'accounts:api-logout' %}"
             class="block w-full bg-red-500 hover:bg-red-600 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150 text-center"
           >
             Logout
@@ -93,6 +93,6 @@
   </div>
 </div>
 
-<script src="{% static 'script.js' %}"></script>
+<script src="{% static 'profile/script.js' %}"></script>
 
 {% endblock %}

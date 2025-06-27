@@ -7,7 +7,8 @@
         <h1 class="font-bold text-center text-2xl mb-5">Deploy Box</h1>
         <div
             class="bg-white ring-2 ring-gray-200 shadow-2xl shadow-gray-400 w-full rounded-lg divide-y divide-gray-200">
-            <form method="POST" action="{% url 'accounts:signup' %}" class="px-5 py-7">
+            <form method="POST" action="{% url 'accounts:api-signup' %}" class="px-5 py-7" id="signup-form">
+                {% csrf_token %}
                 <div class="mb-5">
                     <label for="org_name" class="font-semibold text-sm text-gray-600 pb-1 block">Organization
                         Name</label>
@@ -78,7 +79,7 @@
                     </div>
                 </div>
 
-                <button type="submit"
+                <button type="submit" id="submit-btn"
                     class="transition duration-200 bg-emerald-400 hover:bg-emerald-500 focus:bg-emerald-600 focus:shadow-sm focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block">
                     <span class="inline-block mr-2">Create Account</span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -100,3 +101,74 @@
         </div>
     </div>
 </div>
+
+<script>
+document.getElementById('signup-form').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const submitBtn = document.getElementById('submit-btn');
+    const originalText = submitBtn.innerHTML;
+    
+    // Show loading state
+    submitBtn.innerHTML = '<span class="inline-block mr-2">Creating Account...</span><svg class="animate-spin w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+    submitBtn.disabled = true;
+    
+    // Remove any existing error messages
+    const existingErrors = document.querySelectorAll('.error-message');
+    existingErrors.forEach(error => error.remove());
+    
+    fetch(this.action, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: JSON.stringify({
+            org_name: formData.get('org_name'),
+            org_email: formData.get('org_email'),
+            username: formData.get('username'),
+            email: formData.get('email'),
+            first_name: formData.get('first_name'),
+            last_name: formData.get('last_name'),
+            birthdate: formData.get('birthdate'),
+            password1: formData.get('password1'),
+            password2: formData.get('password2')
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            // Success - redirect to login
+            alert('Account created successfully! Please log in.');
+            window.location.href = "{% url 'main_site:login' %}";
+        } else {
+            // Show validation errors
+            let errorMessage = 'Please fix the following errors:\n';
+            
+            if (data.user_errors) {
+                Object.keys(data.user_errors).forEach(field => {
+                    errorMessage += `\n${field}: ${data.user_errors[field].join(', ')}`;
+                });
+            }
+            
+            if (data.org_errors) {
+                Object.keys(data.org_errors).forEach(field => {
+                    errorMessage += `\n${field}: ${data.org_errors[field].join(', ')}`;
+                });
+            }
+            
+            alert(errorMessage);
+        }
+    })
+    .catch(error => {
+        console.error('Signup error:', error);
+        alert('An error occurred while creating your account. Please try again.');
+    })
+    .finally(() => {
+        // Reset button state
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
+    });
+});
+</script>

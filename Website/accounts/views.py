@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from accounts.models import UserProfile
 from accounts.serializers.UserCreationSerializer import UserCreationSerializer
 from accounts.serializers.OrganizationSignupSerializer import (
@@ -53,6 +53,11 @@ class SignupAPIView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+    
+class LogoutAPIView(APIView):
+    def post(self, request):
+        logout(request)
+        return Response({"detail": "Logged out successfully"}, status=status.HTTP_200_OK)
 
 
 class OAuthPasswordLoginView(APIView):
@@ -194,11 +199,225 @@ class M2MProtectedView(APIView):
         """
         Example POST endpoint that requires M2M authentication.
         """
-        application = getattr(request, 'auth_application', None)
-        
         return Response({
             "message": "M2M POST request successful",
-            "application": application.name if application else None,
-            "data_received": request.data,
             "timestamp": timezone.now().isoformat(),
         })
+
+
+class ProfileAPIView(APIView):
+    """API view for user profile operations."""
+    
+    @oauth_required()
+    def get(self, request):
+        """Get current user profile data."""
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        user_data = {
+            "username": request.user.username,
+            "email": request.user.email,
+            "first_name": request.user.first_name,
+            "last_name": request.user.last_name,
+        }
+        
+        return Response({
+            "success": True,
+            "user": user_data
+        })
+    
+    @oauth_required()
+    def post(self, request):
+        """Update user profile data."""
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        username = request.data.get('username')
+        email = request.data.get('email')
+        
+        try:
+            # Update username if provided and different
+            if username and username != request.user.username:
+                # Check if username is already taken
+                if UserProfile.objects.filter(username=username).exclude(id=request.user.id).exists():
+                    return Response({
+                        "success": False,
+                        "error": "Username is already taken"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                request.user.username = username
+            
+            # Update email if provided and different
+            if email and email != request.user.email:
+                # Check if email is already taken
+                if UserProfile.objects.filter(email=email).exclude(id=request.user.id).exists():
+                    return Response({
+                        "success": False,
+                        "error": "Email is already taken"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+                request.user.email = email
+            
+            request.user.save()
+            
+            return Response({
+                "success": True,
+                "message": "Profile updated successfully"
+            })
+            
+        except Exception as e:
+            logger.error(f"Profile update error: {e}")
+            return Response({
+                "success": False,
+                "error": "Failed to update profile"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PasswordResetAPIView(APIView):
+    """API view for password reset functionality."""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request):
+        """Send password reset email."""
+        email = request.data.get('email')
+        
+        if not email:
+            return Response({
+                "success": False,
+                "error": "Email is required"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            # Check if user exists
+            user = UserProfile.objects.filter(email=email).first()
+            if not user:
+                # Don't reveal if email exists or not for security
+                return Response({
+                    "success": True,
+                    "message": "If an account with that email exists, a password reset link has been sent."
+                })
+            
+            # Use Django's built-in password reset functionality
+            from django.contrib.auth.forms import PasswordResetForm
+            from django.contrib.auth.tokens import default_token_generator
+            from django.core.mail import send_mail
+            from django.template.loader import render_to_string
+            from django.utils.http import urlsafe_base64_encode
+            from django.utils.encoding import force_bytes
+            
+            # Generate password reset token
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            
+            # Create reset URL
+            reset_url = request.build_absolute_uri(
+                f'/password_reset/confirm/{uid}/{token}/'
+            )
+            
+            # Send email
+            subject = "Password Reset Request"
+            message = f"""
+            Hello {user.username},
+            
+            You requested a password reset for your account. Please click the link below to reset your password:
+            
+            {reset_url}
+            
+            If you didn't request this, please ignore this email.
+            
+            Best regards,
+            DeployBox Team
+            """
+            
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,  # Use configured email
+                [email],
+                fail_silently=False,
+            )
+            
+            return Response({
+                "success": True,
+                "message": "Password reset email sent successfully"
+            })
+            
+        except Exception as e:
+            logger.error(f"Password reset error: {e}")
+            return Response({
+                "success": False,
+                "error": "Failed to send password reset email"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PasswordResetConfirmAPIView(APIView):
+    """API view for password reset confirmation with token."""
+    permission_classes = [permissions.AllowAny]
+    
+    def post(self, request, uidb64, token):
+        """Process password reset with token."""
+        new_password1 = request.data.get('new_password1')
+        new_password2 = request.data.get('new_password2')
+        
+        if not new_password1 or not new_password2:
+            return Response({
+                "success": False,
+                "error": "Both password fields are required"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        if new_password1 != new_password2:
+            return Response({
+                "success": False,
+                "error": "Passwords do not match"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            from django.contrib.auth.tokens import default_token_generator
+            from django.utils.http import urlsafe_base64_decode
+            from django.utils.encoding import force_str
+            from django.contrib.auth.password_validation import validate_password
+            from django.core.exceptions import ValidationError
+            
+            # Decode the user ID
+            try:
+                uid = force_str(urlsafe_base64_decode(uidb64))
+                user = UserProfile.objects.get(pk=uid)
+            except (TypeError, ValueError, OverflowError, UserProfile.DoesNotExist):
+                user = None
+            
+            if user is None:
+                return Response({
+                    "success": False,
+                    "error": "Invalid reset link"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Check if the token is valid
+            if not default_token_generator.check_token(user, token):
+                return Response({
+                    "success": False,
+                    "error": "Invalid or expired reset link"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Validate the new password
+            try:
+                validate_password(new_password1, user)
+            except ValidationError as e:
+                return Response({
+                    "success": False,
+                    "error": "Password validation failed",
+                    "details": list(e.messages)
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Set the new password
+            user.set_password(new_password1)
+            user.save()
+            
+            return Response({
+                "success": True,
+                "message": "Password has been reset successfully"
+            })
+            
+        except Exception as e:
+            logger.error(f"Password reset confirmation error: {e}")
+            return Response({
+                "success": False,
+                "error": "Failed to reset password"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
