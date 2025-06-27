@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse
 from django.conf import settings
+from django.contrib import messages
 from accounts.forms import CustomUserCreationForm
 from accounts.models import UserProfile
 from organizations.models import Organization, OrganizationMember
@@ -11,9 +12,11 @@ from organizations.forms import (
 )
 from rest_framework.request import Request
 from organizations.services import get_organizations
-from projects.forms import ProjectCreateFormWithMembers, Project
-from stacks.forms import EnvFileUploadForm
+from projects.forms import ProjectCreateFormWithMembers, ProjectSettingsForm
+from projects.models import Project, ProjectMember
+from stacks.forms import EnvFileUploadForm, StackSettingsForm, EnvironmentVariablesForm
 from stacks.models import PurchasableStack, StackGoogleCloudRun, Stack
+from stacks.services import post_stack_env
 from core.decorators import oauth_required
 from django.views import View
 from django.shortcuts import render
@@ -148,6 +151,18 @@ class DashboardView(View):
         """Project-specific dashboard."""
         user = cast(UserProfile, request.user)
         project = Project.objects.get(id=project_id)
+        
+        # Handle project deletion
+        if request.method == 'POST' and request.POST.get('action') == 'delete':
+            # Check if user has permission to delete the project
+            project_member = ProjectMember.objects.filter(user=user, project=project, role='admin').first()
+            if project_member:
+                project.delete()
+                return redirect('main_site:organization_dashboard', organization_id=organization_id)
+            else:
+                # User doesn't have permission to delete
+                pass  # Could add error handling here
+        
         stacks = Stack.objects.filter(project_id=project_id)
 
         # Get all organizations and projects for the user for dropdowns
@@ -173,6 +188,19 @@ class DashboardView(View):
         """Stack-specific dashboard."""
         user = cast(UserProfile, request.user)
         stack = Stack.objects.get(id=stack_id)
+        
+        # Handle stack deletion
+        if request.method == 'POST' and request.POST.get('action') == 'delete':
+            # Check if user has permission to delete the stack (project admin)
+            project = Project.objects.get(id=project_id)
+            project_member = ProjectMember.objects.filter(user=user, project=project, role='admin').first()
+            if project_member:
+                stack.delete()
+                return redirect('main_site:project_dashboard', organization_id=organization_id, project_id=project_id)
+            else:
+                # User doesn't have permission to delete
+                pass  # Could add error handling here
+        
         stack_google_cloud_runs = list(StackGoogleCloudRun.objects.filter(stack=stack))
 
         for stack_google_cloud_run in stack_google_cloud_runs:
@@ -291,6 +319,156 @@ class DashboardView(View):
                 "organization": organization,
                 "user_organizations": user_organizations,
                 "current_organization_id": organization_id,
+            },
+        )
+
+    @oauth_required()
+    def project_settings(self, request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
+        """Project settings page."""
+        user = cast(UserProfile, request.user)
+        project = Project.objects.get(id=project_id)
+        
+        if request.method == 'POST':
+            form = ProjectSettingsForm(request.POST, instance=project)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Project settings updated successfully')
+                return redirect('main_site:project_settings', organization_id=organization_id, project_id=project_id)
+        else:
+            form = ProjectSettingsForm(instance=project)
+        
+        # Get all organizations and projects for the user for dropdowns
+        user_organizations = Organization.objects.filter(organizationmember__user=user)
+        user_projects = Project.objects.filter(projectmember__user=user)
+        
+        # Check if user is admin of the project
+        is_admin = ProjectMember.objects.filter(user=user, project=project, role='admin').exists()
+        
+        return render(
+            request,
+            "dashboard/project_settings.html",
+            {
+                "user": user,
+                "project": project,
+                "form": form,
+                "user_organizations": user_organizations,
+                "user_projects": user_projects,
+                "current_organization_id": organization_id,
+                "current_project_id": project_id,
+                "is_admin": is_admin,
+            },
+        )
+
+    @oauth_required()
+    def stack_settings(self, request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
+        """Stack settings page."""
+        user = cast(UserProfile, request.user)
+        stack = Stack.objects.get(id=stack_id)
+        
+        if request.method == 'POST':
+            form = StackSettingsForm(request.POST, instance=stack)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Stack settings updated successfully')
+                return redirect('main_site:stack_settings', organization_id=organization_id, project_id=project_id, stack_id=stack_id)
+        else:
+            form = StackSettingsForm(instance=stack)
+        
+        # Get all organizations and projects for the user for dropdowns
+        user_organizations = Organization.objects.filter(organizationmember__user=user)
+        user_projects = Project.objects.filter(projectmember__user=user)
+        user_stacks = Stack.objects.filter(project_id=project_id)
+        # Get the current project for context
+        project = Project.objects.get(id=project_id)
+        
+        return render(
+            request,
+            "dashboard/stack_settings.html",
+            {
+                "organization_id": organization_id,
+                "project_id": project_id,
+                "stack": stack,
+                "project": project,
+                "form": form,
+                "user_organizations": user_organizations,
+                "user_projects": user_projects,
+                "user_stacks": user_stacks,
+                "current_organization_id": organization_id,
+                "current_project_id": project_id,
+                "current_stack_id": stack_id,
+            },
+        )
+
+    @oauth_required()
+    def environment_variables(self, request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
+        """Environment variables configuration page."""
+        user = cast(UserProfile, request.user)
+        stack = Stack.objects.get(id=stack_id)
+        
+        if request.method == 'POST':
+            form = EnvironmentVariablesForm(request.POST, request.FILES)
+            if form.is_valid():
+                env_variables = form.cleaned_data.get('env_variables', '')
+                
+                # Save the environment variables
+                if env_variables.strip():
+                    # Parse the environment variables string into a dictionary
+                    env_dict = {}
+                    for line in env_variables.strip().split('\n'):
+                        line = line.strip()
+                        # Skip empty lines and comments
+                        if line and not line.startswith('#'):
+                            if '=' in line:
+                                key, value = line.split('=', 1)
+                                env_dict[key.strip()] = value.strip()
+                    
+                    # Call the post_stack_env function with the dictionary
+                    try:
+                        result = post_stack_env(
+                            stack_id=stack_id,
+                            selected_frameworks=stack.purchased_stack.type.lower(),
+                            selected_locations="none",  # You might want to make this configurable
+                            env_dict=env_dict
+                        )
+                        
+                        if result.status_code == 200:
+                            messages.success(request, 'Environment variables updated successfully')
+                        else:
+                            messages.error(request, 'Failed to update environment variables')
+                    except Exception as e:
+                        messages.error(request, f'Error updating environment variables: {str(e)}')
+                else:
+                    messages.warning(request, 'No environment variables provided.')
+                
+                return redirect('main_site:environment_variables', organization_id=organization_id, project_id=project_id, stack_id=stack_id)
+        else:
+            # Initialize form with existing environment variables if any
+            initial_data = {}
+            # You could load existing env vars here: initial_data['env_variables'] = stack.get_env_variables()
+            form = EnvironmentVariablesForm(initial=initial_data)
+        
+        # Get all organizations and projects for the user for dropdowns
+        user_organizations = Organization.objects.filter(organizationmember__user=user)
+        user_projects = Project.objects.filter(projectmember__user=user)
+        user_stacks = Stack.objects.filter(project_id=project_id)
+        # Get the current project for context
+        project = Project.objects.get(id=project_id)
+        
+        return render(
+            request,
+            "dashboard/environment_variables.html",
+            {
+                "organization_id": organization_id,
+                "project_id": project_id,
+                "stack": stack,
+                "project": project,
+                "form": form,
+                "user_organizations": user_organizations,
+                "user_projects": user_projects,
+                "user_stacks": user_stacks,
+                "current_organization_id": organization_id,
+                "current_project_id": project_id,
+                "current_stack_id": stack_id,
             },
         )
 

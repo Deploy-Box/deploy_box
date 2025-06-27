@@ -46,9 +46,24 @@ urlpatterns = [
         name="project_dashboard",
     ),
     path(
+        "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/settings/",
+        views.dashboard_view.project_settings,
+        name="project_settings",
+    ),
+    path(
         "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/stacks/<str:stack_id>/",
         views.dashboard_view.stack_dashboard,
         name="stack_dashboard",
+    ),
+    path(
+        "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/stacks/<str:stack_id>/settings/",
+        views.dashboard_view.stack_settings,
+        name="stack_settings",
+    ),
+    path(
+        "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/stacks/<str:stack_id>/environment-variables/",
+        views.dashboard_view.environment_variables,
+        name="environment_variables",
     ),
     path(
         "dashboard/organizations/<str:organization_id>/add_org_member",

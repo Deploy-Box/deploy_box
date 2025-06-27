@@ -139,8 +139,8 @@
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
                         <a href="#"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Deployment</a>
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
+                        <a href="{% url 'main_site:project_settings' organization_id=current_organization_id project_id=current_project_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'project_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Settings</a>
                     </div>
                 </li>
                 {% endif %}
@@ -153,12 +153,12 @@
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
                         <a href="#"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Usage</a>
-                        <a href="#"
+                        <a href="{% url 'main_site:environment_variables' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Environment Variables</a>
                         <a href="#"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Logs</a>
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Settings</a>
+                        <a href="{% url 'main_site:stack_settings' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'stack_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Settings</a>
                     </div>
                 </li>
                 {% endif %}

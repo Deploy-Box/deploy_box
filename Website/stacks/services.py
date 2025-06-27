@@ -145,23 +145,12 @@ def get_all_stack_databases() -> list[StackDatabase]:
 
 # TODO: show loading indicator
 def post_stack_env(
-    stack_id: str, selected_frameworks, selected_locations, uploaded_file
+    stack_id: str, selected_frameworks, selected_locations, env_dict
 ):
     """
-    Uploads an env file and sets its values as secrets and environment variables
+    Sets environment variables as secrets and environment variables
     in the corresponding Azure Container App using AzureDeployBoxIAC.
     """
-    # Save the uploaded file temporarily
-    with open("temp.env", "wb") as f:
-        for chunk in uploaded_file.chunks():
-            f.write(chunk)
-
-    # Parse the .env file into a dictionary
-    env_dict = dotenv_values("temp.env")
-
-    # Clean up temporary file
-    os.remove("temp.env")
-
     # Determine resource group and app name
     if selected_locations == "none":
         app_name = f"{selected_frameworks}-{stack_id}"

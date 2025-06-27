@@ -1,0 +1,296 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="w-full bg-gray-50">
+    <header class="bg-zinc-950 pt-16 pb-24 text-center">
+        <h1 class="text-2xl font-bold text-gray-100 mb-2">Environment Variables</h1>
+        <p class="text-md text-gray-100 max-w-2xl mx-auto">
+            Configure environment variables for {{ stack.name }}
+        </p>
+    </header>
+    <main class="w-full max-w-4xl mx-auto px-4 -mt-10 pb-12">
+        
+        <!-- Success Message -->
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+                <span class="block sm:inline">{{ message }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        <!-- Environment Variables Form -->
+        <section class="mb-8">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" clip-rule="evenodd"></path>
+                    </svg>
+                    Environment Variables Configuration
+                    <button type="button" id="download-template" class="ml-auto text-xs text-emerald-600 hover:text-emerald-800 underline">
+                        Download Template
+                    </button>
+                </h2>
+                
+                <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <div class="flex items-start">
+                        <svg class="h-5 w-5 text-blue-400 mt-0.5 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                        </svg>
+                        <div>
+                            <h3 class="text-sm font-medium text-blue-800">Environment Variables Format</h3>
+                            <p class="text-sm text-blue-700 mt-1">
+                                Enter environment variables in <code class="bg-blue-100 px-1 rounded">KEY=value</code> format, one per line. 
+                                These variables will be available to your application at runtime.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <form method="post" class="space-y-6" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <!-- Manual Entry Section -->
+                    <div>
+                        <label for="{{ form.env_variables.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-2">
+                            Environment Variables
+                        </label>
+                        {{ form.env_variables }}
+                        {% if form.env_variables.errors %}
+                            <p class="mt-1 text-sm text-red-600">{{ form.env_variables.errors.0 }}</p>
+                        {% endif %}
+                        {% if form.env_variables.help_text %}
+                            <p class="mt-1 text-sm text-gray-500">{{ form.env_variables.help_text }}</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="flex justify-between items-center">
+                        <div class="text-sm text-gray-500">
+                            <span id="line-count">0</span> lines
+                        </div>
+                        <div class="flex space-x-3">
+                            <button type="button" id="clear-btn" class="px-4 py-2 text-sm text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors duration-200">
+                                Clear All
+                            </button>
+                            <label class="bg-emerald-500 hover:bg-emerald-600 text-white py-2 px-4 rounded-lg flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg cursor-pointer text-sm">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
+                                </svg>
+                                Load .env File
+                                {{ form.env_file }}
+                            </label>
+                            <button type="submit" class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                Save Environment Variables
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <!-- Examples Section -->
+        <section class="mb-8">
+            <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                    </svg>
+                    Common Environment Variables
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Database Configuration</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg font-mono text-sm">
+                            <div class="text-gray-600">DATABASE_URL=postgresql://user:pass@localhost/db</div>
+                            <div class="text-gray-600">DB_HOST=localhost</div>
+                            <div class="text-gray-600">DB_PORT=5432</div>
+                            <div class="text-gray-600">DB_NAME=myapp</div>
+                            <div class="text-gray-600">DB_USER=postgres</div>
+                            <div class="text-gray-600">DB_PASSWORD=secret</div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Application Settings</h3>
+                        <div class="bg-gray-50 p-4 rounded-lg font-mono text-sm">
+                            <div class="text-gray-600">NODE_ENV=production</div>
+                            <div class="text-gray-600">PORT=3000</div>
+                            <div class="text-gray-600">SECRET_KEY=your-secret-key</div>
+                            <div class="text-gray-600">DEBUG=false</div>
+                            <div class="text-gray-600">LOG_LEVEL=info</div>
+                            <div class="text-gray-600">API_URL=https://api.example.com</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Notice -->
+        <section class="mb-8">
+            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                <div class="flex items-start">
+                    <svg class="h-5 w-5 text-yellow-400 mt-0.5 mr-2 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                    <div>
+                        <h3 class="text-sm font-medium text-yellow-800">Security Notice</h3>
+                        <p class="text-sm text-yellow-700 mt-1">
+                            Environment variables are encrypted and stored securely. Never commit sensitive information like API keys, passwords, or secrets to your code repository. 
+                            Use this interface to manage them safely.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('{{ form.env_variables.id_for_label }}');
+    const lineCount = document.getElementById('line-count');
+    const clearBtn = document.getElementById('clear-btn');
+    const fileInput = document.getElementById('{{ form.env_file.id_for_label }}');
+
+    // Update line count
+    function updateLineCount() {
+        const lines = textarea.value.split('\n').length;
+        lineCount.textContent = lines;
+    }
+
+    // Initialize line count
+    updateLineCount();
+
+    // Update line count on input
+    textarea.addEventListener('input', updateLineCount);
+
+    // Clear button functionality
+    clearBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear all environment variables?')) {
+            textarea.value = '';
+            updateLineCount();
+        }
+    });
+
+    // Auto-resize textarea
+    function autoResize() {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    textarea.addEventListener('input', autoResize);
+    autoResize(); // Initial resize
+
+    // File upload enhancement - load content directly into textarea
+    if (fileInput) {
+        fileInput.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                // Read and load file content into textarea
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const content = e.target.result;
+                        textarea.value = content;
+                        updateLineCount();
+                        autoResize();
+                        
+                        // Show success message
+                        showMessage(`Environment variables loaded from ${file.name}`, 'success');
+                    } catch (error) {
+                        showMessage('Error reading file. Please ensure it\'s a valid text file.', 'error');
+                    }
+                };
+                reader.onerror = function() {
+                    showMessage('Error reading file. Please try again.', 'error');
+                };
+                reader.readAsText(file);
+            }
+        });
+    }
+
+    // Function to show temporary messages
+    function showMessage(message, type) {
+        // Remove any existing message
+        const existingMessage = document.querySelector('.temp-message');
+        if (existingMessage) {
+            existingMessage.remove();
+        }
+        
+        // Create new message
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `temp-message fixed top-4 right-4 px-4 py-2 rounded-lg text-white text-sm z-50 transition-all duration-300 ${
+            type === 'success' ? 'bg-green-500' : 'bg-red-500'
+        }`;
+        messageDiv.textContent = message;
+        
+        document.body.appendChild(messageDiv);
+        
+        // Remove message after 3 seconds
+        setTimeout(() => {
+            messageDiv.style.opacity = '0';
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 300);
+        }, 3000);
+    }
+
+    // Download template functionality
+    const downloadTemplateBtn = document.getElementById('download-template');
+    if (downloadTemplateBtn) {
+        downloadTemplateBtn.addEventListener('click', function() {
+            const template = `# Environment Variables Template
+# Copy this template and fill in your values
+
+# Database Configuration
+DATABASE_URL=postgresql://user:password@localhost/database_name
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=your_database_name
+DB_USER=your_database_user
+DB_PASSWORD=your_database_password
+
+# Application Settings
+NODE_ENV=production
+PORT=3000
+SECRET_KEY=your-secret-key-here
+DEBUG=false
+LOG_LEVEL=info
+
+# API Configuration
+API_URL=https://api.example.com
+API_KEY=your-api-key-here
+
+# External Services
+REDIS_URL=redis://localhost:6379
+SMTP_HOST=smtp.example.com
+SMTP_PORT=587
+SMTP_USER=your-email@example.com
+SMTP_PASSWORD=your-email-password
+
+# Remove the # comment symbol and fill in your actual values
+# Each line should be in the format: KEY=value
+# No spaces around the = sign
+# No quotes needed unless your value contains spaces`;
+            
+            const blob = new Blob([template], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'env-template.txt';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+        });
+    }
+});
+</script>
+{% endblock %} 
