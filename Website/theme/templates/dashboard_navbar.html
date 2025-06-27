@@ -33,9 +33,7 @@
                             <select id="organizationSelect"
                                 class="w-full p-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sidebar-text">
                                 {% for org in user_organizations %}
-                                <option value="{{ org.id }}" {% if
-                                    current_organization_id|stringformat:"s"==org.id|stringformat:"s" %}selected{% endif
-                                    %}>
+                                <option value="{{ org.id }}" {% if current_organization_id|stringformat:"s" == org.id|stringformat:"s" %}selected{% endif %}>
                                     {{ org.name }}
                                 </option>
                                 {% endfor %}
@@ -95,7 +93,6 @@
                         <div class="relative">
                             <select id="stacksSelect"
                                 class="w-full p-2 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent sidebar-text">
-                                <option value="">Select a Stack</option>
                                 {% for stack in user_stacks %}
                                 <option value="{{ stack.id }}" {% if current_stack_id|stringformat:"s" == stack.id|stringformat:"s" %}selected{% endif %}>
                                     {{ stack.name }}
