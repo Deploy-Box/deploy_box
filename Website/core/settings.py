@@ -6,7 +6,7 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-HOST = os.environ.get("HOST")
+HOST = os.environ.get("HOST2", "https://c361-152-117-84-230.ngrok-free.app")
 assert HOST is not None, "HOST env must be set"
 
 # SECURITY
@@ -24,7 +24,7 @@ if DEBUG:
         [
             "127.0.0.1",
             "localhost",
-            "b74d-152-117-84-227.ngrok-free.app",
+            "c361-152-117-84-230.ngrok-free.app",
             HOST.replace("https://", "").replace("http://", ""),
         ]
     )

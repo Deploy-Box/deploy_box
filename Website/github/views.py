@@ -6,6 +6,7 @@ import threading
 import json
 import logging
 from cryptography.fernet import Fernet
+from typing import cast
 
 from django.shortcuts import redirect, get_object_or_404
 from django.http import HttpResponse, JsonResponse, HttpRequest
@@ -18,6 +19,7 @@ from core.decorators import oauth_required, AuthHttpRequest
 from core.helpers import request_helpers
 from github.models import Webhook, Token
 from stacks.models import Stack
+from core.utils.DeployBoxIAC.main import DeployBoxIAC
 
 # from stacks.services import get_stack
 from accounts.models import UserProfile
@@ -182,10 +184,28 @@ def list_repos(request: AuthHttpRequest) -> HttpResponse:
     return HttpResponse(repo_list_html)
 
 
+def create_iac_webhook(
+    repo_url: str, stack: Stack, directory: str, github_token: str
+):
+    
+    full_repo_url = f"https://github.com/{repo_url}.git#main"
+
+    return {
+        "task": {
+            "type": "Docker",
+            "dockerFilePath": "Dockerfile",
+            "contextPath": full_repo_url,
+            "contextDirectory": directory,
+            "contextAccessToken": github_token,
+            "imageNames": [f"{stack.id}{directory}:latest"]
+        },
+    }
+
+
 @oauth_required()
-def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
+def create_github_webhook(request: HttpRequest) -> JsonResponse:
     """Create and store a GitHub webhook for a user's repository."""
-    user = request.auth_user
+    user = cast(UserProfile, request.user)
     logger.info(f"Starting webhook creation process for user {user.username}")
 
     try:
@@ -309,9 +329,26 @@ def create_github_webhook(request: AuthHttpRequest) -> JsonResponse:
             stack=stack,
             secret=webhook_secret,
         )
+
+        iac = stack.iac
+
+        if stack.purchased_stack.type == "MERN":
+            iac["azurerm_container_app"][f"mern-backend-{stack.id}"]["template"]["container"][0].update({"image": create_iac_webhook(f"{owner}/{repo}", stack, "backend", github_token)})
+            iac["azurerm_container_app"][f"mern-frontend-{stack.id}"]["template"]["container"][0].update({"image": create_iac_webhook(f"{owner}/{repo}", stack, "frontend", github_token)})
+        elif stack.purchased_stack.type == "Django":
+            iac["azurerm_container_app"][f"django-{stack.id}"]["template"]["container"][0].update({"image": create_iac_webhook(f"{owner}/{repo}", stack, "backend", github_token)})
+        else:
+            pass
+
+        stack.iac = iac
+        print(json.dumps(stack.iac, indent=2))
+        stack.save()
+
         logger.info(
             f"Webhook successfully created and stored for repository {repo_name}"
         )
+
+
 
     except requests.RequestException as e:
         error_message = str(e)
@@ -395,48 +432,9 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     # Find user based on webhook repository
     user = webhook.user
 
-    github_token = get_object_or_404(Token, user=user).get_token()
-
-    gcp_wrapper = GCPUtils()
-
-    if webhook.stack.purchased_stack.type == "MERN":
-        threading.Thread(
-            target=gcp_wrapper.post_build_and_deploy,
-            args=(
-                webhook.stack.id,
-                webhook.repository,
-                github_token,
-                "backend",
-                "mern-backend",
-                webhook.stack.root_directory,
-            ),
-        ).start()
-
-        threading.Thread(
-            target=gcp_wrapper.post_build_and_deploy,
-            args=(
-                webhook.stack.id,
-                webhook.repository,
-                github_token,
-                "frontend",
-                "mern-frontend",
-                webhook.stack.root_directory,
-            ),
-        ).start()
-
-    elif webhook.stack.purchased_stack.type == "Django":
-        threading.Thread(
-            target=gcp_wrapper.post_build_and_deploy,
-            args=(
-                webhook.stack.id,
-                webhook.repository,
-                github_token,
-                "",
-                "django",
-                webhook.stack.root_directory,
-                8000,
-            ),
-        ).start()
+    deploy_box_iac = DeployBoxIAC()
+    print(webhook.stack.iac)
+    deploy_box_iac.deploy(f"{webhook.stack.id}-rg", webhook.stack.iac)
 
     return JsonResponse({"status": "success", "event_type": event_type}, status=200)
 

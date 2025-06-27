@@ -123,7 +123,7 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
                             "env": [
                                 {
                                     "name": "REACT_APP_BACKEND_URL",
-                                    "value": "https://backend.wittyocean-13982f09.eastus.azurecontainerapps.io",
+                                    "value": f"https://${{azurerm_container_app.mern-backend-{stack_id}.fqdn}}",
                                 }
                             ],
                         }

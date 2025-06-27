@@ -127,6 +127,9 @@ class DeployBoxIAC:
             # Delete the tf_plan_file file
             os.remove(tf_plan_file)
 
+            # Remove the .terraform directory
+            os.remove(os.path.join(temp_dir, ".terraform"))
+
             # Upload results (including .tfstate) to blob storage
             self.upload_directory_to_blob(temp_dir, blob_prefix=resource_group_name)
 

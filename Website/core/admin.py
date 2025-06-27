@@ -1,8 +1,8 @@
 from django.contrib.admin import AdminSite
 from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.models import Application
-from stacks.admin import PurchasableStackAdmin
-from stacks.models import PurchasableStack
+from stacks.admin import PurchasableStackAdmin, StackAdmin
+from stacks.models import PurchasableStack, Stack
 
 class NoCSRFAdminSite(AdminSite):
     def get_urls(self):
@@ -19,5 +19,6 @@ admin_site = NoCSRFAdminSite()
 # Register OAuth2 provider models
 admin_site.register(Application)
 admin_site.register(PurchasableStack, PurchasableStackAdmin)
+admin_site.register(Stack, StackAdmin)
 
 

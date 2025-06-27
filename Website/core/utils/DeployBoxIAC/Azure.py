@@ -129,47 +129,20 @@ class AzureDeployBoxIAC:
         print("Updates found in the specified path.")
         return True
 
-    def create_github_source_trigger(self, github_token, repo_url, branch="main"):
-        """
-        Create a GitHub source trigger for ACR tasks with private repo access.
-
-        Args:
-            github_token (str): GitHub personal access token
-            repo_url (str): GitHub repository URL (e.g., "https://github.com/owner/repo")
-            branch (str): Branch to monitor for changes
-
-        Returns:
-            dict: Source trigger configuration
-        """
-        return {
-            "name": "github-trigger",
-            "sourceRepository": {
-                "sourceControlType": "Github",
-                "repositoryUrl": repo_url,
-                "branch": branch,
-                "sourceControlAuthProperties": {
-                    "tokenType": "PAT",
-                    "token": github_token,
-                },
-            },
-            "sourceTriggerEvents": [],
-            "status": "Enabled",
-        }
 
     def build_container_image(self, azure_deploy_box_iac: dict) -> dict:
         """ """
 
-        def build_container_image_helper(task: dict, github_token: str = "") -> str:
+        def build_container_image_helper(task: dict) -> str:
             task_name = f"build-task-{int(time.time())}"  # Unique task name
-
-            step = task.get("properties", {}).get("step", {})
+            print(task)
 
             assert (
-                isinstance(step, dict) and "contextDirectory" in step.keys()
-            ), "properties.step.contextDirectory is required"
+                isinstance(task, dict) and "contextDirectory" in task.keys()
+            ), "contextDirectory is required"
 
-            context_directory = step.pop("contextDirectory")
-            context_path = step.get("contextPath")
+            context_directory = task.pop("contextDirectory")
+            context_path = task.get("contextPath")
 
             if not context_path:
                 raise ValueError("contextPath is required in the step definition")
@@ -194,26 +167,18 @@ class AzureDeployBoxIAC:
                     "agentConfiguration": {"cpu": 2},
                     "step": {
                         "type": "Docker",
-                        "dockerFilePath": step.get("dockerFilePath", "Dockerfile"),
+                        "dockerFilePath": task.get("dockerFilePath", "Dockerfile"),
                         "contextPath": repo_url,
-                        "contextAccessToken": github_token,  # GitHub token for private repo access
-                        "imageNames": step.get("imageNames", []),
+                        "contextAccessToken": task.get("contextAccessToken"),  # GitHub token for private repo access
+                        "imageNames": task.get("imageNames", []),
                         "isPushEnabled": True,
                         "noCache": False,
-                        "arguments": step.get("arguments", []),
+                        "arguments": task.get("arguments", []),
                     },
                 },
             }
 
-            # Add source trigger if GitHub token is provided
-            if github_token:
-                task_config["properties"]["trigger"] = {
-                    "sourceTriggers": [
-                        self.create_github_source_trigger(
-                            github_token, repo_url, branch
-                        )
-                    ]
-                }
+            print(task_config)
 
             # Create task
             create_url = (
@@ -272,7 +237,7 @@ class AzureDeployBoxIAC:
                 task = image.get("task")
                 if task:
                     run_id = (
-                        f"{build_container_image_helper(task=task, github_token='')}"
+                        f"{build_container_image_helper(task=task)}"
                     )
                     image = self.wait_for_build_completion(run_id)
                     container.update({"image": image})

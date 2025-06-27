@@ -208,7 +208,7 @@ function checkGitHubAuth() {
                                 // Show success message
                                 alert('Successfully connected repository!');
                                 // Update UI to show connected status
-                                repoDropdownBtn.textContent = `Connected: ${repo.full_name}`;
+                                // repoDropdownBtn.textContent = `Connected: ${repo.full_name}`;
                                 repoDropdown.classList.add('hidden');
                             })
                             .catch(error => {
