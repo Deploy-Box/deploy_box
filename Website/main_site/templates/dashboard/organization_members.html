@@ -20,12 +20,19 @@
                         Members
                     </h2>
                     <div class="flex space-x-3">
+                        <a href="{% url 'main_site:add_org_members' organization_id=organization.id %}"
+                            class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            Invite Deploy Box Member
+                        </a>
                         <a href="{% url 'main_site:add_nonexistant_org_members' organization_id=organization.id %}"
                             class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
                             </svg>
-                            Invite Member
+                            Invite New Member
                         </a>
                     </div>
                 </div>
@@ -55,4 +62,4 @@
         </section>
     </main>
 </div>
-{% endblock %} 
+{% endblock %}
