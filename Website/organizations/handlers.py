@@ -106,6 +106,13 @@ def leave_organization(request: AuthHttpRequest, organization_id: str) -> JsonRe
     user = request.auth_user
     return services.leave_organization(user, organization_id)
 
+def remove_pending_invite(request: AuthHttpRequest, organization_id: str, invite_id: str) -> JsonResponse:
+    """
+    Handler for removing pending invites from an organization.
+    """
+    user = request.auth_user
+    return services.remove_pending_invite(user, organization_id, invite_id)
+
 
 
 

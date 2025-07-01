@@ -139,6 +139,84 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load current user data
     loadUserData();
+    
+    // Delete account functionality
+    const deleteAccountBtn = document.getElementById('deleteAccountBtn');
+    const deleteModal = document.getElementById('deleteModal');
+    const confirmDelete = document.getElementById('confirmDelete');
+    const cancelDelete = document.getElementById('cancelDelete');
+    
+    if (deleteAccountBtn) {
+        deleteAccountBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Show the confirmation modal
+            deleteModal.classList.remove('hidden');
+            deleteModal.classList.add('flex');
+        });
+    }
+    
+    if (cancelDelete) {
+        cancelDelete.addEventListener('click', function(e) {
+            e.preventDefault();
+            // Hide the modal
+            deleteModal.classList.add('hidden');
+            deleteModal.classList.remove('flex');
+        });
+    }
+    
+    if (confirmDelete) {
+        confirmDelete.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            const originalText = this.textContent;
+            
+            // Show loading state
+            this.textContent = 'Deleting...';
+            this.disabled = true;
+            
+            fetch('/api/v1/accounts/delete-account/', {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Account deleted successfully. You will be redirected to the home page.');
+                    // Redirect to home page
+                    window.location.href = '/';
+                } else {
+                    alert('Account deletion failed: ' + (data.error || 'Unknown error'));
+                }
+            })
+            .catch(error => {
+                console.error('Account deletion error:', error);
+                alert('Account deletion failed. Please try again.');
+            })
+            .finally(() => {
+                // Reset button state
+                this.textContent = originalText;
+                this.disabled = false;
+                
+                // Hide the modal
+                deleteModal.classList.add('hidden');
+                deleteModal.classList.remove('flex');
+            });
+        });
+    }
+    
+    // Close modal when clicking outside
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.add('hidden');
+                this.classList.remove('flex');
+            }
+        });
+    }
 });
 
 // Helper function to get CSRF token from cookies

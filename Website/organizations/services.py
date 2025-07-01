@@ -112,12 +112,12 @@ def update_user(user: UserProfile, organization: object, user_id: str) -> JsonRe
             print("user is admin")
             org_member.role = "member"
             org_member.save()
-            invite_org_member.send_user_permission_update_emaill(user=org_user, organization=organization)
+            invite_org_member.send_user_permission_update_email(user=org_user, organization=organization)
             return JsonResponse({"message": "user permission updated successfully"}, status=200)
         else:
             org_member.role = "admin"
             org_member.save()
-            invite_org_member.send_user_permission_update_emaill(user=org_user, organization=organization)
+            invite_org_member.send_user_permission_update_email(user=org_user, organization=organization)
             return JsonResponse({"message": "user permission updated successfully"}, status=200)
 
     except Exception as e:
@@ -260,10 +260,62 @@ def leave_organization(user: UserProfile, organization_id: str) -> JsonResponse:
 
 def invite_new_user_to_org(user: UserProfile, organization: Organization, email: str ):
     try:
-        invite_org_member.send_invite_new_user_to_org(user, organization, email)
         PendingInvites.objects.create(organization=organization, email=email)
+        invite_org_member.send_invite_new_user_to_org(user, organization, email)
         return JsonResponse({"message": "invite email has been sent to user"}, status=200)
     except Exception as e:
         return JsonResponse({"message": f"an unexpected error occured: {e}"}, status=400)
+
+def remove_pending_invite(user: UserProfile, organization_id: str, invite_id: str) -> JsonResponse:
+    """
+    Remove a pending invite from an organization. Only admins can remove pending invites.
+    """
+    try:
+        organization = Organization.objects.get(id=organization_id)
+        
+        # Check if the user is an admin of this organization
+        is_admin = OrganizationMember.objects.filter(
+            user=user, 
+            organization=organization, 
+            role='admin'
+        ).exists()
+        
+        if not is_admin:
+            return JsonResponse({
+                "success": False,
+                "message": "You must be an admin of this organization to cancel invites"
+            }, status=403)
+        
+        # Get the pending invite to remove
+        pending_invite = PendingInvites.objects.filter(
+            id=invite_id, 
+            organization=organization
+        ).first()
+        
+        if not pending_invite:
+            return JsonResponse({
+                "success": False,
+                "message": "Pending invite not found in this organization"
+            }, status=404)
+        
+        # Remove the pending invite
+        pending_invite.delete()
+        
+        return JsonResponse({
+            "success": True,
+            "message": "Pending invite has been cancelled"
+        }, status=200)
+        
+    except Organization.DoesNotExist:
+        return JsonResponse({
+            "success": False,
+            "message": "Organization not found"
+        }, status=404)
+    except Exception as e:
+        logger.error(f"Error removing pending invite: {e}")
+        return JsonResponse({
+            "success": False,
+            "message": "An unexpected error occurred"
+        }, status=500)
 
 

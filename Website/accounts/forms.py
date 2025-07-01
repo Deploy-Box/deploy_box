@@ -12,13 +12,13 @@ current_year = time.strftime("%Y")
 
 
 class CustomUserCreationForm(UserCreationForm):
-    # birthdate = forms.DateField(
-    #     widget=forms.SelectDateWidget(
-    #         years=range(int(current_year), 1899, -1),
-    #         empty_label=("Year", "Month", "Day"),
-    #         attrs={"class": "border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"},
-    #     ),
-    # )
+    birthdate = forms.DateField(
+        widget=forms.SelectDateWidget(
+            years=range(int(current_year), 1899, -1),
+            empty_label=("Year", "Month", "Day"),
+            attrs={"class": "border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"},
+        ),
+    )
 
     class Meta:
         model = UserProfile
@@ -29,7 +29,7 @@ class CustomUserCreationForm(UserCreationForm):
             "password2",
             "first_name",
             "last_name",
-            # "birthdate",
+            "birthdate",
         ]
 
     def __init__(self, *args, **kwargs):

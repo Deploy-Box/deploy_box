@@ -20,6 +20,17 @@ logger = logging.getLogger(__name__)
 
 class SignupAPIView(APIView):
     def post(self, request):
+        invite_id = request.data.get('invite_id')
+        
+        if invite_id:
+            # Handle invite-based signup
+            return self._handle_invite_signup(request, invite_id)
+        else:
+            # Handle regular signup
+            return self._handle_regular_signup(request)
+    
+    def _handle_regular_signup(self, request):
+        """Handle regular signup with organization creation."""
         user_serializer = UserCreationSerializer(data=request.data)
         org_serializer = OrganizationSignupSerializer(
             data=request.data, context={"user": None}
@@ -69,6 +80,78 @@ class SignupAPIView(APIView):
             },
             status=status.HTTP_400_BAD_REQUEST,
         )
+    
+    def _handle_invite_signup(self, request, invite_id):
+        """Handle signup with existing organization invite."""
+        try:
+            # Get the pending invite
+            pending_invite = PendingInvites.objects.get(id=invite_id)
+            
+            # Validate that the email matches the invite
+            if request.data.get('email') != pending_invite.email:
+                return Response(
+                    {
+                        "user_errors": {
+                            "email": ["Email must match the invited email address"]
+                        }
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            # Create user without organization
+            user_serializer = UserCreationSerializer(data=request.data)
+            
+            if user_serializer.is_valid():
+                with transaction.atomic():
+                    user = user_serializer.save()
+                    assert isinstance(user, UserProfile)
+                    
+                    # Add user to the organization
+                    OrganizationMember.objects.create(
+                        organization=pending_invite.organization,
+                        user=user,
+                        role="member"
+                    )
+                    
+                    # Remove the pending invite
+                    pending_invite.delete()
+                    
+                    return Response(
+                        {
+                            "message": "User created and added to organization successfully",
+                            "user_id": str(user.id),
+                            "organization_id": str(pending_invite.organization.id),
+                        },
+                        status=status.HTTP_201_CREATED,
+                    )
+            else:
+                return Response(
+                    {
+                        "user_errors": user_serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+                
+        except PendingInvites.DoesNotExist:
+            return Response(
+                {
+                    "user_errors": {
+                        "invite": ["Invalid or expired invite link"]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            logger.error(f"Error in invite signup: {e}")
+            return Response(
+                {
+                    "user_errors": {
+                        "general": ["An error occurred while processing your signup"]
+                    }
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
 
 class LogoutAPIView(APIView):
     def post(self, request):
@@ -436,4 +519,36 @@ class PasswordResetConfirmAPIView(APIView):
             return Response({
                 "success": False,
                 "error": "Failed to reset password"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class DeleteAccountAPIView(APIView):
+    """API view for account deletion functionality."""
+    
+    @oauth_required()
+    def delete(self, request):
+        """Delete the authenticated user's account."""
+        if not request.user.is_authenticated:
+            return Response({"error": "Authentication required"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            # Get the user to delete
+            user = request.user
+            
+            # Log the user out first
+            logout(request)
+            
+            # Delete the user account
+            user.delete()
+            
+            return Response({
+                "success": True,
+                "message": "Account deleted successfully"
+            }, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            logger.error(f"Account deletion error: {e}")
+            return Response({
+                "success": False,
+                "error": "Failed to delete account"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

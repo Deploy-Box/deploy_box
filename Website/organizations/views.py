@@ -88,3 +88,14 @@ def leave_organization(
         return handlers.leave_organization(request, organization_id)
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
+
+@oauth_required()
+def remove_pending_invite(
+    request: AuthHttpRequest,
+    organization_id: str,
+    invite_id: str
+) -> JsonResponse:
+    if request.method == "POST":
+        return handlers.remove_pending_invite(request, organization_id, invite_id)
+    else:
+        return JsonResponse({"success": False, "message": "method not allowed"}, status=405)

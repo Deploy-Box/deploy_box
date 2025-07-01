@@ -3,6 +3,8 @@ from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.models import Application
 from stacks.admin import PurchasableStackAdmin, StackAdmin
 from stacks.models import PurchasableStack, Stack
+from accounts.admin import UserProfileAdmin
+from accounts.models import UserProfile
 
 class NoCSRFAdminSite(AdminSite):
     def get_urls(self):
@@ -20,5 +22,6 @@ admin_site = NoCSRFAdminSite()
 admin_site.register(Application)
 admin_site.register(PurchasableStack, PurchasableStackAdmin)
 admin_site.register(Stack, StackAdmin)
+admin_site.register(UserProfile, UserProfileAdmin)
 
 

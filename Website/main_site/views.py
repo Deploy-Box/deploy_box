@@ -4,7 +4,7 @@ from django.conf import settings
 from django.contrib import messages
 from accounts.forms import CustomUserCreationForm
 from accounts.models import UserProfile
-from organizations.models import Organization, OrganizationMember
+from organizations.models import Organization, OrganizationMember, PendingInvites
 from organizations.forms import (
     OrganizationCreateFormWithMembers,
     OrganizationMemberForm,
@@ -293,6 +293,7 @@ class DashboardView(View):
         user = cast(UserProfile, request.user)
         organization = Organization.objects.get(id=organization_id)
         members = OrganizationMember.objects.filter(organization=organization)
+        pending_invites = PendingInvites.objects.filter(organization=organization)
         user_organizations = Organization.objects.filter(organizationmember__user=user)
         
         # Check if user is admin of this organization
@@ -309,6 +310,7 @@ class DashboardView(View):
                 "user": user,
                 "organization": organization,
                 "members": members,
+                "pending_invites": pending_invites,
                 "user_organizations": user_organizations,
                 "current_organization_id": organization_id,
                 "is_admin": is_admin,
@@ -550,7 +552,26 @@ class AuthView(View):
 
     def signup(self, request: HttpRequest) -> HttpResponse:
         """Signup view."""
-        return render(request, "accounts/signup.html", {"form": CustomUserCreationForm})
+        invite_id = request.GET.get('invite')
+        invite_data = None
+        
+        if invite_id:
+            try:
+                pending_invite = PendingInvites.objects.get(id=invite_id)
+                invite_data = {
+                    'invite_id': invite_id,
+                    'organization_name': pending_invite.organization.name,
+                    'organization_email': pending_invite.organization.email,
+                    'invite_email': pending_invite.email
+                }
+            except PendingInvites.DoesNotExist:
+                # Invalid invite ID - will be handled in template
+                pass
+        
+        return render(request, "accounts/signup.html", {
+            "form": CustomUserCreationForm,
+            "invite_data": invite_data
+        })
 
     def logout(self, request: HttpRequest) -> HttpResponse:
         """Logout view."""

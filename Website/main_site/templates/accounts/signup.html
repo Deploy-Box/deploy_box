@@ -5,10 +5,34 @@
 <div class="min-h-screen bg-gray-100 flex flex-col justify-center sm:py-12">
     <div class="p-10 xs:p-0 mx-auto md:w-full md:max-w-md">
         <h1 class="font-bold text-center text-2xl mb-5">Deploy Box</h1>
+        
+        {% if invite_data %}
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">
+                        You've been invited to join {{ invite_data.organization_name }}
+                    </h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <p>You'll be automatically added to this organization once you create your account.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
         <div
             class="bg-white ring-2 ring-gray-200 shadow-2xl shadow-gray-400 w-full rounded-lg divide-y divide-gray-200">
             <form method="POST" action="{% url 'accounts:api-signup' %}" class="px-5 py-7" id="signup-form">
                 {% csrf_token %}
+                
+                {% if not invite_data %}
+                <!-- Organization fields - only show if no invite -->
                 <div class="mb-5">
                     <label for="org_name" class="font-semibold text-sm text-gray-600 pb-1 block">Organization
                         Name</label>
@@ -28,6 +52,12 @@
                 </div>
 
                 <hr class="my-6">
+                {% else %}
+                <!-- Hidden fields for invite data -->
+                <input type="hidden" name="invite_id" value="{{ invite_data.invite_id }}" />
+                <input type="hidden" name="org_name" value="{{ invite_data.organization_name }}" />
+                <input type="hidden" name="org_email" value="{{ invite_data.organization_email }}" />
+                {% endif %}
 
                 <div class="mb-5">
                     <label for="username" class="font-semibold text-sm text-gray-600 pb-1 block">Username</label>
@@ -39,7 +69,12 @@
                 <div class="mb-5">
                     <label for="email" class="font-semibold text-sm text-gray-600 pb-1 block">Email</label>
                     <div class="mt-1">
+                        {% if invite_data %}
+                        <input type="email" name="email" id="email" value="{{ invite_data.invite_email }}"
+                            class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full bg-gray-50" readonly />
+                        {% else %}
                         {{ form.email }}
+                        {% endif %}
                     </div>
                 </div>
 
@@ -81,7 +116,7 @@
 
                 <button type="submit" id="submit-btn"
                     class="transition duration-200 bg-emerald-400 hover:bg-emerald-500 focus:bg-emerald-600 focus:shadow-sm focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block">
-                    <span class="inline-block mr-2">Create Account</span>
+                    <span class="inline-block mr-2">{% if invite_data %}Join Organization{% else %}Create Account{% endif %}</span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         class="w-4 h-4 inline-block">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -111,12 +146,34 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
     const originalText = submitBtn.innerHTML;
     
     // Show loading state
-    submitBtn.innerHTML = '<span class="inline-block mr-2">Creating Account...</span><svg class="animate-spin w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+    submitBtn.innerHTML = '<span class="inline-block mr-2">{% if invite_data %}Joining Organization...{% else %}Creating Account...{% endif %}</span><svg class="animate-spin w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
     submitBtn.disabled = true;
     
     // Remove any existing error messages
     const existingErrors = document.querySelectorAll('.error-message');
     existingErrors.forEach(error => error.remove());
+    
+    // Prepare request data
+    const requestData = {
+        username: formData.get('username'),
+        email: formData.get('email'),
+        first_name: formData.get('first_name'),
+        last_name: formData.get('last_name'),
+        birthdate: formData.get('birthdate'),
+        password1: formData.get('password1'),
+        password2: formData.get('password2')
+    };
+    
+    // Add organization data if present
+    if (formData.get('org_name')) {
+        requestData.org_name = formData.get('org_name');
+        requestData.org_email = formData.get('org_email');
+    }
+    
+    // Add invite data if present
+    if (formData.get('invite_id')) {
+        requestData.invite_id = formData.get('invite_id');
+    }
     
     fetch(this.action, {
         method: 'POST',
@@ -124,17 +181,7 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
             'Content-Type': 'application/json',
             'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
         },
-        body: JSON.stringify({
-            org_name: formData.get('org_name'),
-            org_email: formData.get('org_email'),
-            username: formData.get('username'),
-            email: formData.get('email'),
-            first_name: formData.get('first_name'),
-            last_name: formData.get('last_name'),
-            birthdate: formData.get('birthdate'),
-            password1: formData.get('password1'),
-            password2: formData.get('password2')
-        })
+        body: JSON.stringify(requestData)
     })
     .then(response => response.json())
     .then(data => {
