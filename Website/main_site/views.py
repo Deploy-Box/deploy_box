@@ -136,14 +136,72 @@ class DashboardView(View):
         # Get all organizations for the user for dropdown
         user_organizations = Organization.objects.filter(organizationmember__user=user)
 
+        # Get payment methods for the organization
+        payment_methods = []
+        try:
+            import stripe
+            stripe.api_key = settings.STRIPE.get("SECRET_KEY")
+            
+            if organization.stripe_customer_id:
+                # Get all payment methods for the customer
+                stripe_payment_methods = stripe.PaymentMethod.list(
+                    customer=organization.stripe_customer_id, 
+                    type="card"
+                )
+                
+                # Get the customer to find the default payment method
+                customer = stripe.Customer.retrieve(organization.stripe_customer_id)
+                default_payment_method_id = customer.invoice_settings.default_payment_method if customer.invoice_settings else None
+                
+                # Format payment methods
+                for pm in stripe_payment_methods.data:
+                    if pm.card:
+                        payment_methods.append({
+                            "id": pm.id,
+                            "brand": pm.card.brand,
+                            "last4": pm.card.last4,
+                            "exp_month": pm.card.exp_month,
+                            "exp_year": pm.card.exp_year,
+                            "is_default": pm.id == default_payment_method_id,
+                        })
+        except Exception as e:
+            # Log the error but don't fail the page
+            logger.error(f"Error fetching payment methods: {e}")
+
+        # Get usage data for the organization
+        from stacks.models import StackDatabase
+        from django.db.models import Sum
+        from datetime import datetime, timedelta
+        from django.utils import timezone
+        from payments.models import usage_information
+        
+        # Get all stacks for this organization's projects
+        organization_projects = Project.objects.filter(organization=organization)
+        organization_stacks = Stack.objects.filter(project__in=organization_projects)
+        
+        # Get current time in user's timezone (you can customize this)
+        current_time = timezone.now()
+        month_start = current_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+
+        # Calculate usage metrics
+        daily_usage = usage_information.get_total_current_usage_for_organization(organization)
+        current_usage = usage_information.get_total_monthly_usage_for_organization(organization)
+        projected_monthly_usage = current_usage * (30 / (current_time.day or 1))
+        
         return render(
             request,
             "dashboard/organization_billing.html",
             {
-                "user": user,
-                "organization": organization,
-                "user_organizations": user_organizations,
-                "current_organization_id": organization_id,
+            "user": user,
+            "organization": organization,
+            "user_organizations": user_organizations,
+            "current_organization_id": organization_id,
+            "payment_methods": payment_methods,
+            "stripe_publishable_key": settings.STRIPE.get("PUBLISHABLE_KEY", None),
+            "current_daily_usage": f"{daily_usage:.2f}",
+            "current_usage": f"{current_usage:.2f}",
+            "projected_monthly_usage": f"{projected_monthly_usage:.2f}",
+            "month_start_formatted": month_start.strftime("%b 1, %Y"),
             },
         )
 

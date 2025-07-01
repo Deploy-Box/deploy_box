@@ -1,6 +1,23 @@
 {% extends 'dashboard_base.html' %}
 {% load static %}
 
+{% csrf_token %}
+
+<style>
+.payment-card-visa {
+    background: linear-gradient(135deg, #1a1f71 0%, #00539c 100%);
+}
+.payment-card-mastercard {
+    background: linear-gradient(135deg, #eb001b 0%, #f79e1b 100%);
+}
+.payment-card-amex {
+    background: linear-gradient(135deg, #006fcf 0%, #00a1e0 100%);
+}
+.payment-card-default {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+</style>
+
 {% block content %}
 <div class="w-full bg-gray-50">
     <header class="bg-zinc-950 pt-16 pb-24 text-center">
@@ -17,39 +34,26 @@
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
                         <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
                     </svg>
-                    Current Plan
+                    Usage
                 </h2>
                 <div class="bg-zinc-50 p-6 rounded-lg border border-gray-200">
                     <div class="flex justify-between items-center">
-                        <div>
-                            <h3 class="text-lg font-semibold text-zinc-900">Free Tier</h3>
-                            <p class="text-sm text-zinc-500 mt-1">Basic features included</p>
-                            <div class="mt-3 space-y-2">
-                                <div class="flex items-center text-sm text-zinc-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    Up to 3 projects
-                                </div>
-                                <div class="flex items-center text-sm text-zinc-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    Basic support
-                                </div>
-                                <div class="flex items-center text-sm text-zinc-600">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    Standard deployment
-                                </div>
+                        <div class="flex space-x-8 w-full">
+                            <div class="flex-1 text-center">
+                                <h3 class="text-lg font-semibold text-zinc-900 mb-2">Current Daily Usage</h3>
+                                <p class="text-2xl font-bold text-emerald-500 mb-1">${{ current_daily_usage }}</p>
+                                <span class="text-sm text-gray-500">average per day</span>
                             </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-2xl font-bold text-zinc-900">$0/month</div>
-                            <button class="mt-3 inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300">
-                                Upgrade Plan
-                            </button>
+                            <div class="flex-1 text-center">
+                                <h3 class="text-lg font-semibold text-zinc-900 mb-2">Current Usage</h3>
+                                <p class="text-2xl font-bold text-emerald-500 mb-1">${{ current_usage }}</p>
+                                    <span class="text-sm text-gray-500">since {% now "M 1, Y" %} UTC</span>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <h3 class="text-lg font-semibold text-zinc-900 mb-2">Projected Monthly Usage</h3>
+                                <p class="text-2xl font-bold text-emerald-500 mb-1">${{ projected_monthly_usage }}</p>
+                                <span class="text-sm text-gray-500">by end of month</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -66,37 +70,52 @@
                         </svg>
                         Payment Methods
                     </h2>
-                    <a href="{% url 'main_site:card_add' %}" class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300">
+                    <button onclick="showAddPaymentModal()" class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                             <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
                         </svg>
                         Add Payment Method
-                    </a>
+                    </button>
                 </div>
                 <div class="space-y-4">
-                    <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
-                        <div class="flex justify-between items-center">
-                            <div class="flex items-center">
-                                <div class="w-12 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded flex items-center justify-center mr-3">
-                                    <span class="text-white text-xs font-bold">VISA</span>
+                    {% if payment_methods %}
+                        {% for payment_method in payment_methods %}
+                        <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <div class="w-12 h-8 rounded flex items-center justify-center mr-3 payment-card-{{ payment_method.brand }}">
+                                        <span class="text-white text-xs font-bold">{{ payment_method.brand|upper }}</span>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium text-zinc-900">•••• •••• •••• {{ payment_method.last4 }}</p>
+                                        <p class="text-sm text-zinc-500">Expires {{ payment_method.exp_month }}/{{ payment_method.exp_year }}</p>
+                                    </div>
                                 </div>
-                                <div>
-                                    <p class="font-medium text-zinc-900">•••• •••• •••• 4242</p>
-                                    <p class="text-sm text-zinc-500">Expires 12/25</p>
+                                <div class="flex items-center space-x-2">
+                                    {% if payment_method.is_default %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                        Default
+                                    </span>
+                                    {% endif %}
+                                    <button class="text-red-500 hover:text-red-600 transition-colors duration-300" 
+                                            onclick="showDeleteModal('{{ payment_method.id }}', '{{ organization.id }}', '{{ payment_method.brand|upper }}', '{{ payment_method.last4 }}')">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                            <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                                        </svg>
+                                    </button>
                                 </div>
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    Default
-                                </span>
-                                <button class="text-red-500 hover:text-red-600 transition-colors duration-300">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                                    </svg>
-                                </button>
                             </div>
                         </div>
-                    </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="bg-zinc-50 p-6 rounded-lg border border-gray-200 text-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                            </svg>
+                            <p class="text-gray-500 mb-2">No payment methods found</p>
+                            <p class="text-sm text-gray-400">Add a payment method to get started</p>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </section>
@@ -153,59 +172,455 @@
                 </div>
             </div>
         </section>
-
-        <!-- Usage Summary Section -->
-        <section class="mb-8">
-            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
-                <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                    </svg>
-                    Usage Summary
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Active Projects</p>
-                                <p class="text-2xl font-semibold text-gray-900">2</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">Active Stacks</p>
-                                <p class="text-2xl font-semibold text-gray-900">3</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
-                        <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fill-rule="evenodd" d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
-                            <div class="ml-4">
-                                <p class="text-sm font-medium text-gray-500">This Month</p>
-                                <p class="text-2xl font-semibold text-gray-900">$49.98</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
     </main>
 </div>
+
+<!-- Add Payment Method Modal -->
+<div id="addPaymentModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-gray-900">Add Payment Method</h3>
+                </div>
+            </div>
+            <button onclick="hideAddPaymentModal()" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <form id="payment-form" class="space-y-6">
+            <div id="payment-element" class="min-h-[200px]">
+                <!-- Stripe Elements will be mounted here -->
+            </div>
+            
+            <!-- Error message container -->
+            <div id="addPaymentErrorMessage" class="hidden p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                <p id="addPaymentErrorText" class="text-sm"></p>
+            </div>
+            
+            <!-- Success message container -->
+            <div id="addPaymentSuccessMessage" class="hidden p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                <p id="addPaymentSuccessText" class="text-sm"></p>
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="button" onclick="hideAddPaymentModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                    Cancel
+                </button>
+                <button type="submit" id="submitPaymentBtn" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
+                    Add Payment Method
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Payment Method Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-gray-900">Delete Payment Method</h3>
+            </div>
+        </div>
+        <div class="mb-4">
+            <p class="text-sm text-gray-500">
+                Are you sure you want to delete the <strong id="cardBrand"></strong> card ending in <strong id="cardLast4"></strong>? This action cannot be undone.
+            </p>
+            <!-- Error message container -->
+            <div id="errorMessage" class="hidden mt-3 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+                <p id="errorText" class="text-sm"></p>
+            </div>
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button id="cancelDelete" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                Cancel
+            </button>
+            <button id="confirmDelete" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200">
+                Delete Payment Method
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Stripe Script -->
+<script src="https://js.stripe.com/v3/"></script>
+<script>
+let currentPaymentMethodId = null;
+let currentOrganizationId = "{{ organization.id }}";
+let stripe = null;
+let elements = null;
+let paymentElement = null;
+
+// Initialize Stripe
+function initializeStripe() {
+    if (!stripe) {
+        stripe = Stripe("{{ stripe_publishable_key }}");
+    }
+}
+
+function showAddPaymentModal() {
+    document.getElementById('addPaymentModal').classList.remove('hidden');
+    hideAddPaymentMessages();
+    
+    // Initialize Stripe if not already done
+    initializeStripe();
+    
+    // Create and mount the Card Element
+    if (!elements) {
+        const options = {
+            mode: "setup",
+            currency: "usd",
+            appearance: {
+                theme: 'stripe',
+                variables: {
+                    colorPrimary: '#059669',
+                },
+            },
+        };
+        
+        elements = stripe.elements(options);
+        paymentElement = elements.create("card");
+    }
+    
+    // Mount the element
+    paymentElement.mount("#payment-element");
+}
+
+function hideAddPaymentModal() {
+    document.getElementById('addPaymentModal').classList.add('hidden');
+    hideAddPaymentMessages();
+    
+    // Unmount the payment element
+    if (paymentElement) {
+        paymentElement.unmount();
+    }
+}
+
+function showAddPaymentError(message) {
+    const errorContainer = document.getElementById('addPaymentErrorMessage');
+    const errorText = document.getElementById('addPaymentErrorText');
+    
+    errorText.textContent = message;
+    errorContainer.classList.remove('hidden');
+    document.getElementById('addPaymentSuccessMessage').classList.add('hidden');
+}
+
+function showAddPaymentSuccess(message) {
+    const successContainer = document.getElementById('addPaymentSuccessMessage');
+    const successText = document.getElementById('addPaymentSuccessText');
+    
+    successText.textContent = message;
+    successContainer.classList.remove('hidden');
+    document.getElementById('addPaymentErrorMessage').classList.add('hidden');
+}
+
+function hideAddPaymentMessages() {
+    document.getElementById('addPaymentErrorMessage').classList.add('hidden');
+    document.getElementById('addPaymentSuccessMessage').classList.add('hidden');
+}
+
+function setAddPaymentLoadingState(isLoading) {
+    const submitBtn = document.getElementById('submitPaymentBtn');
+    const cancelBtn = document.querySelector('#addPaymentModal button[onclick="hideAddPaymentModal()"]');
+    
+    if (isLoading) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Adding...';
+        submitBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        cancelBtn.disabled = true;
+        cancelBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Add Payment Method';
+        submitBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+        cancelBtn.disabled = false;
+        cancelBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+// Handle payment form submission
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentForm = document.getElementById('payment-form');
+    
+    paymentForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        
+        if (!stripe || !elements) {
+            showAddPaymentError('Payment system not initialized');
+            return;
+        }
+        
+        setAddPaymentLoadingState(true);
+        hideAddPaymentMessages();
+        
+        try {
+            // Create the SetupIntent and obtain clientSecret
+            const response = await fetch("/api/v1/payments/create-intent/", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    organization_id: currentOrganizationId
+                })
+            });
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Failed to create setup intent');
+            }
+            
+            const data = await response.json();
+            const clientSecret = data.client_secret;
+            
+            // Get the payment method from the card element
+            const { paymentMethod, error: submitError } = await stripe.createPaymentMethod({
+                type: 'card',
+                card: paymentElement,
+            });
+            
+            if (submitError) {
+                setAddPaymentLoadingState(false);
+                showAddPaymentError(submitError.message);
+                return;
+            }
+            
+            // Confirm the SetupIntent with the payment method
+            const { error } = await stripe.confirmCardSetup(clientSecret, {
+                payment_method: paymentMethod.id,
+            });
+            
+            if (error) {
+                setAddPaymentLoadingState(false);
+                showAddPaymentError(error.message);
+            } else {
+                // Success - the page will reload due to return_url
+                showAddPaymentSuccess('Payment method added successfully!');
+                setTimeout(() => {
+                    window.location.reload();
+                }, 2000);
+            }
+        } catch (error) {
+            setAddPaymentLoadingState(false);
+            console.error('Error:', error);
+            showAddPaymentError('An error occurred while adding the payment method');
+        }
+    });
+    
+    // Close add payment modal when clicking outside
+    const addPaymentModal = document.getElementById('addPaymentModal');
+    addPaymentModal.addEventListener('click', function(e) {
+        if (e.target === addPaymentModal) {
+            hideAddPaymentModal();
+        }
+    });
+    
+    // Close add payment modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !addPaymentModal.classList.contains('hidden')) {
+            hideAddPaymentModal();
+        }
+    });
+});
+
+function showDeleteModal(paymentMethodId, organizationId, cardBrand, cardLast4) {
+    currentPaymentMethodId = paymentMethodId;
+    currentOrganizationId = organizationId;
+    
+    document.getElementById('cardBrand').textContent = cardBrand;
+    document.getElementById('cardLast4').textContent = cardLast4;
+    
+    // Hide any previous error messages
+    document.getElementById('errorMessage').classList.add('hidden');
+    
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function showError(message) {
+    const errorContainer = document.getElementById('errorMessage');
+    const errorText = document.getElementById('errorText');
+    
+    errorText.textContent = message;
+    errorContainer.classList.remove('hidden');
+}
+
+function hideError() {
+    document.getElementById('errorMessage').classList.add('hidden');
+}
+
+function setLoadingState(isLoading) {
+    const confirmButton = document.getElementById('confirmDelete');
+    const cancelButton = document.getElementById('cancelDelete');
+    
+    if (isLoading) {
+        confirmButton.disabled = true;
+        confirmButton.textContent = 'Deleting...';
+        confirmButton.classList.add('opacity-50', 'cursor-not-allowed');
+        cancelButton.disabled = true;
+        cancelButton.classList.add('opacity-50', 'cursor-not-allowed');
+    } else {
+        confirmButton.disabled = false;
+        confirmButton.textContent = 'Delete Payment Method';
+        confirmButton.classList.remove('opacity-50', 'cursor-not-allowed');
+        cancelButton.disabled = false;
+        cancelButton.classList.remove('opacity-50', 'cursor-not-allowed');
+    }
+}
+
+function setDefaultPaymentMethod(paymentMethodId, organizationId) {
+    if (!paymentMethodId || !organizationId) {
+        showError('Payment method ID or organization ID not set');
+        return;
+    }
+    
+    // Show loading state on the button
+    const button = event.target.closest('button');
+    const originalContent = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+    
+    fetch(`/api/v1/payments/payment-method/set-default/?organization_id=${organizationId}&payment_method_id=${paymentMethodId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            // Reload the page to show updated payment methods
+            window.location.reload();
+        } else {
+            showError(data.error || 'Failed to set default payment method');
+            // Restore button
+            button.disabled = false;
+            button.innerHTML = originalContent;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('An error occurred while setting the default payment method');
+        // Restore button
+        button.disabled = false;
+        button.innerHTML = originalContent;
+    });
+}
+
+function setDefaultPaymentMethod(paymentMethodId, organizationId) {
+    if (!paymentMethodId || !organizationId) {
+        showError('Payment method ID or organization ID not set');
+        return;
+    }
+    
+    // Show loading state on the button
+    const button = event.target.closest('button');
+    const originalContent = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = '<svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+    
+    fetch(`/api/v1/payments/payment-method/set-default/?organization_id=${organizationId}&payment_method_id=${paymentMethodId}`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.message) {
+            // Reload the page to show updated payment methods
+            window.location.reload();
+        } else {
+            showError(data.error || 'Failed to set default payment method');
+            // Restore button
+            button.disabled = false;
+            button.innerHTML = originalContent;
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showError('An error occurred while setting the default payment method');
+        // Restore button
+        button.disabled = false;
+        button.innerHTML = originalContent;
+    });
+}
+
+function deletePaymentMethod() {
+    if (!currentPaymentMethodId || !currentOrganizationId) {
+        showError('Payment method ID or organization ID not set');
+        return;
+    }
+    
+    setLoadingState(true);
+    hideError();
+    
+    console.log(currentOrganizationId);
+    fetch(`/api/v1/payments/payment-method/delete/?organization_id=${currentOrganizationId}&payment_method_id=${currentPaymentMethodId}`, {
+        method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json',
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        setLoadingState(false);
+        if (data.message) {
+            // Reload the page to show updated payment methods
+            window.location.reload();
+        } else {
+            showError(data.error || 'Failed to delete payment method');
+        }
+    })
+    .catch(error => {
+        setLoadingState(false);
+        console.error('Error:', error);
+        showError('An error occurred while deleting the payment method');
+    });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const deleteModal = document.getElementById('deleteModal');
+    const cancelDelete = document.getElementById('cancelDelete');
+    const confirmDelete = document.getElementById('confirmDelete');
+
+    cancelDelete.addEventListener('click', function() {
+        deleteModal.classList.add('hidden');
+        hideError();
+    });
+
+    confirmDelete.addEventListener('click', function() {
+        deletePaymentMethod();
+    });
+
+    // Close modal when clicking outside
+    deleteModal.addEventListener('click', function(e) {
+        if (e.target === deleteModal) {
+            deleteModal.classList.add('hidden');
+            hideError();
+        }
+    });
+
+    // Close modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !deleteModal.classList.contains('hidden')) {
+            deleteModal.classList.add('hidden');
+            hideError();
+        }
+    });
+});
+</script>
 {% endblock %} 

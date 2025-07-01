@@ -86,8 +86,8 @@
             </svg>
             Projects
           </h2>
-          <a
-            href="{% url 'main_site:create_project_form' organization_id=organization.id %}"
+          <button
+            id="createProjectBtn"
             class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105"
           >
             <svg
@@ -103,7 +103,7 @@
               ></path>
             </svg>
             Create Project
-          </a>
+          </button>
         </div>
         <div id="projectsList" class="space-y-4">
           {% for project in projects %}
@@ -151,8 +151,8 @@
               ></path>
             </svg>
             <p class="text-zinc-500 mb-4">No projects in this organization</p>
-            <a
-              href="{% url 'main_site:create_project_form' organization_id=organization.id %}"
+            <button
+              id="createProjectBtnEmpty"
               class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105"
             >
               <svg
@@ -168,7 +168,7 @@
                 ></path>
               </svg>
               Create Project
-            </a>
+            </button>
           </div>
           {% endfor %}
         </div>
@@ -183,8 +183,172 @@
   </main>
 </div>
 
+<!-- Create Project Modal -->
+<div id="createProjectModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-gray-900">Create New Project</h3>
+            </div>
+        </div>
+        <div class="mb-4">
+            <p class="text-sm text-gray-500 mb-4">
+                Create a new project within {{ organization.name }} to organize your applications and deployments.
+            </p>
+            <form id="createProjectForm" class="space-y-4">
+                <div>
+                    <label for="projectName" class="block text-sm font-medium text-gray-700 mb-2">
+                        Project Name
+                    </label>
+                    <input type="text" id="projectName" name="name" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                           placeholder="Enter project name">
+                </div>
+                <div>
+                    <label for="projectDescription" class="block text-sm font-medium text-gray-700 mb-2">
+                        Project Description
+                    </label>
+                    <textarea id="projectDescription" name="description" required rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              placeholder="Enter project description"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button id="cancelCreateProject" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                Cancel
+            </button>
+            <button id="submitCreateProject" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
+                Create Project
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Hidden input for organization ID -->
 <input type="hidden" id="organizationId" value="{{ organization.id }}" />
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Project creation modal functionality
+    const createProjectBtn = document.getElementById('createProjectBtn');
+    const createProjectBtnEmpty = document.getElementById('createProjectBtnEmpty');
+    const createProjectModal = document.getElementById('createProjectModal');
+    const cancelCreateProject = document.getElementById('cancelCreateProject');
+    const submitCreateProject = document.getElementById('submitCreateProject');
+    const createProjectForm = document.getElementById('createProjectForm');
+    const projectName = document.getElementById('projectName');
+    const projectDescription = document.getElementById('projectDescription');
+    const organizationId = document.getElementById('organizationId').value;
+
+    // Function to open modal
+    function openProjectModal() {
+        createProjectModal.classList.remove('hidden');
+    }
+
+    // Add event listeners to both buttons
+    if (createProjectBtn) {
+        createProjectBtn.addEventListener('click', openProjectModal);
+    }
+    if (createProjectBtnEmpty) {
+        createProjectBtnEmpty.addEventListener('click', openProjectModal);
+    }
+
+    cancelCreateProject.addEventListener('click', function() {
+        createProjectModal.classList.add('hidden');
+        createProjectForm.reset();
+    });
+
+    submitCreateProject.addEventListener('click', function() {
+        const name = projectName.value.trim();
+        const description = projectDescription.value.trim();
+
+        if (!name) {
+            alert('Please enter a project name');
+            return;
+        }
+
+        if (!description) {
+            alert('Please enter a project description');
+            return;
+        }
+
+        // Show loading state
+        submitCreateProject.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Creating...';
+        submitCreateProject.disabled = true;
+
+        fetch('/api/v1/projects/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                name: name,
+                description: description,
+                organization: organizationId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+            }
+            if (response.ok) {
+                createProjectModal.classList.add('hidden');
+                createProjectForm.reset();
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error creating project:', error);
+            alert('Failed to create project. Please try again.');
+        })
+        .finally(() => {
+            submitCreateProject.innerHTML = 'Create Project';
+            submitCreateProject.disabled = false;
+        });
+    });
+
+    // Close project modal when clicking outside
+    createProjectModal.addEventListener('click', function(e) {
+        if (e.target === createProjectModal) {
+            createProjectModal.classList.add('hidden');
+            createProjectForm.reset();
+        }
+    });
+
+    // Close project modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !createProjectModal.classList.contains('hidden')) {
+            createProjectModal.classList.add('hidden');
+            createProjectForm.reset();
+        }
+    });
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+
 {% comment %}
 <script src="https://js.stripe.com/v3/"></script>
 {% endcomment %}

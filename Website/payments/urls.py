@@ -13,8 +13,11 @@ urlpatterns = [
     # Customer management
     path("customers/get_customer_id/", views.get_customer_id, name="customer_detail"),
     # Payment method management
-    path("payment-method/<str:payment_method_id>/", views.get_payment_method, name="get_payment_method"),
+    path("create-intent/", views.create_payment_intent, name="create_payment_intent"),
     path("payment-method/delete/", views.delete_payment_method, name="delete_payment_method"),
+    path("payment-method/set-default/", views.set_default_payment_method, name="set_default_payment_method"),
+    path("payment-method/<str:org_id>/", views.get_payment_method, name="get_payment_method"),
+    path("payment-methods/<str:org_id>/", views.get_all_payment_methods, name="get_all_payment_methods"),
     # Price management
     # path("prices/", views.create_price_item, name="price_create"),
     # path("prices/<str:price_id>/update/", views.update_price_item, name="price_update"),
