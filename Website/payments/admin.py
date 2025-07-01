@@ -8,34 +8,34 @@ from .models import usage_information, billing_history, Prices
 @admin.register(usage_information)
 class UsageInformationAdmin(admin.ModelAdmin):
     list_display = [
-        'id', 
-        'organization_name', 
-        'stack_name', 
-        'current_usage', 
-        'monthly_usage', 
-        'created_at', 
+        'id',
+        'organization_name',
+        'stack_name',
+        'current_usage',
+        'monthly_usage',
+        'created_at',
         'updated_at'
     ]
-    
+
     list_filter = [
         'organization__name',
         'stack__name',
         'created_at',
         'updated_at',
     ]
-    
+
     search_fields = [
         'organization__name',
         'stack__name',
         'id',
     ]
-    
+
     readonly_fields = ['id', 'created_at', 'updated_at']
-    
+
     ordering = ['-created_at']
-    
+
     list_per_page = 25
-    
+
     fieldsets = (
         ('Basic Information', {
             'fields': ('id', 'organization', 'stack')
@@ -48,13 +48,13 @@ class UsageInformationAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    
+
     def organization_name(self, obj):
         return obj.organization.name if obj.organization else 'N/A'
-    
+
     def stack_name(self, obj):
         return obj.stack.name if obj.stack else 'N/A'
-    
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('organization', 'stack')
 
@@ -70,7 +70,7 @@ class BillingHistoryAdmin(admin.ModelAdmin):
         'created_at',
         'paid_on'
     ]
-    
+
     list_filter = [
         'status',
         'organization__name',
@@ -78,19 +78,19 @@ class BillingHistoryAdmin(admin.ModelAdmin):
         'created_at',
         'paid_on',
     ]
-    
+
     search_fields = [
         'organization__name',
         'description',
         'id',
     ]
-    
-    readonly_fields = ['id', 'created_at']
-    
+
+    readonly_fields = ['id', 'created_at', 'paid_on']
+
     ordering = ['-created_at']
-    
+
     list_per_page = 25
-    
+
     fieldsets = (
         ('Basic Information', {
             'fields': ('id', 'organization', 'amount', 'description')
@@ -103,10 +103,10 @@ class BillingHistoryAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
-    
+
     def organization_name(self, obj):
         return obj.organization.name if obj.organization else 'N/A'
-    
+
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('organization')
 
@@ -117,7 +117,7 @@ class PricesAdmin(admin.ModelAdmin):
     search_fields = ['name', 'id']
     readonly_fields = ['id', 'created_at', 'updated_at']
     ordering = ['name']
-    
+
     fieldsets = (
         ('Basic Information', {
             'fields': ('id', 'name', 'price')

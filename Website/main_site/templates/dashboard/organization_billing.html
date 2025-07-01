@@ -163,32 +163,39 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
+                            {% for record in billing_history_records %}
                             <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Dec 15, 2024</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">MERN Stack Deployment</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$29.99</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.created_at|date:"M d, Y" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ record.description }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${{ record.amount }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
+                                    {% if record.status|lower == 'paid' %}
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Paid
+                                        {{ record.status|capfirst }}
                                     </span>
+                                    {% elif record.status|lower == 'pending' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                        {{ record.status|capfirst }}
+                                    </span>
+                                    {% elif record.status|lower == 'overdue' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        {{ record.status|capfirst }}
+                                    </span>
+                                    {% elif record.status|lower == 'failed' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                        {{ record.status|capfirst }} x
+                                    </span>
+                                    {% elif record.status|lower == 'cancelled' %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 line-through">
+                                        {{ record.status|capfirst }}
+                                    </span>
+                                    {% endif %}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                     <a href="#" class="text-emerald-600 hover:text-emerald-900">Download</a>
                                 </td>
                             </tr>
-                            <tr class="hover:bg-gray-50">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Nov 15, 2024</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">Django Stack Deployment</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">$19.99</td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Paid
-                                    </span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                                    <a href="#" class="text-emerald-600 hover:text-emerald-900">Download</a>
-                                </td>
-                            </tr>
+                            {% endfor %}
                         </tbody>
                     </table>
                 </div>

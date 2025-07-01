@@ -70,8 +70,8 @@ def maintenance(request: HttpRequest) -> HttpResponse:
 
 class DashboardView(View):
     """Class-based view for all dashboard-related functionality."""
-    
-    
+
+
     @oauth_required()
     def get(self, request: HttpRequest) -> HttpResponse:
         """Main dashboard view."""
@@ -82,7 +82,7 @@ class DashboardView(View):
         logger.info(
             f"Found {organizations.count()} organizations and {projects.count()} projects for user"
         )
-        
+
         # If user has organizations, redirect to the first one
         first_organization = organizations.first()
         if first_organization:
@@ -132,7 +132,7 @@ class DashboardView(View):
         """Organization billing page."""
         user = cast(UserProfile, request.user)
         organization = Organization.objects.get(id=organization_id)
-        
+
         # Get all organizations for the user for dropdown
         user_organizations = Organization.objects.filter(organizationmember__user=user)
 
@@ -141,18 +141,18 @@ class DashboardView(View):
         try:
             import stripe
             stripe.api_key = settings.STRIPE.get("SECRET_KEY")
-            
+
             if organization.stripe_customer_id:
                 # Get all payment methods for the customer
                 stripe_payment_methods = stripe.PaymentMethod.list(
-                    customer=organization.stripe_customer_id, 
+                    customer=organization.stripe_customer_id,
                     type="card"
                 )
-                
+
                 # Get the customer to find the default payment method
                 customer = stripe.Customer.retrieve(organization.stripe_customer_id)
                 default_payment_method_id = customer.invoice_settings.default_payment_method if customer.invoice_settings else None
-                
+
                 # Format payment methods
                 for pm in stripe_payment_methods.data:
                     if pm.card:
@@ -173,12 +173,12 @@ class DashboardView(View):
         from django.db.models import Sum
         from datetime import datetime, timedelta
         from django.utils import timezone
-        from payments.models import usage_information
-        
+        from payments.models import usage_information, billing_history
+
         # Get all stacks for this organization's projects
         organization_projects = Project.objects.filter(organization=organization)
         organization_stacks = Stack.objects.filter(project__in=organization_projects)
-        
+
         # Get current time in user's timezone (you can customize this)
         current_time = timezone.now()
         month_start = current_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -187,7 +187,10 @@ class DashboardView(View):
         daily_usage = usage_information.get_total_current_usage_for_organization(organization)
         current_usage = usage_information.get_total_monthly_usage_for_organization(organization)
         projected_monthly_usage = current_usage * (30 / (current_time.day or 1))
-        
+
+        #get billing history for the organization
+        billing_history_records = billing_history.get_billing_history_for_organization(organization)
+
         return render(
             request,
             "dashboard/organization_billing.html",
@@ -202,6 +205,7 @@ class DashboardView(View):
             "current_usage": f"{current_usage:.2f}",
             "projected_monthly_usage": f"{projected_monthly_usage:.2f}",
             "month_start_formatted": month_start.strftime("%b 1, %Y"),
+            "billing_history_records": billing_history_records,
             },
         )
 
@@ -210,7 +214,7 @@ class DashboardView(View):
         """Project-specific dashboard."""
         user = cast(UserProfile, request.user)
         project = Project.objects.get(id=project_id)
-        
+
         # Handle project deletion
         if request.method == 'POST' and request.POST.get('action') == 'delete':
             # Check if user has permission to delete the project
@@ -221,7 +225,7 @@ class DashboardView(View):
             else:
                 # User doesn't have permission to delete
                 pass  # Could add error handling here
-        
+
         stacks = Stack.objects.filter(project_id=project_id)
 
         # Get all organizations and projects for the user for dropdowns
@@ -247,7 +251,7 @@ class DashboardView(View):
         """Stack-specific dashboard."""
         user = cast(UserProfile, request.user)
         stack = Stack.objects.get(id=stack_id)
-        
+
         # Handle stack deletion
         if request.method == 'POST' and request.POST.get('action') == 'delete':
             # Check if user has permission to delete the stack (project admin)
@@ -259,7 +263,7 @@ class DashboardView(View):
             else:
                 # User doesn't have permission to delete
                 pass  # Could add error handling here
-        
+
         stack_google_cloud_runs = list(StackGoogleCloudRun.objects.filter(stack=stack))
 
         for stack_google_cloud_run in stack_google_cloud_runs:
@@ -353,14 +357,14 @@ class DashboardView(View):
         members = OrganizationMember.objects.filter(organization=organization)
         pending_invites = PendingInvites.objects.filter(organization=organization)
         user_organizations = Organization.objects.filter(organizationmember__user=user)
-        
+
         # Check if user is admin of this organization
         is_admin = OrganizationMember.objects.filter(
-            organization=organization, 
-            user=user, 
+            organization=organization,
+            user=user,
             role="admin"
         ).exists()
-        
+
         return render(
             request,
             "dashboard/organization_members.html",
@@ -397,7 +401,7 @@ class DashboardView(View):
         """Project settings page."""
         user = cast(UserProfile, request.user)
         project = Project.objects.get(id=project_id)
-        
+
         if request.method == 'POST':
             form = ProjectSettingsForm(request.POST, instance=project)
             if form.is_valid():
@@ -406,14 +410,14 @@ class DashboardView(View):
                 return redirect('main_site:project_settings', organization_id=organization_id, project_id=project_id)
         else:
             form = ProjectSettingsForm(instance=project)
-        
+
         # Get all organizations and projects for the user for dropdowns
         user_organizations = Organization.objects.filter(organizationmember__user=user)
         user_projects = Project.objects.filter(projectmember__user=user)
-        
+
         # Check if user is admin of the project
         is_admin = ProjectMember.objects.filter(user=user, project=project, role='admin').exists()
-        
+
         return render(
             request,
             "dashboard/project_settings.html",
@@ -434,7 +438,7 @@ class DashboardView(View):
         """Stack settings page."""
         user = cast(UserProfile, request.user)
         stack = Stack.objects.get(id=stack_id)
-        
+
         if request.method == 'POST':
             form = StackSettingsForm(request.POST, instance=stack)
             if form.is_valid():
@@ -443,14 +447,14 @@ class DashboardView(View):
                 return redirect('main_site:stack_settings', organization_id=organization_id, project_id=project_id, stack_id=stack_id)
         else:
             form = StackSettingsForm(instance=stack)
-        
+
         # Get all organizations and projects for the user for dropdowns
         user_organizations = Organization.objects.filter(organizationmember__user=user)
         user_projects = Project.objects.filter(projectmember__user=user)
         user_stacks = Stack.objects.filter(project_id=project_id)
         # Get the current project for context
         project = Project.objects.get(id=project_id)
-        
+
         return render(
             request,
             "dashboard/stack_settings.html",
@@ -474,12 +478,12 @@ class DashboardView(View):
         """Environment variables configuration page."""
         user = cast(UserProfile, request.user)
         stack = Stack.objects.get(id=stack_id)
-        
+
         if request.method == 'POST':
             form = EnvironmentVariablesForm(request.POST, request.FILES)
             if form.is_valid():
                 env_variables = form.cleaned_data.get('env_variables', '')
-                
+
                 # Save the environment variables
                 if env_variables.strip():
                     # Parse the environment variables string into a dictionary
@@ -491,7 +495,7 @@ class DashboardView(View):
                             if '=' in line:
                                 key, value = line.split('=', 1)
                                 env_dict[key.strip()] = value.strip()
-                    
+
                     # Call the post_stack_env function with the dictionary
                     try:
                         result = post_stack_env(
@@ -500,7 +504,7 @@ class DashboardView(View):
                             selected_locations="none",  # You might want to make this configurable
                             env_dict=env_dict
                         )
-                        
+
                         if result.status_code == 200:
                             messages.success(request, 'Environment variables updated successfully')
                         else:
@@ -509,21 +513,21 @@ class DashboardView(View):
                         messages.error(request, f'Error updating environment variables: {str(e)}')
                 else:
                     messages.warning(request, 'No environment variables provided.')
-                
+
                 return redirect('main_site:environment_variables', organization_id=organization_id, project_id=project_id, stack_id=stack_id)
         else:
             # Initialize form with existing environment variables if any
             initial_data = {}
             # You could load existing env vars here: initial_data['env_variables'] = stack.get_env_variables()
             form = EnvironmentVariablesForm(initial=initial_data)
-        
+
         # Get all organizations and projects for the user for dropdowns
         user_organizations = Organization.objects.filter(organizationmember__user=user)
         user_projects = Project.objects.filter(projectmember__user=user)
         user_stacks = Stack.objects.filter(project_id=project_id)
         # Get the current project for context
         project = Project.objects.get(id=project_id)
-        
+
         return render(
             request,
             "dashboard/environment_variables.html",
@@ -545,7 +549,7 @@ class DashboardView(View):
 
 class PaymentView(View):
     """Class-based view for all payment-related functionality."""
-    
+
     STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
 
     @oauth_required()
@@ -591,7 +595,7 @@ class PaymentView(View):
 
 class AuthView(View):
     """Class-based view for all authentication-related functionality."""
-    
+
     def login(self, request: HttpRequest) -> HttpResponse:
         """Login view."""
         return render(request, "accounts/login.html", {})
@@ -612,7 +616,7 @@ class AuthView(View):
         """Signup view."""
         invite_id = request.GET.get('invite')
         invite_data = None
-        
+
         if invite_id:
             try:
                 pending_invite = PendingInvites.objects.get(id=invite_id)
@@ -625,7 +629,7 @@ class AuthView(View):
             except PendingInvites.DoesNotExist:
                 # Invalid invite ID - will be handled in template
                 pass
-        
+
         return render(request, "accounts/signup.html", {
             "form": CustomUserCreationForm,
             "invite_data": invite_data
