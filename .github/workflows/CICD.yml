@@ -1,13 +1,15 @@
-name: Django Migrations
+name: Build and Push Docker image to Azure
 
 on:
   push:
     branches:
-      - main  # Run on pushes to the main branch
-  workflow_dispatch:
+      - main
+      - dev
+
 jobs:
   migrations:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
     steps:
       - name: Checkout repository
@@ -38,29 +40,45 @@ jobs:
           python Website/manage.py makemigrations
           python Website/manage.py migrate
 
-  docker-build:
+  build:
     runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+
+    env:
+      STACK: ${{ vars.STACK }}
+      ACR_NAME: ${{ vars.ACR_NAME }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
-      - name: Checkout repository
+      - name: Check out code
         uses: actions/checkout@v4
-        
-      - name: Build Docker Image
-        run: |
-          docker build -t us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1 Website/
 
-      - name: Push Docker Image to Google Cloud Container Registry
-        run: |
-          echo "${{ secrets.GCP_SA_KEY }}" | base64 --decode > gcp-key.json
-          gcloud auth activate-service-account --key-file=gcp-key.json
-          gcloud auth configure-docker us-central1-docker.pkg.dev
-          docker push us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - name: Redeploy to Google Cloud Run
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ env.AZURE_CLIENT_ID }}
+          tenant-id: ${{ env.AZURE_TENANT_ID }}
+          subscription-id: ${{ env.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to Azure Container Registry
         run: |
-          gcloud config set project deploy-box-prod
-          gcloud run deploy website-1 \
-            --image us-central1-docker.pkg.dev/deploy-box-prod/deploy-box-repository/website-1 \
-            --region us-central1 \
-            --platform managed \
-            --allow-unauthenticated
+          az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and Push Website Docker image to Azure
+        run: |
+          IMAGE_NAME=${{ env.ACR_NAME }}.azurecr.io/${{ env.STACK }}-website
+          docker build -t $IMAGE_NAME Website/
+          docker push $IMAGE_NAME
+
+      - name: Deploy to Azure Container Apps
+        run: |
+          az containerapp update \
+            --name ${{ secrets.CONTAINER_APP_NAME }} \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.STACK }}-website
+
