@@ -6,6 +6,10 @@ on:
       - main
       - dev
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   migrations:
     runs-on: ubuntu-latest
