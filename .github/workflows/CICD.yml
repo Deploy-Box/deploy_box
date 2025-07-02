@@ -96,11 +96,16 @@ jobs:
           ACR_PASSWORD=$(az acr credential show --name ${{ env.ACR_NAME }} --query "passwords[0].value" -o tsv)
           
           # Update the container app with registry credentials
+          az containerapp registry set \
+            --name ${{ secrets.CONTAINER_APP_NAME }} \
+            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --server ${{ env.ACR_NAME }}.azurecr.io \
+            --username $ACR_USERNAME \
+            --password $ACR_PASSWORD
+          
+          # Update the container app image
           az containerapp update \
             --name ${{ secrets.CONTAINER_APP_NAME }} \
             --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.STACK }}-website \
-            --registry-server ${{ env.ACR_NAME }}.azurecr.io \
-            --registry-username $ACR_USERNAME \
-            --registry-password $ACR_PASSWORD
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.STACK }}-website
 
