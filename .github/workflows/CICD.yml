@@ -60,7 +60,7 @@ jobs:
 
     env:
       STACK: ${{ vars.STACK }}
-      ACR_NAME: ${{ vars.ACR_NAME }}
+      ACR_NAME: ${{ env.ACR_NAME }}
       AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
@@ -85,7 +85,7 @@ jobs:
 
       - name: Build and Push Website Docker image to Azure
         run: |
-          IMAGE_NAME=${{ env.ACR_NAME }}.azurecr.io/${{ env.STACK }}-website
+          IMAGE_NAME=${{ env.ACR_NAME }}.azurecr.io/${{ vars.STACK }}-website
           docker build -t $IMAGE_NAME Website/
           docker push $IMAGE_NAME
 
@@ -97,15 +97,15 @@ jobs:
           
           # Update the container app with registry credentials
           az containerapp registry set \
-            --name ${{ secrets.CONTAINER_APP_NAME }} \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
             --server ${{ env.ACR_NAME }}.azurecr.io \
             --username $ACR_USERNAME \
             --password $ACR_PASSWORD
           
           # Update the container app image
           az containerapp update \
-            --name ${{ secrets.CONTAINER_APP_NAME }} \
-            --resource-group ${{ secrets.RESOURCE_GROUP }} \
-            --image ${{ env.ACR_NAME }}.azurecr.io/${{ env.STACK }}-website
+            --name ${{ env.CONTAINER_APP_NAME }} \
+            --resource-group ${{ env.RESOURCE_GROUP }} \
+            --image ${{ env.ACR_NAME }}.azurecr.io/${{ vars.STACK }}-website
 
