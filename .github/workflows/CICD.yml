@@ -61,9 +61,9 @@ jobs:
     env:
       STACK: ${{ vars.STACK }}
       ACR_NAME: ${{ env.ACR_NAME }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID: ${{ env.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ env.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ env.AZURE_SUBSCRIPTION_ID }}
 
     steps:
       - name: Check out code
