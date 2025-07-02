@@ -5,6 +5,20 @@ on:
     branches:
       - main
       - dev
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+
+# Permissions required for OIDC authentication
+permissions:
+  id-token: write
+  contents: read
 
 jobs:
   migrations:
