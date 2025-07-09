@@ -93,6 +93,9 @@ jobs:
 
       - name: Deploy to Azure Container Apps
         run: |
+          # Enable admin user on ACR if not already enabled
+          az acr update -n $ACR_NAME --admin-enabled true
+          
           # Get the ACR credentials
           ACR_USERNAME=$(az acr credential show --name $ACR_NAME --query "username" -o tsv)
           ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query "passwords[0].value" -o tsv)
