@@ -108,4 +108,7 @@ urlpatterns = [
     path(
         "google0f33857d0e9df9a5.html", views.google_verification, name="google_verification"
     ),
+    path(
+        "sitemap.xml", views.sitemap, name="sitemap"
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
