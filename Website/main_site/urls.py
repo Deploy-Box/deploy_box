@@ -105,4 +105,7 @@ urlpatterns = [
         views.dashboard_view.create_project_form,
         name="create_project_form",
     ),
+    path(
+        "google0f33857d0e9df9a5.html", views.google_verification, name="google_verification"
+    ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -18,6 +18,7 @@ urlpatterns = [
     path("payment-method/set-default/", views.set_default_payment_method, name="set_default_payment_method"),
     path("payment-method/<str:org_id>/", views.get_payment_method, name="get_payment_method"),
     path("payment-methods/<str:org_id>/", views.get_all_payment_methods, name="get_all_payment_methods"),
+    path("update_billing_history/", views.update_billing_history, name="update_billing_history"),
     # Price management
     # path("prices/", views.create_price_item, name="price_create"),
     # path("prices/<str:price_id>/update/", views.update_price_item, name="price_update"),
