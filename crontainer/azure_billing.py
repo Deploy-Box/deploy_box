@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import json
 import time
+from typing import Literal
 
 load_dotenv()
 
@@ -36,38 +37,58 @@ class AzureBilling:
         else:
             raise Exception(f"Error retrieving Azure token: {response.text}")
 
-    def get_resource_group_usage(self, resource_group_names: list) -> dict:
+    def get_resource_group_usage(
+        self,
+        resource_group_names: list,
+        period: str = "MonthToDate",
+        granularity: Literal["Monthly", "Yesterday"] = "Monthly",
+        resource_group_to_org: dict = {}
+    ) -> dict:
         """
-        This function retrieves the resource group usage from Azure and returns it as a JSON object.
+        Retrieves the resource group usage from Azure.
+        Returns a dict: {resource_group_name: {"cost": ..., "org": ...}}
         """
-
         url = f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
-        body ={
-                "type": "ActualCost",
-                "timeframe": "MonthToDate",
-                "dataset": {
-                    "granularity": "Monthly",
-                    "aggregation": {
+
+        body = {
+            "type": "ActualCost",
+            "dataset": {
+                "granularity": granularity,
+                "aggregation": {
                     "totalCost": {
                         "name": "PreTaxCost",
                         "function": "Sum"
                     }
-                    },
-                    "grouping": [
-                        {
-                            "type": "Dimension",
-                            "name": "ResourceGroupName"
-                        }
-                    ],
-                    "filter": {
+                },
+                "grouping": [
+                    {
+                        "type": "Dimension",
+                        "name": "ResourceGroupName"
+                    }
+                ],
+                "filter": {
                     "dimensions": {
                         "name": "ResourceGroupName",
                         "operator": "In",
                         "values": resource_group_names
                     }
-                    }
                 }
-                }
+            }
+        }
+
+        if period == "MonthToDate":
+            body["timeframe"] = "MonthToDate"
+        elif period == "Yesterday":
+            from datetime import datetime, timedelta
+            yesterday = datetime.now() - timedelta(days=1)
+            body["timeframe"] = "Custom"
+            body["timePeriod"] = {
+                "from": yesterday.isoformat(),
+                "to": yesterday.isoformat()
+            }
+        else:
+            raise ValueError("period must be 'MonthToDate' or 'Yesterday'")
+
         headers = {
             "Authorization": f"Bearer {self.token}",
             "Content-Type": "application/json",
@@ -76,12 +97,13 @@ class AzureBilling:
         if response.status_code == 200:
             rows = response.json().get("properties").get("rows")
             output = {}
-
             for row in rows:
                 cost = row[0]
                 resource_group_name = row[2]
-                output[resource_group_name] = cost
-
+                org = None
+                if resource_group_to_org:
+                    org = resource_group_to_org.get(resource_group_name)
+                output[resource_group_name] = {"cost": cost, "org": org}
             return output
         else:
             raise Exception(f"Error retrieving resource group usage: {response.text}")
@@ -113,5 +135,8 @@ if __name__ == "__main__":
     resource_groups, resource_group_tags, resource_group_to_org = billing.get_all_resource_groups()
     # print(f"Resource Groups: {resource_groups}")
     # Get usage for all resource groups
-    usage = billing.get_resource_group_usage(resource_groups)
-    # print(f"Usage for Resource Groups: {usage}")
+    usage = billing.get_resource_group_usage(resource_groups, period="Yesterday", granularity="Daily", resource_group_to_org=resource_group_to_org)
+    print(f"Usage for Resource Groups: {json.dumps(usage, indent=2)}")
+
+    usage = billing.get_resource_group_usage(resource_groups, period="MonthToDate", resource_group_to_org=resource_group_to_org)
+    print(f"Usage for Resource Groups Monthly: {json.dumps(usage, indent=2)}")
