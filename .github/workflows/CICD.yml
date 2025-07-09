@@ -58,13 +58,13 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
     env:
-      STACK: ${{ vars.STACK }}                # repository-level variable
-      ACR_NAME: ${{ vars.ACR_NAME }}          # environment-level variable
-      CONTAINER_APP_NAME: ${{ vars.CONTAINER_APP_NAME }} # environment-level variable
-      RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}         # environment-level variable
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}    # environment secret
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}    # environment secret
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }} # environment secret
+      STACK: ${{ vars.STACK }}
+      ACR_NAME: ${{ vars.ACR_NAME }}
+      CONTAINER_APP_NAME: ${{ vars.CONTAINER_APP_NAME }}
+      RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
     steps:
       - name: Check out code
@@ -95,7 +95,6 @@ jobs:
           ACR_USERNAME=$(az acr credential show --name $ACR_NAME --query "username" -o tsv)
           ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query "passwords[0].value" -o tsv)
 
-          # Update the container app with registry credentials
           az containerapp registry set \
             --name $CONTAINER_APP_NAME \
             --resource-group $RESOURCE_GROUP \
@@ -103,8 +102,13 @@ jobs:
             --username $ACR_USERNAME \
             --password $ACR_PASSWORD
 
-          # Update the container app image
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          IMAGE_NAME=$ACR_NAME.azurecr.io/$STACK-website:$IMAGE_TAG
+
+          docker build -t $IMAGE_NAME Website/
+          docker push $IMAGE_NAME
+
           az containerapp update \
             --name $CONTAINER_APP_NAME \
             --resource-group $RESOURCE_GROUP \
-            --image $ACR_NAME.azurecr.io/$STACK-website
+            --image $IMAGE_NAME
