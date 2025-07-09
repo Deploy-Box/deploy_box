@@ -15,7 +15,6 @@ on:
         options:
           - dev
 
-# Permissions required for OIDC authentication
 permissions:
   id-token: write
   contents: read
@@ -59,53 +58,53 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
     env:
-      STACK: ${{ vars.STACK }}
-      ACR_NAME: ${{ vars.ACR_NAME }}
-      CONTAINER_APP_NAME: ${{ vars.CONTAINER_APP_NAME }}
-      RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}
-      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      STACK: ${{ vars.STACK }}                # repository-level variable
+      ACR_NAME: ${{ vars.ACR_NAME }}          # environment-level variable
+      CONTAINER_APP_NAME: ${{ vars.CONTAINER_APP_NAME }} # environment-level variable
+      RESOURCE_GROUP: ${{ vars.RESOURCE_GROUP }}         # environment-level variable
+      AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}    # environment secret
+      AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}    # environment secret
+      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }} # environment secret
 
-      steps:
-        - name: Check out code
-          uses: actions/checkout@v4
-  
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v3
-  
-        - name: Log in to Azure
-          uses: azure/login@v1
-          with:
-            client-id: ${{ secrets.AZURE_CLIENT_ID }}
-            tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-            subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  
-        - name: Log in to Azure Container Registry
-          run: az acr login --name $ACR_NAME
-  
-        - name: Build and Push Website Docker image to Azure
-          run: |
-            IMAGE_NAME=$ACR_NAME.azurecr.io/$STACK-website
-            docker build -t $IMAGE_NAME Website/
-            docker push $IMAGE_NAME
-  
-        - name: Deploy to Azure Container Apps
-          run: |
-            # Get the ACR credentials
-            ACR_USERNAME=$(az acr credential show --name $ACR_NAME --query "username" -o tsv)
-            ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query "passwords[0].value" -o tsv)
-  
-            # Update the container app with registry credentials
-            az containerapp registry set \
-              --name $CONTAINER_APP_NAME \
-              --resource-group $RESOURCE_GROUP \
-              --server $ACR_NAME.azurecr.io \
-              --username $ACR_USERNAME \
-              --password $ACR_PASSWORD
-  
-            # Update the container app image
-            az containerapp update \
-              --name $CONTAINER_APP_NAME \
-              --resource-group $RESOURCE_GROUP \
-              --image $ACR_NAME.azurecr.io/$STACK-website
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Log in to Azure Container Registry
+        run: az acr login --name $ACR_NAME
+
+      - name: Build and Push Website Docker image to Azure
+        run: |
+          IMAGE_NAME=$ACR_NAME.azurecr.io/$STACK-website
+          docker build -t $IMAGE_NAME Website/
+          docker push $IMAGE_NAME
+
+      - name: Deploy to Azure Container Apps
+        run: |
+          # Get the ACR credentials
+          ACR_USERNAME=$(az acr credential show --name $ACR_NAME --query "username" -o tsv)
+          ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query "passwords[0].value" -o tsv)
+
+          # Update the container app with registry credentials
+          az containerapp registry set \
+            --name $CONTAINER_APP_NAME \
+            --resource-group $RESOURCE_GROUP \
+            --server $ACR_NAME.azurecr.io \
+            --username $ACR_USERNAME \
+            --password $ACR_PASSWORD
+
+          # Update the container app image
+          az containerapp update \
+            --name $CONTAINER_APP_NAME \
+            --resource-group $RESOURCE_GROUP \
+            --image $ACR_NAME.azurecr.io/$STACK-website
