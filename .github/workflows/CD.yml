@@ -1,20 +1,14 @@
 name: Continuous Deployment to Azure
 
 on:
+  push:
+    branches:
+      - dev
   pull_request:
     types: [closed]
     branches:
       - main
-      - dev
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'dev'
-        type: choice
-        options:
-          - dev
+
 
 permissions:
   id-token: write
@@ -23,8 +17,10 @@ permissions:
 jobs:
   migrations:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
-    environment: ${{ github.event.pull_request.base.ref == 'main' && 'prod' || 'dev' }}
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
     steps:
       - name: Checkout repository
@@ -57,8 +53,10 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    if: github.event.pull_request.merged == true
-    environment: ${{ github.event.pull_request.base.ref == 'main' && 'prod' || 'dev' }}
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
+      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
 
     env:
       STACK: ${{ vars.STACK }}
@@ -96,9 +94,6 @@ jobs:
 
       - name: Deploy to Azure Container Apps
         run: |
-          # Enable admin user on ACR if not already enabled
-          az acr update -n $ACR_NAME --admin-enabled true
-          
           # Get the ACR credentials
           ACR_USERNAME=$(az acr credential show --name $ACR_NAME --query "username" -o tsv)
           ACR_PASSWORD=$(az acr credential show --name $ACR_NAME --query "passwords[0].value" -o tsv)
