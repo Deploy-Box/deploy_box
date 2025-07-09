@@ -642,7 +642,12 @@ class AuthView(View):
 def google_verification(request: HttpRequest) -> HttpResponse:
     """Google verification view."""
     # This is a static HTML file for Google Search Console verification
-    return render(request, "google0f33857d0e9df9a5.html", content_type="text/html")
+    return render(request, "google_stuff/google0f33857d0e9df9a5.html", content_type="text/html")
+
+def sitemap(request: HttpRequest) -> HttpResponse:
+    """Sitemap view."""
+    # This is a static XML file for sitemap
+    return render(request, "google_stuff/sitemap.xml", content_type="application/xml")
 
 
 # Create instances for URL routing
