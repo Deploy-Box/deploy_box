@@ -104,6 +104,9 @@ jobs:
             --username $ACR_USERNAME \
             --password $ACR_PASSWORD
 
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          IMAGE_NAME=$ACR_NAME.azurecr.io/$STACK-website:$IMAGE_TAG
+
           az containerapp update \
             --name $CONTAINER_APP_NAME \
             --resource-group $RESOURCE_GROUP \
