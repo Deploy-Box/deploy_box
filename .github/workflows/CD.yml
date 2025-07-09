@@ -1,7 +1,8 @@
-name: Build and Push Docker image to Azure
+name: Continuous Deployment to Azure
 
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
       - main
       - dev
@@ -22,7 +23,8 @@ permissions:
 jobs:
   migrations:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+    if: github.event.pull_request.merged == true
+    environment: ${{ github.event.pull_request.base.ref == 'main' && 'prod' || 'dev' }}
 
     steps:
       - name: Checkout repository
@@ -55,7 +57,8 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+    if: github.event.pull_request.merged == true
+    environment: ${{ github.event.pull_request.base.ref == 'main' && 'prod' || 'dev' }}
 
     env:
       STACK: ${{ vars.STACK }}
