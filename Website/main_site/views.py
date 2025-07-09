@@ -639,6 +639,11 @@ class AuthView(View):
         """Logout view."""
         return render(request, "accounts/logout.html", {})
 
+def google_verification(request: HttpRequest) -> HttpResponse:
+    """Google verification view."""
+    # This is a static HTML file for Google Search Console verification
+    return render(request, "google0f33857d0e9df9a5.html", content_type="text/html")
+
 
 # Create instances for URL routing
 dashboard_view = DashboardView()

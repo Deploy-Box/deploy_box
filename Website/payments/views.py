@@ -3,6 +3,9 @@ import time
 import stripe
 from stripe import error as stripe_error
 import random
+import logging
+
+logger = logging.getLogger(__name__)
 
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse, HttpRequest
@@ -11,12 +14,13 @@ from typing import Union
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.services as stack_services
-from stacks.models import PurchasableStack, StackDatabase
+from stacks.models import PurchasableStack, StackDatabase, Stack
 from organizations.models import Organization
 from organizations.services import get_organization
 from accounts.models import UserProfile
 from core.helpers import request_helpers
 from projects.models import Project
+from payments.models import usage_information, billing_history
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 
@@ -83,7 +87,7 @@ def save_stripe_payment_method(request: AuthHttpRequest) -> JsonResponse:
         return JsonResponse(
             {"error": f"An error occurred while saving the payment method: {e}"}, status=400
         )
-    
+
 def create_payment_intent(request: AuthHttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse(
@@ -93,30 +97,30 @@ def create_payment_intent(request: AuthHttpRequest) -> JsonResponse:
     try:
         data = json.loads(request.body)
         organization_id = data.get("organization_id")
-        
+
         if not organization_id:
             return JsonResponse({"error": "organization_id is required"}, status=400)
-        
+
         organization = get_object_or_404(Organization, id=organization_id)
         customer_id = organization.stripe_customer_id
-        
+
         if not customer_id:
             return JsonResponse(
                 {"error": "No Stripe customer found for this organization"}, status=404
             )
-        
+
         # Create a SetupIntent for adding payment methods without charging
         setup_intent = stripe.SetupIntent.create(
             customer=customer_id,
             payment_method_types=["card"],
             usage="off_session",  # This allows the payment method to be used for future payments
         )
-        
+
         return JsonResponse({
             "client_secret": setup_intent.client_secret,
             "setup_intent_id": setup_intent.id
         }, status=200)
-        
+
     except stripe_error.StripeError as e:  # type: ignore
         return JsonResponse({"error": str(e)}, status=400)
     except Exception as e:
@@ -466,7 +470,7 @@ def get_all_payment_methods(request: HttpRequest, org_id: str) -> JsonResponse:
 
         # Get all payment methods for the customer
         payment_methods = stripe.PaymentMethod.list(customer=customer_id, type="card")
-        
+
         # Get the customer to find the default payment method
         customer = stripe.Customer.retrieve(customer_id)
         default_payment_method_id = customer.invoice_settings.default_payment_method if customer.invoice_settings else None
@@ -524,11 +528,11 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
                 },
                 status=400,
             )
-        
+
         payment_method_id = request.GET.get("payment_method_id")
         if not payment_method_id:
             return JsonResponse({"error": "payment_method_id is required"}, status=400)
-        
+
         payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
         if not payment_method:
             return JsonResponse({"error": "Payment method not found"}, status=404)
@@ -536,7 +540,7 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
         customer = stripe.Customer.retrieve(customer_id)
         print(customer)
         default_payment_method_id = customer.invoice_settings.default_payment_method if customer.invoice_settings else None
-        
+
         if default_payment_method_id:
             # Detach the payment method
             stripe.PaymentMethod.detach(default_payment_method_id)
@@ -565,7 +569,7 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
         return JsonResponse(
             {"message": "Payment method removed successfully."}, status=200
         )
-    
+
     except stripe_error.StripeError as e:  # type: ignore
         return JsonResponse({"error": str(e)}, status=400)
     except Exception as e:
@@ -593,11 +597,11 @@ def set_default_payment_method(request: HttpRequest) -> JsonResponse:
             return JsonResponse(
                 {"error": "No Stripe customer found for this organization"}, status=404
             )
-        
+
         payment_method_id = request.GET.get("payment_method_id")
         if not payment_method_id:
             return JsonResponse({"error": "payment_method_id is required"}, status=400)
-        
+
         # Verify the payment method exists and belongs to the customer
         payment_method = stripe.PaymentMethod.retrieve(payment_method_id)
         if not payment_method or payment_method.customer != customer_id:
@@ -620,3 +624,59 @@ def set_default_payment_method(request: HttpRequest) -> JsonResponse:
             {"error": "An error occurred while setting the default payment method."},
             status=400,
         )
+
+
+def update_organization_usage(request: HttpRequest) -> JsonResponse:
+    if request.method == "POST":
+
+        data = json.loads(request.body)
+        return JsonResponse({"message": "Usage updated successfully."}, status=200)
+    else:
+        return JsonResponse({"error": "Invalid request method."}, status=405)
+
+def update_billing_history(request: HttpRequest) -> JsonResponse:
+    if request.method == "POST":
+        data = json.loads(request.body)
+        update_status = data.get("status", None)
+        billing_id = data.get("billing_id", None)
+        print("update_status: ", update_status)
+        billed_ids = []
+
+        if update_status:
+            try:
+                entry = billing_history.objects.get(id=billing_id)
+                entry.status = update_status
+                entry.save()
+                return JsonResponse({"message": "Billing history updated successfully."}, status=200)
+            except billing_history.DoesNotExist:
+                print(f"Billing history entry with id {billing_id} not found.")
+                return JsonResponse({"error": "Billing history entry not found."}, status=404)
+
+        try:
+            print("Data: ", data)
+            for stack_id, usage in data.items():
+                stack_id = stack_id.strip('-rg')  # Remove '-rg' suffix if present
+                stack = get_object_or_404(Stack, id=stack_id)
+                organization = stack.project.organization
+
+                # Create new entry
+                try:
+                    billed_instance = billing_history.objects.create(
+                        organization_id=organization.id,
+                        billed_usage=usage.get("billed_usage", 0),
+                        amount=usage.get("cost", 0.0),
+                        description=usage.get("description", "No description provided"),
+                        payment_method=usage.get("payment_method", "default"),
+                        status=usage.get("status", "pending"),
+                    )
+
+                    billed_ids.append(billed_instance.id)
+
+                except Exception as e:
+                    print(f"Failed to update billing history for stack {stack_id}: {str(e)}")
+                    continue
+            return JsonResponse({"message": "Billing history updated successfully.", "billed_ids": billed_ids}, status=200)
+        except Exception as e:
+            return JsonResponse({"message": "Failed to update billing history."}, status=500)
+    else:
+        return JsonResponse({"error": "Invalid request method."}, status=405)
