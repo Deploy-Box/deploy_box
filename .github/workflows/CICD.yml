@@ -85,7 +85,9 @@ jobs:
 
       - name: Build and Push Website Docker image to Azure
         run: |
-          IMAGE_NAME=$ACR_NAME.azurecr.io/$STACK-website
+          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
+          IMAGE_NAME=$ACR_NAME.azurecr.io/$STACK-website:$IMAGE_TAG
+
           docker build -t $IMAGE_NAME Website/
           docker push $IMAGE_NAME
 
@@ -101,12 +103,6 @@ jobs:
             --server $ACR_NAME.azurecr.io \
             --username $ACR_USERNAME \
             --password $ACR_PASSWORD
-
-          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
-          IMAGE_NAME=$ACR_NAME.azurecr.io/$STACK-website:$IMAGE_TAG
-
-          docker build -t $IMAGE_NAME Website/
-          docker push $IMAGE_NAME
 
           az containerapp update \
             --name $CONTAINER_APP_NAME \
