@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     "projects",
     "organizations",
     "payments",
+    "blogs",
+    "taggit",
 ]
 
 if DEBUG:
