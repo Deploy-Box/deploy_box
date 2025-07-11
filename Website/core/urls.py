@@ -8,6 +8,9 @@ from core.admin import admin_site
 urlpatterns = [
     # Main site URLs (frontend)
     path("", include(("main_site.urls", "main_site"), namespace="main_site")),
+    # Blogs app URLs
+    path("blogs/", include(("blogs.urls", "blogs"), namespace="blogs")),
+    path("ckeditor5/", include("django_ckeditor_5.urls")),
     # Admin interface
     path("admin/", admin_site.urls),
     # API endpoints

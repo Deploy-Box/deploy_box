@@ -1,6 +1,8 @@
 from django.contrib.admin import AdminSite
 from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.models import Application
+from blogs.admin import BlogPostAdmin
+from blogs.models import BlogPost
 from stacks.admin import PurchasableStackAdmin, StackAdmin
 from stacks.models import PurchasableStack, Stack
 from accounts.admin import UserProfileAdmin
@@ -27,4 +29,5 @@ admin_site.register(Stack, StackAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
 admin_site.register(usage_information, UsageInformationAdmin)
 admin_site.register(billing_history, BillingHistoryAdmin)
+admin_site.register(BlogPost, BlogPostAdmin)
 
