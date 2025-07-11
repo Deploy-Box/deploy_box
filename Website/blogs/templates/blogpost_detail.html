@@ -19,8 +19,9 @@
                 {% endfor %}
             </div>
             <div class="prose prose-invert max-w-none text-lg text-gray-100 mb-8">
-                {{ blogpost.content|linebreaks }}
+                {{ blogpost.content|safe }}
             </div>
+            <div class="text-gray-200 mb-4 line-clamp-3">{{ blogpost.content|truncatewords_html:30|safe }}</div>
             <a href="{% url 'blogs:blogpost_list' %}">
                 <button class="bg-emerald-400 text-emerald-950 font-bold py-3 px-8 rounded-lg shadow hover:bg-emerald-500 transition text-lg">
                     Back to Blog List
