@@ -21,8 +21,16 @@ class AzureDeployBoxIAC:
         self.tenant_id = os.getenv("ARM_TENANT_ID")
         self.subscription_id = os.getenv("ARM_SUBSCRIPTION_ID")
         self.location = "eastus"
-        self.resource_group = "deploy-box-rg-dev"
-        self.registry_name = "deployboxcrdev"
+        try:
+            from django.conf import settings
+            self.resource_group = getattr(settings, 'AZURE', {}).get('RESOURCE_GROUP_NAME') or os.getenv('RESOURCE_GROUP_NAME', 'deploy-box-rg-dev')
+        except ImportError:
+            self.resource_group = os.getenv('RESOURCE_GROUP_NAME', 'deploy-box-rg-dev')
+        try:
+            from django.conf import settings
+            self.registry_name = getattr(settings, 'AZURE', {}).get('ACR_NAME') or os.getenv('ACR_NAME', 'deployboxcrdev')
+        except ImportError:
+            self.registry_name = os.getenv('ACR_NAME', 'deployboxcrdev')
 
         self.state = {}
 

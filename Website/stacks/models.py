@@ -1,3 +1,4 @@
+import json
 from django.db import models
 from django.db.models import UniqueConstraint
 from projects.models import Project
@@ -33,6 +34,30 @@ class Stack(RequestableModel):
     iac = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    # MERN
+    @property
+    def mern_frontend_url(self):
+        return "This is a placeholder for the frontend url"
+
+    @property
+    def mern_backend_url(self):
+        return "This is a placeholder for the backend url"
+    
+    @property
+    def mern_mongodb_uri(self):
+        return "This is a placeholder for the mongodb uri"
+    
+
+    # Django
+    @property
+    def django_url(self):
+        return "This is a placeholder for the django url"
+    
+    @property
+    def django_mongodb_uri(self):
+        return "This is a placeholder for the mongodb uri"
+    
 
     @classmethod
     def get_service(cls, **kwargs):

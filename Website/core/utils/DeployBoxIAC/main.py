@@ -2,6 +2,7 @@ import json
 import subprocess
 import tempfile
 import os
+import shutil
 from azure.storage.blob import BlobServiceClient
 
 from core.utils.DeployBoxIAC.Azure import AzureDeployBoxIAC
@@ -128,7 +129,7 @@ class DeployBoxIAC:
             os.remove(tf_plan_file)
 
             # Remove the .terraform directory
-            os.remove(os.path.join(temp_dir, ".terraform"))
+            shutil.rmtree(os.path.join(temp_dir, ".terraform"), ignore_errors=True)
 
             # Upload results (including .tfstate) to blob storage
             self.upload_directory_to_blob(temp_dir, blob_prefix=resource_group_name)

@@ -73,6 +73,36 @@ def delete_stack(stack: Stack) -> bool:
     return True
 
 
+def refresh_stack(stack: Stack) -> bool:
+    """Refresh a stack's infrastructure by running terraform refresh"""
+    try:
+        print(f"Refreshing stack: {stack.id}")
+        resource_group_name = stack.id + "-rg"
+        cloud = DeployBoxIAC()
+        
+        # Use the IAC configuration stored in the stack model
+        iac_config = stack.iac
+        if not iac_config:
+            logger.error(f"No IAC configuration found for stack: {stack.id}")
+            return False
+        
+        # Log the IAC configuration being used for debugging
+        logger.info(f"Using IAC configuration for stack {stack.id}: {iac_config}")
+            
+        cloud.deploy(resource_group_name, iac_config)
+        logger.info(f"Successfully refreshed stack: {stack.id}")
+        return True
+    except FileNotFoundError as e:
+        logger.error(f"State file not found for stack {stack.id}: {str(e)}")
+        return False
+    except ValueError as e:
+        logger.error(f"Invalid IAC configuration for stack {stack.id}: {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to refresh stack {stack.id}: {str(e)}")
+        return False
+
+
 def get_stacks(user: UserProfile) -> list[Stack]:
     projects = Project.objects.filter(projectmember__user=user)
 

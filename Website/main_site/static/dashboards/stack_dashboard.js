@@ -165,6 +165,7 @@ function checkGitHubAuth() {
                 // User is not authorized, show connect button
                 document.getElementById('github-connect').classList.remove('hidden');
                 document.getElementById('github-repos').classList.add('hidden');
+                document.getElementById('github-remove').classList.add('hidden');
                 throw new Error('Not authorized');
             }
         })
@@ -208,8 +209,12 @@ function checkGitHubAuth() {
                                 // Show success message
                                 alert('Successfully connected repository!');
                                 // Update UI to show connected status
-                                // repoDropdownBtn.textContent = `Connected: ${repo.full_name}`;
+                                updateRepoButtonText(repo.full_name);
                                 repoDropdown.classList.add('hidden');
+                                // Show remove button since repository is now connected
+                                document.getElementById('github-remove').classList.remove('hidden');
+                                // Reload the page to show the repository name in the overview
+                                location.reload();
                             })
                             .catch(error => {
                                 console.error('Error creating webhook:', error);
@@ -219,10 +224,120 @@ function checkGitHubAuth() {
                     repoList.appendChild(repoItem);
                 });
             }
+            
+            // Check if there's already a webhook for this stack
+            checkWebhookStatus();
         })
         .catch(error => {
             console.error('Error checking GitHub auth:', error);
         });
+}
+
+function checkWebhookStatus() {
+    const dashboard = document.getElementById('dashboard');
+    const stack_id = dashboard.getAttribute('data-stack-id');
+    
+    fetch(`/api/v1/github/webhook/status/?stack-id=${stack_id}`)
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Failed to check webhook status');
+        })
+        .then(data => {
+            if (data.connected) {
+                // Repository is connected, show remove button and update dropdown text
+                document.getElementById('github-remove').classList.remove('hidden');
+                updateRepoButtonText(data.repository);
+            } else {
+                // No repository connected, hide remove button
+                document.getElementById('github-remove').classList.add('hidden');
+            }
+        })
+        .catch(error => {
+            console.error('Error checking webhook status:', error);
+        });
+}
+
+function removeRepositoryConnection() {
+    if (confirm('Are you sure you want to remove this repository connection? This will disconnect the webhook for this stack.')) {
+        const dashboard = document.getElementById('dashboard');
+        const stack_id = dashboard.getAttribute('data-stack-id');
+        
+        fetch('/api/v1/github/webhook/disconnect/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                'stack-id': stack_id
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to remove repository connection');
+            }
+            return response.json();
+        })
+        .then(data => {
+            alert('Repository connection removed successfully!');
+            // Update UI to show repository dropdown again
+            document.getElementById('github-repos').classList.remove('hidden');
+            document.getElementById('github-remove').classList.add('hidden');
+            // Reset the dropdown button text
+            const repoDropdownBtn = document.getElementById('repo-dropdown-btn');
+            if (repoDropdownBtn) {
+                repoDropdownBtn.innerHTML = `
+                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                    </svg>
+                    Select Repository
+                    <svg class="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                    </svg>
+                `;
+            }
+            // Reload the page to reflect changes
+            location.reload();
+        })
+        .catch(error => {
+            console.error('Error removing repository connection:', error);
+            alert('Failed to remove repository connection. Please try again.');
+        });
+    }
+}
+
+function updateRepoButtonText(repoName) {
+    const repoDropdownBtn = document.getElementById('repo-dropdown-btn');
+    if (repoDropdownBtn) {
+        const icon = repoDropdownBtn.querySelector('svg:first-child');
+        const text = repoDropdownBtn.querySelector('span') || document.createElement('span');
+        const dropdownIcon = repoDropdownBtn.querySelector('svg:last-child');
+        
+        // Clear existing content
+        repoDropdownBtn.innerHTML = '';
+        
+        // Add back the GitHub icon
+        repoDropdownBtn.appendChild(icon);
+        
+        // Add the repository name
+        text.textContent = repoName;
+        text.className = 'ml-2';
+        repoDropdownBtn.appendChild(text);
+        
+        // Add back the dropdown icon
+        repoDropdownBtn.appendChild(dropdownIcon);
+    }
+}
+
+function checkExistingRepository() {
+    // Check if there's a repository name displayed in the overview section
+    const repoElement = document.querySelector('a[data-repository-name]');
+    if (repoElement) {
+        const repoName = repoElement.getAttribute('data-repository-name');
+        updateRepoButtonText(repoName);
+    }
 }
 
 window.onload = function () {
@@ -233,6 +348,8 @@ window.onload = function () {
     const stackId = dashboard.dataset.stackId;
     const serviceName = dashboard.dataset.serviceName;
 
+    // Check if there's already a repository connected and update the button text
+    checkExistingRepository();
 
     // Initialize logs functionality
     initLogs(organizationId, projectId, stackId, serviceName);
@@ -247,6 +364,20 @@ window.onload = function () {
             const rootDirectory = document.getElementById('root-directory').value;
             saveRootDirectory(organizationId, projectId, stackId, rootDirectory);
         });
+    }
+
+    // Set up refresh stack functionality
+    const refreshStackBtn = document.getElementById('refresh-stack-btn');
+    if (refreshStackBtn) {
+        refreshStackBtn.addEventListener('click', () => {
+            refreshStack(stackId);
+        });
+    }
+
+    // Set up remove repository connection functionality
+    const removeRepoBtn = document.getElementById('remove-repo-btn');
+    if (removeRepoBtn) {
+        removeRepoBtn.addEventListener('click', removeRepositoryConnection);
     }
 
     // Root Directory Input Handler
@@ -676,4 +807,85 @@ async function saveRootDirectory(stackId, rootDirectory) {
         console.error('Error saving root directory:', error);
         alert('Failed to update root directory. Please try again.');
     }
+}
+
+async function refreshStack(stackId) {
+    const refreshButton = document.getElementById('refresh-stack-btn');
+    const buttonText = refreshButton.querySelector('.button-text');
+    const refreshIcon = refreshButton.querySelector('svg:not(.loading-spinner)');
+    const loadingSpinner = refreshButton.querySelector('.loading-spinner');
+
+    // Show loading state
+    refreshButton.disabled = true;
+    buttonText.textContent = 'Refreshing...';
+    refreshIcon.classList.add('hidden');
+    loadingSpinner.classList.remove('hidden');
+
+    try {
+        const response = await fetch(`/api/v1/stacks/${stackId}/refresh/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to refresh stack');
+        }
+
+        const data = await response.json();
+        
+        if (data.success) {
+            // Show success state
+            buttonText.textContent = 'Refreshed!';
+            refreshButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+            refreshButton.classList.add('bg-green-500', 'hover:bg-green-600');
+            
+            setTimeout(() => {
+                // Reset button state
+                refreshButton.disabled = false;
+                buttonText.textContent = 'Refresh Stack';
+                refreshIcon.classList.remove('hidden');
+                loadingSpinner.classList.add('hidden');
+                refreshButton.classList.remove('bg-green-500', 'hover:bg-green-600');
+                refreshButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+            }, 2000);
+        } else {
+            throw new Error(data.error || 'Failed to refresh stack');
+        }
+    } catch (error) {
+        console.error('Error refreshing stack:', error);
+        
+        // Show error state
+        buttonText.textContent = 'Refresh Failed';
+        refreshButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+        refreshButton.classList.add('bg-red-500', 'hover:bg-red-600');
+
+        setTimeout(() => {
+            // Reset button state
+            refreshButton.disabled = false;
+            buttonText.textContent = 'Refresh Stack';
+            refreshIcon.classList.remove('hidden');
+            loadingSpinner.classList.add('hidden');
+            refreshButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+            refreshButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+        }, 2000);
+    }
+}
+
+// Utility function to get CSRF token from cookies
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
 }

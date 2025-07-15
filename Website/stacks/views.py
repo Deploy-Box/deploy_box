@@ -130,6 +130,32 @@ class StackViewSet(ViewSet):
         )
 
     @oauth_required()
+    @action(detail=True, methods=['post'])
+    def refresh(self, request, pk=None):
+        """POST: Refresh a specific stack's infrastructure"""
+        stack = get_object_or_404(Stack, id=pk)
+        
+        # Check if stack has IAC configuration
+        if not stack.iac:
+            return Response(
+                {"error": "No infrastructure configuration found for this stack."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        refresh_success = services.refresh_stack(stack)
+
+        if not refresh_success:
+            return Response(
+                {"error": "Failed to refresh stack infrastructure. Check server logs for details."}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(
+            {"success": True, "message": "Stack infrastructure refreshed successfully."}, 
+            status=status.HTTP_200_OK
+        )
+
+    @oauth_required()
     @action(detail=True, methods=['get'])
     def env(self, request, pk=None):
         """GET: Fetch environment variables for a specific stack"""

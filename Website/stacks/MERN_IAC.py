@@ -1,6 +1,7 @@
 import os
 import time
 import hashlib
+from django.conf import settings
 
 
 def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
@@ -15,7 +16,7 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
             "user": {
                 "username": f"deployBoxUser{stack_id}",
                 "password": hashlib.sha256(str(time.time()).encode()).hexdigest()[:12],
-                "project_id": "67b8c16290da0876c07a781b",
+                "project_id": settings.MONGO_DB["PROJECT_ID"],
                 "auth_database_name": "admin",
                 "roles": [
                 {
@@ -24,7 +25,7 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
                 }
                 ]
             }
-            },
+        },
         "azurerm_resource_group": {
             "rg": {
                 "name": resource_group_name,
@@ -70,8 +71,8 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
                 ],
                 "registry": [
                     {
-                        "server": "deployboxcrdev.azurecr.io",
-                        "username": "deployboxcrdev",
+                        "server": f"{settings.AZURE['ACR_NAME']}.azurecr.io",
+                        "username": settings.AZURE['ACR_NAME'],
                         "password_secret_name": "acr-password",
                     }
                 ],
@@ -79,13 +80,17 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
                     "container": [
                         {
                             "name": "testing-mern",
-                            "image": "deployboxcrdev.azurecr.io/mern-backend:latest",
+                            "image": f"{settings.AZURE['ACR_NAME']}.azurecr.io/mern-backend:latest",
                             "cpu": 0.25,
                             "memory": "0.5Gi",
                             "env": [
                                 {
                                     "name": "MONGO_URI",
                                     "value": "mongodb+srv://${mongodbatlas_database_user.user.username}:${mongodbatlas_database_user.user.password}@cluster0.yjaoi.mongodb.net/",
+                                },
+                                {
+                                    "name": "MONGO_DB_NAME",
+                                    "value": f"db-{stack_id}",
                                 }
                             ],
                         }
@@ -108,8 +113,8 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
                 ],
                 "registry": [
                     {
-                        "server": "deployboxcrdev.azurecr.io",
-                        "username": "deployboxcrdev",
+                        "server": f"{settings.AZURE['ACR_NAME']}.azurecr.io",
+                        "username": settings.AZURE['ACR_NAME'],
                         "password_secret_name": "acr-password",
                     }
                 ],
@@ -117,13 +122,13 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
                     "container": [
                         {
                             "name": "testing-mern",
-                            "image": "deployboxcrdev.azurecr.io/mern-frontend:latest",
+                            "image": f"{settings.AZURE['ACR_NAME']}.azurecr.io/mern-frontend:latest",
                             "cpu": 0.25,
                             "memory": "0.5Gi",
                             "env": [
                                 {
                                     "name": "REACT_APP_BACKEND_URL",
-                                    "value": f"https://${{azurerm_container_app.mern-backend-{stack_id}.fqdn}}",
+                                    "value": "REACT_APP_BACKEND_URL_PLACEHOLDER",
                                 }
                             ],
                         }

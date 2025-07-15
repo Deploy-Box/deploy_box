@@ -283,6 +283,14 @@ class DashboardView(View):
                 # )
                 # stack_google_cloud_run.save()
 
+        # Get repository information if webhook exists
+        try:
+            from github.models import Webhook
+            webhook = Webhook.objects.get(stack=stack)
+            repository_name = webhook.repository
+        except Webhook.DoesNotExist:
+            repository_name = None
+
         form = EnvFileUploadForm()
 
         # Get all organizations and projects for the user for dropdowns
@@ -292,9 +300,18 @@ class DashboardView(View):
         # Get the current project for context
         project = Project.objects.get(id=project_id)
 
+        # Determine template based on stack type
+        stack_type = stack.purchased_stack.type.lower()
+        if stack_type == "mern":
+            template_name = "dashboard/mern_stack_dashboard.html"
+        elif stack_type == "django":
+            template_name = "dashboard/django_stack_dashboard.html"
+        else:
+            template_name = "dashboard/stack_dashboard.html"
+
         return render(
             request,
-            "dashboard/stack_dashboard.html",
+            template_name,
             {
                 "organization_id": organization_id,
                 "project_id": project_id,
@@ -307,6 +324,8 @@ class DashboardView(View):
                 "current_organization_id": organization_id,
                 "current_project_id": project_id,
                 "current_stack_id": stack_id,
+                "repository_name": repository_name,
+                "stack_google_cloud_runs": stack_google_cloud_runs,
             },
         )
 

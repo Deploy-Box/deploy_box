@@ -220,6 +220,18 @@ def create_github_webhook(request: HttpRequest) -> JsonResponse:
         return e.to_response()
 
     stack = Stack.objects.get(pk=stack_id)
+    
+    # Check if this stack already has a webhook connected
+    existing_webhook = Webhook.objects.filter(stack=stack).first()
+    if existing_webhook:
+        logger.warning(f"Stack {stack_id} already has a webhook connected to repository {existing_webhook.repository}")
+        return JsonResponse(
+            {
+                "error": f"This stack already has a repository connected: {existing_webhook.repository}. Please disconnect the existing repository before connecting a new one."
+            },
+            status=409
+        )
+    
     github_token = get_object_or_404(Token, user=user).get_token()
 
     headers = {"Authorization": f"token {github_token}"}
@@ -456,3 +468,111 @@ def get_repos_json(request: AuthHttpRequest) -> JsonResponse:
 
     repos = repo_response.json()
     return JsonResponse({"repositories": repos})
+
+
+@oauth_required()
+def disconnect_github_webhook(request: HttpRequest) -> JsonResponse:
+    """Disconnect a GitHub webhook from a stack."""
+    user = cast(UserProfile, request.user)
+    logger.info(f"Starting webhook disconnection process for user {user.username}")
+
+    try:
+        stack_id = request_helpers.assertRequestFields(request, ["stack-id"])
+        logger.info(f"Received webhook disconnection request for stack {stack_id}")
+    except request_helpers.MissingFieldError as e:
+        logger.error(f"Missing required fields in webhook disconnection request: {str(e)}")
+        return e.to_response()
+
+    try:
+        stack = Stack.objects.get(pk=stack_id)
+    except Stack.DoesNotExist:
+        logger.error(f"Stack {stack_id} not found")
+        return JsonResponse({"error": "Stack not found"}, status=404)
+
+    # Check if the stack belongs to the user
+    if stack.project.user != user:
+        logger.error(f"User {user.username} attempted to disconnect webhook for stack {stack_id} they don't own")
+        return JsonResponse({"error": "You don't have permission to disconnect this webhook"}, status=403)
+
+    # Find the webhook for this stack
+    try:
+        webhook = Webhook.objects.get(stack=stack)
+    except Webhook.DoesNotExist:
+        logger.warning(f"No webhook found for stack {stack_id}")
+        return JsonResponse({"error": "No webhook found for this stack"}, status=404)
+
+    github_token = get_object_or_404(Token, user=user).get_token()
+    headers = {"Authorization": f"token {github_token}"}
+
+    # Delete the webhook from GitHub
+    try:
+        owner, repo = webhook.repository.split("/")
+        webhook_url = f"{GITHUB_API_BASE}/repos/{owner}/{repo}/hooks/{webhook.webhook_id}"
+        
+        logger.info(f"Deleting webhook {webhook.webhook_id} from GitHub for repository {webhook.repository}")
+        response = requests.delete(webhook_url, headers=headers, timeout=5)
+        
+        if response.status_code == 404:
+            logger.warning(f"Webhook {webhook.webhook_id} not found on GitHub (may have been deleted manually)")
+        elif response.status_code != 204:
+            logger.error(f"Failed to delete webhook from GitHub: {response.status_code}")
+            return JsonResponse(
+                {"error": f"Failed to delete webhook from GitHub: {response.status_code}"},
+                status=400
+            )
+        else:
+            logger.info(f"Successfully deleted webhook {webhook.webhook_id} from GitHub")
+            
+    except requests.RequestException as e:
+        logger.error(f"Failed to delete webhook from GitHub: {str(e)}")
+        return JsonResponse(
+            {"error": f"Failed to delete webhook from GitHub: {str(e)}"},
+            status=400
+        )
+
+    # Remove the webhook from our database
+    webhook.delete()
+    logger.info(f"Successfully disconnected webhook for stack {stack_id}")
+
+    return JsonResponse({"message": "Webhook disconnected successfully"}, status=200)
+
+
+@oauth_required()
+def get_webhook_status(request: AuthHttpRequest) -> JsonResponse:
+    """Get the webhook status for a stack."""
+    user = request.auth_user
+    
+    try:
+        stack_id = request_helpers.assertRequestFields(request, ["stack-id"])
+    except request_helpers.MissingFieldError as e:
+        return e.to_response()
+
+    try:
+        stack = Stack.objects.get(pk=stack_id)
+    except Stack.DoesNotExist:
+        return JsonResponse({"error": "Stack not found"}, status=404)
+
+    # Check if the stack belongs to the user
+    if stack.project.user != user:
+        return JsonResponse({"error": "You don't have permission to access this stack"}, status=403)
+
+    # Check if there's a webhook for this stack
+    webhook = Webhook.objects.filter(stack=stack).first()
+    
+    if webhook:
+        return JsonResponse({
+            "connected": True,
+            "repository": webhook.repository,
+            "webhook_id": webhook.webhook_id,
+            "created_at": webhook.created_at.isoformat()
+        })
+    else:
+        return JsonResponse({
+            "connected": False,
+            "repository": None,
+            "webhook_id": None,
+            "created_at": None
+        })
+
+
+

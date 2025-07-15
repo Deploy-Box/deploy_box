@@ -218,6 +218,18 @@ GITHUB = {
     "TOKEN_KEY": os.environ.get("DEPLOY_BOX_GITHUB_TOKEN_KEY"),
 }
 
+AZURE = {
+    "CLIENT_ID": os.environ.get("ARM_CLIENT_ID"),
+    "CLIENT_SECRET": os.environ.get("ARM_CLIENT_SECRET"), 
+    "TENANT_ID": os.environ.get("ARM_TENANT_ID"),
+    "SUBSCRIPTION_ID": os.environ.get("ARM_SUBSCRIPTION_ID"),
+    "STORAGE_CONNECTION_STRING": os.environ.get("AZURE_STORAGE_CONNECTION_STRING"),
+    "CONTAINER_NAME": os.environ.get("CONTAINER_NAME"),
+    "RESOURCE_GROUP_NAME": os.environ.get("RESOURCE_GROUP_NAME"),
+    "ACR_NAME": os.environ.get("ACR_NAME"),
+    "ACR_PASSWORD": os.environ.get("ACR_PASSWORD"),
+}
+
 # Templates Configuration
 TEMPLATES = [
     {
