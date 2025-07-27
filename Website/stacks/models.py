@@ -32,6 +32,7 @@ class Stack(RequestableModel):
     instance_usage_bill_amount = models.FloatField(default=0)
     status = models.CharField(max_length=100, default="STARTING")
     iac = models.JSONField(default=dict)
+    stack_information = models.JSONField(default=dict)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

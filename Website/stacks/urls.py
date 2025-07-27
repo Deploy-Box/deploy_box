@@ -44,4 +44,8 @@ urlpatterns += [
     path("logs/<str:service_name>/", views.LogsAPIView.as_view(), name="logs_api"),
 ]
 
+urlpatterns += [
+    path("update-iac/<str:stack_id>/", views.update_iac, name="update_iac"),
+]
+
 # urlpatterns += Stack.get_urlpatterns(baseurl="")
