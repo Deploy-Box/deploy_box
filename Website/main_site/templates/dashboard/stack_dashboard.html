@@ -1,4 +1,5 @@
-{% extends 'dashboard_base.html' %} {%load static%} {% block extra_head %}
+{% extends 'dashboard_base.html' %} {%load static%} {% block extra_head %}{% load get_item %}
+
 <div id="dashboard" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
   data-stack-id="{{ stack.id }}" data-service-name="{{ stack_google_cloud_runs.0.id }}"></div>
 {% endblock %} {% block content %}
@@ -322,6 +323,45 @@
               </path>
             </svg>
           </button>
+        </div>
+      </div>
+    </section>
+
+        <!-- Stack Actions -->
+    <section class="mb-8">
+      <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+        <h2 class="text-xl font-bold mb-4 flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+            fill="currentColor">
+            <path fill-rule="evenodd"
+              d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+              clip-rule="evenodd"></path>
+          </svg>
+          Stack Settings
+        </h2>
+        <div class="flex-row mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+          <h3 class="text-md font-semibold mb-3">Make Stack Persistent</h3>
+          <p class="text-sm text-zinc-600 mb-4">
+            Making your stack persistent will ensure that it does not spin down with inactivity. Once your stack is persistent, it will remain active and available for use at all times. We will also automatically scale your stack as needed.
+          </p>
+          <form method="POST" action="{% url 'stacks:update_iac' stack.id %}?section=mern-backend">
+            {% csrf_token %}
+            {% if not stack.stack_information|get_item:"is_persistent"|to_bool %}
+              <input type="hidden" name="min_replicas" value="1">
+              <input type="hidden" name="is_persistent" value="true">
+              <button type="submit"
+                class="bg-emerald-400 hover:bg-emerald-500 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                Make Persistent
+              </button>
+            {% else %}
+              <input type="hidden" name="min_replicas" value="0">
+              <input type="hidden" name="is_persistent" value="false">
+              <button type="submit"
+                class="bg-rose-400 hover:bg-rose-500 text-white py-2 px-4 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+                Make Non-Persistent
+              </button>
+            {% endif %}
+          </form>
         </div>
       </div>
     </section>

@@ -54,7 +54,7 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
             }
         },
         "azurerm_container_app": {
-            f"mern-backend-{stack_id}": {
+            f"mern-backend": {
                 "name": f"mern-backend-{stack_id}",
                 "resource_group_name": "${azurerm_resource_group.rg.name}",
                 "container_app_environment_id": "${azurerm_container_app_environment.env.id}",
@@ -83,16 +83,18 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
                             "cpu": 0.25,
                             "memory": "0.5Gi",
                             "env": [
-                                {
-                                    "name": "MONGO_URI",
-                                    "value": "mongodb+srv://${mongodbatlas_database_user.user.username}:${mongodbatlas_database_user.user.password}@cluster0.yjaoi.mongodb.net/",
-                                }
+                                # {
+                                #     "name": "MONGO_URI",
+                                #     "value": "mongodb+srv://${mongodbatlas_database_user.user.username}:${mongodbatlas_database_user.user.password}@cluster0.yjaoi.mongodb.net/",
+                                # }
                             ],
                         }
-                    ]
+                    ],
+                    "min_replicas": 0,
+                    "max_replicas": 10,
                 },
             },
-            f"mern-frontend-{stack_id}": {
+            f"mern-frontend": {
                 "name": f"mern-frontend-{stack_id}",
                 "resource_group_name": "${azurerm_resource_group.rg.name}",
                 "container_app_environment_id": "${azurerm_container_app_environment.env.id}",
@@ -121,10 +123,10 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
                             "cpu": 0.25,
                             "memory": "0.5Gi",
                             "env": [
-                                {
-                                    "name": "REACT_APP_BACKEND_URL",
-                                    "value": f"https://${{azurerm_container_app.mern-backend-{stack_id}.fqdn}}",
-                                }
+                                # {
+                                #     "name": "REACT_APP_BACKEND_URL",
+                                #     "value": f"https://${{azurerm_container_app.mern-backend.fqdn}}",
+                                # }
                             ],
                         }
                     ]

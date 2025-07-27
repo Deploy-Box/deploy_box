@@ -1,3 +1,4 @@
+import json
 from django.http import JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
 
@@ -148,3 +149,18 @@ def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:
         )
 
     return JsonResponse({"success": True}, status=200)
+
+def update_iac(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
+    """
+    Legacy function-based view - use StackViewSet update action instead
+    """
+
+    try:
+        # data = json.loads(request.body)
+        data = request.POST.dict()
+        # data = json.loads(data)
+        section = request.GET.getlist("section", [])
+        print("section", section)
+        return services.update_iac(stack_id, data, section)
+    except ValueError:
+        return JsonResponse({"error": "Invalid data"}, status=400)
