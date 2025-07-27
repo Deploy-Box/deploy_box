@@ -12,8 +12,8 @@ from core.decorators import oauth_required, AuthHttpRequest
 import stacks.handlers as handlers
 from stacks.models import Stack, PurchasableStack
 from stacks.serializers import (
-    StackDatabaseSerializer, 
-    StackSerializer, 
+    StackDatabaseSerializer,
+    StackSerializer,
     PurchasableStackSerializer,
     StackCreateSerializer,
     StackUpdateSerializer,
@@ -37,7 +37,7 @@ class StackViewSet(ViewSet):
         stack_id = request.query_params.get("stack_id")
         if not stack_id:
             return Response({"error": "Stack ID is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Get the stack directly from the database
         try:
             stack = get_object_or_404(Stack, id=stack_id)
@@ -52,9 +52,9 @@ class StackViewSet(ViewSet):
         serializer = StackCreateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         data = serializer.validated_data
-        
+
         # Verify that project and purchasable stack exist
         try:
             project = get_object_or_404(Project, id=data['project_id'])
@@ -76,7 +76,7 @@ class StackViewSet(ViewSet):
         stack_id = pk
         if not stack_id:
             return Response({"error": "Stack ID is required"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Get the stack directly from the database
         try:
             stack = get_object_or_404(Stack, id=stack_id)
@@ -90,13 +90,13 @@ class StackViewSet(ViewSet):
         """PUT: Update a specific stack"""
         stack = get_object_or_404(Stack, id=pk)
         serializer = StackUpdateSerializer(data=request.data)
-        
+
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         data = serializer.validated_data
         root_directory = data.get('root_directory')
-        
+
         success = services.update_stack(stack, root_directory)
         return Response({"success": success})
 
@@ -105,13 +105,13 @@ class StackViewSet(ViewSet):
         """PATCH: Partially update a specific stack"""
         stack = get_object_or_404(Stack, id=pk)
         serializer = StackUpdateSerializer(data=request.data, partial=True)
-        
+
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         data = serializer.validated_data
         root_directory = data.get('root_directory')
-        
+
         success = services.update_stack(stack, root_directory)
         return Response({"success": success})
 
@@ -125,8 +125,34 @@ class StackViewSet(ViewSet):
             return Response({"error": "Failed to delete stack."}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         return Response(
-            {"success": True, "message": "Stack deleted successfully."}, 
+            {"success": True, "message": "Stack deleted successfully."},
             status=status.HTTP_204_NO_CONTENT
+        )
+
+    @oauth_required()
+    @action(detail=True, methods=['post'])
+    def refresh(self, request, pk=None):
+        """POST: Refresh a specific stack's infrastructure"""
+        stack = get_object_or_404(Stack, id=pk)
+        
+        # Check if stack has IAC configuration
+        if not stack.iac:
+            return Response(
+                {"error": "No infrastructure configuration found for this stack."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        refresh_success = services.refresh_stack(stack)
+
+        if not refresh_success:
+            return Response(
+                {"error": "Failed to refresh stack infrastructure. Check server logs for details."}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+        return Response(
+            {"success": True, "message": "Stack infrastructure refreshed successfully."}, 
+            status=status.HTTP_200_OK
         )
 
     @oauth_required()
@@ -139,7 +165,7 @@ class StackViewSet(ViewSet):
     def env(self, request, pk=None):
         """POST: Update environment variables for a specific stack"""
         from stacks.forms import EnvFileUploadForm
-        
+
         form = EnvFileUploadForm(request.POST, request.FILES)
         if form.is_valid():
             selected_frameworks = form.cleaned_data["framework"]
@@ -174,7 +200,7 @@ class StackViewSet(ViewSet):
 
         if not bucket_name or not file_name:
             return Response(
-                {"error": "Bucket name and file name are required"}, 
+                {"error": "Bucket name and file name are required"},
                 status=status.HTTP_400_BAD_REQUEST
             )
 
@@ -235,9 +261,9 @@ class PurchasableStackViewSet(ViewSet):
         serializer = PurchasableStackCreateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         data = serializer.validated_data
-        
+
         # Check if the purchasable stack already exists
         purchasable_stack = PurchasableStack.objects.filter(price_id=data['price_id']).first()
 
@@ -245,9 +271,9 @@ class PurchasableStackViewSet(ViewSet):
             return Response({"error": "Purchasable stack already exists."}, status=status.HTTP_400_BAD_REQUEST)
 
         return services.post_purchasable_stack(
-            data['type'], 
-            data['variant'], 
-            data['version'], 
+            data['type'],
+            data['variant'],
+            data['version'],
             data['price_id']
         )
 
@@ -287,13 +313,13 @@ class StackDatabaseViewSet(ViewSet):
         serializer = StackDatabaseUpdateSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
+
         data = serializer.validated_data['data']
         success = services.update_stack_databases_usages(data)
 
         if not success:
             return Response(
-                {"error": "Failed to update stack databases usages."}, 
+                {"error": "Failed to update stack databases usages."},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
@@ -317,7 +343,7 @@ def base_routing(request: AuthHttpRequest) -> JsonResponse:
     """Legacy function-based view - use StackViewSet instead"""
     viewset = StackViewSet()
     viewset.request = request
-    
+
     if request.method == "GET":
         return viewset.list(request)
     elif request.method == "POST":
@@ -331,7 +357,7 @@ def specific_routing(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
     """Legacy function-based view - use StackViewSet instead"""
     viewset = StackViewSet()
     viewset.request = request
-    
+
     if request.method == "GET":
         return viewset.retrieve(request, pk=stack_id)
     elif request.method == "POST":
@@ -349,7 +375,7 @@ def purchasable_stack_routing(request: AuthHttpRequest) -> JsonResponse:
     """Legacy function-based view - use PurchasableStackViewSet instead"""
     viewset = PurchasableStackViewSet()
     viewset.request = request
-    
+
     if request.method == "GET":
         return viewset.list(request)
     elif request.method == "POST":
@@ -362,7 +388,7 @@ def stack_env_routing(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
     """Legacy function-based view - use StackViewSet env action instead"""
     viewset = StackViewSet()
     viewset.request = request
-    
+
     if request.method == "GET":
         return viewset.env(request, pk=stack_id)
     elif request.method == "POST":
@@ -400,3 +426,12 @@ def get_logs(request: HttpRequest, service_name: str) -> JsonResponse:
     view = LogsAPIView()
     view.request = request
     return view.get(request, service_name)
+
+def update_iac(request: HttpRequest, stack_id: str) -> JsonResponse:
+    """Legacy function-based view - use StackViewSet update action instead"""
+    if request.method == "POST":
+        return handlers.update_iac(request, stack_id)
+    else:
+        return JsonResponse({"error": "Method not allowed."}, status=405)
+
+

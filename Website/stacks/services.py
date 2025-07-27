@@ -20,6 +20,8 @@ from stacks.MERN_IAC import get_MERN_IAC
 from stacks.Django_IAC import get_Django_IAC
 from core.utils.DeployBoxIAC.main import main, DeployBoxIAC
 from django.views.decorators.csrf import csrf_exempt
+from .service_helpers import ServiceHelper
+from core.utils.DeployBoxIAC.main import DeployBoxIAC
 
 logger = logging.getLogger(__name__)
 
@@ -71,6 +73,36 @@ def delete_stack(stack: Stack) -> bool:
         return False
 
     return True
+
+
+def refresh_stack(stack: Stack) -> bool:
+    """Refresh a stack's infrastructure by running terraform refresh"""
+    try:
+        print(f"Refreshing stack: {stack.id}")
+        resource_group_name = stack.id + "-rg"
+        cloud = DeployBoxIAC()
+        
+        # Use the IAC configuration stored in the stack model
+        iac_config = stack.iac
+        if not iac_config:
+            logger.error(f"No IAC configuration found for stack: {stack.id}")
+            return False
+        
+        # Log the IAC configuration being used for debugging
+        logger.info(f"Using IAC configuration for stack {stack.id}: {iac_config}")
+            
+        cloud.deploy(resource_group_name, iac_config)
+        logger.info(f"Successfully refreshed stack: {stack.id}")
+        return True
+    except FileNotFoundError as e:
+        logger.error(f"State file not found for stack {stack.id}: {str(e)}")
+        return False
+    except ValueError as e:
+        logger.error(f"Invalid IAC configuration for stack {stack.id}: {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to refresh stack {stack.id}: {str(e)}")
+        return False
 
 
 def get_stacks(user: UserProfile) -> list[Stack]:
@@ -214,3 +246,52 @@ def update_stack_databases_usages(data) -> bool:
     except Exception as e:
         logger.error(f"Failed to update stack databases usages: {str(e)}")
         return False
+
+def update_iac(stack_id: str, data: dict, section: list[str]) -> JsonResponse:
+    """
+    Updates the IAC for a given stack based on the provided data.
+
+    Args:
+        stack_id (str): The ID of the stack to update.
+        data (dict): The new IAC data to apply.
+        section (list[str]): The top-level sections of the IAC to target.
+
+    Returns:
+        JsonResponse: Success or error response.
+    """
+    try:
+        stack = Stack.objects.get(pk=stack_id)
+        print("stack info: ", stack.stack_information)
+        old_iac = stack.iac
+        print("Old IAC: ", old_iac)
+
+        for item in section:
+            iac_section = ServiceHelper().find_nested_value(old_iac, item)
+            print("item", item)
+            print("section", iac_section)
+            for key, value in data.items():
+                try:
+                    ServiceHelper().update_nested_value(iac_section, key, value)
+                    if key in stack.stack_information:
+                        stack.stack_information[key] = value
+                    else:
+                        continue
+                except Exception as e:
+                    continue
+
+            # Reassign back just in case it's not by reference
+            ServiceHelper().update_nested_value(old_iac, item, iac_section)
+
+        stack.iac = old_iac
+        stack.save()
+
+        DeployBoxIAC().deploy(f"{stack_id}-rg", old_iac)
+
+        return JsonResponse({"success": True, "message": "IAC updated successfully.", "iac": old_iac}, status=200)
+
+    except Stack.DoesNotExist:
+        logger.error(f"Stack with ID {stack_id} does not exist.")
+        return JsonResponse({"error": "Stack not found."}, status=404)
+    except Exception as e:
+        logger.error(f"Failed to update IAC for stack {stack_id}: {str(e)}")
+        return JsonResponse({"error": f"Failed to update IAC. {str(e)}"}, status=500)

@@ -11,4 +11,9 @@ class BlogPostAdmin(admin.ModelAdmin):
     ordering = ('-created_at',)
     fields = ('title', 'slug', 'content', 'author', 'tags')
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == "author":
+            kwargs["queryset"] = kwargs.get("queryset", None) or self.model._meta.get_field("author").remote_field.model.objects.filter(is_staff=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 admin.site.register(BlogPost, BlogPostAdmin)

@@ -21,8 +21,16 @@ class AzureDeployBoxIAC:
         self.tenant_id = os.getenv("ARM_TENANT_ID")
         self.subscription_id = os.getenv("ARM_SUBSCRIPTION_ID")
         self.location = "eastus"
-        self.resource_group = "deploy-box-rg-dev"
-        self.registry_name = "deployboxcrdev"
+        try:
+            from django.conf import settings
+            self.resource_group = getattr(settings, 'AZURE', {}).get('RESOURCE_GROUP_NAME') or os.getenv('RESOURCE_GROUP_NAME', 'deploy-box-rg-dev')
+        except ImportError:
+            self.resource_group = os.getenv('RESOURCE_GROUP_NAME', 'deploy-box-rg-dev')
+        try:
+            from django.conf import settings
+            self.registry_name = getattr(settings, 'AZURE', {}).get('ACR_NAME') or os.getenv('ACR_NAME', 'deployboxcrdev')
+        except ImportError:
+            self.registry_name = os.getenv('ACR_NAME', 'deployboxcrdev')
 
         self.state = {}
 
@@ -128,6 +136,66 @@ class AzureDeployBoxIAC:
         )
         print("Updates found in the specified path.")
         return True
+
+    def get_billing_info(self, billing_info):
+        """Update billing info with retry mechanism for rate limiting"""
+
+        url = f"https://management.azure.com/subscriptions/{self.subscription_id}/providers/Microsoft.CostManagement/query?api-version=2023-03-01"
+
+        body = {
+            "type": "ActualCost",
+            "dataset": {
+                "granularity": "Monthly",
+                "aggregation": {
+                    "totalCost": {
+                        "name": "PreTaxCost",
+                        "function": "Sum"
+                    }
+                },
+                "grouping": [
+                    {
+                        "type": "Dimension",
+                        "name": "ResourceGroupName"
+                    }
+                ],
+                "filter": {
+                    "dimensions": {
+                        "name": "SubscriptionId", 
+                        "operator": "In",
+                        "values": [self.subscription_id]
+                    }
+                }
+            }
+        }
+
+        max_retries = 5
+        base_delay = 1
+        
+        for attempt in range(max_retries):
+            response = requests.post(url, json=body, headers=self.headers)
+            
+            if response.status_code == 200:
+                rows = response.json().get("properties", {}).get("rows", [])
+                for row in rows:
+                    cost = row[0]
+                    stack_id = row[2].split("-rg")[0]
+
+                    if stack_id in billing_info:
+                        billing_info[stack_id]["cost"] = cost + billing_info[stack_id]["cost"]
+                    else:
+                        billing_info[stack_id] = {"cost": cost}
+
+                return billing_info
+            elif response.status_code == 429:  # Rate limited
+                if attempt < max_retries - 1:  # Don't sleep on the last attempt
+                    delay = base_delay * (2 ** attempt)  # Exponential backoff
+                    print(f"Rate limited (429). Retrying in {delay} seconds... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(delay)
+                    continue
+                else:
+                    raise Exception(f"Rate limit exceeded after {max_retries} attempts. Please try again later.")
+            else:
+                raise Exception(f"Error retrieving resource group usage: {response.text}")
 
 
     def build_container_image(self, azure_deploy_box_iac: dict) -> dict:

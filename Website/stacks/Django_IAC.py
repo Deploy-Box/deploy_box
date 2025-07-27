@@ -52,8 +52,8 @@ def get_Django_IAC(stack_id: str, project_id: str, org_id: str, django_secret_ke
                 ],
                 "registry": [
                     {
-                        "server": "deployboxcrdev.azurecr.io",
-                        "username": "deployboxcrdev",
+                        "server": f"{settings.AZURE['ACR_NAME']}.azurecr.io",
+                        "username": settings.AZURE['ACR_NAME'],
                         "password_secret_name": "acr-password",
                     }
                 ],
