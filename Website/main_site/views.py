@@ -2,6 +2,11 @@ from django.shortcuts import render, redirect
 from django.http import HttpRequest, HttpResponse
 from django.conf import settings
 from django.contrib import messages
+from django.views import View
+from typing import cast
+import logging
+import calendar
+
 from accounts.forms import CustomUserCreationForm
 from accounts.models import UserProfile
 from organizations.models import Organization, OrganizationMember, PendingInvites
@@ -10,7 +15,6 @@ from organizations.forms import (
     OrganizationMemberForm,
     NonexistantOrganizationMemberForm,
 )
-from rest_framework.request import Request
 from organizations.services import get_organizations
 from projects.forms import ProjectCreateFormWithMembers, ProjectSettingsForm
 from projects.models import Project, ProjectMember
@@ -18,11 +22,7 @@ from stacks.forms import EnvFileUploadForm, StackSettingsForm, EnvironmentVariab
 from stacks.models import PurchasableStack, StackGoogleCloudRun, Stack
 from stacks.services import post_stack_env
 from core.decorators import oauth_required
-from django.views import View
-from django.shortcuts import render
-from typing import cast
-
-import logging
+from core.utils.DeployBoxIAC.main import DeployBoxIAC
 
 logger = logging.getLogger(__name__)
 
@@ -169,11 +169,8 @@ class DashboardView(View):
             logger.error(f"Error fetching payment methods: {e}")
 
         # Get usage data for the organization
-        from stacks.models import StackDatabase
-        from django.db.models import Sum
-        from datetime import datetime, timedelta
         from django.utils import timezone
-        from payments.models import usage_information, billing_history
+        from payments.models import billing_history
 
         # Get all stacks for this organization's projects
         organization_projects = Project.objects.filter(organization=organization)
@@ -182,14 +179,38 @@ class DashboardView(View):
         # Get current time in user's timezone (you can customize this)
         current_time = timezone.now()
         month_start = current_time.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+        num_days_in_month = calendar.monthrange(current_time.year, current_time.month)[1]
 
         # Calculate usage metrics
-        daily_usage = usage_information.get_total_current_usage_for_organization(organization)
-        current_usage = usage_information.get_total_monthly_usage_for_organization(organization)
-        projected_monthly_usage = current_usage * (30 / (current_time.day or 1))
+        billing_info = DeployBoxIAC().get_billing_info()
+
+        for info in billing_info.values():
+            if info.get("cost") < current_time.day / num_days_in_month:
+                info["cost"] = current_time.day / num_days_in_month
+
+        current_usage = sum(billing_info.get(stack.id, {}).get("cost", 0.00) for stack in organization_stacks)
+        daily_usage = current_usage / (current_time.day or 1)
+        projected_monthly_usage = current_usage * (num_days_in_month / (current_time.day or 1))
 
         #get billing history for the organization
         billing_history_records = billing_history.get_billing_history_for_organization(organization)
+
+        # Check if the billing history stripe inovice statuses have changed
+        for record in billing_history_records:
+            if record.status.upper() == "PAID":
+                continue
+            
+            if record.stripe_invoice_id:
+                try:
+                    invoice = stripe.Invoice.retrieve(record.stripe_invoice_id)
+                    if invoice.status != record.status:
+                        record.status = invoice.status
+                        record.save()
+                except Exception as e:
+                    logger.error(f"Error retrieving invoice: {e}")
+                    record.status = "failed"
+                    record.save()
+                    continue
 
         return render(
             request,

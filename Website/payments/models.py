@@ -186,6 +186,8 @@ class billing_history(models.Model):
     billed_usage = models.FloatField(default=0.00)
     payment_method = models.CharField(max_length=50, blank=True, null=True)
     status = models.CharField(max_length=20, default=BillingStatus.PENDING, choices=BillingStatus.choices)
+    stripe_invoice_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_invoice_hosted_url = models.CharField(max_length=255, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     paid_on = models.DateTimeField(auto_now=True)
 
@@ -196,3 +198,10 @@ class billing_history(models.Model):
     def get_billing_history_for_organization(cls, organization):
         """Get billing history for an organization"""
         return cls.objects.filter(organization=organization).order_by('-created_at')
+    
+    @classmethod
+    def get_organization_pending_total(cls, organization):
+        """Get total pending amount for an organization"""
+        return cls.objects.filter(organization=organization, status=cls.BillingStatus.PENDING).aggregate(
+            total_amount=Sum('amount')
+        )['total_amount'] or 0.00

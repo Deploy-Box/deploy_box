@@ -134,6 +134,21 @@ class DeployBoxIAC:
             # Upload results (including .tfstate) to blob storage
             self.upload_directory_to_blob(temp_dir, blob_prefix=resource_group_name)
 
+    def get_billing_info(self):
+        """Update billing info"""
+
+        azure_deploy_box_iac = AzureDeployBoxIAC()
+        mongodb_atlas_deploy_box_iac = MongoDBAtlasDeployBoxIAC()
+
+        billing_info = {}
+        billing_info = azure_deploy_box_iac.get_billing_info(billing_info)
+        # billing_info = mongodb_atlas_deploy_box_iac.update_billing_info(billing_info)
+
+        print(f"Billing info: {billing_info}")
+
+        return billing_info
+
+
 
 # Legacy function for backward compatibility
 def main(resource_group_name, iac):

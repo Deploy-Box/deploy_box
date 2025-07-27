@@ -21,6 +21,7 @@ from accounts.models import UserProfile
 from core.helpers import request_helpers
 from projects.models import Project
 from payments.models import usage_information, billing_history
+from core.utils.DeployBoxIAC.main import DeployBoxIAC
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 
@@ -285,70 +286,48 @@ def stripe_webhook(request: HttpRequest) -> Union[HttpResponse, JsonResponse]:
     return HttpResponse(status=200)
 
 
-def create_invoice(request: HttpRequest) -> JsonResponse:
-    if request.method == "POST":
-        try:
-            # Get data from the request body (e.g., customer_id, amount, description)
-            data = json.loads(request.body)
-            customer_id = data["customer_id"]  # Existing Stripe customer ID
-            amount = data["amount"]  # Amount to charge in cents (e.g., 5000 for $50.00)
-            description = data["description"]  # Description of the charge
+def create_invoice(customer_id, dollar_amount, description) -> str:
+    try:
+        # Step 1: Create an invoice item
+        stripe.InvoiceItem.create(
+            customer=customer_id,
+            amount=int(100 * dollar_amount),
+            currency="usd",  # You can change the currency if needed
+            description=description,
+        )
 
-            # Step 1: Create an invoice item
-            stripe.InvoiceItem.create(
-                customer=customer_id,
-                amount=amount,
-                currency="usd",  # You can change the currency if needed
-                description=description,
-            )
+        # Step 2: Create the invoice for the customer
+        invoice = stripe.Invoice.create(
+            customer=customer_id,
+            auto_advance=False,  # Automatically finalizes and sends the invoice
+        )
 
-            # Step 2: Create the invoice for the customer
-            invoice = stripe.Invoice.create(
-                customer=customer_id,
-                auto_advance=False,  # Automatically finalizes and sends the invoice
-            )
+        # Step 3: Finalize the invoice (send to customer)
+        invoice.finalize_invoice()
 
-            # Step 3: Finalize the invoice (send to customer)
-            invoice.finalize_invoice()
+        return invoice.id, invoice.hosted_invoice_url
 
-            return JsonResponse({"invoice_id": invoice.id, "status": invoice.status})
+    except stripe_error.StripeError as e:  # type: ignore
+        print(f"Error creating invoice: {e}")
+        return None
 
-        except stripe_error.StripeError as e:  # type: ignore
-            return JsonResponse({"error": str(e)}, status=400)
-
-        except Exception as e:
-            return JsonResponse(
-                {"error": "An error occurred while creating the invoice."}, status=400
-            )
+    except Exception as e:
+        print(f"Error creating invoice: {e}")
+        return None
 
 
-def get_customer_id(request):
-    if request.method == "POST":
-        try:
-            # Parse the JSON data from the request body
-            data = json.loads(request.body)
-            org_id = data.get("org_id")  # Extract user_id from the JSON payload
+def get_customer_id(org_id):
+    # Query the UserProfile by the provided user_id
+    try:
+        org = Organization.objects.get(id=org_id)
+        customer_id = (
+            org.stripe_customer_id
+        )  # Assuming customer_id is a field in UserProfile
 
-            # Check if user_id is provided
-            if not org_id:
-                return JsonResponse({"error": "user_id is required"}, status=400)
+        return customer_id
 
-            # Query the UserProfile by the provided user_id
-            try:
-                org = Organization.objects.get(id=org_id)
-                customer_id = (
-                    org.stripe_customer_id
-                )  # Assuming customer_id is a field in UserProfile
-
-                return JsonResponse({"customer_id": customer_id}, status=200)
-
-            except UserProfile.DoesNotExist:
-                return JsonResponse({"error": "User not found"}, status=404)
-
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON"}, status=400)
-    else:
-        return JsonResponse({"error": "Only POST requests are allowed."}, status=405)
+    except UserProfile.DoesNotExist:
+        return None
 
 
 def update_invoice_billing(request):
@@ -636,6 +615,47 @@ def update_organization_usage(request: HttpRequest) -> JsonResponse:
 
 def update_billing_history(request: HttpRequest) -> JsonResponse:
     if request.method == "POST":
+
+        deploy_box = DeployBoxIAC()
+        billing_info = deploy_box.get_billing_info(request.body)
+
+        print("Billing info: ", billing_info)
+
+        for stack_id, usage in billing_info.items():
+            if usage.get("cost") < 1:
+                usage["cost"] = 1.00
+            try:
+                stack = Stack.objects.get(pk=stack_id)
+            except Stack.DoesNotExist:
+                print(f"Stack with id {stack_id} not found.")
+                continue
+            description = f"Billed usage for stack {stack_id}"
+            organization = stack.project.organization
+
+            customer_id = get_customer_id(organization.id)
+            if not customer_id:
+                print(f"No customer id found for organization {organization.id}")
+                continue
+
+            invoice_id, invoice_url = create_invoice(customer_id, usage.get("cost", 0.0), description)
+
+            if not invoice_id:
+                print(f"Failed to create invoice for stack {stack_id}")
+                continue
+
+            billing_history.objects.create(
+                organization_id=organization.id,
+                billed_usage=usage.get("billed_usage", 0),
+                amount=usage.get("cost", 0.0),
+                description=description,
+                stripe_invoice_id=invoice_id,
+                stripe_invoice_hosted_url=invoice_url,
+                payment_method="default",
+                status="pending",
+            )
+
+        return JsonResponse({"message": "Billing history updated successfully.", "billing_info": billing_info}, status=200)
+
         data = json.loads(request.body)
         update_status = data.get("status", None)
         billing_id = data.get("billing_id", None)
