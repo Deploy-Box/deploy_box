@@ -48,6 +48,10 @@ class AzureDeployBoxIAC:
             "Content-Type": "application/json",
         }
 
+    def request(self, url: str, method: str, body: dict):
+        response = requests.request(method, url, headers=self.headers, json=body)
+        return response.json()
+
     def plan(self, terraform: dict, deploy_box_iac: dict, state: dict):
         self.state = state.setdefault("azure", {})
 
@@ -524,8 +528,9 @@ class AzureDeployBoxIAC:
             },
         }}
         self.azurerm_container_app.plan("my-container-app", result)
+        self.azurerm_container_app.get_stack_information("my-container-app", result)
 
-        print(json.dumps(result, indent=2))
+        # print(json.dumps(result, indent=2))
 
 
 azure_deploy_box_iac = AzureDeployBoxIAC()

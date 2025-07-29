@@ -1,8 +1,8 @@
 from __future__ import annotations
 from pydantic import BaseModel, Field
-from typing import TYPE_CHECKING, List
+import requests
+from typing import TYPE_CHECKING, List, Dict, Any, Optional
 import logging
-from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
 
@@ -11,41 +11,59 @@ if TYPE_CHECKING:
 
 RESOURCE_NAME = "azurerm_container_app"
 
+class EnvironmentVariable(BaseModel):
+    name: str
+    value: Optional[str] = None
+    secret_name: Optional[str] = None
+
 class Container(BaseModel):
     name: str = "1"
     cpu: float = 0.25
     memory: str = "0.5Gi"
-    env: list = []
+    env: List[EnvironmentVariable] = Field(default_factory=list)
     image: str
-
-    @classmethod
-    def __dict__(cls, **data):
-        if "name" not in data:
-            data["name"] = f"container-app-{data.get('index', 0)}"
-        return super().__dict__(**data)
 
 class Template(BaseModel):
     container: List[Container]
     max_replicas: int = 10
     min_replicas: int = 0
 
-@dataclass
-class ContainerAppDefaults:
-    name: str = "container-app-{index}"
+class TrafficWeight(BaseModel):
+    latest_revision: bool = True
+    percentage: int = 100
+
+class Ingress(BaseModel):
+    external: bool = True
+    target_port: int = 80
+    transport: str = "http"
+    traffic_weight: List[TrafficWeight] = Field(default_factory=lambda: [TrafficWeight()])
+
+class Secret(BaseModel):
+    name: str
+    value: str
+
+class Registry(BaseModel):
+    server: str
+    username: str
+    password_secret_name: str
+
+class ContainerApp(BaseModel):
+    container_app_environment_id: str
+    name: str
+    resource_group_name: str
     revision_mode: str = "Single"
-    max_replicas: int = 10
-    min_replicas: int = 0
-    ingress_external: bool = True
-    ingress_target_port: int = 80
-    ingress_transport: str = "http"
-    ingress_traffic_weight: list = field(default_factory=lambda: [{"latest_revision": True, "percentage": 100}])
+    template: Template
+    ingress: Ingress
+    registry: List[Registry]
+    secret: List[Secret]
+    tags: Dict[str, Any] = Field(default_factory=dict)
 
 class AzureContainerApp:
     """Azure Container App IAC class"""
 
     def __init__(self, parent: AzureDeployBoxIAC) -> None:
         self.parent = parent
-        self.defaults = ContainerAppDefaults()
+        self.container_app_list: List[ContainerApp] = []
 
     def plan(self, stack_id: str, iac: dict) -> None:
         resources = iac.get(RESOURCE_NAME, {})
@@ -59,57 +77,72 @@ class AzureContainerApp:
             ensure_dict(resource, f"Resource {resource_name}")
             
             # Container App Core Config
-            ca_name = resource.get("name", self._under_to_dash(self.defaults.name.format(index=index)))
-            ca_revision_mode = resource.get("revision_mode", self.defaults.revision_mode)
+            ca_name = resource.get("name", self._under_to_dash(f"container-app-{index}"))
 
-            # Template
+            # Template - let Pydantic handle defaults
             template_dict = ensure_dict(resource.get("template", {}), f"Template for {resource_name}")
             template = Template(**template_dict)
-            print(template.container)
             
-            # container_list = self._process_containers(ensure_list(template_dict.get("container", []), "container"), resource_name)
-            # template = {
-            #     "container": container_list,
-            #     "max_replicas": template_dict.get("max_replicas", self.defaults.max_replicas),
-            #     "min_replicas": template_dict.get("min_replicas", self.defaults.min_replicas),
-            # }
-
-            # Ingress
+            # Ingress - let Pydantic handle defaults
             ingress_dict = ensure_dict(resource.get("ingress", {}), f"Ingress for {resource_name}")
-            ingress = {
-                "external": ingress_dict.get("external", self.defaults.ingress_external),
-                "target_port": ingress_dict.get("target_port", self.defaults.ingress_target_port),
-                "transport": ingress_dict.get("transport", self.defaults.ingress_transport),
-                "traffic_weight": ingress_dict.get("traffic_weight", self.defaults.ingress_traffic_weight),
-            }
+            ingress = Ingress(**ingress_dict)
 
             # Secrets
-            secret = self._merge_secrets(
+            secret_list = self._merge_secrets(
                 [{"name": "acr-password", "value": self.parent.registry_password}],
                 resource.get("secret", [])
             )
+            secrets = [Secret(**secret_dict) for secret_dict in secret_list]
 
             # Registry
-            registry = [{
+            registry_list = [{
                 "server": f"{self.parent.registry_name}.azurecr.io",
                 "username": self.parent.registry_name,
                 "password_secret_name": "acr-password"
             }]
+            registries = [Registry(**registry_dict) for registry_dict in registry_list]
 
             # Final Assembly
-            ca = {
-                "container_app_environment_id": self.parent.azurerm_container_app_environment.azurerm_container_app_environment_id,
-                "name": ca_name,
-                "resource_group_name": self.parent.azurerm_resource_group.azurerm_resource_group_id,
-                "revision_mode": ca_revision_mode,
-                "template": template,
-                "ingress": ingress,
-                "registry": registry,
-                "secret": secret,
-                "tags": {}
-            }
+            ca = ContainerApp(
+                container_app_environment_id=self.parent.azurerm_container_app_environment.azurerm_container_app_environment_id,
+                name=ca_name,
+                resource_group_name=self.parent.azurerm_resource_group.azurerm_resource_group_id,
+                template=template,
+                ingress=ingress,
+                registry=registries,
+                secret=secrets,
+            )
 
-            resources[resource_name] = ca
+            print("ca", ca)
+            self.container_app_list.append(ca)
+
+            resources[resource_name] = ca.dict()
+
+    def get_stack_information(self, stack_id: str, iac: dict) -> dict:
+        class ResourceInformation(BaseModel):
+            endpoint: str
+            status: str
+            is_persistent: bool
+
+        class StackInformation(BaseModel):
+            resources: List[ResourceInformation]
+
+        response = {}
+
+        print("container_app_list", self.container_app_list)
+
+        for container in self.container_app_list:
+            # Get container ingress endpoint
+            response = self.parent.request(
+                f"https://management.azure.com/subscriptions/{self.parent.subscription_id}/resourceGroups/{self.parent.azurerm_resource_group.azurerm_resource_group_id}/providers/Microsoft.App/containerApps/mern-backend-c17a810399e344a0?api-version=2023-05-01",
+                "GET",
+                None
+            )
+            print("response", response)
+            # stack_info.resources.append(ResourceInformation(endpoint="", status="", is_persistent=False))
+
+        return response
+            
     
     def _merge_secrets(self, existing_secrets: list, new_secrets: list) -> list:
         """Merge existing secrets with new secrets, avoiding duplicates"""
@@ -126,27 +159,10 @@ class AzureContainerApp:
     def _under_to_dash(self, name: str) -> str:
         """Convert a name from under_score to dash-format"""
         return name.replace("_", "-")
-    
-    def _process_containers(self, containers: list, resource_name: str) -> list:
-        processed = []
-        for index, container in enumerate(containers):
-            ensure_dict(container, f"Container #{index} in {resource_name}")
-            container = {k: v for k, v in container.items() if k in {"name", "cpu", "memory", "env", "image"}}
-            container.setdefault("name", self._under_to_dash(f"{resource_name}-container-{index}"))
-            container.setdefault("cpu", 0.25)
-            container.setdefault("memory", "0.5Gi")
-            container.setdefault("env", [])
-            
-            image = container.get("image")
-            if not image:
-                raise ValueError(f"Image must be specified for container in {resource_name}")
-            
-            container["image"] = f"{self.parent.registry_name}.azurecr.io/{image}"
-            processed.append(container)
-        return processed
 
 def ensure_dict(obj: object, name: str) -> dict:
     if not isinstance(obj, dict):
+
         raise ValueError(f"{name} must be a dictionary")
     return obj
 

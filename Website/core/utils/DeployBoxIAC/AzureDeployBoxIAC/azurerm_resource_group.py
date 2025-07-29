@@ -8,7 +8,7 @@ RESOURCE_NAME = "azurerm_resource_group"
 
 class AzureResourceGroup:
     """Azure Resource Group IAC class"""
-    azurerm_resource_group_id = "1234"
+    azurerm_resource_group_id = "c17a810399e344a0-rg"
 
     def __init__(self, parent: AzureDeployBoxIAC) -> None:
         self.parent = parent
