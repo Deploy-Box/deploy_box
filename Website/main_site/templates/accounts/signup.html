@@ -16,14 +16,49 @@
                 </div>
                 <div class="ml-3">
                     <h3 class="text-sm font-medium text-blue-800">
-                        You've been invited to join {{ invite_data.organization_name }}
+                        {% if transfer_data %}
+                            🎉 Your Project is Ready!
+                        {% else %}
+                            You've been invited to join {{ invite_data.organization_name }}
+                        {% endif %}
                     </h3>
                     <div class="mt-2 text-sm text-blue-700">
-                        <p>You'll be automatically added to this organization once you create your account.</p>
+                        {% if transfer_data %}
+                            <p>You'll be joining <strong>{{ invite_data.organization_name }}</strong> and taking ownership of <strong>{{ transfer_data.project_name }}</strong>.</p>
+                        {% else %}
+                            <p>You'll be automatically added to this organization once you create your account.</p>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
+        
+        {% if transfer_data %}
+        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-emerald-800">
+                        Project Transfer Details
+                    </h3>
+                    <div class="mt-2 text-sm text-emerald-700">
+                        <ul class="list-disc list-inside space-y-1">
+                            <li><strong>Project:</strong> {{ transfer_data.project_name }}</li>
+                            <li><strong>Developer:</strong> {{ transfer_data.developer_name }}</li>
+                            {% if transfer_data.keep_developer %}
+                            <li><strong>Developer Access:</strong> Will remain as collaborator</li>
+                            {% endif %}
+                            <li><strong>Expires:</strong> {{ transfer_data.expires_at }}</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
         {% endif %}
         
         <div
@@ -57,6 +92,9 @@
                 <input type="hidden" name="invite_id" value="{{ invite_data.invite_id }}" />
                 <input type="hidden" name="org_name" value="{{ invite_data.organization_name }}" />
                 <input type="hidden" name="org_email" value="{{ invite_data.organization_email }}" />
+                {% if transfer_data %}
+                <input type="hidden" name="transfer_id" value="{{ transfer_data.transfer_id }}" />
+                {% endif %}
                 {% endif %}
 
                 <div class="mb-5">
@@ -116,7 +154,15 @@
 
                 <button type="submit" id="submit-btn"
                     class="transition duration-200 bg-emerald-400 hover:bg-emerald-500 focus:bg-emerald-600 focus:shadow-sm focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-block">
-                    <span class="inline-block mr-2">{% if invite_data %}Join Organization{% else %}Create Account{% endif %}</span>
+                    <span class="inline-block mr-2">
+                        {% if transfer_data %}
+                            🚀 Create Account & Accept Project
+                        {% elif invite_data %}
+                            Join Organization
+                        {% else %}
+                            Create Account
+                        {% endif %}
+                    </span>
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         class="w-4 h-4 inline-block">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -146,7 +192,15 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
     const originalText = submitBtn.innerHTML;
     
     // Show loading state
-    submitBtn.innerHTML = '<span class="inline-block mr-2">{% if invite_data %}Joining Organization...{% else %}Creating Account...{% endif %}</span><svg class="animate-spin w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+    submitBtn.innerHTML = '<span class="inline-block mr-2">' + 
+        '{% if transfer_data %}' +
+            'Creating Account & Accepting Project...' +
+        '{% elif invite_data %}' +
+            'Joining Organization...' +
+        '{% else %}' +
+            'Creating Account...' +
+        '{% endif %}' +
+        '</span><svg class="animate-spin w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
     submitBtn.disabled = true;
     
     // Remove any existing error messages
@@ -173,6 +227,11 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
     // Add invite data if present
     if (formData.get('invite_id')) {
         requestData.invite_id = formData.get('invite_id');
+    }
+    
+    // Add transfer data if present
+    if (formData.get('transfer_id')) {
+        requestData.transfer_id = formData.get('transfer_id');
     }
     
     fetch(this.action, {

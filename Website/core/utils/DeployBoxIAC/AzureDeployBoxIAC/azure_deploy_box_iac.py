@@ -484,8 +484,6 @@ class AzureDeployBoxIAC:
         except Exception as e:
             print(f"Failed to delete: {e}")
 
-        exit(1)
-
     def testing(self):
         # Test the AzureDeployBoxIAC class functionality
         # print(AzureResourceGroup.plan("my-resource-group", {}))
@@ -533,6 +531,6 @@ class AzureDeployBoxIAC:
         # print(json.dumps(result, indent=2))
 
 
-azure_deploy_box_iac = AzureDeployBoxIAC()
-azure_deploy_box_iac.testing()
-exit(1)
+# azure_deploy_box_iac = AzureDeployBoxIAC()
+# azure_deploy_box_iac.testing()
+# exit(1)

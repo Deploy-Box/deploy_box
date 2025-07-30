@@ -21,8 +21,12 @@ logger = logging.getLogger(__name__)
 class SignupAPIView(APIView):
     def post(self, request):
         invite_id = request.data.get('invite_id')
+        transfer_id = request.data.get('transfer_id')
         
-        if invite_id:
+        if invite_id and transfer_id:
+            # Handle combined invite + transfer signup
+            return self._handle_transfer_signup(request, invite_id, transfer_id)
+        elif invite_id:
             # Handle invite-based signup
             return self._handle_invite_signup(request, invite_id)
         else:
@@ -52,16 +56,20 @@ class SignupAPIView(APIView):
                 user_email = user.email
 
                 try:
-                    invite = PendingInvites.objects.get(email=user_email)
-                    org_id = invite.organization.id
-                    organization = Organization.objects.get(id=org_id)
+                    invite = PendingInvites.objects.filter(email=user_email).first()
+                    if invite:
+                        org_id = invite.organization.id
+                        organization = Organization.objects.get(id=org_id)
 
-                    OrganizationMember.objects.create(user=user, organization=organization, role="member")
+                        OrganizationMember.objects.create(user=user, organization=organization, role="member")
 
-                    invite.delete()
+                        invite.delete()
+                    else:
+                        return Response({"message": "No pending invite found for this email"}, status=status.HTTP_404_NOT_FOUND)
 
-                except PendingInvites.DoesNotExist:
-                    return Response({"message": "No pending invite found for this email"}, status=status.HTTP_404_NOT_FOUND)
+                except Exception as e:
+                    logger.error(f"Error processing pending invite: {e}")
+                    return Response({"message": "Error processing invitation"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
                 # Create a simple serializable response
                 return Response(
@@ -143,6 +151,107 @@ class SignupAPIView(APIView):
             )
         except Exception as e:
             logger.error(f"Error in invite signup: {e}")
+            return Response(
+                {
+                    "user_errors": {
+                        "general": ["An error occurred while processing your signup"]
+                    }
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+    def _handle_transfer_signup(self, request, invite_id, transfer_id):
+        """Handle signup with both organization invite and project transfer."""
+        try:
+            # Get the pending invite
+            pending_invite = PendingInvites.objects.get(id=invite_id)
+            
+            # Get the transfer invitation
+            from organizations.models import ProjectTransferInvitation
+            transfer_invitation = ProjectTransferInvitation.objects.get(id=transfer_id, status="pending")
+            
+            # Validate that the email matches both the invite and transfer
+            if request.data.get('email') != pending_invite.email or request.data.get('email') != transfer_invitation.to_email:
+                return Response(
+                    {
+                        "user_errors": {
+                            "email": ["Email must match the invited email address"]
+                        }
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            
+            # Create user
+            user_serializer = UserCreationSerializer(data=request.data)
+            
+            if user_serializer.is_valid():
+                with transaction.atomic():
+                    user = user_serializer.save()
+                    assert isinstance(user, UserProfile)
+                    
+                    # Add user to the organization
+                    OrganizationMember.objects.create(
+                        organization=pending_invite.organization,
+                        user=user,
+                        role="member"
+                    )
+                    
+                    # Remove the pending invite
+                    pending_invite.delete()
+                    
+                    # Automatically accept the project transfer
+                    from organizations.services import accept_project_transfer
+                    transfer_result = accept_project_transfer(transfer_id, user)
+                    
+                    if transfer_result.status_code == 200:
+                        return Response(
+                            {
+                                "message": "Account created, organization joined, and project transfer completed successfully",
+                                "user_id": str(user.id),
+                                "organization_id": str(pending_invite.organization.id),
+                                "transfer_completed": True
+                            },
+                            status=status.HTTP_201_CREATED,
+                        )
+                    else:
+                        # Transfer failed but account was created
+                        return Response(
+                            {
+                                "message": "Account created and organization joined, but project transfer failed. Please contact support.",
+                                "user_id": str(user.id),
+                                "organization_id": str(pending_invite.organization.id),
+                                "transfer_completed": False
+                            },
+                            status=status.HTTP_201_CREATED,
+                        )
+            else:
+                return Response(
+                    {
+                        "user_errors": user_serializer.errors,
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+                
+        except PendingInvites.DoesNotExist:
+            return Response(
+                {
+                    "user_errors": {
+                        "invite": ["Invalid or expired invite link"]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except ProjectTransferInvitation.DoesNotExist:
+            return Response(
+                {
+                    "user_errors": {
+                        "transfer": ["Invalid or expired transfer invitation"]
+                    }
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except Exception as e:
+            logger.error(f"Error in transfer signup: {e}")
             return Response(
                 {
                     "user_errors": {

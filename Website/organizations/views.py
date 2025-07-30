@@ -54,7 +54,7 @@ def add_org_member(
     organization_id: str,
 ) -> JsonResponse:
     if request.method == "POST":
-        return handlers.add_org_members(request, organization_id)
+        return handlers.add_org_member(request, organization_id)
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
@@ -99,3 +99,53 @@ def remove_pending_invite(
         return handlers.remove_pending_invite(request, organization_id, invite_id)
     else:
         return JsonResponse({"success": False, "message": "method not allowed"}, status=405)
+
+# Project transfer views
+@oauth_required()
+def initiate_project_transfer(
+    request: AuthHttpRequest,
+    project_id: str,
+) -> JsonResponse:
+    if request.method == "POST":
+        return handlers.initiate_project_transfer(request, project_id)
+    else:
+        return JsonResponse({"message": "method not allowed"}, status=405)
+
+@oauth_required()
+def accept_project_transfer(
+    request: AuthHttpRequest,
+    transfer_id: str,
+) -> JsonResponse:
+    if request.method == "POST":
+        return handlers.accept_project_transfer(request, transfer_id)
+    else:
+        return JsonResponse({"message": "method not allowed"}, status=405)
+
+@oauth_required()
+def get_project_transfer_status(
+    request: AuthHttpRequest,
+    transfer_id: str,
+) -> JsonResponse:
+    if request.method == "GET":
+        return handlers.get_project_transfer_status(request, transfer_id)
+    else:
+        return JsonResponse({"message": "method not allowed"}, status=405)
+
+@oauth_required()
+def get_user_transfer_invitations(
+    request: AuthHttpRequest,
+) -> JsonResponse:
+    if request.method == "GET":
+        return handlers.get_user_transfer_invitations(request)
+    else:
+        return JsonResponse({"message": "method not allowed"}, status=405)
+
+@oauth_required()
+def cancel_project_transfer(
+    request: AuthHttpRequest,
+    transfer_id: str,
+) -> JsonResponse:
+    if request.method == "POST":
+        return handlers.cancel_project_transfer(request, transfer_id)
+    else:
+        return JsonResponse({"message": "method not allowed"}, status=405)

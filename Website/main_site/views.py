@@ -9,7 +9,7 @@ import calendar
 
 from accounts.forms import CustomUserCreationForm
 from accounts.models import UserProfile
-from organizations.models import Organization, OrganizationMember, PendingInvites
+from organizations.models import Organization, OrganizationMember, PendingInvites, ProjectTransferInvitation
 from organizations.forms import (
     OrganizationCreateFormWithMembers,
     OrganizationMemberForm,
@@ -249,6 +249,9 @@ class DashboardView(View):
 
         stacks = Stack.objects.filter(project_id=project_id)
 
+        # Check if user is admin of the project
+        is_admin = ProjectMember.objects.filter(user=user, project=project, role='admin').exists()
+
         # Get all organizations and projects for the user for dropdowns
         user_organizations = Organization.objects.filter(organizationmember__user=user)
         user_projects = Project.objects.filter(projectmember__user=user)
@@ -264,6 +267,7 @@ class DashboardView(View):
                 "user_projects": user_projects,
                 "current_organization_id": organization_id,
                 "current_project_id": project_id,
+                "is_admin": is_admin,
             },
         )
 
@@ -586,6 +590,97 @@ class DashboardView(View):
             },
         )
 
+    @oauth_required()
+    def project_transfer_accept(self, request: HttpRequest, transfer_id: str) -> HttpResponse:
+        """Project transfer acceptance page."""
+        user = cast(UserProfile, request.user)
+        
+        # Get user's organizations for navbar context
+        user_organizations = Organization.objects.filter(organizationmember__user=user)
+        current_organization_id = user_organizations.first().id if user_organizations.exists() else ""
+        
+        # Get user's projects for navbar context
+        user_projects = Project.objects.filter(projectmember__user=user)
+        
+        # Get user's stacks for navbar context
+        user_stacks = Stack.objects.filter(project__projectmember__user=user)
+        
+        try:
+            transfer_invitation = ProjectTransferInvitation.objects.get(id=transfer_id)
+            
+            # Check if the transfer is for this user
+            if transfer_invitation.to_email != user.email:
+                return render(
+                    request,
+                    "dashboard/project_transfer_accept.html",
+                    {
+                        "transfer_invitation": None,
+                        "user_organizations": user_organizations,
+                        "user_projects": user_projects,
+                        "user_stacks": user_stacks,
+                        "current_organization_id": current_organization_id,
+                        "current_project_id": "",
+                        "current_stack_id": "",
+                    }
+                )
+            
+            return render(
+                request,
+                "dashboard/project_transfer_accept.html",
+                {
+                    "transfer_invitation": transfer_invitation,
+                    "user_organizations": user_organizations,
+                    "user_projects": user_projects,
+                    "user_stacks": user_stacks,
+                    "current_organization_id": current_organization_id,
+                    "current_project_id": "",
+                    "current_stack_id": "",
+                }
+            )
+            
+        except ProjectTransferInvitation.DoesNotExist:
+            return render(
+                request,
+                "dashboard/project_transfer_accept.html",
+                {
+                    "transfer_invitation": None,
+                    "user_organizations": user_organizations,
+                    "user_projects": user_projects,
+                    "user_stacks": user_stacks,
+                    "current_organization_id": current_organization_id,
+                    "current_project_id": "",
+                    "current_stack_id": "",
+                }
+            )
+
+    @oauth_required()
+    def transfer_invitations(self, request: HttpRequest) -> HttpResponse:
+        """Transfer invitations dashboard page."""
+        user = cast(UserProfile, request.user)
+        
+        # Get user's organizations for navbar context
+        user_organizations = Organization.objects.filter(organizationmember__user=user)
+        current_organization_id = user_organizations.first().id if user_organizations.exists() else ""
+        
+        # Get user's projects for navbar context
+        user_projects = Project.objects.filter(projectmember__user=user)
+        
+        # Get user's stacks for navbar context
+        user_stacks = Stack.objects.filter(project__projectmember__user=user)
+        
+        return render(
+            request,
+            "dashboard/transfer_invitations.html",
+            {
+                "user_organizations": user_organizations,
+                "user_projects": user_projects,
+                "user_stacks": user_stacks,
+                "current_organization_id": current_organization_id,
+                "current_project_id": "",
+                "current_stack_id": "",
+            }
+        )
+
 
 class PaymentView(View):
     """Class-based view for all payment-related functionality."""
@@ -655,7 +750,9 @@ class AuthView(View):
     def signup(self, request: HttpRequest) -> HttpResponse:
         """Signup view."""
         invite_id = request.GET.get('invite')
+        transfer_id = request.GET.get('transfer_id')
         invite_data = None
+        transfer_data = None
 
         if invite_id:
             try:
@@ -666,13 +763,30 @@ class AuthView(View):
                     'organization_email': pending_invite.organization.email,
                     'invite_email': pending_invite.email
                 }
+                
+                # If there's also a transfer_id, get transfer data
+                if transfer_id:
+                    try:
+                        transfer_invitation = ProjectTransferInvitation.objects.get(id=transfer_id, status="pending")
+                        transfer_data = {
+                            'transfer_id': transfer_id,
+                            'project_name': transfer_invitation.project.name,
+                            'developer_name': transfer_invitation.from_organization.name,
+                            'keep_developer': transfer_invitation.keep_developer,
+                            'expires_at': transfer_invitation.expires_at.strftime('%B %d, %Y')
+                        }
+                    except ProjectTransferInvitation.DoesNotExist:
+                        # Invalid transfer ID - will be handled in template
+                        pass
+                        
             except PendingInvites.DoesNotExist:
                 # Invalid invite ID - will be handled in template
                 pass
 
         return render(request, "accounts/signup.html", {
             "form": CustomUserCreationForm,
-            "invite_data": invite_data
+            "invite_data": invite_data,
+            "transfer_data": transfer_data
         })
 
     def logout(self, request: HttpRequest) -> HttpResponse:

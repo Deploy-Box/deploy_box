@@ -106,6 +106,16 @@ urlpatterns = [
         name="create_project_form",
     ),
     path(
+        "project-transfer/accept/<str:transfer_id>/",
+        views.dashboard_view.project_transfer_accept,
+        name="project_transfer_accept",
+    ),
+    path(
+        "dashboard/transfers/",
+        views.dashboard_view.transfer_invitations,
+        name="transfer_invitations",
+    ),
+    path(
         "google0f33857d0e9df9a5.html", views.google_verification, name="google_verification"
     ),
     path(
