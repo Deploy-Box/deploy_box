@@ -1,5 +1,5 @@
-import json
 import os
+from typing import Optional
 import requests
 import time
 import re
@@ -48,7 +48,7 @@ class AzureDeployBoxIAC:
             "Content-Type": "application/json",
         }
 
-    def request(self, url: str, method: str, body: dict):
+    def request(self, url: str, method: str, body: Optional[dict] = None) -> dict:
         response = requests.request(method, url, headers=self.headers, json=body)
         return response.json()
 
@@ -526,7 +526,7 @@ class AzureDeployBoxIAC:
             },
         }}
         self.azurerm_container_app.plan("my-container-app", result)
-        self.azurerm_container_app.get_stack_information("my-container-app", result)
+        print(self.azurerm_container_app.get_resource_information("my-container-app", result))
 
         # print(json.dumps(result, indent=2))
 

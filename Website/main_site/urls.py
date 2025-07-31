@@ -116,9 +116,17 @@ urlpatterns = [
         name="transfer_invitations",
     ),
     path(
+        "components/",
+        views.components_view.components,
+        name="components",
+    ),
+    path(
         "google0f33857d0e9df9a5.html", views.google_verification, name="google_verification"
     ),
     path(
         "sitemap.xml", views.sitemap, name="sitemap"
+    ),
+    path(
+        "examples/organization_members/", views.examples_view.example_organization_members, name="example_organization_members"
     ),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

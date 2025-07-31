@@ -138,11 +138,10 @@ class DeployBoxIAC:
         """Update billing info"""
 
         azure_deploy_box_iac = AzureDeployBoxIAC()
-        mongodb_atlas_deploy_box_iac = MongoDBAtlasDeployBoxIAC()
+        # mongodb_atlas_deploy_box_iac = MongoDBAtlasDeployBoxIAC()
 
         billing_info = {}
         billing_info = azure_deploy_box_iac.get_billing_info(billing_info)
-        # billing_info = mongodb_atlas_deploy_box_iac.update_billing_info(billing_info)
 
         print(f"Billing info: {billing_info}")
 

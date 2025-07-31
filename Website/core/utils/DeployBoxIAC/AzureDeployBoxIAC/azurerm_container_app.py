@@ -1,6 +1,5 @@
 from __future__ import annotations
-from pydantic import BaseModel, Field
-import requests
+from pydantic import BaseModel, Field, model_validator
 from typing import TYPE_CHECKING, List, Dict, Any, Optional
 import logging
 
@@ -20,13 +19,20 @@ class Container(BaseModel):
     name: str = "1"
     cpu: float = 0.25
     memory: str = "0.5Gi"
-    env: List[EnvironmentVariable] = Field(default_factory=list)
     image: str
+    env: List[EnvironmentVariable] = Field(default_factory=list)
 
 class Template(BaseModel):
     container: List[Container]
     max_replicas: int = 10
     min_replicas: int = 0
+
+    @model_validator(mode="before")
+    def check_containers_exist(cls, values):
+        containers = values.get('container', [])
+        if not containers:
+            raise ValueError("At least one container must be defined in a template.")
+        return values
 
 class TrafficWeight(BaseModel):
     latest_revision: bool = True
@@ -113,13 +119,13 @@ class AzureContainerApp:
                 secret=secrets,
             )
 
-            print("ca", ca)
             self.container_app_list.append(ca)
 
             resources[resource_name] = ca.dict()
 
-    def get_stack_information(self, stack_id: str, iac: dict) -> dict:
+    def get_resource_information(self, stack_id: str, iac: dict) -> dict:
         class ResourceInformation(BaseModel):
+            resource_name: str = Field(default=RESOURCE_NAME)
             endpoint: str
             status: str
             is_persistent: bool
@@ -128,20 +134,24 @@ class AzureContainerApp:
             resources: List[ResourceInformation]
 
         response = {}
-
-        print("container_app_list", self.container_app_list)
+        stack_info = StackInformation(resources=[])
 
         for container in self.container_app_list:
+            print(f"Processing container app: {container}")
             # Get container ingress endpoint
             response = self.parent.request(
                 f"https://management.azure.com/subscriptions/{self.parent.subscription_id}/resourceGroups/{self.parent.azurerm_resource_group.azurerm_resource_group_id}/providers/Microsoft.App/containerApps/mern-backend-c17a810399e344a0?api-version=2023-05-01",
                 "GET",
                 None
             )
-            print("response", response)
-            # stack_info.resources.append(ResourceInformation(endpoint="", status="", is_persistent=False))
 
-        return response
+            endpoint = response.get("properties", {}).get("configuration", {}).get("ingress", {}).get("fqdn", "")
+            status = response.get("properties", {}).get("provisioningState", "Unknown")
+            is_persistent = container.template.min_replicas > 0
+
+            stack_info.resources.append(ResourceInformation(endpoint=endpoint, status=status, is_persistent=is_persistent))
+
+        return stack_info.model_dump()
             
     
     def _merge_secrets(self, existing_secrets: list, new_secrets: list) -> list:
@@ -170,3 +180,4 @@ def ensure_list(obj: object, name: str) -> list:
     if not isinstance(obj, list):
         raise ValueError(f"{name} must be a list")
     return obj
+
