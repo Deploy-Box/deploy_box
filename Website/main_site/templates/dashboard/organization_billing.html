@@ -387,6 +387,15 @@ function setAddPaymentLoadingState(isLoading) {
 document.addEventListener('DOMContentLoaded', function() {
     const paymentForm = document.getElementById('payment-form');
 
+    // Check if we should auto-open the payment modal
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('open-add-payment-method') === 'true') {
+        showAddPaymentModal();
+        // Remove the query parameter from URL to prevent modal from reopening on page reload
+        const newUrl = window.location.pathname + window.location.search.replace('?open-add-payment-method=true', '').replace('&open-add-payment-method=true', '');
+        window.history.replaceState({}, document.title, newUrl);
+    }
+
     paymentForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 

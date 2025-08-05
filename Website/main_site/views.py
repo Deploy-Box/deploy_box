@@ -86,16 +86,22 @@ class DashboardView(View):
         # If user has organizations, redirect to the first one
         first_organization = organizations.first()
         if first_organization:
+            print(f"Redirecting to organization dashboard for organization: {first_organization.id}")
             return redirect('main_site:organization_dashboard', organization_id=first_organization.id)
         else:
+            # Show welcome screen for users with no organizations
+            print("Showing welcome screen for users with no organizations")
             return render(
                 request,
-                "dashboard/dashboard.html",
+                "dashboard/welcome.html",
                 {
                     "user": user,
                     "organizations": organizations,
                     "projects": projects,
                     "user_organizations": organizations,
+                    "current_organization_id": None,
+                    "current_project_id": None,
+                    "current_stack_id": None,
                 },
             )
 
@@ -655,30 +661,215 @@ class DashboardView(View):
 
     @oauth_required()
     def transfer_invitations(self, request: HttpRequest) -> HttpResponse:
-        """Transfer invitations dashboard page."""
+        """View for transfer invitations."""
         user = cast(UserProfile, request.user)
-        
-        # Get user's organizations for navbar context
-        user_organizations = Organization.objects.filter(organizationmember__user=user)
-        current_organization_id = user_organizations.first().id if user_organizations.exists() else ""
-        
-        # Get user's projects for navbar context
-        user_projects = Project.objects.filter(projectmember__user=user)
-        
-        # Get user's stacks for navbar context
-        user_stacks = Stack.objects.filter(project__projectmember__user=user)
-        
+        invitations = ProjectTransferInvitation.objects.filter(
+            recipient_email=user.email, status="PENDING"
+        )
         return render(
             request,
             "dashboard/transfer_invitations.html",
             {
+                "invitations": invitations,
+                "user": user,
+            },
+        )
+
+    @oauth_required()
+    def stack_marketplace(self, request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
+        """View for the stack marketplace where users can purchase stacks."""
+        user = cast(UserProfile, request.user)
+        
+        # Verify user has access to this organization and project
+        try:
+            organization = Organization.objects.get(id=organization_id)
+            project = Project.objects.get(id=project_id, organization=organization)
+            
+            # Check if user is a member of the organization
+            if not OrganizationMember.objects.filter(user=user, organization=organization).exists():
+                messages.error(request, "You don't have access to this organization.")
+                return redirect('main_site:dashboard')
+                
+        except (Organization.DoesNotExist, Project.DoesNotExist):
+            messages.error(request, "Organization or project not found.")
+            return redirect('main_site:dashboard')
+
+        # Hardcoded stack examples for the marketplace
+        available_stacks = [
+            {
+                'id': 'mern-basic',
+                'name': 'MERN Stack - Basic',
+                'type': 'MERN',
+                'variant': 'Basic',
+                'description': 'Full-stack JavaScript solution with MongoDB, Express.js, React, and Node.js',
+                'price': 29.99,
+                'features': [
+                    'MongoDB Database',
+                    'Express.js Backend API',
+                    'React Frontend',
+                    'Node.js Runtime',
+                    'Docker Containerization',
+                    'Auto-deployment'
+                ],
+                'icon': '⚛️',
+                'color': 'emerald',
+                'popular': False
+            },
+            {
+                'id': 'mern-premium',
+                'name': 'MERN Stack - Premium',
+                'type': 'MERN',
+                'variant': 'Premium',
+                'description': 'Advanced MERN stack with additional features and optimizations',
+                'price': 49.99,
+                'features': [
+                    'Everything in Basic',
+                    'Redis Caching',
+                    'Advanced Security',
+                    'Performance Monitoring',
+                    'CI/CD Pipeline',
+                    'Priority Support'
+                ],
+                'icon': '⚛️',
+                'color': 'amber',
+                'popular': True
+            },
+            {
+                'id': 'django-basic',
+                'name': 'Django Stack - Basic',
+                'type': 'Django',
+                'variant': 'Basic',
+                'description': 'Python web framework with PostgreSQL and modern frontend',
+                'price': 34.99,
+                'features': [
+                    'Django Backend',
+                    'PostgreSQL Database',
+                    'React Frontend',
+                    'Docker Containerization',
+                    'Admin Interface',
+                    'Auto-deployment'
+                ],
+                'icon': '🐍',
+                'color': 'emerald',
+                'popular': False
+            },
+            {
+                'id': 'django-premium',
+                'name': 'Django Stack - Premium',
+                'type': 'Django',
+                'variant': 'Premium',
+                'description': 'Enterprise-grade Django stack with advanced features',
+                'price': 59.99,
+                'features': [
+                    'Everything in Basic',
+                    'Redis Caching',
+                    'Celery Task Queue',
+                    'Advanced Security',
+                    'Performance Monitoring',
+                    'Priority Support'
+                ],
+                'icon': '🐍',
+                'color': 'amber',
+                'popular': False
+            },
+            {
+                'id': 'mean-basic',
+                'name': 'MEAN Stack - Basic',
+                'type': 'MEAN',
+                'variant': 'Basic',
+                'description': 'JavaScript full-stack with MongoDB, Express.js, Angular, and Node.js',
+                'price': 39.99,
+                'features': [
+                    'MongoDB Database',
+                    'Express.js Backend API',
+                    'Angular Frontend',
+                    'Node.js Runtime',
+                    'Docker Containerization',
+                    'Auto-deployment'
+                ],
+                'icon': '🅰️',
+                'color': 'emerald',
+                'popular': False
+            },
+            {
+                'id': 'mean-premium',
+                'name': 'MEAN Stack - Premium',
+                'type': 'MEAN',
+                'variant': 'Premium',
+                'description': 'Advanced MEAN stack with enterprise features',
+                'price': 69.99,
+                'features': [
+                    'Everything in Basic',
+                    'Redis Caching',
+                    'Advanced Security',
+                    'Performance Monitoring',
+                    'CI/CD Pipeline',
+                    'Priority Support'
+                ],
+                'icon': '🅰️',
+                'color': 'amber',
+                'popular': False
+            },
+            {
+                'id': 'lamp-basic',
+                'name': 'LAMP Stack - Basic',
+                'type': 'LAMP',
+                'variant': 'Basic',
+                'description': 'Classic web stack with Linux, Apache, MySQL, and PHP',
+                'price': 24.99,
+                'features': [
+                    'Apache Web Server',
+                    'MySQL Database',
+                    'PHP Backend',
+                    'Docker Containerization',
+                    'Basic Security',
+                    'Auto-deployment'
+                ],
+                'icon': '🐘',
+                'color': 'emerald',
+                'popular': False
+            },
+            {
+                'id': 'lamp-premium',
+                'name': 'LAMP Stack - Premium',
+                'type': 'LAMP',
+                'variant': 'Premium',
+                'description': 'Enhanced LAMP stack with modern features',
+                'price': 44.99,
+                'features': [
+                    'Everything in Basic',
+                    'Redis Caching',
+                    'Advanced Security',
+                    'Performance Monitoring',
+                    'SSL Certificate',
+                    'Priority Support'
+                ],
+                'icon': '🐘',
+                'color': 'amber',
+                'popular': False
+            }
+        ]
+
+        # Get all organizations and projects for the user for dropdowns
+        user_organizations = Organization.objects.filter(organizationmember__user=user)
+        user_projects = Project.objects.filter(projectmember__user=user)
+        user_stacks = Stack.objects.filter(project__projectmember__user=user)
+
+        return render(
+            request,
+            "dashboard/stack_marketplace.html",
+            {
+                "organization": organization,
+                "project": project,
+                "available_stacks": available_stacks,
+                "user": user,
                 "user_organizations": user_organizations,
                 "user_projects": user_projects,
                 "user_stacks": user_stacks,
-                "current_organization_id": current_organization_id,
-                "current_project_id": "",
+                "current_organization_id": organization_id,
+                "current_project_id": project_id,
                 "current_stack_id": "",
-            }
+            },
         )
 
 

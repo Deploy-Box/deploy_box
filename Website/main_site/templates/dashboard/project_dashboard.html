@@ -127,7 +127,7 @@
                     </a>
                     {% endfor %}
                     <div class="text-center py-6 border-t border-gray-200">
-                        <a href="{% url 'main_site:pricing' %}"
+                        <button id="addAnotherStackBtn"
                             class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
                                 fill="currentColor">
@@ -136,7 +136,7 @@
                                     clip-rule="evenodd"></path>
                             </svg>
                             Add Another Stack
-                        </a>
+                        </button>
                     </div>
                     {% else %}
                     <div class="text-center py-8">
@@ -147,7 +147,7 @@
                             </path>
                         </svg>
                         <p class="text-zinc-500 mb-4">This project has no stacks</p>
-                        <a href="{% url 'main_site:pricing' %}"
+                        <button id="createStackBtn"
                             class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
                                 fill="currentColor">
@@ -156,7 +156,7 @@
                                     clip-rule="evenodd"></path>
                             </svg>
                             Create a Stack
-                        </a>
+                        </button>
                     </div>
                     {% endif %}
                 </div>
@@ -415,6 +415,104 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         return cookieValue;
+    }
+
+    // Check payment methods for the organization
+    function checkPaymentMethods() {
+        const organizationId = '{{ organization_id }}';
+        
+        return fetch(`/api/v1/payments/payment-methods/${organizationId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error || data.payment_methods.length === 0) {
+                    // No payment methods found, show prominent warning banner
+                    const warningDiv = document.createElement('div');
+                    warningDiv.id = 'paymentWarningBanner';
+                    warningDiv.className = 'bg-red-600 text-white p-6 mb-8 rounded-lg shadow-lg';
+                    warningDiv.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center">
+                                <svg class="h-6 w-6 mr-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                                </svg>
+                                <div>
+                                    <h3 class="text-lg font-semibold mb-1">Payment Method Required</h3>
+                                    <p class="text-red-100">You need to add a payment method to your organization before you can purchase stacks.</p>
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <a href="/dashboard/organizations/${organizationId}/billing/?open-add-payment-method=true" class="bg-white text-red-600 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition-colors">
+                                    Add Payment Method
+                                </a>
+                                <button onclick="this.parentElement.parentElement.parentElement.remove()" class="text-white hover:text-red-200">
+                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Check if banner already exists
+                    const existingBanner = document.getElementById('paymentWarningBanner');
+                    if (!existingBanner) {
+                        // Insert warning at the top of the main content
+                        const mainContent = document.querySelector('main');
+                        if (mainContent) {
+                            mainContent.insertBefore(warningDiv, mainContent.firstChild);
+                        }
+                    }
+                    return false; // No payment method
+                }
+                return true; // Has payment method
+            })
+            .catch(error => {
+                console.error('Error checking payment methods:', error);
+                return false; // Assume no payment method on error
+            });
+    }
+
+    // Check payment methods on page load
+    checkPaymentMethods();
+
+    // Create Stack functionality
+    const createStackBtn = document.getElementById('createStackBtn');
+    if (createStackBtn) {
+        createStackBtn.addEventListener('click', function() {
+            checkPaymentMethods().then(hasPaymentMethod => {
+                if (hasPaymentMethod) {
+                    // Has payment method, redirect to stack marketplace
+                    window.location.href = "{% url 'main_site:stack_marketplace' organization_id project.id %}";
+                } else {
+                    // No payment method, banner is already shown by checkPaymentMethods
+                    // Scroll to the banner to make it more visible
+                    const banner = document.getElementById('paymentWarningBanner');
+                    if (banner) {
+                        banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            });
+        });
+    }
+
+    // Add Another Stack functionality
+    const addAnotherStackBtn = document.getElementById('addAnotherStackBtn');
+    if (addAnotherStackBtn) {
+        addAnotherStackBtn.addEventListener('click', function() {
+            checkPaymentMethods().then(hasPaymentMethod => {
+                if (hasPaymentMethod) {
+                    // Has payment method, redirect to stack marketplace
+                    window.location.href = "{% url 'main_site:stack_marketplace' organization_id project.id %}";
+                } else {
+                    // No payment method, banner is already shown by checkPaymentMethods
+                    // Scroll to the banner to make it more visible
+                    const banner = document.getElementById('paymentWarningBanner');
+                    if (banner) {
+                        banner.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }
+            });
+        });
     }
 });
 </script>

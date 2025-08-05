@@ -20,6 +20,7 @@ urlpatterns = [
     path("profile/", views.profile, name="profile"),
     # Dashboard
     path("dashboard/", views.dashboard_view.get, name="dashboard"),
+    path("dashboard/welcome/", views.dashboard_view.get, name="welcome"),
     path(
         "dashboard/organizations/<str:organization_id>/",
         views.dashboard_view.organization_dashboard,
@@ -44,6 +45,11 @@ urlpatterns = [
         "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/",
         views.dashboard_view.project_dashboard,
         name="project_dashboard",
+    ),
+    path(
+        "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/marketplace/",
+        views.dashboard_view.stack_marketplace,
+        name="stack_marketplace",
     ),
     path(
         "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/settings/",

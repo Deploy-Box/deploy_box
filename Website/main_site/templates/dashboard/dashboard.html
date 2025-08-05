@@ -266,15 +266,20 @@
                 },
                 body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert(data.message);
-                }
+            .then(response => {
                 if (response.ok) {
-                    createOrgModal.classList.add('hidden');
-                    createOrgForm.reset();
-                    location.reload();
+                    return response.json().then(data => {
+                        if (data.message) {
+                            alert(data.message);
+                        }
+                        createOrgModal.classList.add('hidden');
+                        createOrgForm.reset();
+                        location.reload();
+                    });
+                } else {
+                    return response.json().then(data => {
+                        throw new Error(data.error || data.message || 'Failed to create organization');
+                    });
                 }
             })
             .catch(error => {

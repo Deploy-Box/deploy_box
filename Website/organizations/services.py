@@ -43,7 +43,7 @@ def get_organization(user: UserProfile, organization_id: str) -> Union[Organizat
     return organization
 
 
-def create_organization(user: UserProfile, name: str, email: str) -> Union[Organization, dict]:
+def create_organization(user: UserProfile, name: str, email: str) -> Union[dict, dict]:
     from payments.services import create_stripe_user
 
     try:
@@ -65,7 +65,13 @@ def create_organization(user: UserProfile, name: str, email: str) -> Union[Organ
     except Exception as e:
         return {"error": str(e)}
 
-    return organization
+    return {
+        "id": str(organization.id),
+        "name": organization.name,
+        "email": organization.email,
+        "created_at": organization.created_at.isoformat(),
+        "message": "Organization created successfully"
+    }
 
 
 def update_organization(user: UserProfile, organization_id: str, data: dict) -> JsonResponse:

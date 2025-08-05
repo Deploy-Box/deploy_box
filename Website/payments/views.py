@@ -156,6 +156,11 @@ def create_checkout_session(request: AuthHttpRequest, org_id: str) -> JsonRespon
     if not organization:
         return JsonResponse({"error": "Organization not found"}, status=404)
 
+    # Check if organization has payment methods
+    has_payment_methods, error_message = check_organization_payment_methods(organization)
+    if not has_payment_methods:
+        return JsonResponse({"error": error_message}, status=400)
+
     price_id = PurchasableStack.objects.get(id=stack_id).price_id
 
     try:
@@ -328,6 +333,31 @@ def get_customer_id(org_id):
 
     except UserProfile.DoesNotExist:
         return None
+
+
+def check_organization_payment_methods(organization):
+    """
+    Check if an organization has payment methods set up.
+    Returns a tuple: (has_payment_methods, error_message)
+    """
+    if not organization.stripe_customer_id:
+        return False, "Organization does not have a payment account set up. Please add a payment method first."
+    
+    try:
+        payment_methods = stripe.PaymentMethod.list(
+            customer=organization.stripe_customer_id,
+            type="card"
+        )
+        
+        if not payment_methods.data:
+            return False, "No payment methods found for this organization. Please add a payment method before making purchases."
+            
+        return True, None
+        
+    except stripe_error.StripeError as e:
+        return False, f"Error checking payment methods: {str(e)}"
+    except Exception as e:
+        return False, "An error occurred while checking payment methods."
 
 
 def update_invoice_billing(request):
