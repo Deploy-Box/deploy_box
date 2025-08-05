@@ -89,6 +89,10 @@ def delete_organization(user: UserProfile, organization_id: str) -> JsonResponse
         return JsonResponse({"error": "You are not authorized to delete this organization"}, status=403)
 
     # TODO: Check if the organization has any projects
+        # Check if the organization has any projects
+    if hasattr(organization, 'project_set') and organization.project_set.exists():
+        return JsonResponse({"error": "You must delete all projects in this organization first."}, status=400)
+
 
     organization.delete()
 
