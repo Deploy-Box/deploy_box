@@ -984,6 +984,267 @@ class DashboardView(View):
         )
 
     @oauth_required()
+    def api_marketplace(self, request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
+        """View for the API marketplace where users can purchase APIs."""
+        user = cast(UserProfile, request.user)
+        
+        # Verify user has access to this organization and project
+        try:
+            organization = Organization.objects.get(id=organization_id)
+            project = Project.objects.get(id=project_id, organization=organization)
+            
+            # Check if user is a member of the organization
+            if not OrganizationMember.objects.filter(user=user, organization=organization).exists():
+                messages.error(request, "You don't have access to this organization.")
+                return redirect('main_site:dashboard')
+                
+        except (Organization.DoesNotExist, Project.DoesNotExist):
+            messages.error(request, "Organization or project not found.")
+            return redirect('main_site:dashboard')
+
+        # Mock API data for the marketplace
+        available_apis = [
+            {
+                'id': 'geolocation-basic',
+                'name': 'Geolocation API',
+                'category': 'Location',
+                'tier': 'Basic',
+                'description': 'Get precise location data including coordinates, country, city, and timezone information',
+                'price': 9.99,
+                'features': [
+                    'IP-based geolocation',
+                    'Country and city detection',
+                    'Timezone information',
+                    '1,000 requests/month',
+                    'JSON response format',
+                    'Basic documentation'
+                ],
+                'icon': '🌍',
+                'color': 'emerald',
+                'popular': True,
+                'endpoint': 'https://api.example.com/geolocation/v1',
+                'response_time': '< 100ms'
+            },
+            {
+                'id': 'weather-basic',
+                'name': 'Weather API',
+                'category': 'Weather',
+                'tier': 'Basic',
+                'description': 'Real-time weather data with current conditions and 5-day forecasts',
+                'price': 14.99,
+                'features': [
+                    'Current weather conditions',
+                    '5-day weather forecast',
+                    'Temperature, humidity, wind data',
+                    '2,000 requests/month',
+                    'Multiple units support',
+                    'Basic weather alerts'
+                ],
+                'icon': '🌤️',
+                'color': 'emerald',
+                'popular': True,
+                'endpoint': 'https://api.example.com/weather/v1',
+                'response_time': '< 200ms'
+            },
+            {
+                'id': 'geolocation-premium',
+                'name': 'Geolocation API - Premium',
+                'category': 'Location',
+                'tier': 'Premium',
+                'description': 'Advanced geolocation with enhanced accuracy and additional data points',
+                'price': 24.99,
+                'features': [
+                    'Everything in Basic',
+                    'Enhanced accuracy',
+                    'ISP and organization data',
+                    '10,000 requests/month',
+                    'Bulk geolocation',
+                    'Advanced analytics',
+                    'Priority support'
+                ],
+                'icon': '🌍',
+                'color': 'amber',
+                'popular': False,
+                'endpoint': 'https://api.example.com/geolocation/v2',
+                'response_time': '< 50ms'
+            },
+            {
+                'id': 'weather-premium',
+                'name': 'Weather API - Premium',
+                'category': 'Weather',
+                'tier': 'Premium',
+                'description': 'Comprehensive weather data with extended forecasts and historical data',
+                'price': 34.99,
+                'features': [
+                    'Everything in Basic',
+                    'Extended 10-day forecast',
+                    'Historical weather data',
+                    '20,000 requests/month',
+                    'Weather maps and radar',
+                    'Severe weather alerts',
+                    'Priority support'
+                ],
+                'icon': '🌤️',
+                'color': 'amber',
+                'popular': False,
+                'endpoint': 'https://api.example.com/weather/v2',
+                'response_time': '< 150ms'
+            },
+            {
+                'id': 'currency-basic',
+                'name': 'Currency Exchange API',
+                'category': 'Finance',
+                'tier': 'Basic',
+                'description': 'Real-time currency exchange rates and conversion tools',
+                'price': 12.99,
+                'features': [
+                    '170+ currency pairs',
+                    'Real-time exchange rates',
+                    'Historical rates',
+                    '1,500 requests/month',
+                    'JSON and XML formats',
+                    'Basic conversion tools'
+                ],
+                'icon': '💰',
+                'color': 'emerald',
+                'popular': False,
+                'endpoint': 'https://api.example.com/currency/v1',
+                'response_time': '< 100ms'
+            },
+            {
+                'id': 'email-validation-basic',
+                'name': 'Email Validation API',
+                'category': 'Validation',
+                'tier': 'Basic',
+                'description': 'Validate email addresses and check deliverability',
+                'price': 7.99,
+                'features': [
+                    'Email format validation',
+                    'Domain verification',
+                    'Disposable email detection',
+                    '2,500 requests/month',
+                    'Bulk validation',
+                    'Detailed response codes'
+                ],
+                'icon': '📧',
+                'color': 'emerald',
+                'popular': False,
+                'endpoint': 'https://api.example.com/email/v1',
+                'response_time': '< 80ms'
+            },
+            {
+                'id': 'geolocation-pro',
+                'name': 'Geolocation API - Pro',
+                'category': 'Location',
+                'tier': 'Pro',
+                'description': 'Enterprise-grade geolocation with maximum accuracy and unlimited requests',
+                'price': 49.99,
+                'features': [
+                    'Everything in Premium',
+                    'Maximum accuracy',
+                    'Unlimited requests',
+                    'Custom data fields',
+                    'White-label solution',
+                    '24/7 priority support',
+                    'SLA guarantee',
+                    'Custom integrations'
+                ],
+                'icon': '🌍',
+                'color': 'purple',
+                'popular': False,
+                'endpoint': 'https://api.example.com/geolocation/v3',
+                'response_time': '< 25ms'
+            },
+            {
+                'id': 'weather-pro',
+                'name': 'Weather API - Pro',
+                'category': 'Weather',
+                'tier': 'Pro',
+                'description': 'Enterprise weather solution with unlimited access and advanced features',
+                'price': 69.99,
+                'features': [
+                    'Everything in Premium',
+                    'Unlimited requests',
+                    '30-day extended forecast',
+                    'Weather modeling data',
+                    'Custom weather alerts',
+                    '24/7 priority support',
+                    'SLA guarantee',
+                    'Custom integrations'
+                ],
+                'icon': '🌤️',
+                'color': 'purple',
+                'popular': False,
+                'endpoint': 'https://api.example.com/weather/v3',
+                'response_time': '< 100ms'
+            },
+            {
+                'id': 'ai-translation-basic',
+                'name': 'AI Translation API',
+                'category': 'AI',
+                'tier': 'Basic',
+                'description': 'Neural machine translation supporting 100+ languages',
+                'price': 19.99,
+                'features': [
+                    '100+ language pairs',
+                    'Neural translation',
+                    'Context-aware translation',
+                    '1,000 requests/month',
+                    'Text and document translation',
+                    'Basic language detection'
+                ],
+                'icon': '🤖',
+                'color': 'emerald',
+                'popular': False,
+                'endpoint': 'https://api.example.com/translation/v1',
+                'response_time': '< 500ms'
+            },
+            {
+                'id': 'image-processing-basic',
+                'name': 'Image Processing API',
+                'category': 'Media',
+                'tier': 'Basic',
+                'description': 'AI-powered image processing, resizing, and optimization',
+                'price': 16.99,
+                'features': [
+                    'Image resizing and cropping',
+                    'Format conversion',
+                    'Compression optimization',
+                    '500 requests/month',
+                    'Multiple output formats',
+                    'Basic filters and effects'
+                ],
+                'icon': '🖼️',
+                'color': 'emerald',
+                'popular': False,
+                'endpoint': 'https://api.example.com/image/v1',
+                'response_time': '< 2s'
+            }
+        ]
+
+        # Get all organizations and projects for the user for dropdowns
+        user_organizations = Organization.objects.filter(organizationmember__user=user)
+        user_projects = Project.objects.filter(projectmember__user=user)
+        user_stacks = Stack.objects.filter(project__projectmember__user=user)
+        
+        return render(
+            request,
+            "dashboard/api_marketplace.html",
+            {
+                "organization": organization,
+                "project": project,
+                "available_apis": available_apis,
+                "user": user,
+                "user_organizations": user_organizations,
+                "user_projects": user_projects,
+                "user_stacks": user_stacks,
+                "current_organization_id": organization_id,
+                "current_project_id": project_id,
+                "current_stack_id": "",
+            },
+        )
+
+    @oauth_required()
     def stack_details(self, request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
         """View for individual stack details page."""
         user = cast(UserProfile, request.user)

@@ -89,7 +89,7 @@
                     </svg>
                     Project Management
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <a href="{% url 'main_site:project_settings' organization_id project.id %}" 
                        class="flex items-center p-4 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-lg hover:from-blue-100 hover:to-blue-200 transition-all duration-300 transform hover:scale-105">
                         <div class="bg-blue-500 p-2 rounded-lg mr-3">
@@ -110,8 +110,20 @@
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-lg font-semibold text-purple-900">Marketplace</h3>
+                            <h3 class="text-lg font-semibold text-purple-900">Stack Marketplace</h3>
                             <p class="text-sm text-purple-700">Browse and purchase new stacks</p>
+                        </div>
+                    </a>
+                    <a href="{% url 'main_site:api_marketplace' organization_id project.id %}" 
+                       class="flex items-center p-4 bg-gradient-to-r from-indigo-50 to-indigo-100 border border-indigo-200 rounded-lg hover:from-indigo-100 hover:to-indigo-200 transition-all duration-300 transform hover:scale-105">
+                        <div class="bg-indigo-500 p-2 rounded-lg mr-3">
+                            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-indigo-900">API Marketplace</h3>
+                            <p class="text-sm text-indigo-700">Browse and integrate external APIs</p>
                         </div>
                     </a>
                 </div>

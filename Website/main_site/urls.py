@@ -52,6 +52,11 @@ urlpatterns = [
         name="stack_marketplace",
     ),
     path(
+        "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/api-marketplace/",
+        views.dashboard_view.api_marketplace,
+        name="api_marketplace",
+    ),
+    path(
         "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/marketplace/stack/<str:stack_id>/",
         views.dashboard_view.stack_details,
         name="stack_details",

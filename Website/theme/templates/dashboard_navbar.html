@@ -154,6 +154,10 @@
                     <div class="space-y-1">
                         <a href="{% url 'main_site:project_dashboard' organization_id=current_organization_id project_id=current_project_id %}"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
+                        <a href="{% url 'main_site:stack_marketplace' organization_id=current_organization_id project_id=current_project_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'stack_marketplace' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Stack Marketplace</a>
+                        <a href="{% url 'main_site:api_marketplace' organization_id=current_organization_id project_id=current_project_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'api_marketplace' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">API Marketplace</a>
                         <a href="#"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Deployment</a>
                         <a href="{% url 'main_site:project_settings' organization_id=current_organization_id project_id=current_project_id %}"
