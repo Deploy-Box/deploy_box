@@ -52,6 +52,11 @@ urlpatterns = [
         name="stack_marketplace",
     ),
     path(
+        "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/marketplace/stack/<str:stack_id>/",
+        views.dashboard_view.stack_details,
+        name="stack_details",
+    ),
+    path(
         "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/settings/",
         views.dashboard_view.project_settings,
         name="project_settings",
@@ -70,6 +75,11 @@ urlpatterns = [
         "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/stacks/<str:stack_id>/environment-variables/",
         views.dashboard_view.environment_variables,
         name="environment_variables",
+    ),
+    path(
+        "dashboard/organizations/<str:organization_id>/projects/<str:project_id>/stacks/<str:stack_id>/environments/",
+        views.dashboard_view.environments,
+        name="environments",
     ),
     path(
         "dashboard/organizations/<str:organization_id>/add_org_member",
@@ -101,11 +111,7 @@ urlpatterns = [
     path(
         "payments/checkout/cancelled/", views.payment_view.cancelled_view, name="checkout_cancelled"
     ),
-    path(
-        "dashboard/create_organization_form/",
-        views.dashboard_view.create_organization_form,
-        name="create_organization_form",
-    ),
+
     path(
         "dashboard/organizations/<str:organization_id>/create_project_form",
         views.dashboard_view.create_project_form,

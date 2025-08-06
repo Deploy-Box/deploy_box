@@ -97,6 +97,44 @@
             </div>
         </section>
 
+        <!-- Project Transfer Section -->
+        {% if is_admin %}
+        <section class="mb-8">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-amber-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-amber-600 mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path>
+                    </svg>
+                    Transfer Project
+                </h2>
+                
+                <div class="space-y-4">
+                    <!-- Transfer to Client -->
+                    <div class="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                        <button id="transferToClientBtn" 
+                                class="w-full inline-flex items-center justify-center bg-amber-500 hover:bg-amber-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path>
+                            </svg>
+                            Transfer to Client
+                        </button>
+                    </div>
+                    
+                    <!-- Transfer to Another Organization -->
+                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <button id="transferToOrgBtn" 
+                                class="w-full inline-flex items-center justify-center bg-blue-500 hover:bg-blue-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd"></path>
+                            </svg>
+                            Transfer to Organization
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
         <!-- Danger Zone -->
         {% if is_admin %}
         <section class="mb-8">
@@ -131,8 +169,183 @@
     </main>
 </div>
 
-<!-- Delete Confirmation Modal -->
+<!-- Transfer to Client Modal -->
 {% if is_admin %}
+<div id="transferToClientModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-amber-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-gray-900">Transfer Project to Client</h3>
+            </div>
+        </div>
+        
+        <!-- Error Alert -->
+        <div id="transferToClientErrorAlert" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p id="transferToClientErrorMessage" class="text-sm text-red-800"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success Alert -->
+        <div id="transferToClientSuccessAlert" class="hidden mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p id="transferToClientSuccessMessage" class="text-sm text-green-800"></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <p class="text-sm text-gray-500 mb-4">
+                Transfer ownership of this project to your client. They will receive an email invitation to accept the transfer.
+            </p>
+            <form id="transferToClientForm" class="space-y-4">
+                <div>
+                    <label for="clientName" class="block text-sm font-medium text-gray-700 mb-2">
+                        Client Name <span class="text-red-500">*</span>
+                    </label>
+                    <input type="text" id="clientName" name="client_name" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500"
+                           placeholder="Enter client's full name">
+                    <div id="clientNameError" class="hidden mt-1 text-sm text-red-600"></div>
+                </div>
+                <div>
+                    <label for="clientEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                        Client Email <span class="text-red-500">*</span>
+                    </label>
+                    <input type="email" id="clientEmail" name="client_email" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500"
+                           placeholder="Enter client's email address">
+                    <div id="clientEmailError" class="hidden mt-1 text-sm text-red-600"></div>
+                </div>
+                <div>
+                    <label for="clientCompany" class="block text-sm font-medium text-gray-700 mb-2">
+                        Company Name (Optional)
+                    </label>
+                    <input type="text" id="clientCompany" name="client_company"
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500"
+                           placeholder="Enter company name">
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="keepDeveloper" name="keep_developer" checked
+                           class="h-4 w-4 text-amber-600 focus:ring-amber-500 border-gray-300 rounded">
+                    <label for="keepDeveloper" class="ml-2 block text-sm text-gray-700">
+                        Keep me as a collaborator on the project
+                    </label>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button id="cancelTransferToClient" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                Cancel
+            </button>
+            <button id="sendTransferToClient" class="px-4 py-2 text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 rounded-md transition-colors duration-200">
+                Send Transfer Invitation
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Transfer to Organization Modal -->
+<div id="transferToOrgModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-gray-900">Transfer Project to Organization</h3>
+            </div>
+        </div>
+        
+        <!-- Error Alert -->
+        <div id="transferToOrgErrorAlert" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p id="transferToOrgErrorMessage" class="text-sm text-red-800"></p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Success Alert -->
+        <div id="transferToOrgSuccessAlert" class="hidden mb-4 p-3 bg-green-50 border border-green-200 rounded-md">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p id="transferToOrgSuccessMessage" class="text-sm text-green-800"></p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <p class="text-sm text-gray-500 mb-4">
+                Transfer this project to another organization that you own or are a member of.
+            </p>
+            <form id="transferToOrgForm" class="space-y-4">
+                <div>
+                    <label for="targetOrganization" class="block text-sm font-medium text-gray-700 mb-2">
+                        Target Organization <span class="text-red-500">*</span>
+                    </label>
+                    <select id="targetOrganization" name="target_organization" required
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <option value="">Select an organization</option>
+                        {% for org in user_organizations %}
+                            {% if org.id != current_organization_id %}
+                            <option value="{{ org.id }}">{{ org.name }}</option>
+                            {% endif %}
+                        {% endfor %}
+                    </select>
+                    <div id="targetOrganizationError" class="hidden mt-1 text-sm text-red-600"></div>
+                </div>
+                <div class="flex items-center">
+                    <input type="checkbox" id="keepDeveloperOrg" name="keep_developer" checked
+                           class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                    <label for="keepDeveloperOrg" class="ml-2 block text-sm text-gray-700">
+                        Keep me as a collaborator on the project
+                    </label>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button id="cancelTransferToOrg" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                Cancel
+            </button>
+            <button id="sendTransferToOrg" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors duration-200">
+                Transfer Project
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
 <div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
     <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <div class="flex items-center mb-4">
@@ -167,28 +380,309 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Email validation function
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // Transfer to Client functionality
+    const transferToClientBtn = document.getElementById('transferToClientBtn');
+    const transferToClientModal = document.getElementById('transferToClientModal');
+    const cancelTransferToClient = document.getElementById('cancelTransferToClient');
+    const sendTransferToClient = document.getElementById('sendTransferToClient');
+    const transferToClientForm = document.getElementById('transferToClientForm');
+    const clientName = document.getElementById('clientName');
+    const clientEmail = document.getElementById('clientEmail');
+    const clientCompany = document.getElementById('clientCompany');
+    const keepDeveloper = document.getElementById('keepDeveloper');
+    const transferToClientErrorAlert = document.getElementById('transferToClientErrorAlert');
+    const transferToClientErrorMessage = document.getElementById('transferToClientErrorMessage');
+    const transferToClientSuccessAlert = document.getElementById('transferToClientSuccessAlert');
+    const transferToClientSuccessMessage = document.getElementById('transferToClientSuccessMessage');
+    const clientNameError = document.getElementById('clientNameError');
+    const clientEmailError = document.getElementById('clientEmailError');
+
+    if (transferToClientBtn) {
+        transferToClientBtn.addEventListener('click', function() {
+            transferToClientModal.classList.remove('hidden');
+        });
+    }
+
+    if (cancelTransferToClient) {
+        cancelTransferToClient.addEventListener('click', function() {
+            transferToClientModal.classList.add('hidden');
+            transferToClientForm.reset();
+            transferToClientErrorAlert.classList.add('hidden');
+            transferToClientSuccessAlert.classList.add('hidden');
+            clientNameError.classList.add('hidden');
+            clientEmailError.classList.add('hidden');
+        });
+    }
+
+    if (sendTransferToClient) {
+        sendTransferToClient.addEventListener('click', function() {
+            let hasError = false;
+            const name = clientName.value.trim();
+            const email = clientEmail.value.trim();
+            const company = clientCompany.value.trim();
+            const keepDev = keepDeveloper.checked;
+
+            clientNameError.classList.add('hidden');
+            clientEmailError.classList.add('hidden');
+            transferToClientErrorAlert.classList.add('hidden');
+            transferToClientSuccessAlert.classList.add('hidden');
+
+            if (!name) {
+                clientNameError.textContent = 'Client name is required.';
+                clientNameError.classList.remove('hidden');
+                hasError = true;
+            }
+
+            if (!email) {
+                clientEmailError.textContent = 'Client email is required.';
+                clientEmailError.classList.remove('hidden');
+                hasError = true;
+            } else if (!isValidEmail(email)) {
+                clientEmailError.textContent = 'Please enter a valid email address.';
+                clientEmailError.classList.remove('hidden');
+                hasError = true;
+            }
+
+            if (hasError) {
+                return;
+            }
+
+            // Show loading state
+            sendTransferToClient.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Sending...';
+            sendTransferToClient.disabled = true;
+
+            const projectId = '{{ project.id }}';
+            
+            fetch(`/api/v1/organizations/projects/${projectId}/transfer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    client_name: name,
+                    client_email: email,
+                    client_company: company,
+                    keep_developer: keepDev
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    transferToClientSuccessMessage.textContent = data.message;
+                    transferToClientSuccessAlert.classList.remove('hidden');
+                    transferToClientModal.classList.add('hidden');
+                    transferToClientForm.reset();
+                } else if (data.error) {
+                    transferToClientErrorMessage.textContent = data.error;
+                    transferToClientErrorAlert.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error sending transfer invitation:', error);
+                transferToClientErrorMessage.textContent = 'Failed to send transfer invitation. Please try again.';
+                transferToClientErrorAlert.classList.remove('hidden');
+            })
+            .finally(() => {
+                sendTransferToClient.innerHTML = 'Send Transfer Invitation';
+                sendTransferToClient.disabled = false;
+            });
+        });
+    }
+
+    // Transfer to Organization functionality
+    const transferToOrgBtn = document.getElementById('transferToOrgBtn');
+    const transferToOrgModal = document.getElementById('transferToOrgModal');
+    const cancelTransferToOrg = document.getElementById('cancelTransferToOrg');
+    const sendTransferToOrg = document.getElementById('sendTransferToOrg');
+    const transferToOrgForm = document.getElementById('transferToOrgForm');
+    const targetOrganization = document.getElementById('targetOrganization');
+    const keepDeveloperOrg = document.getElementById('keepDeveloperOrg');
+    const transferToOrgErrorAlert = document.getElementById('transferToOrgErrorAlert');
+    const transferToOrgErrorMessage = document.getElementById('transferToOrgErrorMessage');
+    const transferToOrgSuccessAlert = document.getElementById('transferToOrgSuccessAlert');
+    const transferToOrgSuccessMessage = document.getElementById('transferToOrgSuccessMessage');
+    const targetOrganizationError = document.getElementById('targetOrganizationError');
+
+    if (transferToOrgBtn) {
+        transferToOrgBtn.addEventListener('click', function() {
+            transferToOrgModal.classList.remove('hidden');
+        });
+    }
+
+    if (cancelTransferToOrg) {
+        cancelTransferToOrg.addEventListener('click', function() {
+            transferToOrgModal.classList.add('hidden');
+            transferToOrgForm.reset();
+            transferToOrgErrorAlert.classList.add('hidden');
+            transferToOrgSuccessAlert.classList.add('hidden');
+            targetOrganizationError.classList.add('hidden');
+        });
+    }
+
+    if (sendTransferToOrg) {
+        sendTransferToOrg.addEventListener('click', function() {
+            let hasError = false;
+            const targetOrgId = targetOrganization.value.trim();
+            const keepDev = keepDeveloperOrg.checked;
+
+            targetOrganizationError.classList.add('hidden');
+            transferToOrgErrorAlert.classList.add('hidden');
+            transferToOrgSuccessAlert.classList.add('hidden');
+
+            if (!targetOrgId) {
+                targetOrganizationError.textContent = 'Please select a target organization.';
+                targetOrganizationError.classList.remove('hidden');
+                hasError = true;
+            }
+
+            if (hasError) {
+                return;
+            }
+
+            // Show loading state
+            sendTransferToOrg.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Transferring...';
+            sendTransferToOrg.disabled = true;
+
+            const projectId = '{{ project.id }}';
+            
+            fetch(`/api/v1/organizations/projects/${projectId}/transfer-to-organization`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    target_organization_id: targetOrgId,
+                    keep_developer: keepDev
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    transferToOrgSuccessMessage.textContent = data.message;
+                    transferToOrgSuccessAlert.classList.remove('hidden');
+                    transferToOrgModal.classList.add('hidden');
+                    transferToOrgForm.reset();
+                    // Redirect to the target organization's project dashboard after a short delay
+                    setTimeout(() => {
+                        window.location.href = `/dashboard/organizations/${targetOrgId}/projects/${projectId}/`;
+                    }, 2000);
+                } else if (data.error) {
+                    transferToOrgErrorMessage.textContent = data.error;
+                    transferToOrgErrorAlert.classList.remove('hidden');
+                }
+            })
+            .catch(error => {
+                console.error('Error transferring project:', error);
+                transferToOrgErrorMessage.textContent = 'Failed to transfer project. Please try again.';
+                transferToOrgErrorAlert.classList.remove('hidden');
+            })
+            .finally(() => {
+                sendTransferToOrg.innerHTML = 'Transfer Project';
+                sendTransferToOrg.disabled = false;
+            });
+        });
+    }
+
+    // Close modals when clicking outside
+    if (transferToClientModal) {
+        transferToClientModal.addEventListener('click', function(e) {
+            if (e.target === transferToClientModal) {
+                transferToClientModal.classList.add('hidden');
+                transferToClientForm.reset();
+                transferToClientErrorAlert.classList.add('hidden');
+                transferToClientSuccessAlert.classList.add('hidden');
+                clientNameError.classList.add('hidden');
+                clientEmailError.classList.add('hidden');
+            }
+        });
+    }
+
+    if (transferToOrgModal) {
+        transferToOrgModal.addEventListener('click', function(e) {
+            if (e.target === transferToOrgModal) {
+                transferToOrgModal.classList.add('hidden');
+                transferToOrgForm.reset();
+                transferToOrgErrorAlert.classList.add('hidden');
+                transferToOrgSuccessAlert.classList.add('hidden');
+                targetOrganizationError.classList.add('hidden');
+            }
+        });
+    }
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (transferToClientModal && !transferToClientModal.classList.contains('hidden')) {
+                transferToClientModal.classList.add('hidden');
+                transferToClientForm.reset();
+                transferToClientErrorAlert.classList.add('hidden');
+                transferToClientSuccessAlert.classList.add('hidden');
+                clientNameError.classList.add('hidden');
+                clientEmailError.classList.add('hidden');
+            }
+            if (transferToOrgModal && !transferToOrgModal.classList.contains('hidden')) {
+                transferToOrgModal.classList.add('hidden');
+                transferToOrgForm.reset();
+                transferToOrgErrorAlert.classList.add('hidden');
+                transferToOrgSuccessAlert.classList.add('hidden');
+                targetOrganizationError.classList.add('hidden');
+            }
+        }
+    });
+
+    // Delete project functionality
     const deleteBtn = document.getElementById('deleteProjectBtn');
     const deleteModal = document.getElementById('deleteModal');
     const cancelDelete = document.getElementById('cancelDelete');
 
-    deleteBtn.addEventListener('click', function() {
-        deleteModal.classList.remove('hidden');
-    });
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', function() {
+            deleteModal.classList.remove('hidden');
+        });
+    }
 
-    cancelDelete.addEventListener('click', function() {
-        deleteModal.classList.add('hidden');
-    });
-
-    // Close modal when clicking outside
-    deleteModal.addEventListener('click', function(e) {
-        if (e.target === deleteModal) {
+    if (cancelDelete) {
+        cancelDelete.addEventListener('click', function() {
             deleteModal.classList.add('hidden');
-        }
-    });
+        });
+    }
 
-    // Close modal with Escape key
+    // Close delete modal when clicking outside
+    if (deleteModal) {
+        deleteModal.addEventListener('click', function(e) {
+            if (e.target === deleteModal) {
+                deleteModal.classList.add('hidden');
+            }
+        });
+    }
+
+    // Close delete modal with Escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && !deleteModal.classList.contains('hidden')) {
+        if (e.key === 'Escape' && deleteModal && !deleteModal.classList.contains('hidden')) {
             deleteModal.classList.add('hidden');
         }
     });

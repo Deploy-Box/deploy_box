@@ -33,32 +33,7 @@
     </header>
 
     <main class="w-full max-w-7xl mx-auto px-4 -mt-10 pb-12">
-        <!-- Breadcrumb -->
-        <nav class="mb-8">
-            <ol class="flex items-center space-x-2 text-sm text-gray-600">
-                <li>
-                    <a href="{% url 'main_site:organization_dashboard' organization.id %}" class="hover:text-emerald-600">
-                        {{ organization.name }}
-                    </a>
-                </li>
-                <li>
-                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                    </svg>
-                </li>
-                <li>
-                    <a href="{% url 'main_site:project_dashboard' organization.id project.id %}" class="hover:text-emerald-600">
-                        {{ project.name }}
-                    </a>
-                </li>
-                <li>
-                    <svg class="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                    </svg>
-                </li>
-                <li class="text-gray-900 font-medium">Marketplace</li>
-            </ol>
-        </nav>
+
 
         <!-- Filter Section -->
         <div class="mb-8">
@@ -93,6 +68,15 @@
                                 Premium
                             </span>
                         </button>
+                        <button 
+                            onclick="filterStacks('pro')" 
+                            id="filter-pro"
+                            class="filter-btn px-4 py-2 text-sm font-medium rounded-lg border-2 border-purple-400 text-purple-300 bg-purple-50 hover:bg-purple-100 transition-all duration-200">
+                            <span class="flex items-center">
+                                <div class="w-3 h-3 bg-purple-400 rounded-full mr-2"></div>
+                                Pro
+                            </span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -104,7 +88,8 @@
             {% if stack.variant == 'Basic' %}
                 {% if stack.type == 'MERN' or stack.type == 'Django' or stack.type == 'MEAN' or stack.type == 'LAMP' %}
                     <!-- Free tier - emerald colors -->
-                    <div class="stack-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative" data-tier="basic">
+                    <div class="stack-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="basic" id="stack-{{ stack.id }}">
+                        <a href="{% url 'main_site:stack_details' organization.id project.id stack.id %}" class="block p-6">
                         {% if stack.popular %}
                         <div class="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                             POPULAR
@@ -166,14 +151,14 @@
                 {% endif %}
             {% elif stack.variant == 'Premium' %}
                 <!-- Premium tier - amber colors -->
-                <div class="stack-card bg-white rounded-xl shadow-lg border-2 border-amber-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative" data-tier="premium">
+                <div class="stack-card bg-white rounded-xl shadow-lg border-2 border-amber-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="premium" id="stack-{{ stack.id }}">
                     {% if stack.popular %}
                     <div class="absolute top-0 right-0 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                         POPULAR
                     </div>
                     {% endif %}
                     
-                    <div class="p-6">
+                    <a href="{% url 'main_site:stack_details' organization.id project.id stack.id %}" class="block p-6">
                         <!-- Stack Header -->
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center space-x-3">
@@ -226,22 +211,22 @@
                     </div>
                 </div>
             {% else %}
-                <!-- Pro tier - purple colors (for future use) -->
-                <div class="stack-card bg-white rounded-xl shadow-lg border-2 border-purple-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative" data-tier="pro">
+                <!-- Pro tier - purple colors matching pricing page -->
+                <div class="stack-card bg-white rounded-xl shadow-lg border-2 border-purple-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="pro" id="stack-{{ stack.id }}">
                     {% if stack.popular %}
-                    <div class="absolute top-0 right-0 bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                    <div class="absolute top-0 right-0 bg-purple-400 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                         POPULAR
                     </div>
                     {% endif %}
                     
-                    <div class="p-6">
+                    <a href="{% url 'main_site:stack_details' organization.id project.id stack.id %}" class="block p-6">
                         <!-- Stack Header -->
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center space-x-3">
                                 <div class="text-3xl">{{ stack.icon }}</div>
                                 <div>
                                     <h3 class="font-bold text-gray-900 text-lg">{{ stack.name }}</h3>
-                                    <p class="text-sm text-purple-600 font-medium">{{ stack.type }} Stack - Pro</p>
+                                    <p class="text-sm text-purple-300 font-medium">{{ stack.type }} Stack - Pro</p>
                                 </div>
                             </div>
                         </div>
@@ -251,8 +236,8 @@
 
                         <!-- Price -->
                         <div class="mb-4">
-                            <span class="text-2xl font-bold text-purple-600">${{ stack.price }}</span>
-                            <span class="text-sm text-gray-500 ml-1">one-time</span>
+                            <span class="text-2xl font-bold text-zinc-100">${{ stack.price }}</span>
+                            <span class="text-sm text-zinc-400 ml-1">one-time</span>
                         </div>
 
                         <!-- Features -->
@@ -261,7 +246,7 @@
                             <ul class="space-y-1">
                                 {% for feature in stack.features|slice:":4" %}
                                 <li class="flex items-center text-sm text-gray-600">
-                                    <svg class="h-4 w-4 mr-2 text-purple-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <svg class="h-4 w-4 mr-2 text-purple-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                         <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
                                     </svg>
                                     {{ feature }}
@@ -278,7 +263,7 @@
                         <!-- Purchase Button -->
                         <button 
                             onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }})"
-                            class="w-full bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                            class="w-full bg-purple-300 hover:bg-purple-400 text-zinc-950 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
                             </svg>
@@ -288,17 +273,6 @@
                 </div>
             {% endif %}
             {% endfor %}
-        </div>
-
-        <!-- Back to Project Button -->
-        <div class="mt-12 text-center">
-            <a href="{% url 'main_site:project_dashboard' organization.id project.id %}" 
-               class="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 transition-colors duration-200">
-                <svg class="h-5 w-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
-                </svg>
-                Back to Project Dashboard
-            </a>
         </div>
     </main>
 </div>
@@ -332,6 +306,75 @@
             </button>
             <button id="confirmPurchase" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
                 Confirm Purchase
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Stack Details Modal -->
+<div id="stackDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    <div id="modalStackIcon" class="text-4xl mr-4"></div>
+                </div>
+                <div>
+                    <h3 id="modalStackName" class="text-2xl font-bold text-gray-900"></h3>
+                    <p id="modalStackType" class="text-lg text-gray-600"></p>
+                    <p class="text-sm text-gray-500 mt-1">
+                        <span id="modalOrganizationName">{{ organization.name }}</span> • 
+                        <span id="modalProjectName">{{ project.name }}</span>
+                    </p>
+                </div>
+            </div>
+            <button onclick="hideStackDetails()" class="text-gray-400 hover:text-gray-600 transition-colors duration-200">
+                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Left Column -->
+            <div>
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">Description</h4>
+                    <p id="modalStackDescription" class="text-gray-600 leading-relaxed"></p>
+                </div>
+                
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">Pricing</h4>
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="flex items-center justify-between">
+                            <span class="text-2xl font-bold" id="modalStackPrice"></span>
+                            <span class="text-sm text-gray-500">one-time purchase</span>
+                        </div>
+                    </div>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Right Column -->
+            <div>
+                <div class="mb-6">
+                    <h4 class="text-lg font-semibold text-gray-900 mb-3">Features</h4>
+                    <ul id="modalStackFeatures" class="space-y-2">
+                        <!-- Features will be populated by JavaScript -->
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3 mt-8 pt-6 border-t border-gray-200">
+            <button onclick="hideStackDetails()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                Close
+            </button>
+            <button id="modalPurchaseBtn" class="px-6 py-2 text-sm font-medium text-white rounded-md transition-colors duration-200 flex items-center space-x-2">
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                </svg>
+                <span>Purchase Stack</span>
             </button>
         </div>
     </div>
@@ -426,6 +469,98 @@ function updateResultsCount(tier) {
     // You could add a results counter here if needed
     console.log(`Showing ${visibleCards.length} of ${totalCards.length} stacks`);
 }
+
+// Stack Details Modal Functions
+let currentStackDetails = null;
+
+function showStackDetails(stackId, stackName, stackType, stackVariant, stackDescription, stackPrice, stackFeatures, colorTheme) {
+    currentStackDetails = { stackId, stackName, stackType, stackVariant, stackDescription, stackPrice, stackFeatures, colorTheme };
+    
+    // Set modal content
+    document.getElementById('modalStackName').textContent = stackName;
+    document.getElementById('modalStackType').textContent = `${stackType} Stack - ${stackVariant}`;
+    document.getElementById('modalStackDescription').textContent = stackDescription;
+    document.getElementById('modalStackPrice').textContent = `$${stackPrice}`;
+    
+    // Set stack icon based on type
+    const iconMap = {
+        'MERN': '⚛️',
+        'Django': '🐍',
+        'MEAN': '🅰️',
+        'LAMP': '🐘'
+    };
+    document.getElementById('modalStackIcon').textContent = iconMap[stackType] || '📦';
+    
+    // Parse and display features
+    const featuresList = document.getElementById('modalStackFeatures');
+    featuresList.innerHTML = '';
+    
+    // Parse the features string (it comes as a JSON-like string)
+    let features = [];
+    try {
+        // Remove the safe filter and parse as JSON
+        features = JSON.parse(stackFeatures.replace(/&quot;/g, '"'));
+    } catch (e) {
+        // Fallback: split by comma if JSON parsing fails
+        features = stackFeatures.replace(/[\[\]'"]/g, '').split(',');
+    }
+    
+    features.forEach(feature => {
+        const li = document.createElement('li');
+        li.className = 'flex items-center text-sm text-gray-600';
+        li.innerHTML = `
+            <svg class="h-4 w-4 mr-3 text-${colorTheme}-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+            </svg>
+            ${feature.trim()}
+        `;
+        featuresList.appendChild(li);
+    });
+    
+    // Style the purchase button based on color theme
+    const purchaseBtn = document.getElementById('modalPurchaseBtn');
+    purchaseBtn.className = `px-6 py-2 text-sm font-medium rounded-md transition-colors duration-200 flex items-center space-x-2`;
+    
+    if (colorTheme === 'emerald') {
+        purchaseBtn.classList.add('bg-emerald-600', 'hover:bg-emerald-700', 'text-white');
+    } else if (colorTheme === 'amber') {
+        purchaseBtn.classList.add('bg-amber-500', 'hover:bg-amber-600', 'text-zinc-950');
+    } else if (colorTheme === 'purple') {
+        purchaseBtn.classList.add('bg-purple-300', 'hover:bg-purple-400', 'text-zinc-950');
+    }
+    
+    // Add click handler for purchase button
+    purchaseBtn.onclick = () => {
+        hideStackDetails();
+        purchaseStack(stackId, stackName, stackPrice);
+    };
+    
+    // Show modal
+    document.getElementById('stackDetailsModal').classList.remove('hidden');
+}
+
+function hideStackDetails() {
+    document.getElementById('stackDetailsModal').classList.add('hidden');
+    currentStackDetails = null;
+}
+
+// Close stack details modal when clicking outside
+document.addEventListener('DOMContentLoaded', function() {
+    const stackDetailsModal = document.getElementById('stackDetailsModal');
+    
+    stackDetailsModal.addEventListener('click', function(e) {
+        if (e.target === stackDetailsModal) {
+            hideStackDetails();
+        }
+    });
+    
+    // Close stack details modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !stackDetailsModal.classList.contains('hidden')) {
+            hideStackDetails();
+        }
+    });
+});
 </script>
 
 <style>

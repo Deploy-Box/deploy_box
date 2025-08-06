@@ -75,7 +75,7 @@
                             </path>
                         </svg>
                         <p class="text-zinc-500 mb-4">You have no organizations</p>
-                        <a href="{% url 'main_site:create_organization_form' %}"
+                        <button id="createOrgBtnEmpty"
                             class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
                                 fill="currentColor">
@@ -84,12 +84,12 @@
                                     clip-rule="evenodd"></path>
                             </svg>
                             Create Organization
-                        </a>
+                        </button>
                     </div>
                     {% endfor %}
                 </div>
                 <div class="mt-6">
-                    <a id="createOrgBtn"
+                    <button id="createOrgBtn"
                         class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
                             fill="currentColor">
@@ -98,7 +98,7 @@
                                 clip-rule="evenodd"></path>
                         </svg>
                         Create New Organization
-                    </a>
+                    </button>
                 </div>
             </div>
         </section>
@@ -168,26 +168,42 @@
         const modalOverlay = document.getElementById('modalOverlay');
         const cancelBtn = document.getElementById('cancelModalBtn');
         const createOrgBtn = document.getElementById('createOrgBtn');
+        const createOrgBtnEmpty = document.getElementById('createOrgBtnEmpty');
         const deleteBtns = document.querySelectorAll('#deleteOrgBtn');
         const orgIdInput = document.getElementById('orgIdToDelete');
 
-        createOrgBtn.addEventListener('click', () => {
-            modalOverlay.classList.remove('hidden');
-            modalOverlay.classList.add('flex');
-        });
+        // Function to open organization modal
+        function openOrgModal() {
+            const createOrgModal = document.getElementById('createOrgModal');
+            if (createOrgModal) {
+                createOrgModal.classList.remove('hidden');
+            }
+        }
 
-        deleteBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                orgIdInput.value = btn.value;
-                modalOverlay.classList.remove('hidden');
-                modalOverlay.classList.add('flex');
+        // Add event listeners to both buttons
+        if (createOrgBtn) {
+            createOrgBtn.addEventListener('click', openOrgModal);
+        }
+        if (createOrgBtnEmpty) {
+            createOrgBtnEmpty.addEventListener('click', openOrgModal);
+        }
+
+        if (deleteBtns) {
+            deleteBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    orgIdInput.value = btn.value;
+                    modalOverlay.classList.remove('hidden');
+                    modalOverlay.classList.add('flex');
+                });
             });
-        });
+        }
 
-        cancelBtn.addEventListener('click', () => {
-            modalOverlay.classList.add('hidden');
-            modalOverlay.classList.remove('flex');
-        });
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', () => {
+                modalOverlay.classList.add('hidden');
+                modalOverlay.classList.remove('flex');
+            });
+        }
     });
 </script>
 

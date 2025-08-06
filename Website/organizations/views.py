@@ -149,3 +149,13 @@ def cancel_project_transfer(
         return handlers.cancel_project_transfer(request, transfer_id)
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
+
+@oauth_required()
+def transfer_project_to_organization(
+    request: AuthHttpRequest,
+    project_id: str,
+) -> JsonResponse:
+    if request.method == "POST":
+        return handlers.transfer_project_to_organization(request, project_id)
+    else:
+        return JsonResponse({"message": "method not allowed"}, status=405)

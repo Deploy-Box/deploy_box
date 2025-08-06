@@ -1,0 +1,484 @@
+{% extends 'dashboard_base.html' %} {%load static%} {% block extra_head %}
+<div id="dashboard" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}" data-stack-id="{{ stack_id }}"></div>
+{% endblock %} {% block content %}
+<div class="fixed top-24 left-8">
+  <a href="{% url 'main_site:stack_dashboard' organization_id project_id stack_id %}"
+    class="inline-flex items-center px-4 py-2 bg-white hover:bg-zinc-50 text-sm text-zinc-900 rounded-lg font-medium transition-all duration-300 shadow-lg hover:shadow-xl border border-zinc-200">
+    <svg class="w-4 h-4 mr-2 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+    </svg>
+    Back to Stack
+  </a>
+</div>
+
+<div class="w-full bg-gray-50">
+  <header class="bg-zinc-950 pt-16 pb-24 text-center">
+    <div class="flex items-center justify-center mb-4">
+      <div class="bg-emerald-500 p-3 rounded-full mr-4">
+        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+        </svg>
+      </div>
+      <h1 class="text-3xl font-bold text-gray-100">Environment Management</h1>
+    </div>
+    <p class="text-md text-gray-100 max-w-2xl mx-auto">
+      Manage your development, testing, and production environments
+    </p>
+  </header>
+  
+  <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
+    <div id="metadata" class="hidden" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}" data-stack-id="{{ stack_id }}"></div>
+
+    <!-- Stack Information -->
+    <section class="mb-8">
+      <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          Stack Information
+        </h2>
+        <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200">
+          <div class="flex items-center space-x-3">
+            <div class="bg-emerald-500 p-2 rounded-lg">
+              <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-lg font-semibold text-zinc-900">{{ stack.name }}</h3>
+              <p class="text-sm text-zinc-500">{{ stack.purchased_stack.type }} Stack</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cost Disclaimer -->
+    <section class="mb-8">
+      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div class="flex items-start">
+          <div class="flex-shrink-0">
+            <svg class="w-5 h-5 text-blue-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+            </svg>
+          </div>
+          <div class="ml-3">
+            <h3 class="text-sm font-medium text-blue-800">Cost Information</h3>
+            <div class="mt-2 text-sm text-blue-700">
+              <p>Each environment you create will incur separate but equal costs. Additional environments will be billed independently based on their individual resource usage and configuration.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+
+    <!-- Environments List -->
+    <section class="mb-8">
+      <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-bold text-emerald-400 flex items-center">
+            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            Your Environments
+          </h2>
+          <button id="open-add-modal" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+            </svg>
+            Add Environment
+          </button>
+        </div>
+        
+        <div id="environments-list" class="space-y-4">
+          <!-- Default environments -->
+          <div class="env-item bg-gradient-to-r from-emerald-50 to-emerald-100 p-4 rounded-lg border border-emerald-200" data-env-id="dev">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="bg-emerald-500 p-2 rounded-lg">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-emerald-900">Development</h3>
+                  <p class="text-sm text-emerald-700">Active development environment for testing changes</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                  <span class="h-2 w-2 rounded-full bg-emerald-500 mr-1"></span>
+                  Active
+                </span>
+                <button class="clone-env-btn p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-200 rounded-lg transition-all duration-300" data-env-id="dev" data-env-name="Development">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                </button>
+                <button class="delete-env-btn p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-200 rounded-lg transition-all duration-300" data-env-id="dev">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="env-item bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200" data-env-id="staging">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="bg-yellow-500 p-2 rounded-lg">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-yellow-900">Staging</h3>
+                  <p class="text-sm text-yellow-700">Pre-production testing and validation environment</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                  <span class="h-2 w-2 rounded-full bg-yellow-500 mr-1"></span>
+                  Active
+                </span>
+                <button class="clone-env-btn p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-200 rounded-lg transition-all duration-300" data-env-id="staging" data-env-name="Staging">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                </button>
+                <button class="delete-env-btn p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-200 rounded-lg transition-all duration-300" data-env-id="staging">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="env-item bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg border border-red-200" data-env-id="prod">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-3">
+                <div class="bg-red-500 p-2 rounded-lg">
+                  <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-lg font-semibold text-red-900">Production</h3>
+                  <p class="text-sm text-red-700">Live production environment serving users</p>
+                </div>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  <span class="h-2 w-2 rounded-full bg-red-500 mr-1"></span>
+                  Active
+                </span>
+                <button class="clone-env-btn p-2 text-red-600 hover:text-red-800 hover:bg-red-200 rounded-lg transition-all duration-300" data-env-id="prod" data-env-name="Production">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                  </svg>
+                </button>
+                <button class="delete-env-btn p-2 text-gray-400 cursor-not-allowed" data-env-id="prod" disabled title="Production environment cannot be deleted">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty state -->
+        <div id="empty-state" class="hidden text-center py-12">
+          <svg class="w-16 h-16 text-zinc-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+          </svg>
+          <h3 class="text-lg font-medium text-zinc-900 mb-2">No environments yet</h3>
+          <p class="text-zinc-500 mb-4">Create your first environment to get started</p>
+          <button id="create-first-env" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-all duration-300">
+            Create Environment
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Environment Statistics -->
+    <section class="mb-8">
+      <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-xl font-bold text-emerald-400 mb-6 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          Environment Statistics
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-4 rounded-lg border border-emerald-200">
+            <div class="flex items-center">
+              <div class="bg-emerald-500 p-2 rounded-lg mr-3">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm text-emerald-600">Total Environments</p>
+                <p class="text-2xl font-bold text-emerald-900" id="total-environments">3</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-lg border border-blue-200">
+            <div class="flex items-center">
+              <div class="bg-blue-500 p-2 rounded-lg mr-3">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm text-blue-600">Active</p>
+                <p class="text-2xl font-bold text-blue-900" id="active-environments">3</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-yellow-50 to-yellow-100 p-4 rounded-lg border border-yellow-200">
+            <div class="flex items-center">
+              <div class="bg-yellow-500 p-2 rounded-lg mr-3">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm text-yellow-600">Inactive</p>
+                <p class="text-2xl font-bold text-yellow-900" id="inactive-environments">0</p>
+              </div>
+            </div>
+          </div>
+          <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-4 rounded-lg border border-purple-200">
+            <div class="flex items-center">
+              <div class="bg-purple-500 p-2 rounded-lg mr-3">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div>
+                <p class="text-sm text-purple-600">Custom</p>
+                <p class="text-2xl font-bold text-purple-900" id="custom-environments">0</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Add Environment Modal -->
+<div id="add-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Add New Environment</h3>
+        <button id="close-add-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Modal Body -->
+      <div class="p-6">
+        <form id="environment-form" class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label for="env-name" class="block text-sm font-medium text-gray-700 mb-2">Environment Name</label>
+              <input type="text" id="env-name" name="name" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                placeholder="e.g., Staging, UAT, Production">
+            </div>
+            <div>
+              <label for="env-type" class="block text-sm font-medium text-gray-700 mb-2">Environment Type</label>
+              <select id="env-type" name="type" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent">
+                <option value="">Select Type</option>
+                <option value="development">Development</option>
+                <option value="staging">Staging</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label for="env-description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea id="env-description" name="description" rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+              placeholder="Describe the purpose of this environment"></textarea>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label for="env-url" class="block text-sm font-medium text-gray-700 mb-2">Base URL</label>
+              <input type="url" id="env-url" name="url"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                placeholder="https://env.example.com">
+            </div>
+            <div>
+              <label for="env-database" class="block text-sm font-medium text-gray-700 mb-2">Database</label>
+              <input type="text" id="env-database" name="database"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                placeholder="Database name or connection string">
+            </div>
+            <div>
+              <label for="env-color" class="block text-sm font-medium text-gray-700 mb-2">Theme Color</label>
+              <select id="env-color" name="color"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent">
+                <option value="emerald">Emerald (Development)</option>
+                <option value="yellow">Yellow (Staging)</option>
+                <option value="purple">Purple (Custom)</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Cost Warning -->
+          <div class="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div class="flex items-start">
+              <div class="flex-shrink-0">
+                <svg class="w-5 h-5 text-yellow-400 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+              </div>
+              <div class="ml-3">
+                <h4 class="text-sm font-medium text-yellow-800">Cost Warning</h4>
+                <div class="mt-1 text-sm text-yellow-700">
+                  <p>Creating a new environment will incur additional costs. Each environment is billed separately based on its resource usage and configuration.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Modal Footer -->
+          <div class="flex items-center justify-end space-x-3 pt-4">
+            <button type="button" id="cancel-add"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+              Cancel
+            </button>
+            <button type="submit"
+              class="px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors">
+              Create Environment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Clone Environment Modal -->
+<div id="clone-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden">
+  <div class="flex items-center justify-center min-h-screen p-4">
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-gray-200">
+        <h3 class="text-lg font-semibold text-gray-900">Clone Environment</h3>
+        <button id="close-clone-modal" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      
+      <!-- Modal Body -->
+      <div class="p-6">
+        <form id="clone-form">
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Source Environment</label>
+            <div class="flex items-center p-3 bg-gray-50 rounded-lg border">
+              <div id="source-env-icon" class="w-5 h-5 mr-3"></div>
+              <span id="source-env-name" class="text-sm font-medium text-gray-900"></span>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-gray-700 mb-2">Clone Mode</label>
+            <div class="space-y-2">
+              <label class="flex items-center">
+                <input type="radio" name="clone_mode" value="new" checked
+                  class="mr-2 text-emerald-600 focus:ring-emerald-500" id="clone-mode-new">
+                <span class="text-sm text-gray-700">Create New Environment</span>
+              </label>
+              <label class="flex items-center">
+                <input type="radio" name="clone_mode" value="overwrite"
+                  class="mr-2 text-emerald-600 focus:ring-emerald-500" id="clone-mode-overwrite">
+                <span class="text-sm text-gray-700">Overwrite Existing Environment</span>
+              </label>
+            </div>
+          </div>
+          
+          <!-- New Environment Fields -->
+          <div id="new-env-fields">
+            <div class="mb-4">
+              <label for="target-env-name" class="block text-sm font-medium text-gray-700 mb-2">Target Environment Name</label>
+              <input type="text" id="target-env-name" name="target_name" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+                placeholder="Enter new environment name">
+            </div>
+            
+            <div class="mb-4">
+              <label for="target-env-type" class="block text-sm font-medium text-gray-700 mb-2">Environment Type</label>
+              <select id="target-env-type" name="target_type" required
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent">
+                <option value="">Select Type</option>
+                <option value="development">Development</option>
+                <option value="staging">Staging</option>
+              </select>
+            </div>
+          </div>
+          
+          <!-- Overwrite Environment Fields -->
+          <div id="overwrite-env-fields" class="hidden">
+            <div class="mb-4">
+              <label for="overwrite-env-select" class="block text-sm font-medium text-gray-700 mb-2">Select Environment to Overwrite</label>
+              <select id="overwrite-env-select" name="overwrite_env_id"
+                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent">
+                <option value="">Choose an environment...</option>
+              </select>
+            </div>
+            
+            <div class="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div class="flex items-center">
+                <svg class="w-5 h-5 text-yellow-500 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="text-sm text-yellow-700 font-medium">Warning</span>
+              </div>
+              <p class="text-sm text-yellow-700 mt-1">This will completely replace the selected environment's configuration with the source environment's settings.</p>
+            </div>
+          </div>
+          
+          <div class="mb-6">
+            <label for="target-env-description" class="block text-sm font-medium text-gray-700 mb-2">Description</label>
+            <textarea id="target-env-description" name="target_description" rows="3"
+              class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent"
+              placeholder="Describe the purpose of this cloned environment"></textarea>
+          </div>
+          
+          <!-- Modal Footer -->
+          <div class="flex items-center justify-end space-x-3">
+            <button type="button" id="cancel-clone"
+              class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+              Cancel
+            </button>
+            <button type="submit"
+              class="px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-colors">
+              Clone Environment
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="{% static 'dashboards/environments.js' %}"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+{% endblock %} 

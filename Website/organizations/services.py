@@ -537,4 +537,66 @@ def get_user_transfer_invitations(user: UserProfile) -> JsonResponse:
     except Exception as e:
         return JsonResponse({"message": f"An unexpected error occurred: {e}"}, status=500)
 
+def transfer_project_to_organization(user: UserProfile, project_id: str, target_organization_id: str, keep_developer: bool = True) -> JsonResponse:
+    """Transfer a project to another organization"""
+    try:
+        # Get the project and check permissions
+        project = Project.objects.get(id=project_id)
+        project_member = ProjectMember.objects.filter(
+            project=project, 
+            user=user, 
+            role="admin"
+        ).first()
+        
+        if not project_member:
+            return JsonResponse({"message": "You don't have permission to transfer this project"}, status=403)
+        
+        # Get the target organization and check if user is a member
+        target_organization = Organization.objects.get(id=target_organization_id)
+        target_org_member = OrganizationMember.objects.filter(
+            organization=target_organization,
+            user=user
+        ).first()
+        
+        if not target_org_member:
+            return JsonResponse({"message": "You must be a member of the target organization"}, status=403)
+        
+        # Check if project is already in the target organization
+        if project.organization.id == target_organization_id:
+            return JsonResponse({"message": "Project is already in the target organization"}, status=400)
+        
+        # Transfer the project
+        with transaction.atomic():
+            # Update project organization
+            project.organization = target_organization
+            project.save()
+            
+            # Handle project members based on keep_developer setting
+            if keep_developer:
+                # Keep existing project members
+                pass
+            else:
+                # Remove all existing project members and add user as admin
+                ProjectMember.objects.filter(project=project).delete()
+                ProjectMember.objects.create(
+                    user=user,
+                    project=project,
+                    role="admin"
+                )
+            
+            # Note: We can't create an audit log for direct transfers since ProjectTransferAudit requires a transfer_invitation
+            # This is a limitation of the current model design
+            pass
+        
+        return JsonResponse({
+            "message": f"Project '{project.name}' successfully transferred to '{target_organization.name}'"
+        }, status=200)
+        
+    except Project.DoesNotExist:
+        return JsonResponse({"message": "Project not found"}, status=404)
+    except Organization.DoesNotExist:
+        return JsonResponse({"message": "Target organization not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"message": f"An unexpected error occurred: {e}"}, status=500)
+
 

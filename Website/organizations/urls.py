@@ -13,6 +13,7 @@ urlpatterns = [
     
     # Project transfer URLs
     path("projects/<str:project_id>/transfer", views.initiate_project_transfer, name="initiate_project_transfer"),
+    path("projects/<str:project_id>/transfer-to-organization", views.transfer_project_to_organization, name="transfer_project_to_organization"),
     path("transfers/<str:transfer_id>/accept", views.accept_project_transfer, name="accept_project_transfer"),
     path("transfers/<str:transfer_id>/cancel", views.cancel_project_transfer, name="cancel_project_transfer"),
     path("transfers/<str:transfer_id>/status", views.get_project_transfer_status, name="get_project_transfer_status"),

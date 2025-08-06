@@ -167,6 +167,30 @@ def cancel_project_transfer(request: AuthHttpRequest, transfer_id: str) -> JsonR
     user = request.auth_user
     return services.cancel_project_transfer(user, transfer_id)
 
+def transfer_project_to_organization(request: AuthHttpRequest, project_id: str) -> JsonResponse:
+    """Transfer a project to another organization"""
+    user = request.auth_user
+
+    try:
+        data = json.loads(request.body)
+        target_organization_id = data.get("target_organization_id")
+        keep_developer = data.get("keep_developer", True)
+        
+        if not target_organization_id:
+            return JsonResponse({"message": "target_organization_id is required"}, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({"message": "Invalid JSON data"}, status=400)
+    except Exception as e:
+        return JsonResponse({"message": f"Error parsing request data: {e}"}, status=400)
+
+    return services.transfer_project_to_organization(
+        user=user,
+        project_id=project_id,
+        target_organization_id=target_organization_id,
+        keep_developer=keep_developer
+    )
+
 
 
 
