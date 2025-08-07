@@ -6,6 +6,7 @@ from django.views import View
 from typing import cast
 import logging
 import calendar
+import stripe
 
 from accounts.forms import CustomUserCreationForm
 from accounts.models import UserProfile
@@ -144,7 +145,6 @@ class DashboardView(View):
         # Get payment methods for the organization
         payment_methods = []
         try:
-            import stripe
             stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 
             if organization.stripe_customer_id:
@@ -630,8 +630,13 @@ class DashboardView(View):
         
         # Get user's organizations for navbar context
         user_organizations = Organization.objects.filter(organizationmember__user=user)
-        current_organization_id = user_organizations.first().id if user_organizations.exists() else ""
-        
+        first_user_organization = user_organizations.first()
+
+        if first_user_organization is None:
+            current_organization_id = ""
+        else:
+            current_organization_id = first_user_organization.id
+
         # Get user's projects for navbar context
         user_projects = Project.objects.filter(projectmember__user=user)
         
@@ -723,7 +728,6 @@ class DashboardView(View):
 
         # Get actual purchasable stacks from database
         from stacks.models import PurchasableStack
-        import stripe
         from django.conf import settings
         
         stripe.api_key = settings.STRIPE.get("SECRET_KEY")
@@ -769,7 +773,7 @@ class DashboardView(View):
                         'popular': False,  # Could be determined by sales volume or admin setting
                         'is_from_database': True  # Flag to identify database entries
                     })
-                except stripe.error.StripeError as e:
+                except stripe.error.StripeError as e: # type: ignore[attr-defined]
                     # Log error but continue with other stacks
                     logger.error(f"Error fetching price for stack {stack.id}: {e}")
                     continue
@@ -1689,7 +1693,7 @@ class PaymentView(View):
                     'popular': False,
                     'is_from_database': True
                 })
-            except stripe.error.StripeError as e:
+            except stripe.error.StripeError as e: # type: ignore[attr-defined]
                 # Log error but continue with other stacks
                 logger.error(f"Error fetching price for stack {stack.id}: {e}")
                 continue

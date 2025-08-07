@@ -21,6 +21,11 @@ class MongoDBUtils:
 
         print(f"Successfully initialized MongoDB utils")
 
+        # Assert that all necessary configurations are present
+        assert MongoDBUtils.__MONGODB_PROJECT_ID is not None, "MONGODB_PROJECT_ID is not set in settings"
+        assert MongoDBUtils.__MONGODB_CLIENT_ID is not None, "MONGODB_CLIENT_ID is not set in settings"
+        assert MongoDBUtils.__MONGODB_CLIENT_SECRET is not None, "MONGODB_CLIENT_SECRET is not set in settings"
+
     def __get_token(self) -> None:
         """ "
         Retrieve a MongoDB token using the OAuth2 client credentials flow."

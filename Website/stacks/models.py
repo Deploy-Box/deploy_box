@@ -15,6 +15,7 @@ class PurchasableStack(RequestableModel):
     price_id = models.CharField(max_length=50)
     description = models.CharField(default="check out this stack", max_length=512)
     name = models.CharField(default="this is a stack", max_length=128)
+    prebuilt_quantity = models.PositiveIntegerField(default=0, help_text="Number of prebuilt stacks available for immediate use")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -71,16 +72,19 @@ class Stack(RequestableModel):
 
         return stack_services.add_stack(**kwargs)
 
-    # class Meta:
-    #     constraints = [
-    #         UniqueConstraint(
-    #             fields=["project", "name"], name="unique_stack_name_per_project"
-    #         )
-    #     ]
-
     def __str__(self):
         return self.project.name + " - " + self.name
 
+
+class PrebuiltStack(RequestableModel):
+    id = ShortUUIDField(primary_key=True)
+    purchasable_stack = models.ForeignKey(PurchasableStack, on_delete=models.CASCADE, related_name="prebuilt_stacks")
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"PrebuiltStack {self.id} for PurchasableStack {self.purchasable_stack.id}"
 
 class StackFrontend(models.Model):
     id = ShortUUIDField(primary_key=True)

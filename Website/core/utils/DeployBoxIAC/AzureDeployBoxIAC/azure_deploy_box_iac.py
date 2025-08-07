@@ -35,6 +35,15 @@ class AzureDeployBoxIAC:
             self.registry_name = os.getenv('ACR_NAME', 'deployboxcrdev')
             self.registry_password = os.getenv('ACR_PASSWORD', 'deployboxcrdev-password')
 
+        # Assert that all necessary configurations are present
+        assert self.client_id is not None, "ARM_CLIENT_ID is not set in environment variables"
+        assert self.client_secret is not None, "ARM_CLIENT_SECRET is not set in environment variables"
+        assert self.tenant_id is not None, "ARM_TENANT_ID is not set in environment variables"
+        assert self.subscription_id is not None, "ARM_SUBSCRIPTION_ID is not set in environment variables"
+        assert self.resource_group is not None, "RESOURCE_GROUP_NAME is not set in environment variables or settings"
+        assert self.registry_name is not None, "ACR_NAME is not set in environment variables or settings"
+        assert self.registry_password is not None, "ACR_PASSWORD is not set in environment variables or settings"
+
         self.azurerm_container_app_environment = AzureContainerAppEnvironment(self)
         self.azurerm_container_app = AzureContainerApp(self)
         self.azurerm_resource_group = AzureResourceGroup(self)
