@@ -1,7 +1,12 @@
 {% extends 'dashboard_base.html' %}
 {% load static %}
 
+{% block extra_head %}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
 {% block content %}
+{% csrf_token %}
 <div class="w-full bg-gray-50">
     <header class="bg-zinc-950 pt-16 pb-24 text-center">
         <div class="max-w-4xl mx-auto px-4">
@@ -87,9 +92,8 @@
             {% for stack in available_stacks %}
             {% if stack.variant == 'Basic' %}
                 {% if stack.type == 'MERN' or stack.type == 'Django' or stack.type == 'MEAN' or stack.type == 'LAMP' %}
-                    <!-- Free tier - emerald colors -->
+                    <!-- Basic tier - emerald colors -->
                     <div class="stack-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="basic" id="stack-{{ stack.id }}">
-                        <a href="{% url 'main_site:stack_details' organization.id project.id stack.id %}" class="block p-6">
                         {% if stack.popular %}
                         <div class="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                             POPULAR
@@ -103,7 +107,7 @@
                                     <div class="text-3xl">{{ stack.icon }}</div>
                                     <div>
                                         <h3 class="font-bold text-gray-900 text-lg">{{ stack.name }}</h3>
-                                        <p class="text-sm text-emerald-600 font-medium">{{ stack.type }} Stack - Free</p>
+                                        <p class="text-sm text-emerald-600 font-medium">{{ stack.type }} Stack - {{ stack.variant }}</p>
                                     </div>
                                 </div>
                             </div>
@@ -139,7 +143,7 @@
 
                             <!-- Purchase Button -->
                             <button 
-                                onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }})"
+                                onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }}, '{{ stack.is_from_database|yesno:'true,false' }}')"
                                 class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                                 <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -158,14 +162,14 @@
                     </div>
                     {% endif %}
                     
-                    <a href="{% url 'main_site:stack_details' organization.id project.id stack.id %}" class="block p-6">
+                    <div class="p-6">
                         <!-- Stack Header -->
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center space-x-3">
                                 <div class="text-3xl">{{ stack.icon }}</div>
                                 <div>
                                     <h3 class="font-bold text-gray-900 text-lg">{{ stack.name }}</h3>
-                                    <p class="text-sm text-amber-600 font-medium">{{ stack.type }} Stack - Premium</p>
+                                    <p class="text-sm text-amber-600 font-medium">{{ stack.type }} Stack - {{ stack.variant }}</p>
                                 </div>
                             </div>
                         </div>
@@ -201,7 +205,7 @@
 
                         <!-- Purchase Button -->
                         <button 
-                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }})"
+                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }}, '{{ stack.is_from_database|yesno:'true,false' }}')"
                             class="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -211,7 +215,7 @@
                     </div>
                 </div>
             {% else %}
-                <!-- Pro tier - purple colors matching pricing page -->
+                <!-- Pro tier - purple colors -->
                 <div class="stack-card bg-white rounded-xl shadow-lg border-2 border-purple-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="pro" id="stack-{{ stack.id }}">
                     {% if stack.popular %}
                     <div class="absolute top-0 right-0 bg-purple-400 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
@@ -219,14 +223,14 @@
                     </div>
                     {% endif %}
                     
-                    <a href="{% url 'main_site:stack_details' organization.id project.id stack.id %}" class="block p-6">
+                    <div class="p-6">
                         <!-- Stack Header -->
                         <div class="flex items-center justify-between mb-4">
                             <div class="flex items-center space-x-3">
                                 <div class="text-3xl">{{ stack.icon }}</div>
                                 <div>
                                     <h3 class="font-bold text-gray-900 text-lg">{{ stack.name }}</h3>
-                                    <p class="text-sm text-purple-300 font-medium">{{ stack.type }} Stack - Pro</p>
+                                    <p class="text-sm text-purple-300 font-medium">{{ stack.type }} Stack - {{ stack.variant }}</p>
                                 </div>
                             </div>
                         </div>
@@ -236,8 +240,8 @@
 
                         <!-- Price -->
                         <div class="mb-4">
-                            <span class="text-2xl font-bold text-zinc-100">${{ stack.price }}</span>
-                            <span class="text-sm text-zinc-400 ml-1">one-time</span>
+                            <span class="text-2xl font-bold text-purple-600">${{ stack.price }}</span>
+                            <span class="text-sm text-gray-500 ml-1">one-time</span>
                         </div>
 
                         <!-- Features -->
@@ -262,7 +266,7 @@
 
                         <!-- Purchase Button -->
                         <button 
-                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }})"
+                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }}, '{{ stack.is_from_database|yesno:'true,false' }}')"
                             class="w-full bg-purple-300 hover:bg-purple-400 text-zinc-950 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -295,8 +299,46 @@
             <p class="text-sm text-gray-500 mb-4">
                 You're about to purchase <span id="modalStackName" class="font-semibold text-gray-900"></span> for <span id="modalStackPrice" class="font-semibold text-gray-900"></span>.
             </p>
+            
+            <!-- Organization Selection -->
+            <div class="mb-4">
+                <label for="org_dropdown" class="block text-sm font-medium text-gray-700 mb-2">Select Organization</label>
+                <select
+                    name="org_dropdown"
+                    id="org_dropdown"
+                    class="w-full rounded-lg border-gray-300 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                    <option value="" selected disabled>Select an Organization</option>
+                    {% for organization in user_organizations %}
+                    <option value="{{ organization.id }}">
+                        {{ organization.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Project Selection -->
+            <div class="mb-4">
+                <label for="project_dropdown" class="block text-sm font-medium text-gray-700 mb-2">Select Project</label>
+                <select
+                    name="project_dropdown"
+                    id="project_dropdown"
+                    class="w-full rounded-lg border-gray-300 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500"
+                >
+                    <option value="" selected disabled>Select a Project</option>
+                    {% for project in user_projects %}
+                    <option
+                        value="{{ project.id }}"
+                        org_id="{{ project.organization_id }}"
+                    >
+                        {{ project.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
             <p class="text-sm text-gray-500">
-                This will add the stack to your project and you'll be able to deploy it immediately.
+                This will add the stack to your selected project and you'll be able to deploy it immediately.
             </p>
         </div>
         
@@ -382,12 +424,53 @@
 
 <script>
 let selectedStack = null;
+let stripe = null;
 
-function purchaseStack(stackId, stackName, stackPrice) {
-    selectedStack = { id: stackId, name: stackName, price: stackPrice };
+// Initialize Stripe on page load (same as payments home page)
+fetch("/api/v1/payments/config")
+  .then((result) => {
+    return result.json();
+  })
+  .then((data) => {
+    // Initialize Stripe.js
+    stripe = Stripe(data.public_key);
+    console.log("Stripe initialized successfully");
+  })
+  .catch((error) => {
+    console.error("Error initializing Stripe:", error);
+  });
+
+function purchaseStack(stackId, stackName, stackPrice, isFromDatabase) {
+    selectedStack = { 
+        id: stackId, 
+        name: stackName, 
+        price: stackPrice, 
+        isFromDatabase: isFromDatabase === 'true'
+    };
     
     document.getElementById('modalStackName').textContent = stackName;
     document.getElementById('modalStackPrice').textContent = `$${stackPrice}`;
+    
+    // Set default organization and project
+    const currentOrgId = '{{ organization.id }}';
+    const currentProjectId = '{{ project.id }}';
+    
+    // Set organization dropdown
+    const orgDropdown = document.getElementById('org_dropdown');
+    if (orgDropdown) {
+        orgDropdown.value = currentOrgId;
+        // Trigger change event to filter projects
+        orgDropdown.dispatchEvent(new Event('change'));
+    }
+    
+    // Set project dropdown after a short delay to allow filtering
+    setTimeout(() => {
+        const projectDropdown = document.getElementById('project_dropdown');
+        if (projectDropdown) {
+            projectDropdown.value = currentProjectId;
+        }
+    }, 100);
+    
     document.getElementById('purchaseModal').classList.remove('hidden');
 }
 
@@ -399,18 +482,72 @@ document.getElementById('cancelPurchase').addEventListener('click', function() {
 document.getElementById('confirmPurchase').addEventListener('click', function() {
     if (!selectedStack) return;
     
+    const orgId = document.getElementById('org_dropdown').value;
+    const projectId = document.getElementById('project_dropdown').value;
+    
+    // Validate selections
+    if (!orgId) {
+        alert("Please select an organization before purchasing");
+        return;
+    }
+    if (!projectId) {
+        alert("Please select a project before purchasing");
+        return;
+    }
+    
     // Show loading state
     const confirmBtn = document.getElementById('confirmPurchase');
     const originalText = confirmBtn.textContent;
     confirmBtn.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processing...';
     confirmBtn.disabled = true;
     
-    // Simulate purchase process (replace with actual API call)
-    setTimeout(() => {
-        // For now, just redirect back to project dashboard
-        // In a real implementation, you would make an API call to purchase the stack
-        window.location.href = "{% url 'main_site:project_dashboard' organization.id project.id %}";
-    }, 2000);
+    if (selectedStack.isFromDatabase) {
+        // For database stacks, use the same Stripe flow as payments home page
+        // Ensure stripe is initialized
+        if (!stripe) {
+            alert('Payment system is still loading. Please wait a moment and try again.');
+            return;
+        }
+        
+        // Create checkout session
+        fetch(`/api/v1/payments/checkout/create/${orgId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                stack_id: selectedStack.id,
+                project_id: projectId
+            })
+        })
+        .then((result) => result.json())
+        .then((data) => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            console.log("sessionID", data);
+            // Redirect to Stripe Checkout
+            return stripe.redirectToCheckout({ sessionId: data.sessionId });
+        })
+        .then((res) => {
+            if (res && res.error) {
+                console.error("Stripe checkout error:", res.error);
+                alert("Error redirecting to payment page. Please try again.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error creating checkout session:", error);
+            alert("Failed to create checkout session. Please try again.");
+        });
+    } else {
+        // For mock stacks, simulate purchase process (replace with actual API call)
+        setTimeout(() => {
+            // For now, just redirect back to project dashboard
+            // In a real implementation, you would make an API call to purchase the stack
+            window.location.href = "{% url 'main_site:project_dashboard' organization.id project.id %}";
+        }, 2000);
+    }
 });
 
 // Close modal when clicking outside
@@ -560,7 +697,64 @@ document.addEventListener('DOMContentLoaded', function() {
             hideStackDetails();
         }
     });
+    
+    // Handle direct stack purchase via query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const stackId = urlParams.get('stack_id');
+    
+    if (stackId) {
+        // Find the stack data from the available stacks
+        const stackData = findStackById(stackId);
+        if (stackData) {
+            // Open purchase modal directly
+            purchaseStack(stackData.id, stackData.name, stackData.price, stackData.isFromDatabase);
+        } else {
+            console.warn(`Stack with ID ${stackId} not found`);
+        }
+    }
 });
+
+// Helper function to find stack by ID
+function findStackById(stackId) {
+    // Stack data from the template
+    const availableStacks = [
+        {% for stack in available_stacks %}
+        {
+            id: '{{ stack.id }}',
+            name: '{{ stack.name }}',
+            price: {{ stack.price }},
+            isFromDatabase: {{ stack.is_from_database|yesno:'true,false' }}
+        },
+        {% endfor %}
+    ];
+    
+    return availableStacks.find(stack => stack.id === stackId);
+}
+
+// Organization dropdown change handler
+const org_dropdown = document.getElementById("org_dropdown");
+if (org_dropdown) {
+    org_dropdown.addEventListener("change", () => {
+        const org_id = org_dropdown.value;
+        console.log(org_id);
+
+        let project_options = document.querySelectorAll("#project_dropdown option");
+
+        project_options.forEach((option) => {
+            console.log(option.getAttribute("org_id"));
+            console.log(org_id);
+
+            if (option.getAttribute("org_id") !== org_id) {
+                option.style.display = "none";
+            } else {
+                option.style.display = "block";
+            }
+        });
+
+        // Reset project dropdown to default placeholder when organization changes
+        document.getElementById("project_dropdown").value = "";
+    });
+}
 </script>
 
 <style>

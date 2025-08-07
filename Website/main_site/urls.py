@@ -111,6 +111,7 @@ urlpatterns = [
     ),
     # Payment pages
     path("payments/<str:variant>", views.payment_view.home_page_view, name="payments_home"),
+    path("stacks-marketplace/", views.payment_view.stacks_marketplace_view, name="stacks_marketplace"),
     path("payments/cards/add/", views.payment_view.add_card_view, name="card_add"),
     path("payments/checkout/success/", views.payment_view.success_view, name="checkout_success"),
     path(

@@ -4,9 +4,6 @@ from rest_framework import status, permissions
 from django.contrib.auth import authenticate, login, logout
 from accounts.models import UserProfile
 from accounts.serializers.UserCreationSerializer import UserCreationSerializer
-from accounts.serializers.OrganizationSignupSerializer import (
-    OrganizationSignupSerializer,
-)
 from organizations.models import PendingInvites, OrganizationMember, Organization
 from django.conf import settings
 from django.db import transaction
@@ -34,25 +31,15 @@ class SignupAPIView(APIView):
             return self._handle_regular_signup(request)
     
     def _handle_regular_signup(self, request):
-        """Handle regular signup with organization creation."""
+        """Handle regular signup without organization creation."""
         user_serializer = UserCreationSerializer(data=request.data)
-        org_serializer = OrganizationSignupSerializer(
-            data=request.data, context={"user": None}
-        )  # placeholder
 
-        user_serializer_is_valid = user_serializer.is_valid()
-        org_serializer_is_valid = org_serializer.is_valid()
-
-
-        if user_serializer_is_valid and org_serializer_is_valid:
+        if user_serializer.is_valid():
             with transaction.atomic():
                 user = user_serializer.save()
                 assert isinstance(user, UserProfile)
-                org_serializer.context["user"] = user
-                org = org_serializer.save()
-                assert isinstance(org, Organization)
 
-                #check pending invites
+                # Check for pending invites
                 user_email = user.email
 
                 try:
@@ -64,27 +51,32 @@ class SignupAPIView(APIView):
                         OrganizationMember.objects.create(user=user, organization=organization, role="member")
 
                         invite.delete()
+                        
+                        return Response(
+                            {
+                                "message": "User created and added to organization successfully",
+                                "user_id": str(user.id),
+                                "organization_id": str(organization.id),
+                            },
+                            status=status.HTTP_201_CREATED,
+                        )
                     else:
-                        return Response({"message": "No pending invite found for this email"}, status=status.HTTP_404_NOT_FOUND)
+                        # No pending invite found - just create the user
+                        return Response(
+                            {
+                                "message": "User created successfully",
+                                "user_id": str(user.id),
+                            },
+                            status=status.HTTP_201_CREATED,
+                        )
 
                 except Exception as e:
                     logger.error(f"Error processing pending invite: {e}")
                     return Response({"message": "Error processing invitation"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-                # Create a simple serializable response
-                return Response(
-                    {
-                        "message": "User and organization created successfully",
-                        "user_id": str(user.id),
-                        "organization_id": str(org.id),
-                    },
-                    status=status.HTTP_201_CREATED,
-                )
-
         return Response(
             {
                 "user_errors": user_serializer.errors,
-                "org_errors": org_serializer.errors,
             },
             status=status.HTTP_400_BAD_REQUEST,
         )

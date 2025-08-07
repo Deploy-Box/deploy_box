@@ -2,51 +2,6 @@
 let stripe;
 let currentOrganizationId = null;
 
-// Function to show payment method warning banner
-function showPaymentMethodWarning(organizationId) {
-  const warningBanner = document.getElementById('paymentMethodWarning');
-  const addPaymentLink = document.getElementById('addPaymentMethodLink');
-  
-  if (warningBanner && addPaymentLink) {
-    addPaymentLink.href = `/dashboard/organizations/${organizationId}/billing/`;
-    warningBanner.classList.remove('hidden');
-    
-    // Add padding to body to account for fixed banner
-    document.body.style.paddingTop = '80px';
-  }
-}
-
-// Function to dismiss payment warning
-function dismissPaymentWarning() {
-  const warningBanner = document.getElementById('paymentMethodWarning');
-  if (warningBanner) {
-    warningBanner.classList.add('hidden');
-    document.body.style.paddingTop = '0';
-  }
-}
-
-// Function to check payment methods for an organization
-function checkOrganizationPaymentMethods(organizationId) {
-  return fetch(`/api/v1/payments/payment-methods/${organizationId}/`)
-    .then(response => response.json())
-    .then(data => {
-      console.log("data", data);
-      showPaymentMethodWarning(organizationId);
-
-      return false;
-      if (data.error) {
-        // No payment methods found
-        showPaymentMethodWarning(organizationId);
-        return false;
-      }
-      return true;
-    })
-    .catch(error => {
-      console.error('Error checking payment methods:', error);
-      return false;
-    });
-}
-
 // Get Stripe publishable key
 fetch("/api/v1/payments/config")
   .then((result) => {
@@ -70,13 +25,6 @@ fetch("/api/v1/payments/config")
         }
         if (!project_id) {
           alert("Please select a project before purchasing");
-          return;
-        }
-
-        // Check payment methods before proceeding
-        const hasPaymentMethods = await checkOrganizationPaymentMethods(org_id);
-        if (!hasPaymentMethods) {
-          // Warning banner is already shown by checkOrganizationPaymentMethods
           return;
         }
 
@@ -120,15 +68,6 @@ const org_dropdown = document.getElementById("org_dropdown");
 org_dropdown.addEventListener("change", () => {
   const org_id = org_dropdown.value;
   console.log(org_id);
-  
-  // Hide warning banner when no organization is selected
-  if (!org_id) {
-    dismissPaymentWarning();
-    return;
-  }
-
-  // Check payment methods for the selected organization
-  checkOrganizationPaymentMethods(org_id);
 
   let project_options = document.querySelectorAll("#project_dropdown option");
 

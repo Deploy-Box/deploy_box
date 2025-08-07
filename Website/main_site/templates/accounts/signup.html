@@ -66,28 +66,7 @@
             <form method="POST" action="{% url 'accounts:api-signup' %}" class="px-5 py-7" id="signup-form">
                 {% csrf_token %}
                 
-                {% if not invite_data %}
-                <!-- Organization fields - only show if no invite -->
-                <div class="mb-5">
-                    <label for="org_name" class="font-semibold text-sm text-gray-600 pb-1 block">Organization
-                        Name</label>
-                    <input type="text" name="org_name" id="org_name"
-                        class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
-                        placeholder="Enter organization name" required />
-                    {{ form.org_name }}
-                </div>
-
-                <div class="mb-5">
-                    <label for="org_email" class="font-semibold text-sm text-gray-600 pb-1 block">Organization
-                        Email</label>
-                    <input type="email" name="org_email" id="org_email"
-                        class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
-                        placeholder="Enter organization email" required />
-                    {{ form.org_email }}
-                </div>
-
-                <hr class="my-6">
-                {% else %}
+                {% if invite_data %}
                 <!-- Hidden fields for invite data -->
                 <input type="hidden" name="invite_id" value="{{ invite_data.invite_id }}" />
                 <input type="hidden" name="org_name" value="{{ invite_data.organization_name }}" />
@@ -218,11 +197,7 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
         password2: formData.get('password2')
     };
     
-    // Add organization data if present
-    if (formData.get('org_name')) {
-        requestData.org_name = formData.get('org_name');
-        requestData.org_email = formData.get('org_email');
-    }
+
     
     // Add invite data if present
     if (formData.get('invite_id')) {
@@ -255,12 +230,6 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
             if (data.user_errors) {
                 Object.keys(data.user_errors).forEach(field => {
                     errorMessage += `\n${field}: ${data.user_errors[field].join(', ')}`;
-                });
-            }
-            
-            if (data.org_errors) {
-                Object.keys(data.org_errors).forEach(field => {
-                    errorMessage += `\n${field}: ${data.org_errors[field].join(', ')}`;
                 });
             }
             
