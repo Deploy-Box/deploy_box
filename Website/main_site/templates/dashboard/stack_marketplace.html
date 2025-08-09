@@ -703,28 +703,36 @@ document.addEventListener('DOMContentLoaded', function() {
     const stackId = urlParams.get('stack_id');
     
     if (stackId) {
+        console.log(`Found stack_id in URL: ${stackId}`);
         // Find the stack data from the available stacks
         const stackData = findStackById(stackId);
         if (stackData) {
-            // Open purchase modal directly
-            purchaseStack(stackData.id, stackData.name, stackData.price, stackData.isFromDatabase);
+            console.log(`Found stack data:`, stackData);
+            // Open purchase modal with a delay so user can see the page load first
+            setTimeout(() => {
+                purchaseStack(stackData.id, stackData.name, stackData.price, stackData.isFromDatabase);
+            }, 1500); // 1.5 second delay for better UX
         } else {
-            console.warn(`Stack with ID ${stackId} not found`);
+            console.warn(`Stack with ID ${stackId} not found in available stacks`);
+            // Optionally show an error message to the user
+            setTimeout(() => {
+                alert(`Stack with ID ${stackId} was not found. Please select a stack from the marketplace.`);
+            }, 500);
         }
     }
 });
 
 // Helper function to find stack by ID
 function findStackById(stackId) {
-    // Stack data from the template
+    // Stack data from the template - properly escaped
     const availableStacks = [
         {% for stack in available_stacks %}
         {
-            id: '{{ stack.id }}',
-            name: '{{ stack.name }}',
+            id: '{{ stack.id|escapejs }}',
+            name: '{{ stack.name|escapejs }}',
             price: {{ stack.price }},
             isFromDatabase: {{ stack.is_from_database|yesno:'true,false' }}
-        },
+        }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
     

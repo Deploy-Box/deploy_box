@@ -1033,7 +1033,7 @@ class DashboardView(View):
         ]
 
         # Combine database stacks and mock stacks
-        available_stacks = purchasable_stacks + mock_stacks
+        available_stacks = purchasable_stacks
 
         # Get all organizations and projects for the user for dropdowns
         user_organizations = Organization.objects.filter(organizationmember__user=user)
@@ -1635,16 +1635,33 @@ class PaymentView(View):
         else:
             return base_features.get(stack_type, ['Basic features'])
 
-    @oauth_required()
     def stacks_marketplace_view(self, request: HttpRequest) -> HttpResponse:
         """Stacks marketplace view with filter options."""
-        user_profile = cast(UserProfile, request.user)
-        organizations = get_organizations(user_profile)
-        projects = [
-            project
-            for organization in organizations
-            for project in organization.get_projects()
-        ]
+        is_authenticated = request.user.is_authenticated
+
+        if is_authenticated:
+            user_profile = cast(UserProfile, request.user)
+            organizations = get_organizations(user_profile)
+
+            # Look through orgs until we find one with projects
+            organization = None
+            projects = []
+            project = None
+            for org in organizations:
+                org_projects = org.get_projects()
+                print(org_projects)
+                if org_projects:
+                    organization = org
+                    projects = org_projects
+                    project = projects[0]
+                    break
+
+        else:
+            organization = None
+            project = None
+
+        print(organization)
+        print(project)
         
         # Get variant from query parameter, default to 'BASIC'
         variant = request.GET.get('variant', 'BASIC').upper()
@@ -1702,8 +1719,8 @@ class PaymentView(View):
             request,
             "payments/stacks_marketplace.html",
             {
-                "organizations": organizations,
-                "projects": projects,
+                "organization_id": organization.id if organization else None,
+                "project_id": project.id if project else None,
                 "stack_options": stack_options,
                 "selected_variant": variant,
             },

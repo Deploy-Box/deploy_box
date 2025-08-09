@@ -208,4 +208,4 @@ def main(resource_group_name, iac):
     deploy_box = DeployBoxIAC()
     return deploy_box.deploy(resource_group_name, iac)
 
-DeployBoxIAC()
+# DeployBoxIAC()

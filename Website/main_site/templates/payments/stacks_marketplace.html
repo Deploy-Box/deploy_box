@@ -140,7 +140,7 @@
 
                         <!-- Purchase Button -->
                         <button 
-                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }}, '{{ stack.is_from_database|yesno:'true,false' }}')"
+                            onclick="purchaseStack('{{ stack.id }}', '{{ organization_id }}', '{{ project_id }}')"
                             class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -201,7 +201,7 @@
 
                         <!-- Purchase Button -->
                         <button 
-                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }}, '{{ stack.is_from_database|yesno:'true,false' }}')"
+                            onclick="purchaseStack('{{ stack.id }}', '{{ organization_id }}', '{{ project_id }}')"
                             class="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -262,7 +262,7 @@
 
                         <!-- Purchase Button -->
                         <button 
-                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }}, '{{ stack.is_from_database|yesno:'true,false' }}')"
+                            onclick="purchaseStack('{{ stack.id }}', '{{ organization_id }}', '{{ project_id }}')"
                             class="w-full bg-purple-300 hover:bg-purple-400 text-zinc-950 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -418,17 +418,24 @@ function findStackById(stackId) {
     return availableStacks.find(stack => stack.id === stackId);
 }
 
-function purchaseStack(stackId, stackName, stackPrice, isFromDatabase) {
+function purchaseStack(stackId, organization_id, project_id) {
     selectedStack = { 
         id: stackId, 
-        name: stackName, 
-        price: stackPrice, 
-        isFromDatabase: isFromDatabase === 'true'
+        organization_id: organization_id,
+        project_id: project_id,
     };
+
+    if (organization_id && project_id) {
+        // Redirect to the purchase page with the organization and project IDs
+        window.location.href = `/dashboard/organizations/${organization_id}/projects/${project_id}/marketplace/?stack_id=${stackId}`;
+    } else {
+        // Redirect to the dashboard if no organization or project is selected
+        window.location.href = "/dashboard/";
+    }
     
-    document.getElementById('modalStackName').textContent = stackName;
-    document.getElementById('modalStackPrice').textContent = `$${stackPrice}`;
-    document.getElementById('purchaseModal').classList.remove('hidden');
+    // document.getElementById('modalStackName').textContent = stackName;
+    // document.getElementById('modalStackPrice').textContent = `$${stackPrice}`;
+    // document.getElementById('purchaseModal').classList.remove('hidden');
 }
 
 document.getElementById('cancelPurchase').addEventListener('click', function() {

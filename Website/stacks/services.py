@@ -22,8 +22,51 @@ from core.utils.DeployBoxIAC.main import main, DeployBoxIAC
 from django.views.decorators.csrf import csrf_exempt
 from .service_helpers import ServiceHelper
 from core.utils.DeployBoxIAC.main import DeployBoxIAC
+from azure.servicebus import ServiceBusClient, ServiceBusMessage
+import time
 
 logger = logging.getLogger(__name__)
+
+
+def send_to_service_bus(message_data: dict, queue_name: str = "stack-deployment-queue") -> bool:
+    """
+    Sends a message to Azure Service Bus queue.
+    
+    Args:
+        message_data (dict): The data to send as a message
+        queue_name (str): The name of the Service Bus queue
+        
+    Returns:
+        bool: True if message was sent successfully, False otherwise
+    """
+    try:
+        # Get Service Bus connection string from environment variables
+        connection_string = os.getenv('AZURE_SERVICE_BUS_CONNECTION_STRING')
+        if not connection_string:
+            logger.error("AZURE_SERVICE_BUS_CONNECTION_STRING not found in environment variables")
+            return False
+            
+        # Create Service Bus client
+        servicebus_client = ServiceBusClient.from_connection_string(connection_string)
+        
+        # Create a message
+        message = ServiceBusMessage(
+            body=json.dumps(message_data),
+            content_type="application/json"
+        )
+        
+        # Send the message
+        with servicebus_client:
+            sender = servicebus_client.get_queue_sender(queue_name=queue_name)
+            with sender:
+                sender.send_messages(message)
+                
+        logger.info(f"Successfully sent message to Service Bus queue: {queue_name}")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to send message to Service Bus: {str(e)}")
+        return False
 
 
 def add_stack(**kwargs) -> Stack:
@@ -42,16 +85,39 @@ def add_stack(**kwargs) -> Stack:
             name=name, project=project, purchased_stack=purchasable_stack
         )
 
+        # Put request on Azure Service Bus
+        message_data = {
+            "type": "create",            
+            "data": {
+                "stack_id": str(stack.id),
+                "stack_type": purchasable_stack.type.upper(),
+                "variant": purchasable_stack.variant.upper(),
+                "version": purchasable_stack.version,
+            },
+            "timestamp": time.time()
+        }
+        
+        # Send message to Service Bus (non-blocking)
+        try:
+            send_to_service_bus(message_data, "iac")
+        except Exception as e:
+            logger.warning(f"Failed to send message to Service Bus: {str(e)}")
+            # Continue with deployment even if Service Bus fails
+
         variant = purchasable_stack.variant.lower()
 
-        if purchasable_stack.type == "MERN":
-            deploy_MERN_stack(project, stack, variant)
-        elif purchasable_stack.type == "DJANGO":
-            deploy_django_stack(project, stack, variant)
-        else:
-            JsonResponse({"error": "Stack type not supported."}, status=400)
+        # if purchasable_stack.type == "MERN":
+        #     deploy_MERN_stack(project, stack, variant)
+        # elif purchasable_stack.type == "DJANGO":
+        #     deploy_django_stack(project, stack, variant)
+        # else:
+        #     JsonResponse({"error": "Stack type not supported."}, status=400)
 
     return stack
+
+# project = Project.objects.all()[0]
+# purchasable_stack = PurchasableStack.objects.all()[0]
+# add_stack(name="test", project_id=project.id, purchasable_stack_id=purchasable_stack.id)
 
 
 def update_stack(stack: Stack, root_directory: Union[str, None] = None) -> bool:
