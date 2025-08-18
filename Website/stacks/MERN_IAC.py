@@ -37,28 +37,11 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
                 },
             }
         },
-        "azurerm_log_analytics_workspace": {
-            "law": {
-                "name": "example-law",
-                "location": "eastus",
-                "resource_group_name": "${azurerm_resource_group.rg.name}",
-                "sku": "PerGB2018",
-                "retention_in_days": 30,
-            }
-        },
-        "azurerm_container_app_environment": {
-            "env": {
-                "name": "example-env",
-                "location": "eastus",
-                "resource_group_name": "${azurerm_resource_group.rg.name}",
-                "log_analytics_workspace_id": "${azurerm_log_analytics_workspace.law.id}",
-            }
-        },
         "azurerm_container_app": {
             f"mern-backend": {
                 "name": f"mern-backend-{stack_id}",
                 "resource_group_name": "${azurerm_resource_group.rg.name}",
-                "container_app_environment_id": "${azurerm_container_app_environment.env.id}",
+                "container_app_environment_id": "/subscriptions/3106bb2d-2f28-445e-ab1e-79d93bd15979/resourceGroups/deploy-box-rg-dev/providers/Microsoft.App/managedEnvironments/deploy-box-cae-dev",
                 "revision_mode": "Single",
                 "ingress": {
                     "external_enabled": True,
@@ -98,7 +81,7 @@ def get_MERN_IAC(stack_id: str, project_id: str, org_id: str):
             f"mern-frontend": {
                 "name": f"mern-frontend-{stack_id}",
                 "resource_group_name": "${azurerm_resource_group.rg.name}",
-                "container_app_environment_id": "${azurerm_container_app_environment.env.id}",
+                "container_app_environment_id": "/subscriptions/3106bb2d-2f28-445e-ab1e-79d93bd15979/resourceGroups/deploy-box-rg-dev/providers/Microsoft.App/managedEnvironments/deploy-box-cae-dev",
                 "revision_mode": "Single",
                 "ingress": {
                     "external_enabled": True,

@@ -156,31 +156,68 @@ def create_checkout_session(request: AuthHttpRequest, org_id: str) -> JsonRespon
     if not organization:
         return JsonResponse({"error": "Organization not found"}, status=404)
 
-    price_id = PurchasableStack.objects.get(id=stack_id).price_id
+    purchasable_stack = PurchasableStack.objects.get(id=stack_id)
+    price_id = purchasable_stack.price_id
 
     try:
-        checkout_session = stripe.checkout.Session.create(
-            metadata={
-                "purchasable_stack_id": stack_id,
-                "organization_id": organization.id,
-                "project_id": project_id,
-            },
-            customer=organization.stripe_customer_id,
-            success_url=domain_url
-            + "/payments/checkout/success?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url=domain_url + "/payments/cancelled",
-            payment_method_types=["card"],
-            mode="payment",
-            line_items=[
-                {
-                    "price": price_id,
-                    "quantity": 1,
+        # Check if the price is free (amount = 0)
+        price = stripe.Price.retrieve(price_id)
+        is_free = price.unit_amount == 0
+        
+        # Ensure organization has a Stripe customer ID
+        if not organization.stripe_customer_id:
+            # Create a new Stripe customer for the organization
+            customer = stripe.Customer.create(
+                email=organization.email,
+                name=organization.name,
+                metadata={
+                    "organization_id": organization.id,
                 }
-            ],
-            payment_intent_data={
-                "setup_future_usage": "off_session",  # This tells Stripe to save the card for future payments
-            },
-        )
+            )
+            organization.stripe_customer_id = customer.id
+            organization.save()
+        
+        has_payment_method, _ = check_organization_payment_methods(organization)
+
+        if is_free and not has_payment_method:
+            # Use setup mode for free stacks
+            checkout_session = stripe.checkout.Session.create(
+                metadata={
+                    "purchasable_stack_id": stack_id,
+                    "organization_id": organization.id,
+                    "project_id": project_id,
+                },
+                customer=organization.stripe_customer_id,
+                success_url=domain_url
+                + "/payments/checkout/success?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=domain_url + "/payments/cancelled",
+                payment_method_types=["card"],
+                mode="setup",
+            )
+        else:
+            # Use payment mode for paid stacks
+            checkout_session = stripe.checkout.Session.create(
+                metadata={
+                    "purchasable_stack_id": stack_id,
+                    "organization_id": organization.id,
+                    "project_id": project_id,
+                },
+                customer=organization.stripe_customer_id,
+                success_url=domain_url
+                + "/payments/checkout/success?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url=domain_url + "/payments/cancelled",
+                payment_method_types=["card"],
+                mode="payment",
+                line_items=[
+                    {
+                        "price": price_id,
+                        "quantity": 1,
+                    }
+                ],
+                payment_intent_data={
+                    "setup_future_usage": "off_session",  # This tells Stripe to save the card for future payments
+                },
+            )
         return JsonResponse({"sessionId": checkout_session["id"]})
     except Exception as e:
         return JsonResponse({"error": str(e)})
@@ -317,17 +354,53 @@ def create_invoice(customer_id, dollar_amount, description) -> str:
 
 
 def get_customer_id(org_id):
-    # Query the UserProfile by the provided user_id
+    # Query the Organization by the provided org_id
     try:
         org = Organization.objects.get(id=org_id)
-        customer_id = (
-            org.stripe_customer_id
-        )  # Assuming customer_id is a field in UserProfile
+        customer_id = org.stripe_customer_id
 
         return customer_id
 
-    except UserProfile.DoesNotExist:
+    except Organization.DoesNotExist:
         return None
+
+
+def check_organization_payment_methods(organization):
+    """
+    Check if an organization has payment methods set up.
+    Returns a tuple: (has_payment_methods, error_message)
+    """
+    if not organization.stripe_customer_id:
+        # Create a new Stripe customer for the organization
+        try:
+            customer = stripe.Customer.create(
+                email=organization.email,
+                name=organization.name,
+                metadata={
+                    "organization_id": organization.id,
+                }
+            )
+            organization.stripe_customer_id = customer.id
+            organization.save()
+            return False, "No payment methods found for this organization. Please add a payment method before making purchases."
+        except Exception as e:
+            return False, f"Error creating payment account: {str(e)}"
+    
+    try:
+        payment_methods = stripe.PaymentMethod.list(
+            customer=organization.stripe_customer_id,
+            type="card"
+        )
+        
+        if not payment_methods.data:
+            return False, "No payment methods found for this organization. Please add a payment method before making purchases."
+            
+        return True, None
+        
+    except stripe_error.StripeError as e:
+        return False, f"Error checking payment methods: {str(e)}"
+    except Exception as e:
+        return False, "An error occurred while checking payment methods."
 
 
 def update_invoice_billing(request):

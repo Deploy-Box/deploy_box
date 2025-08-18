@@ -18,12 +18,16 @@ class Command(BaseCommand):
             # List active products (optional filters can be used)
             products = stripe.Product.list(active=True)
 
+            print("Found ", len(products), " products")
+
             purchasable_stacks = []
 
             # Print product names and IDs
             for product in products.auto_paging_iter():
                 if product.metadata.get("is_stack") == "true":
                     purchasable_stacks.append(product)
+
+            print("Found ", len(purchasable_stacks), " purchasable stacks")
 
             # Upsert purchasable stacks based on price_id
             for stack in purchasable_stacks:

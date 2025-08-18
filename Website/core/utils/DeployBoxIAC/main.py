@@ -5,20 +5,72 @@ import os
 import shutil
 from azure.storage.blob import BlobServiceClient
 
-from core.utils.DeployBoxIAC.Azure import AzureDeployBoxIAC
+from core.utils.DeployBoxIAC.AzureDeployBoxIAC import AzureDeployBoxIAC
 from core.utils.DeployBoxIAC.MongoDBAtlas import MongoDBAtlasDeployBoxIAC
 from dotenv import load_dotenv
 import shutil
+from organizations.models import Organization
+from stacks.models import PrebuiltStack, PurchasableStack, Project
+import stacks.services as services
 
 load_dotenv()
 
-
 class DeployBoxIAC:
+    _instance = None  # Class-level attribute to store the singleton instance
+
+    def __new__(cls, *args, **kwargs):
+        if not cls._instance:
+            cls._instance = super(DeployBoxIAC, cls).__new__(cls, *args, **kwargs)
+        return cls._instance
+
     def __init__(self):
+        if hasattr(self, 'initialized'):
+            return
+        
+        self.refresh_prebuilt_stacks()
+
+        self.initialized = True  # Mark the instance as initialized
+
+    def refresh_prebuilt_stacks(self):
         self.azure_storage_connection_string = os.environ.get(
             "AZURE_STORAGE_CONNECTION_STRING"
         )
         self.container_name = os.environ.get("CONTAINER_NAME")
+
+        purchasable_stacks = PurchasableStack.objects.all()
+        print(f"Found {purchasable_stacks.count()} purchasable stacks.")
+
+        org_name = "Deploy Box Prebuilt Stacks"
+        project_name = "Deploy Box Prebuilt Stacks"
+
+        # Get or create the organization
+        organization, _ = Organization.objects.get_or_create(name=org_name)
+
+        # Get or create the project under the organization
+        project, _ = Project.objects.get_or_create(
+            name=project_name,
+            organization=organization
+        )
+
+        for ps in purchasable_stacks:
+            print(f"Processing PurchasableStack ID: {ps.id}")
+            print(f"Type: {ps.type}, Variant: {ps.variant}, Version: {ps.version}, Price ID: {ps.price_id}, Prebuilt Quantity: {ps.prebuilt_quantity}")
+            prebuilt_stacks = PrebuiltStack.objects.filter(purchasable_stack=ps)
+            print(f"  Found {prebuilt_stacks.count()} prebuilt stacks for this purchasable stack.")
+
+            for i in range(ps.prebuilt_quantity - prebuilt_stacks.count()):
+                stack = services.add_stack(
+                    name=f"Prebuilt Stack {i+1} for {ps.type} {ps.variant}",
+                    project_id=project.id,
+                    purchasable_stack_id=ps.id
+                )
+
+                prebuilt_stack = PrebuiltStack.objects.create(
+                    purchasable_stack=ps,
+                    stack=stack
+                )
+
+                print(f"  Created PrebuiltStack ID: {prebuilt_stack.id} linked to Stack ID: {stack.id}")
 
     def run_terraform_cmd(self, command, cwd):
         """Run terraform command and return result"""
@@ -139,11 +191,10 @@ class DeployBoxIAC:
         """Update billing info"""
 
         azure_deploy_box_iac = AzureDeployBoxIAC()
-        mongodb_atlas_deploy_box_iac = MongoDBAtlasDeployBoxIAC()
+        # mongodb_atlas_deploy_box_iac = MongoDBAtlasDeployBoxIAC()
 
         billing_info = {}
         billing_info = azure_deploy_box_iac.get_billing_info(billing_info)
-        # billing_info = mongodb_atlas_deploy_box_iac.update_billing_info(billing_info)
 
         print(f"Billing info: {billing_info}")
 
@@ -156,3 +207,5 @@ def main(resource_group_name, iac):
     """Legacy main function - now delegates to DeployBoxIAC class"""
     deploy_box = DeployBoxIAC()
     return deploy_box.deploy(resource_group_name, iac)
+
+# DeployBoxIAC()

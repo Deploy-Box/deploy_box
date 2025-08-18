@@ -1,0 +1,280 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="w-full bg-gray-50">
+    <header class="bg-zinc-950 pt-16 pb-24 text-center">
+        <h1 class="text-2xl font-bold text-gray-100 mb-2">Project Transfer Invitations</h1>
+        <p class="text-md text-gray-100 max-w-2xl mx-auto">
+            Manage your project ownership transfers
+        </p>
+    </header>
+    <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
+        
+        <!-- Received Transfers Section -->
+        <section class="mb-8">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                    </svg>
+                    Transfer Invitations Received
+                </h2>
+                
+                <div id="receivedTransfersList" class="space-y-4">
+                    <!-- Received transfers will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Sent Transfers Section -->
+        <section class="mb-8">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-amber-500 mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                    </svg>
+                    Transfer Invitations Sent
+                </h2>
+                
+                <div id="sentTransfersList" class="space-y-4">
+                    <!-- Sent transfers will be loaded here -->
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    loadTransferInvitations();
+    
+    function loadTransferInvitations() {
+        fetch('/api/v1/organizations/transfers', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            displayReceivedTransfers(data.received_transfers);
+            displaySentTransfers(data.sent_transfers);
+        })
+        .catch(error => {
+            console.error('Error loading transfer invitations:', error);
+        });
+    }
+    
+    function displayReceivedTransfers(transfers) {
+        const container = document.getElementById('receivedTransfersList');
+        
+        if (transfers.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                    <p class="text-zinc-500">No transfer invitations received</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = transfers.map(transfer => `
+            <div class="bg-emerald-50 p-4 rounded-lg border border-emerald-200 transition-all duration-300 hover:bg-emerald-100">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-emerald-900">${transfer.project_name}</h3>
+                        <p class="text-sm text-emerald-700 mb-2">${transfer.project_description}</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-emerald-600">
+                            <div><strong>From:</strong> ${transfer.from_organization}</div>
+                            <div><strong>Expires:</strong> ${new Date(transfer.expires_at).toLocaleDateString()}</div>
+                            <div><strong>Client:</strong> ${transfer.to_name}</div>
+                            ${transfer.to_company ? `<div><strong>Company:</strong> ${transfer.to_company}</div>` : ''}
+                        </div>
+                        ${transfer.is_expired ? '<div class="mt-2 text-red-600 font-medium">⚠️ This invitation has expired</div>' : ''}
+                    </div>
+                    <div class="flex flex-col space-y-2 ml-4">
+                        ${!transfer.is_expired ? `
+                            <a href="/project-transfer/accept/${transfer.id}/" 
+                               class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                                Accept Transfer
+                            </a>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function displaySentTransfers(transfers) {
+        const container = document.getElementById('sentTransfersList');
+        
+        if (transfers.length === 0) {
+            container.innerHTML = `
+                <div class="text-center py-8">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                    </svg>
+                    <p class="text-zinc-500">No transfer invitations sent</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = transfers.map(transfer => `
+            <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 transition-all duration-300 hover:bg-amber-100">
+                <div class="flex justify-between items-start">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-semibold text-amber-900">${transfer.project_name}</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-amber-700 mb-2">
+                            <div><strong>To:</strong> ${transfer.to_name} (${transfer.to_email})</div>
+                            <div><strong>Status:</strong> <span class="font-medium ${getStatusColor(transfer.status)}">${transfer.status}</span></div>
+                            <div><strong>Expires:</strong> ${new Date(transfer.expires_at).toLocaleDateString()}</div>
+                            ${transfer.to_company ? `<div><strong>Company:</strong> ${transfer.to_company}</div>` : ''}
+                        </div>
+                        ${transfer.accepted_at ? `<div class="text-sm text-amber-600"><strong>Accepted:</strong> ${new Date(transfer.accepted_at).toLocaleDateString()}</div>` : ''}
+                    </div>
+                    <div class="flex flex-col space-y-2 ml-4">
+                        ${transfer.status === 'pending' ? `
+                            <button onclick="cancelTransfer('${transfer.id}')" 
+                                    class="inline-flex items-center bg-red-500 hover:bg-red-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                                Cancel Transfer
+                            </button>
+                        ` : ''}
+                    </div>
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    function getStatusColor(status) {
+        switch(status) {
+            case 'pending': return 'text-amber-600';
+            case 'accepted': return 'text-emerald-600';
+            case 'declined': return 'text-red-600';
+            case 'expired': return 'text-gray-600';
+            default: return 'text-gray-600';
+        }
+    }
+    
+    window.cancelTransfer = function(transferId) {
+        if (confirm('Are you sure you want to cancel this transfer invitation? This action cannot be undone.')) {
+            // Show loading state for the specific button
+            const button = event.target.closest('button');
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Cancelling...';
+            button.disabled = true;
+
+            fetch(`/api/v1/organizations/transfers/${transferId}/cancel`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    // Show success message
+                    showNotification(data.message, 'success');
+                    if (response.ok) {
+                        loadTransferInvitations(); // Reload the list
+                    }
+                } else if (data.error) {
+                    // Show error message
+                    showNotification(data.error, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error canceling transfer:', error);
+                showNotification('Failed to cancel transfer. Please try again.', 'error');
+            })
+            .finally(() => {
+                // Restore button state
+                button.innerHTML = originalContent;
+                button.disabled = false;
+            });
+        }
+    };
+    
+    // Notification system
+    function showNotification(message, type) {
+        // Remove any existing notifications
+        const existingNotification = document.querySelector('.notification-toast');
+        if (existingNotification) {
+            existingNotification.remove();
+        }
+        
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.className = `notification-toast fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm transform transition-all duration-300 translate-x-full`;
+        
+        const bgColor = type === 'success' ? 'bg-green-500' : 'bg-red-500';
+        const icon = type === 'success' ? 
+            '<svg class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>' :
+            '<svg class="h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
+        
+        notification.innerHTML = `
+            <div class="flex items-center ${bgColor} text-white p-3 rounded-lg">
+                <div class="flex-shrink-0 mr-3">
+                    ${icon}
+                </div>
+                <div class="flex-1">
+                    <p class="text-sm font-medium">${message}</p>
+                </div>
+                <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white hover:text-gray-200">
+                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        `;
+        
+        // Add to page
+        document.body.appendChild(notification);
+        
+        // Animate in
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            if (notification.parentElement) {
+                notification.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (notification.parentElement) {
+                        notification.remove();
+                    }
+                }, 300);
+            }
+        }, 5000);
+    }
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %} 

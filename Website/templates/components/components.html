@@ -1,0 +1,298 @@
+<!-- components/components.html -->
+ {% load static tailwind_tags %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Deploy Box</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% tailwind_css %}
+    {% block extra_head %}
+    {% endblock %}
+    <!-- Tailwind CSS CDN for utility classes -->
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background: #f8f9fa;
+        margin: 0;
+        padding: 0;
+      }
+      .container {
+        max-width: 900px;
+        margin: 40px auto;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+        padding: 32px;
+      }
+      h1 {
+        margin-top: 0;
+      }
+      .component-demo {
+        border: 1px solid #e0e0e0;
+        border-radius: 6px;
+        margin-bottom: 32px;
+        padding: 24px;
+        background: #fafbfc;
+      }
+      .component-title {
+        font-size: 1.2em;
+        margin-bottom: 12px;
+        color: #333;
+      }
+      .component-description {
+        color: #666;
+        margin-bottom: 18px;
+      }
+      .example-button {
+        background: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        padding: 10px 24px;
+        font-size: 1em;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .example-button:hover {
+        background: #0056b3;
+      }
+      /* Success Banner Styles */
+      .success-banner {
+        position: fixed;
+        top: 32px;
+        right: 32px;
+        background: #28a745;
+        color: #fff;
+        padding: 18px 32px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        font-size: 1.1em;
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        gap: 16px;
+        animation: fadeIn 0.4s;
+      }
+      .success-banner.show {
+        display: flex;
+      }
+      .success-banner .close-btn {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.3em;
+        cursor: pointer;
+        margin-left: 12px;
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      /* Error Banner Styles */
+      .error-banner {
+        position: fixed;
+        top: 90px;
+        right: 32px;
+        background: #dc3545;
+        color: #fff;
+        padding: 18px 32px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+        font-size: 1.1em;
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        gap: 16px;
+        animation: fadeIn 0.4s;
+      }
+      .error-banner.show {
+        display: flex;
+      }
+      .error-banner .close-btn {
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 1.3em;
+        cursor: pointer;
+        margin-left: 12px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Organization Members Modals (copied exactly for demo) -->
+    <!-- Invite New Member Modal -->
+    <div id="inviteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-gray-900">Invite New Member</h3>
+                </div>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-500 mb-4">
+                    Invite someone who doesn't have a DeployBox account yet. They'll receive an email invitation to create an account and join your organization.
+                </p>
+                <form id="inviteForm" class="space-y-4">
+                    <div>
+                        <label for="inviteEmail" class="block text-sm font-medium text-gray-700 mb-2">
+                            Email Address
+                        </label>
+                        <input type="email" id="inviteEmail" name="email" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                               placeholder="Enter email address">
+                    </div>
+                </form>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelInvite" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                    Cancel
+                </button>
+                <button id="sendInvite" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
+                    Send Invitation
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Invite DeployBox Member Modal -->
+    <div id="inviteDeployBoxModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+            <div class="flex items-center mb-4">
+                <div class="flex-shrink-0">
+                    <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <h3 class="text-lg font-medium text-gray-900">Invite DeployBox Member</h3>
+                </div>
+            </div>
+            <div class="mb-4">
+                <p class="text-sm text-gray-500 mb-4">
+                    Invite an existing DeployBox user to join your organization. They'll receive an email notification and be added to your organization immediately.
+                </p>
+                <form id="inviteDeployBoxForm" class="space-y-4">
+                    <div>
+                        <label for="deployBoxUsername" class="block text-sm font-medium text-gray-700 mb-2">
+                            Username
+                        </label>
+                        <input type="text" id="deployBoxUsername" name="member" required
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                               placeholder="Enter DeployBox username">
+                    </div>
+                    <div>
+                        <label for="memberRole" class="block text-sm font-medium text-gray-700 mb-2">
+                            Role
+                        </label>
+                        <select id="memberRole" name="role" required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500">
+                            <option value="">Select a role</option>
+                            <option value="admin">Admin</option>
+                            <option value="member">Member</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="flex justify-end space-x-3">
+                <button id="cancelDeployBoxInvite" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                    Cancel
+                </button>
+                <button id="sendDeployBoxInvite" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
+                    Add Member
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+      <h1>Reusable Components Showcase</h1>
+      <p>
+        This page displays UI components in isolation for development and
+        testing. Add new components below as you build them.
+      </p>
+
+      <!-- Success Banner Component -->
+      <div id="successBanner" class="success-banner">
+        <span>Success! Your action was completed.</span>
+        <button class="close-btn" onclick="hideSuccessBanner()">&times;</button>
+      </div>
+
+      <!-- Error Banner Component -->
+      <div id="errorBanner" class="error-banner">
+        <span>Error! Something went wrong.</span>
+        <button class="close-btn" onclick="hideErrorBanner()">&times;</button>
+      </div>
+
+      <!-- Example Component: Button -->
+      <div class="component-demo">
+        <div class="component-title">Primary Button</div>
+        <div class="component-description">
+          A simple, reusable button component for actions.
+        </div>
+        <button class="example-button" onclick="showSuccessBanner()">
+          Click Me
+        </button>
+      </div>
+
+      <!-- Example Component: Error Button -->
+      <div class="component-demo">
+        <div class="component-title">Error Button</div>
+        <div class="component-description">
+          A button to demonstrate the error banner component.
+        </div>
+        <button
+          class="example-button"
+          style="background: #dc3545"
+          onclick="showErrorBanner()"
+        >
+          Trigger Error
+        </button>
+      </div>
+      <div id="delete_modal_body" class="hidden">
+        <p>Are you sure you want to delete this item?</p>
+    </div>
+
+      <!-- Modal Example Component -->
+      <div class="component-demo">
+        <div class="component-title">Modal Example</div>
+        <div class="component-description">
+          A reusable modal dialog component. Click the button to open the modal.
+        </div>
+        <button class="example-button" style="background: #6366f1" onclick="showModal_exampleModal('delete_modal_body')">
+          Show Modal
+        </button>
+      </div>
+      {% include "partials/modal.html" with modal_id="exampleModal" title="Example Modal" actions='<button class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200" onclick="hideModal_exampleModal()">Close</button>' icon='<svg class="h-6 w-6 text-indigo-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M12 20a8 8 0 100-16 8 8 0 000 16z" /></svg>' %}
+    </div>
+  </body>
+  <script src="{% static 'js/modal.js' %}"></script>
+  <script>
+    function showSuccessBanner() {
+      document.getElementById("successBanner").classList.add("show");
+      setTimeout(hideSuccessBanner, 3500);
+    }
+    function hideSuccessBanner() {
+      document.getElementById("successBanner").classList.remove("show");
+    }
+    function showErrorBanner() {
+      document.getElementById("errorBanner").classList.add("show");
+      setTimeout(hideErrorBanner, 3500);
+    }
+    function hideErrorBanner() {
+      document.getElementById("errorBanner").classList.remove("show");
+    }
+  </script>
+</html>

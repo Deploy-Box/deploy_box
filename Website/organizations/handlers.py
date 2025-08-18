@@ -1,5 +1,10 @@
 import json
 from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+from django.views import View
+import logging
 
 import organizations.services as services
 from core.decorators import AuthHttpRequest
@@ -7,7 +12,9 @@ from core.helpers import request_helpers
 from organizations.forms import OrganizationCreateFormWithMembers
 from organizations.models import OrganizationMember, Organization
 from organizations.helpers import check_permission
+from accounts.models import UserProfile
 
+logger = logging.getLogger(__name__)
 
 def get_organizations(request: AuthHttpRequest) -> JsonResponse:
     user = request.auth_user
@@ -112,6 +119,77 @@ def remove_pending_invite(request: AuthHttpRequest, organization_id: str, invite
     """
     user = request.auth_user
     return services.remove_pending_invite(user, organization_id, invite_id)
+
+def initiate_project_transfer(request: AuthHttpRequest, project_id: str) -> JsonResponse:
+    """Initiate a project ownership transfer to a client"""
+    user = request.auth_user
+
+    try:
+        data = json.loads(request.body)
+        client_email = data.get("client_email")
+        client_name = data.get("client_name")
+        client_company = data.get("client_company")
+        keep_developer = data.get("keep_developer", True)
+        
+        if not client_email or not client_name:
+            return JsonResponse({"message": "client_email and client_name are required"}, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({"message": "Invalid JSON data"}, status=400)
+    except Exception as e:
+        return JsonResponse({"message": f"Error parsing request data: {e}"}, status=400)
+
+    return services.initiate_project_transfer(
+        user=user,
+        project_id=project_id,
+        client_email=client_email,
+        client_name=client_name,
+        client_company=client_company,
+        keep_developer=keep_developer
+    )
+
+def accept_project_transfer(request: AuthHttpRequest, transfer_id: str) -> JsonResponse:
+    """Accept a project ownership transfer"""
+    user = request.auth_user
+    return services.accept_project_transfer(transfer_id, user)
+
+def get_project_transfer_status(request: AuthHttpRequest, transfer_id: str) -> JsonResponse:
+    """Get the status of a project transfer invitation"""
+    return services.get_project_transfer_status(transfer_id)
+
+def get_user_transfer_invitations(request: AuthHttpRequest) -> JsonResponse:
+    """Get all transfer invitations for the current user"""
+    user = request.auth_user
+    return services.get_user_transfer_invitations(user)
+
+def cancel_project_transfer(request: AuthHttpRequest, transfer_id: str) -> JsonResponse:
+    """Cancel a project transfer invitation"""
+    user = request.auth_user
+    return services.cancel_project_transfer(user, transfer_id)
+
+def transfer_project_to_organization(request: AuthHttpRequest, project_id: str) -> JsonResponse:
+    """Transfer a project to another organization"""
+    user = request.auth_user
+
+    try:
+        data = json.loads(request.body)
+        target_organization_id = data.get("target_organization_id")
+        keep_developer = data.get("keep_developer", True)
+        
+        if not target_organization_id:
+            return JsonResponse({"message": "target_organization_id is required"}, status=400)
+            
+    except json.JSONDecodeError:
+        return JsonResponse({"message": "Invalid JSON data"}, status=400)
+    except Exception as e:
+        return JsonResponse({"message": f"Error parsing request data: {e}"}, status=400)
+
+    return services.transfer_project_to_organization(
+        user=user,
+        project_id=project_id,
+        target_organization_id=target_organization_id,
+        keep_developer=keep_developer
+    )
 
 
 

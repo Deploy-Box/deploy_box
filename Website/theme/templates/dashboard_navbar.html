@@ -15,8 +15,19 @@
             <ul class="space-y-1 px-3">
                 <!-- Organization Section -->
                 <li class="mb-4">
-                    <a href="{% url 'main_site:organization_dashboard' organization_id=current_organization_id %}" class="block">
-                        <div class="flex items-center gap-3 p-3 sidebar-button">
+                    {% if current_organization_id %}
+                        <a href="{% url 'main_site:organization_dashboard' organization_id=current_organization_id %}" class="block">
+                            <div class="flex items-center gap-3 p-3 sidebar-button">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
+                                    stroke="currentColor" class="size-6">
+                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                        d="M2.25 21h19.5m-18-18v18m10.5-18v18m6-13.5V21M6.75 6.75h.75m-.75 3h.75m-.75 3h.75m3-6h.75m-.75 3h.75m-.75 3h.75M6.75 21v-3.375c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21M3 3h12m-.75 4.5H21m-3.75 3.75h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Zm0 3h.008v.008h-.008v-.008Z" />
+                                </svg>
+                                <span class="sidebar-text font-semibold">Organization</span>
+                            </div>
+                        </a>
+                    {% else %}
+                        <div class="flex items-center gap-3 p-3 sidebar-button opacity-50 cursor-not-allowed">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
                                 stroke="currentColor" class="size-6">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -24,7 +35,7 @@
                             </svg>
                             <span class="sidebar-text font-semibold">Organization</span>
                         </div>
-                    </a>
+                    {% endif %}
 
                     <!-- Organization Dropdown -->
                     {% if user_organizations %}
@@ -125,6 +136,10 @@
                             class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_members' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
                             Members
                         </a>
+                        <a href="{% url 'main_site:transfer_invitations' %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'transfer_invitations' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
+                            Transfer Invitations
+                        </a>
                         <a href="{% url 'main_site:organization_settings' organization_id=current_organization_id %}"
                             class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
                             Settings
@@ -139,6 +154,10 @@
                     <div class="space-y-1">
                         <a href="{% url 'main_site:project_dashboard' organization_id=current_organization_id project_id=current_project_id %}"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
+                        <a href="{% url 'main_site:stack_marketplace' organization_id=current_organization_id project_id=current_project_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'stack_marketplace' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Stack Marketplace</a>
+                        <a href="{% url 'main_site:api_marketplace' organization_id=current_organization_id project_id=current_project_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'api_marketplace' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">API Marketplace</a>
                         <a href="#"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Deployment</a>
                         <a href="{% url 'main_site:project_settings' organization_id=current_organization_id project_id=current_project_id %}"
@@ -155,6 +174,8 @@
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
                         <a href="#"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Usage</a>
+                        <a href="{% url 'main_site:environments' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
+    class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'environments' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Environments</a>
                         <a href="{% url 'main_site:environment_variables' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Environment Variables</a>
                         <a href="#"
@@ -276,8 +297,11 @@
             organizationSelect.addEventListener('change', function () {
                 const selectedOrgId = this.value;
                 if (selectedOrgId === 'add_org') {
-                    // Redirect to create organization page
-                    window.location.href = '/dashboard/create_organization_form/';
+                    // Show create organization modal
+                    const createOrgModal = document.getElementById('createOrgModal');
+                    if (createOrgModal) {
+                        createOrgModal.classList.remove('hidden');
+                    }
                 } else if (selectedOrgId) {
                     window.location.href = `/dashboard/organizations/${selectedOrgId}/`;
                 }

@@ -1,0 +1,53 @@
+<div id="{{ modal_id }}" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        {% if icon %}
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0">{{ icon|safe }}</div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-gray-900">{{ title }}</h3>
+            </div>
+        </div>
+        {% else %}
+        <h3 class="text-lg font-medium text-gray-900 mb-4">{{ title }}</h3>
+        {% endif %}
+        <div class="mb-4 modal-body-placeholder"></div>  {# JS will inject content here #}
+
+        <div class="flex justify-end space-x-3">
+            {{ actions|safe }}
+        </div>
+    </div>
+</div>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var modalId = "{{ modal_id }}";
+    var modalElem = document.getElementById(modalId);
+
+    if (!modalElem) return;
+
+    (function(id) {
+      window["showModal_" + id] = function(contentId) {
+        var el = document.getElementById(id);
+        if (!el) return;
+
+        if (contentId) {
+          var source = document.getElementById(contentId);
+          var target = el.querySelector(".modal-body-placeholder");
+          if (source && target) {
+            target.innerHTML = source.innerHTML;
+          } else {
+            console.warn("[Modal] Content not found for ID:", contentId);
+          }
+        }
+
+        el.style.display = "flex";
+      };
+
+      window["hideModal_" + id] = function() {
+        var el = document.getElementById(id);
+        if (el) {
+          el.style.display = "none";
+        }
+      };
+    })(modalId);
+  });
+</script>

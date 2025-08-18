@@ -1,0 +1,28 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Deploy Box - Welcome</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    {% tailwind_css %}
+    {% block extra_head %}
+    {% endblock %}
+</head>
+
+<body class="bg-gray-100">
+    <!-- Main Content - Full width without navbar -->
+    <div id="mainContent" class="w-full">
+        {% block content %}
+        <div class="container mx-auto">
+            <section class="flex items-center justify-center min-h-screen">
+                <h1 class="text-5xl">Welcome to DeployBox</h1>
+            </section>
+        </div>
+        {% endblock %}
+    </div>
+</body>
+
+</html> 

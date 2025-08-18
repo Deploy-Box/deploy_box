@@ -5,6 +5,7 @@ import os
 load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+print(f"BASE_DIR: {BASE_DIR}")
 
 HOST = os.environ.get("HOST", "https://c361-152-117-84-230.ngrok-free.app")
 assert HOST is not None, "HOST env must be set"
@@ -149,33 +150,34 @@ MIDDLEWARE = [
 ]
 
 # Database
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": os.environ.get("DB_PASSWORD"),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
-        # "OPTIONS": {
-        #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
-        # },
-        "CONN_MAX_AGE": 600,
-    }
-}
-
 # DATABASES = {
 #     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": os.environ.get("DB_NAME"),
+#         "USER": os.environ.get("DB_USER"),
+#         "PASSWORD": os.environ.get("DB_PASSWORD"),
+#         "HOST": os.environ.get("DB_HOST"),
+#         "PORT": os.environ.get("DB_PORT"),
+#         # "OPTIONS": {
+#         #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
+#         # },
+#         "CONN_MAX_AGE": 600,
 #     }
 # }
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
 
 
 # Static & Media Files
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [
+    BASE_DIR / "static",
     BASE_DIR / "theme" / "static",
     BASE_DIR / "main_site" / "static",
     BASE_DIR / "blogs" / "static",
@@ -234,7 +236,7 @@ AZURE = {
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": ["templates"],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [

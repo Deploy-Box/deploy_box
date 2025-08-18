@@ -1,13 +1,14 @@
 import os
-import dotenv
+from typing import Optional
 import requests
 import time
 import re
 
-dotenv.load_dotenv()
+from .azurerm_container_app_environment import AzureContainerAppEnvironment
+from .azurerm_container_app import AzureContainerApp
+from .azurerm_resource_group import AzureResourceGroup
 
 PROVIDER_NAME = "azurerm"
-
 
 class AzureDeployBoxIAC:
     api_version = "2025-03-01-preview"
@@ -29,8 +30,23 @@ class AzureDeployBoxIAC:
         try:
             from django.conf import settings
             self.registry_name = getattr(settings, 'AZURE', {}).get('ACR_NAME') or os.getenv('ACR_NAME', 'deployboxcrdev')
+            self.registry_password = getattr(settings, 'AZURE', {}).get('ACR_PASSWORD') or os.getenv('ACR_PASSWORD', 'deployboxcrdev-password')
         except ImportError:
             self.registry_name = os.getenv('ACR_NAME', 'deployboxcrdev')
+            self.registry_password = os.getenv('ACR_PASSWORD', 'deployboxcrdev-password')
+
+        # Assert that all necessary configurations are present
+        assert self.client_id is not None, "ARM_CLIENT_ID is not set in environment variables"
+        assert self.client_secret is not None, "ARM_CLIENT_SECRET is not set in environment variables"
+        assert self.tenant_id is not None, "ARM_TENANT_ID is not set in environment variables"
+        assert self.subscription_id is not None, "ARM_SUBSCRIPTION_ID is not set in environment variables"
+        assert self.resource_group is not None, "RESOURCE_GROUP_NAME is not set in environment variables or settings"
+        assert self.registry_name is not None, "ACR_NAME is not set in environment variables or settings"
+        assert self.registry_password is not None, "ACR_PASSWORD is not set in environment variables or settings"
+
+        self.azurerm_container_app_environment = AzureContainerAppEnvironment(self)
+        self.azurerm_container_app = AzureContainerApp(self)
+        self.azurerm_resource_group = AzureResourceGroup(self)
 
         self.state = {}
 
@@ -40,6 +56,10 @@ class AzureDeployBoxIAC:
             "Authorization": f"Bearer {self.access_token}",
             "Content-Type": "application/json",
         }
+
+    def request(self, url: str, method: str, body: Optional[dict] = None) -> dict:
+        response = requests.request(method, url, headers=self.headers, json=body)
+        return response.json()
 
     def plan(self, terraform: dict, deploy_box_iac: dict, state: dict):
         self.state = state.setdefault("azure", {})
@@ -448,3 +468,78 @@ class AzureDeployBoxIAC:
                 config.append(env_entry)  # Add new entry
 
         return True
+    
+
+    def testing_delete_acr_repository(self):
+        # Delete a repository from an azure container registry
+
+        from azure.identity import DefaultAzureCredential
+        from azure.containerregistry import ContainerRegistryClient
+
+        # Replace with your ACR login server
+        ACR_URL = "https://deployboxcrdev.azurecr.io"
+        REPOSITORY_NAME = "1f102b02298e494a1"  # The repo you want to delete
+
+        # Authenticate using DefaultAzureCredential (works with CLI, Managed Identity, etc.)
+        credential = DefaultAzureCredential()
+
+        # Create client
+        client = ContainerRegistryClient(endpoint=ACR_URL, credential=credential)
+
+        # Delete the repository
+        try:
+            result = client.delete_repository(repository=REPOSITORY_NAME)
+            print(f"Deleted repository: {REPOSITORY_NAME}")
+        except Exception as e:
+            print(f"Failed to delete: {e}")
+
+    def testing(self):
+        # Test the AzureDeployBoxIAC class functionality
+        # print(AzureResourceGroup.plan("my-resource-group", {}))
+        result = {"azurerm_container_app": {
+            "azurerm_container_app_1": {
+                "ingress": {
+                    "target_port": 5000,
+                },
+                "template": {
+                    "container": [
+                        {
+                            "image": "/mern-backend:latest",
+                            "env": [
+                                # {
+                                #     "name": "MONGO_URI",
+                                #     "value": "mongodb+srv://${mongodbatlas_database_user.user.username}:${mongodbatlas_database_user.user.password}@cluster0.yjaoi.mongodb.net/",
+                                # }
+                            ],
+                        }
+                    ]
+                }
+            },
+            "azurerm_container_app_2": {
+                "ingress": {
+                    "target_port": 8080,
+                },
+                "template": {
+                    "container": [
+                        {
+                            "image": "/mern-frontend:latest",
+                            "env": [
+                                {
+                                    "name": "REACT_APP_BACKEND_URL",
+                                    "value": f"https://${{azurerm_container_app.mern-backend.fqdn}}",
+                                }
+                            ],
+                        }
+                    ]
+                },
+            },
+        }}
+        self.azurerm_container_app.plan("my-container-app", result)
+        print(self.azurerm_container_app.get_resource_information("my-container-app", result))
+
+        # print(json.dumps(result, indent=2))
+
+
+# azure_deploy_box_iac = AzureDeployBoxIAC()
+# azure_deploy_box_iac.testing()
+# exit(1)

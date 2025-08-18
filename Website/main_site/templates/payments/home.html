@@ -1,41 +1,282 @@
-{% extends 'base.html' %} {% load static %}
+{% extends 'base.html' %}
+{% load static %}
 
-<head>
-  {% block extra_head%}
+{% block extra_head %}
   <script src="https://js.stripe.com/v3/"></script>
   {% endblock %}
-</head>
 
 {% block content %}
-<div class="pt-10 flex items-center justify-center text-3xl text-bold">
-  <header>Purchase your Stack!</header>
+{% csrf_token %}
+<div class="w-full bg-gray-50">
+    <header class="bg-zinc-950 pt-16 pb-24 text-center">
+        <div class="max-w-4xl mx-auto px-4">
+            <h1 class="text-3xl font-bold text-gray-100 mb-4">{{ variant|title }} Stack Marketplace</h1>
+            <p class="text-lg text-gray-300 mb-6">
+                Choose from our collection of pre-built, production-ready {{ variant|lower }} stacks
+            </p>
+            <div class="flex items-center justify-center space-x-4 text-sm text-gray-400">
+                <span class="flex items-center">
+                    <svg class="h-4 w-4 mr-2 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    One-time purchase
+                </span>
+                <span class="flex items-center">
+                    <svg class="h-4 w-4 mr-2 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    Instant deployment
+                </span>
+                <span class="flex items-center">
+                    <svg class="h-4 w-4 mr-2 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                    </svg>
+                    Full source code
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="w-full max-w-7xl mx-auto px-4 -mt-10 pb-12">
+        <!-- Stacks Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {% for stack in stack_options %}
+            {% if stack.variant == 'Basic' or stack.variant == 'FREE' %}
+                <!-- Basic tier - emerald colors -->
+                <div class="stack-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="basic" id="stack-{{ stack.id }}">
+                    {% if stack.popular %}
+                    <div class="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                        POPULAR
+                    </div>
+                    {% endif %}
+                    
+                    <div class="p-6">
+                        <!-- Stack Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-3xl">{{ stack.icon }}</div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 text-lg">{{ stack.name }}</h3>
+                                    <p class="text-sm text-emerald-600 font-medium">{{ stack.type }} Stack - {{ stack.variant }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ stack.description }}</p>
+
+                        <!-- Price -->
+                        <div class="mb-4">
+                            <span class="text-2xl font-bold text-emerald-600">${{ stack.price }}</span>
+                            <span class="text-sm text-gray-500 ml-1">one-time</span>
+                        </div>
+
+                        <!-- Features -->
+                        <div class="mb-6">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Includes:</h4>
+                            <ul class="space-y-1">
+                                {% for feature in stack.features|slice:":4" %}
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <svg class="h-4 w-4 mr-2 text-emerald-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    {{ feature }}
+                                </li>
+                                {% endfor %}
+                                {% if stack.features|length > 4 %}
+                                <li class="text-sm text-gray-500 italic">
+                                    +{{ stack.features|length|add:"-4" }} more features
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+
+                        <!-- Purchase Button -->
+                        <button 
+                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }}, '{{ stack.is_from_database|yesno:'true,false' }}')"
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            </svg>
+                            <span>Purchase Stack</span>
+                        </button>
+                    </div>
+                </div>
+            {% elif stack.variant == 'Premium' %}
+                <!-- Premium tier - amber colors -->
+                <div class="stack-card bg-white rounded-xl shadow-lg border-2 border-amber-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="premium" id="stack-{{ stack.id }}">
+                    {% if stack.popular %}
+                    <div class="absolute top-0 right-0 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                        POPULAR
+                    </div>
+                    {% endif %}
+                    
+                    <div class="p-6">
+                        <!-- Stack Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-3xl">{{ stack.icon }}</div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 text-lg">{{ stack.name }}</h3>
+                                    <p class="text-sm text-amber-600 font-medium">{{ stack.type }} Stack - {{ stack.variant }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ stack.description }}</p>
+
+                        <!-- Price -->
+                        <div class="mb-4">
+                            <span class="text-2xl font-bold text-amber-600">${{ stack.price }}</span>
+                            <span class="text-sm text-gray-500 ml-1">one-time</span>
+                        </div>
+
+                        <!-- Features -->
+                        <div class="mb-6">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Includes:</h4>
+                            <ul class="space-y-1">
+                                {% for feature in stack.features|slice:":4" %}
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <svg class="h-4 w-4 mr-2 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    {{ feature }}
+                                </li>
+                                {% endfor %}
+                                {% if stack.features|length > 4 %}
+                                <li class="text-sm text-gray-500 italic">
+                                    +{{ stack.features|length|add:"-4" }} more features
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+
+                        <!-- Purchase Button -->
+                        <button 
+                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }}, '{{ stack.is_from_database|yesno:'true,false' }}')"
+                            class="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            </svg>
+                            <span>Purchase Stack</span>
+                        </button>
+                    </div>
+                </div>
+            {% else %}
+                <!-- Pro tier - purple colors -->
+                <div class="stack-card bg-white rounded-xl shadow-lg border-2 border-purple-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="pro" id="stack-{{ stack.id }}">
+                    {% if stack.popular %}
+                    <div class="absolute top-0 right-0 bg-purple-400 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
+                        POPULAR
+                    </div>
+                    {% endif %}
+                    
+                    <div class="p-6">
+                        <!-- Stack Header -->
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center space-x-3">
+                                <div class="text-3xl">{{ stack.icon }}</div>
+                                <div>
+                                    <h3 class="font-bold text-gray-900 text-lg">{{ stack.name }}</h3>
+                                    <p class="text-sm text-purple-300 font-medium">{{ stack.type }} Stack - {{ stack.variant }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ stack.description }}</p>
+
+                        <!-- Price -->
+                        <div class="mb-4">
+                            <span class="text-2xl font-bold text-purple-600">${{ stack.price }}</span>
+                            <span class="text-sm text-gray-500 ml-1">one-time</span>
+                        </div>
+
+                        <!-- Features -->
+                        <div class="mb-6">
+                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Includes:</h4>
+                            <ul class="space-y-1">
+                                {% for feature in stack.features|slice:":4" %}
+                                <li class="flex items-center text-sm text-gray-600">
+                                    <svg class="h-4 w-4 mr-2 text-purple-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    {{ feature }}
+                                </li>
+                                {% endfor %}
+                                {% if stack.features|length > 4 %}
+                                <li class="text-sm text-gray-500 italic">
+                                    +{{ stack.features|length|add:"-4" }} more features
+                                </li>
+                                {% endif %}
+                            </ul>
+                        </div>
+
+                        <!-- Purchase Button -->
+                        <button 
+                            onclick="purchaseStack('{{ stack.id }}', '{{ stack.name }}', {{ stack.price }}, '{{ stack.is_from_database|yesno:'true,false' }}')"
+                            class="w-full bg-purple-300 hover:bg-purple-400 text-zinc-950 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                            </svg>
+                            <span>Purchase Stack</span>
+                        </button>
+                    </div>
+                </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+    </main>
 </div>
-<div class = "text-center mt-4">
+
+<!-- Purchase Modal with Organization/Project Selection -->
+<div id="purchaseModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-gray-900">Purchase Stack</h3>
+            </div>
+        </div>
+        
+        <div class="mb-4">
+            <p class="text-sm text-gray-500 mb-4">
+                You're about to purchase <span id="modalStackName" class="font-semibold text-gray-900"></span> for <span id="modalStackPrice" class="font-semibold text-gray-900"></span>.
+            </p>
+            
+            <!-- Organization Selection -->
+            <div class="mb-4">
+                <label for="org_dropdown" class="block text-sm font-medium text-gray-700 mb-2">Select Organization</label>
   <select
   name="org_dropdown"
   id="org_dropdown"
-  class="rounded-lg border-gray-900 text-gray-900"
+                    class="w-full rounded-lg border-gray-300 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500"
   >
-  <!-- Default Placeholder Option -->
   <option value="" selected disabled>Select an Organization</option>
-
   {% for organization in organizations %}
-  <option id="org_choice" value="{{ organization.id }}">
+                    <option value="{{ organization.id }}">
     {{ organization.name }}
   </option>
   {% endfor %}
   </select>
+            </div>
+            
+            <!-- Project Selection -->
+            <div class="mb-4">
+                <label for="project_dropdown" class="block text-sm font-medium text-gray-700 mb-2">Select Project</label>
   <select
   name="project_dropdown"
   id="project_dropdown"
-  class="rounded-lg border-gray-900 text-gray-900"
+                    class="w-full rounded-lg border-gray-300 text-gray-900 focus:ring-emerald-500 focus:border-emerald-500"
   >
-  <!-- Default Placeholder Option -->
-  <option value="" selected disabled>Select an project</option>
-
+                    <option value="" selected disabled>Select a Project</option>
   {% for project in projects %}
   <option
-    id="proj_choice"
     value="{{ project.id }}"
     org_id="{{ project.organization_id }}"
   >
@@ -44,42 +285,175 @@
   {% endfor %}
   </select>
 </div>
-{%for stack_option in stack_options%}
-  <div class="p-4">
-    <section class="section flex items-center justify-center">
-      <div
-        class="p-10 rounded-l-xl border border-blue-gray-100 rounded-xl bg-no-repeat lg:bg-contain bg-cover bg-right mb-5 w-2/3"
-      >
-        <p
-          class="block antialiased font-sans text-sm font-light leading-normal text-blue-gray-900 font-bold mb-2"
-        >
-          Most Popuar Stack
+            
+            <p class="text-sm text-gray-500">
+                This will add the stack to your selected project and you'll be able to deploy it immediately.
         </p>
-        <h3
-          class="block antialiased tracking-normal font-sans text-3xl font-semibold leading-snug text-blue-gray-900"
-        >
-          {{stack_option.name}}
-        </h3>
-        <p
-          class="block antialiased font-sans text-base font-light leading-relaxed text-inherit mt-2 mb-6 !text-base font-normal text-gray-500"
-        >
-        {{stack_option.description}}
-        </p>
-        <div>
-          <button
-            class="align-middle select-none font-sans font-bold text-center uppercase transition-all disabled:opacity-50 disabled:shadow-none disabled:pointer-events-none text-xs py-3 px-6 rounded-lg border border-gray-900 text-gray-900 hover:opacity-75 focus:ring focus:ring-gray-300 active:opacity-[0.85] flex-shrink-0"
-            type="button"
-            data-ripple-dark="true"
-            id="submitBtn"
-            data-stack-id="{{stack_option.id}}"
-          >
-            Purchase
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button id="cancelPurchase" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                Cancel
+            </button>
+            <button id="confirmPurchase" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
+                Confirm Purchase
           </button>
         </div>
       </div>
-    </section>
   </div>
-{%endfor%}
-<script src="{% static 'payments/index.js' %}"></script>
 
+<script>
+let selectedStack = null;
+let stripe = null;
+
+// Initialize Stripe on page load (same as payments home page)
+fetch("/api/v1/payments/config")
+  .then((result) => {
+    return result.json();
+  })
+  .then((data) => {
+    // Initialize Stripe.js
+    stripe = Stripe(data.public_key);
+    console.log("Stripe initialized successfully");
+  })
+  .catch((error) => {
+    console.error("Error initializing Stripe:", error);
+  });
+
+function purchaseStack(stackId, stackName, stackPrice, isFromDatabase) {
+    selectedStack = { 
+        id: stackId, 
+        name: stackName, 
+        price: stackPrice, 
+        isFromDatabase: isFromDatabase === 'true'
+    };
+    
+    document.getElementById('modalStackName').textContent = stackName;
+    document.getElementById('modalStackPrice').textContent = `$${stackPrice}`;
+    document.getElementById('purchaseModal').classList.remove('hidden');
+}
+
+document.getElementById('cancelPurchase').addEventListener('click', function() {
+    document.getElementById('purchaseModal').classList.add('hidden');
+    selectedStack = null;
+});
+
+document.getElementById('confirmPurchase').addEventListener('click', function() {
+    if (!selectedStack) return;
+    
+    const orgId = document.getElementById('org_dropdown').value;
+    const projectId = document.getElementById('project_dropdown').value;
+    
+    // Validate selections
+    if (!orgId) {
+        alert("Please select an organization before purchasing");
+        return;
+    }
+    if (!projectId) {
+        alert("Please select a project before purchasing");
+        return;
+    }
+    
+    // Show loading state
+    const confirmBtn = document.getElementById('confirmPurchase');
+    const originalText = confirmBtn.textContent;
+    confirmBtn.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processing...';
+    confirmBtn.disabled = true;
+    
+    if (selectedStack.isFromDatabase) {
+        // For database stacks, use the same Stripe flow as payments home page
+        // Ensure stripe is initialized
+        if (!stripe) {
+            alert('Payment system is still loading. Please wait a moment and try again.');
+            return;
+        }
+        
+        // Create checkout session
+        fetch(`/api/v1/payments/checkout/create/${orgId}/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                stack_id: selectedStack.id,
+                project_id: projectId
+            })
+        })
+        .then((result) => result.json())
+        .then((data) => {
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+            console.log("sessionID", data);
+            // Redirect to Stripe Checkout
+            return stripe.redirectToCheckout({ sessionId: data.sessionId });
+        })
+        .then((res) => {
+            if (res && res.error) {
+                console.error("Stripe checkout error:", res.error);
+                alert("Error redirecting to payment page. Please try again.");
+            }
+        })
+        .catch((error) => {
+            console.error("Error creating checkout session:", error);
+            alert("Failed to create checkout session. Please try again.");
+        });
+    } else {
+        // For mock stacks, simulate purchase process (replace with actual API call)
+        setTimeout(() => {
+            // For now, just redirect back to dashboard
+            window.location.href = "/dashboard/";
+        }, 2000);
+    }
+});
+
+// Close modal when clicking outside
+document.getElementById('purchaseModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.add('hidden');
+        selectedStack = null;
+    }
+});
+
+// Close modal with Escape key
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && !document.getElementById('purchaseModal').classList.contains('hidden')) {
+        document.getElementById('purchaseModal').classList.add('hidden');
+        selectedStack = null;
+    }
+});
+
+// Organization dropdown change handler
+const org_dropdown = document.getElementById("org_dropdown");
+org_dropdown.addEventListener("change", () => {
+    const org_id = org_dropdown.value;
+    console.log(org_id);
+
+    let project_options = document.querySelectorAll("#project_dropdown option");
+
+    project_options.forEach((option) => {
+        console.log(option.getAttribute("org_id"));
+        console.log(org_id);
+
+        if (option.getAttribute("org_id") !== org_id) {
+            option.style.display = "none";
+        } else {
+            option.style.display = "block";
+        }
+    });
+
+    // Reset project dropdown to default placeholder when organization changes
+    document.getElementById("project_dropdown").value = "";
+});
+</script>
+
+<style>
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+</style>
 {% endblock %}

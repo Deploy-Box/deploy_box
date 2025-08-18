@@ -387,6 +387,15 @@ function setAddPaymentLoadingState(isLoading) {
 document.addEventListener('DOMContentLoaded', function() {
     const paymentForm = document.getElementById('payment-form');
 
+    // Check if we should auto-open the payment modal
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('open-add-payment-method') === 'true') {
+        showAddPaymentModal();
+        // Remove the query parameter from URL to prevent modal from reopening on page reload
+        const newUrl = window.location.pathname + window.location.search.replace('?open-add-payment-method=true', '').replace('&open-add-payment-method=true', '');
+        window.history.replaceState({}, document.title, newUrl);
+    }
+
     paymentForm.addEventListener('submit', async (event) => {
         event.preventDefault();
 
@@ -439,7 +448,26 @@ document.addEventListener('DOMContentLoaded', function() {
                 setAddPaymentLoadingState(false);
                 showAddPaymentError(error.message);
             } else {
-                // Success - the page will reload due to return_url
+                // Save the payment method to the customer
+                const saveResponse = await fetch("/api/v1/payments/save-payment-method/", {
+                    method: "POST",
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        payment_method_id: paymentMethod.id,
+                        organization_id: currentOrganizationId
+                    })
+                });
+
+                if (!saveResponse.ok) {
+                    const saveErrorData = await saveResponse.json();
+                    setAddPaymentLoadingState(false);
+                    showAddPaymentError(saveErrorData.error || 'Failed to save payment method');
+                    return;
+                }
+
+                // Success - payment method saved
                 showAddPaymentSuccess('Payment method added successfully!');
                 setTimeout(() => {
                     window.location.reload();

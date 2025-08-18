@@ -1,3 +1,7 @@
+// Global variables
+let stripe;
+let currentOrganizationId = null;
+
 // Get Stripe publishable key
 fetch("/api/v1/payments/config")
   .then((result) => {
@@ -5,11 +9,11 @@ fetch("/api/v1/payments/config")
   })
   .then((data) => {
     // Initialize Stripe.js
-    const stripe = Stripe(data.public_key);
+    stripe = Stripe(data.public_key);
 
     // Event handler
     document.querySelectorAll("#submitBtn").forEach((button) => {
-      button.addEventListener("click", () => {
+      button.addEventListener("click", async () => {
         const stack_id = button.getAttribute("data-stack-id");
         const org_id = document.getElementById("org_dropdown").value;
         const project_id = document.getElementById("project_dropdown").value;
@@ -36,12 +40,24 @@ fetch("/api/v1/payments/config")
             return result.json();
           })
           .then((data) => {
+            if (data.error) {
+              // Show error message to user
+              alert(data.error);
+              return;
+            }
             console.log("sessionID", data);
             // Redirect to Stripe Checkout
             return stripe.redirectToCheckout({ sessionId: data.sessionId });
           })
           .then((res) => {
-            console.log(res);
+            if (res && res.error) {
+              console.error("Stripe checkout error:", res.error);
+              alert("Error redirecting to payment page. Please try again.");
+            }
+          })
+          .catch((error) => {
+            console.error("Error creating checkout session:", error);
+            alert("Failed to create checkout session. Please try again.");
           });
       });
     });

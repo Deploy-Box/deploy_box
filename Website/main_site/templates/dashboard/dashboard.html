@@ -75,7 +75,7 @@
                             </path>
                         </svg>
                         <p class="text-zinc-500 mb-4">You have no organizations</p>
-                        <a href="{% url 'main_site:create_organization_form' %}"
+                        <button id="createOrgBtnEmpty"
                             class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
                                 fill="currentColor">
@@ -84,7 +84,7 @@
                                     clip-rule="evenodd"></path>
                             </svg>
                             Create Organization
-                        </a>
+                        </button>
                     </div>
                     {% endfor %}
                 </div>
@@ -163,182 +163,8 @@
     </main>
 </div>
 
-<!-- Create Organization Modal -->
-<div id="createOrgModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <div class="flex items-center mb-4">
-            <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-            </div>
-            <div class="ml-3">
-                <h3 class="text-lg font-medium text-gray-900">Create New Organization</h3>
-            </div>
-        </div>
-        <div class="mb-4">
-            <p class="text-sm text-gray-500 mb-4">
-                Create a new organization to manage your projects and collaborate with your team.
-            </p>
-            <form id="createOrgForm" class="space-y-4">
-                <div>
-                    <label for="orgName" class="block text-sm font-medium text-gray-700 mb-2">
-                        Organization Name
-                    </label>
-                    <input type="text" id="orgName" name="name" required
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-                           placeholder="Enter organization name">
-                </div>
-                <div>
-                    <label for="orgEmail" class="block text-sm font-medium text-gray-700 mb-2">
-                        Organization Email
-                    </label>
-                    <input type="email" id="orgEmail" name="email" required
-                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
-                           placeholder="Enter organization email">
-                </div>
-            </form>
-        </div>
-        <div class="flex justify-end space-x-3">
-            <button id="cancelCreateOrg" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
-                Cancel
-            </button>
-            <button id="submitCreateOrg" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
-                Create Organization
-            </button>
-        </div>
-    </div>
-</div>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const modalOverlay = document.getElementById('modalOverlay');
-        const cancelBtn = document.getElementById('cancelModalBtn');
-        const createOrgBtn = document.getElementById('createOrgBtn');
-        const deleteBtns = document.querySelectorAll('#deleteOrgBtn');
-        const orgIdInput = document.getElementById('orgIdToDelete');
 
-        // Organization creation modal functionality
-        const createOrgModal = document.getElementById('createOrgModal');
-        const cancelCreateOrg = document.getElementById('cancelCreateOrg');
-        const submitCreateOrg = document.getElementById('submitCreateOrg');
-        const createOrgForm = document.getElementById('createOrgForm');
-        const orgName = document.getElementById('orgName');
-        const orgEmail = document.getElementById('orgEmail');
 
-        createOrgBtn.addEventListener('click', function() {
-            createOrgModal.classList.remove('hidden');
-        });
-
-        cancelCreateOrg.addEventListener('click', function() {
-            createOrgModal.classList.add('hidden');
-            createOrgForm.reset();
-        });
-
-        submitCreateOrg.addEventListener('click', function() {
-            const name = orgName.value.trim();
-            const email = orgEmail.value.trim();
-
-            if (!name) {
-                alert('Please enter an organization name');
-                return;
-            }
-
-            if (!email) {
-                alert('Please enter an organization email');
-                return;
-            }
-
-            if (!isValidEmail(email)) {
-                alert('Please enter a valid email address');
-                return;
-            }
-
-            // Show loading state
-            submitCreateOrg.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Creating...';
-            submitCreateOrg.disabled = true;
-
-            fetch('/api/v1/organizations/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message) {
-                    alert(data.message);
-                }
-                if (response.ok) {
-                    createOrgModal.classList.add('hidden');
-                    createOrgForm.reset();
-                    location.reload();
-                }
-            })
-            .catch(error => {
-                console.error('Error creating organization:', error);
-                alert('Failed to create organization. Please try again.');
-            })
-            .finally(() => {
-                submitCreateOrg.innerHTML = 'Create Organization';
-                submitCreateOrg.disabled = false;
-            });
-        });
-
-        // Close organization modal when clicking outside
-        createOrgModal.addEventListener('click', function(e) {
-            if (e.target === createOrgModal) {
-                createOrgModal.classList.add('hidden');
-                createOrgForm.reset();
-            }
-        });
-
-        // Close organization modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && !createOrgModal.classList.contains('hidden')) {
-                createOrgModal.classList.add('hidden');
-                createOrgForm.reset();
-            }
-        });
-
-        // Email validation function
-        function isValidEmail(email) {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            return emailRegex.test(email);
-        }
-
-        // Helper function to get CSRF token
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-
-        // Existing functionality for delete modals
-        deleteBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                orgIdInput.value = btn.value;
-                modalOverlay.classList.remove('hidden');
-                modalOverlay.classList.add('flex');
-            });
-        });
-
-        cancelBtn.addEventListener('click', () => {
-            modalOverlay.classList.add('hidden');
-            modalOverlay.classList.remove('flex');
-        });
-    });
-</script>
 
 {% endblock %}

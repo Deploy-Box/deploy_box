@@ -10,7 +10,7 @@ from django.utils.decorators import method_decorator
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.handlers as handlers
-from stacks.models import Stack, PurchasableStack
+from stacks.models import PrebuiltStack, Stack, PurchasableStack
 from stacks.serializers import (
     StackDatabaseSerializer,
     StackSerializer,
@@ -433,5 +433,3 @@ def update_iac(request: HttpRequest, stack_id: str) -> JsonResponse:
         return handlers.update_iac(request, stack_id)
     else:
         return JsonResponse({"error": "Method not allowed."}, status=405)
-
-
