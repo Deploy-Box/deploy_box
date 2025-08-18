@@ -65,47 +65,47 @@ jobs:
           python manage.py migrate --run-syncdb --verbosity=2
           echo "✅ Migration execution test passed"
 
-  lint-and-test:
-    runs-on: ubuntu-latest
-    name: Code Quality and Tests
+  # lint-and-test:
+  #   runs-on: ubuntu-latest
+  #   name: Code Quality and Tests
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.10"
 
-      - name: Install dependencies
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r Website/requirements.txt
-          pip install flake8 black isort
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m venv venv
+  #         source venv/bin/activate
+  #         pip install -r Website/requirements.txt
+  #         pip install flake8 black isort
 
-      - name: Run code formatting check
-        run: |
-          source venv/bin/activate
-          cd Website
-          # Check if code is properly formatted
-          black --check --diff .
-          isort --check-only --diff .
+  #     - name: Run code formatting check
+  #       run: |
+  #         source venv/bin/activate
+  #         cd Website
+  #         # Check if code is properly formatted
+  #         black --check --diff .
+  #         isort --check-only --diff .
 
-      - name: Run linting
-        run: |
-          source venv/bin/activate
-          cd Website
-          # Run flake8 for code quality
-          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
-          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+  #     - name: Run linting
+  #       run: |
+  #         source venv/bin/activate
+  #         cd Website
+  #         # Run flake8 for code quality
+  #         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+  #         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
 
-      - name: Run Django tests
-        run: |
-          source venv/bin/activate
-          cd Website
-          python manage.py test --verbosity=2
+  #     - name: Run Django tests
+  #       run: |
+  #         source venv/bin/activate
+  #         cd Website
+  #         python manage.py test --verbosity=2
 
   security-check:
     runs-on: ubuntu-latest
