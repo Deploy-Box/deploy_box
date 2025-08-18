@@ -193,10 +193,40 @@ class StackViewSet(ViewSet):
         import google.cloud.storage as storage
         import google.api_core.exceptions as exceptions
         import requests
+        from django.conf import settings
 
-        # Get the bucket name and file name from the request
+        # Get the stack object
+        try:
+            stack = Stack.objects.get(id=stack_id)
+        except Stack.DoesNotExist:
+            return Response({"error": "Stack not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        # First, try to download from the DEPLOY_BOX_STACK_ENDPOINT if configured
+        if hasattr(settings, 'DEPLOY_BOX_STACK_ENDPOINT') and settings.DEPLOY_BOX_STACK_ENDPOINT:
+            try:
+                # Construct the download URL using the environment variable
+                download_url = f"{settings.DEPLOY_BOX_STACK_ENDPOINT.rstrip('/')}/{stack_id}/source.zip"
+                print(f"Attempting to download from: {download_url}")
+                
+                response = requests.get(download_url, timeout=30)
+                response.raise_for_status()
+
+                # Create the response with file download headers
+                file_response = HttpResponse(
+                    response.content, content_type="application/octet-stream"
+                )
+                file_response["Content-Disposition"] = (
+                    f'attachment; filename="stack_{stack_id}_source.zip"'
+                )
+                return file_response
+
+            except requests.RequestException as e:
+                print(f"Failed to download from DEPLOY_BOX_STACK_ENDPOINT: {str(e)}")
+                # Continue to fallback methods
+
+        # Fallback to GCP storage
         bucket_name = "deploy-box-prod-source-code"
-        file_name = f"{stack_id}/source.zip"  # Adding trailing slash to indicate folder
+        file_name = f"{stack_id}/source.zip"
 
         if not bucket_name or not file_name:
             return Response(
@@ -221,11 +251,7 @@ class StackViewSet(ViewSet):
             return response
 
         except exceptions.NotFound:
-            stack = Stack.objects.get(id=stack_id)
             print("Checking Github")
-
-            if not stack:
-                return Response({"error": "Stack not found"}, status=status.HTTP_404_NOT_FOUND)
 
             url = f"https://raw.githubusercontent.com/Deploy-Box/{stack.purchased_stack.type.upper()}/main/source.zip"
 
