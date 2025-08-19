@@ -46,6 +46,7 @@ urlpatterns += [
 
 urlpatterns += [
     path("update-iac/<str:stack_id>/", views.update_iac, name="update_iac"),
+    path("overwrite-iac/<str:stack_id>/", views.overwrite_iac, name="overwrite_iac"),
 ]
 
 # urlpatterns += Stack.get_urlpatterns(baseurl="")

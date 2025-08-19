@@ -36,12 +36,9 @@ Your file server should:
 3. **Handle authentication**: If required, configure your server appropriately
 4. **Return appropriate status codes**: 200 for success, 404 for not found, etc.
 
-## Fallback Behavior
+## Required Configuration
 
-If the `DEPLOY_BOX_STACK_ENDPOINT` is not configured or the download fails, the system will fall back to:
-
-1. **Google Cloud Storage**: `deploy-box-prod-source-code` bucket
-2. **GitHub**: Raw GitHub URLs for Deploy-Box repositories
+The `DEPLOY_BOX_STACK_ENDPOINT` environment variable **must** be configured for the download functionality to work. There are no fallback methods - if the endpoint is not configured or fails, the download will return an error.
 
 ## Testing
 
@@ -63,9 +60,10 @@ To test the functionality:
 
 ### Common Issues
 
-1. **404 Errors**: Ensure files exist at the expected path
-2. **Timeout Errors**: Check network connectivity and server response times
-3. **Authentication Errors**: Verify any required authentication is properly configured
+1. **Environment Variable Not Set**: Ensure `DEPLOY_BOX_STACK_ENDPOINT` is properly configured
+2. **404 Errors**: Ensure files exist at the expected path
+3. **Timeout Errors**: Check network connectivity and server response times
+4. **Authentication Errors**: Verify any required authentication is properly configured
 
 ### Debugging
 
