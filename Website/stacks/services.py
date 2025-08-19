@@ -361,3 +361,53 @@ def update_iac(stack_id: str, data: dict, section: list[str]) -> JsonResponse:
     except Exception as e:
         logger.error(f"Failed to update IAC for stack {stack_id}: {str(e)}")
         return JsonResponse({"error": f"Failed to update IAC. {str(e)}"}, status=500)
+
+
+def overwrite_iac(stack_id: str, new_iac: dict) -> JsonResponse:
+    """
+    Completely overwrites the IAC configuration for a given stack.
+
+    Args:
+        stack_id (str): The ID of the stack to update.
+        new_iac (dict): The complete new IAC configuration to replace the existing one.
+
+    Returns:
+        JsonResponse: Success or error response.
+    """
+    try:
+        stack = Stack.objects.get(pk=stack_id)
+        logger.info(f"Overwriting IAC for stack: {stack_id}")
+        
+        # Store the old IAC for logging purposes
+        old_iac = stack.iac
+        logger.info(f"Old IAC configuration: {old_iac}")
+        logger.info(f"New IAC configuration: {new_iac}")
+        
+        # Validate that the new IAC is a valid dictionary
+        if not isinstance(new_iac, dict):
+            return JsonResponse({"error": "IAC configuration must be a valid JSON object."}, status=400)
+        
+        # Overwrite the IAC configuration
+        stack.iac = new_iac
+        stack.save()
+        
+        # Deploy the new IAC configuration
+        resource_group_name = f"{stack_id}-rg"
+        cloud = DeployBoxIAC()
+        cloud.deploy(resource_group_name, new_iac)
+        
+        logger.info(f"Successfully overwrote IAC for stack: {stack_id}")
+        return JsonResponse({
+            "success": True, 
+            "message": "IAC configuration overwritten successfully.",
+            "stack_id": stack_id,
+            "old_iac": old_iac,
+            "new_iac": new_iac
+        }, status=200)
+
+    except Stack.DoesNotExist:
+        logger.error(f"Stack with ID {stack_id} does not exist.")
+        return JsonResponse({"error": "Stack not found."}, status=404)
+    except Exception as e:
+        logger.error(f"Failed to overwrite IAC for stack {stack_id}: {str(e)}")
+        return JsonResponse({"error": f"Failed to overwrite IAC configuration. {str(e)}"}, status=500)
