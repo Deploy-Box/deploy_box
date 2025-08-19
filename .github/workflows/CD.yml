@@ -1,14 +1,8 @@
 name: Continuous Deployment to Azure
 
 on:
-  push:
-    branches:
-      - dev
   pull_request:
-    types: [closed]
-    branches:
-      - main
-
+    branches: ['dev', 'test',git  'main']
 
 permissions:
   id-token: write
@@ -17,10 +11,8 @@ permissions:
 jobs:
   migrations:
     runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+    if: github.event.pull_request.merged == true
+    environment: ${{ github.event.pull_request.base.ref == 'main' && 'prod' || 'dev' }}
 
     steps:
       - name: Checkout repository
@@ -53,10 +45,8 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'push' && github.ref == 'refs/heads/dev') ||
-      (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+    if: github.event.pull_request.merged == true
+    environment: ${{ github.event.pull_request.base.ref == 'main' && 'prod' || 'dev' }}
 
     env:
       STACK: ${{ vars.STACK }}
