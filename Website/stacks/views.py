@@ -18,7 +18,8 @@ from stacks.serializers import (
     StackCreateSerializer,
     StackUpdateSerializer,
     PurchasableStackCreateSerializer,
-    StackDatabaseUpdateSerializer
+    StackDatabaseUpdateSerializer,
+    StackIACOverwriteSerializer
 )
 from projects.models import Project
 from core.helpers import request_helpers
@@ -156,6 +157,31 @@ class StackViewSet(ViewSet):
         )
 
     @oauth_required()
+    @action(detail=True, methods=['post'])
+    def overwrite_iac(self, request, pk=None):
+        """POST: Overwrite IAC configuration for a specific stack"""
+        stack = get_object_or_404(Stack, id=pk)
+        serializer = StackIACOverwriteSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        new_iac = data.get('iac')
+
+        if not new_iac:
+            return Response({"error": "IAC configuration is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Call the service function and handle the JsonResponse
+        result = services.overwrite_iac(str(stack.id), new_iac)
+        
+        # Convert JsonResponse to DRF Response
+        if result.status_code == 200:
+            return Response(result.json(), status=status.HTTP_200_OK)
+        else:
+            return Response(result.json(), status=result.status_code)
+
+    @oauth_required()
     @action(detail=True, methods=['get'])
     def env(self, request, pk=None):
         """GET: Fetch environment variables for a specific stack"""
@@ -190,60 +216,46 @@ class StackViewSet(ViewSet):
 
     def _download_stack(self, request, stack_id):
         """Helper method for downloading stack source code"""
-        import google.cloud.storage as storage
-        import google.api_core.exceptions as exceptions
         import requests
+        from django.conf import settings
 
-        # Get the bucket name and file name from the request
-        bucket_name = "deploy-box-prod-source-code"
-        file_name = f"{stack_id}/source.zip"  # Adding trailing slash to indicate folder
+        # Get the stack object
+        try:
+            stack = Stack.objects.get(id=stack_id)
+        except Stack.DoesNotExist:
+            return Response({"error": "Stack not found"}, status=status.HTTP_404_NOT_FOUND)
 
-        if not bucket_name or not file_name:
+        # Check if DEPLOY_BOX_STACK_ENDPOINT is configured
+        if not hasattr(settings, 'DEPLOY_BOX_STACK_ENDPOINT') or not settings.DEPLOY_BOX_STACK_ENDPOINT:
             return Response(
-                {"error": "Bucket name and file name are required"},
-                status=status.HTTP_400_BAD_REQUEST
+                {"error": "DEPLOY_BOX_STACK_ENDPOINT is not configured"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
         try:
-            # Initialize GCP storage client
-            storage_client = storage.Client()
-            bucket = storage_client.bucket(bucket_name)
-            blob = bucket.blob(file_name)
-
-            # Download the file content
-            file_content = blob.download_as_bytes()
-
-            # Create the response with file download headers
-            response = HttpResponse(file_content, content_type="application/octet-stream")
-            response["Content-Disposition"] = (
-                f'attachment; filename="{file_name.split("/")[-1]}"'
-            )
-            return response
-
-        except exceptions.NotFound:
-            stack = Stack.objects.get(id=stack_id)
-            print("Checking Github")
-
-            if not stack:
-                return Response({"error": "Stack not found"}, status=status.HTTP_404_NOT_FOUND)
-
-            url = f"https://raw.githubusercontent.com/Deploy-Box/{stack.purchased_stack.type.upper()}/main/source.zip"
-
-            response = requests.get(url)
+            # Construct the download URL using the environment variable
+            file_name = f"{stack.purchased_stack.type}-{stack.purchased_stack.variant}.zip".lower()
+            download_url = f"{settings.DEPLOY_BOX_STACK_ENDPOINT.rstrip('/')}/{file_name}"
+            print(f"Attempting to download from: {download_url}")
+            
+            response = requests.get(download_url, timeout=30)
             response.raise_for_status()
 
             # Create the response with file download headers
-            response = HttpResponse(
+            file_response = HttpResponse(
                 response.content, content_type="application/octet-stream"
             )
-            response["Content-Disposition"] = (
-                f'attachment; filename="{file_name.split("/")[-1]}"'
+            file_response["Content-Disposition"] = (
+                f'attachment; filename="{file_name}"'
             )
+            return file_response
 
-            return response
-
-        except Exception as e:
-            return Response({"error": f"Failed to download file: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except requests.RequestException as e:
+            print(f"Failed to download from DEPLOY_BOX_STACK_ENDPOINT: {str(e)}")
+            return Response(
+                {"error": f"Failed to download file from configured endpoint: {str(e)}"}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
 
 
 class PurchasableStackViewSet(ViewSet):
@@ -431,5 +443,13 @@ def update_iac(request: HttpRequest, stack_id: str) -> JsonResponse:
     """Legacy function-based view - use StackViewSet update action instead"""
     if request.method == "POST":
         return handlers.update_iac(request, stack_id)
+    else:
+        return JsonResponse({"error": "Method not allowed."}, status=405)
+
+
+def overwrite_iac(request: HttpRequest, stack_id: str) -> JsonResponse:
+    """Legacy function-based view - use StackViewSet overwrite_iac action instead"""
+    if request.method == "POST":
+        return handlers.overwrite_iac(request, stack_id)
     else:
         return JsonResponse({"error": "Method not allowed."}, status=405)

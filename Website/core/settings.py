@@ -232,6 +232,12 @@ AZURE = {
     "ACR_PASSWORD": os.environ.get("ACR_PASSWORD"),
 }
 
+# DeployBox Stack Endpoint for file downloads
+# This environment variable should point to a base URL where stack source files are hosted
+# The system will append /{stack_id}/source.zip to this URL when downloading files
+# Example: DEPLOY_BOX_STACK_ENDPOINT=https://api.deploybox.com/stacks
+DEPLOY_BOX_STACK_ENDPOINT = os.environ.get("DEPLOY_BOX_STACK_ENDPOINT")
+
 # Templates Configuration
 TEMPLATES = [
     {

@@ -70,3 +70,7 @@ class PurchasableStackCreateSerializer(serializers.Serializer):
 
 class StackDatabaseUpdateSerializer(serializers.Serializer):
     data = serializers.JSONField()
+
+
+class StackIACOverwriteSerializer(serializers.Serializer):
+    iac = serializers.JSONField(help_text="Complete IAC configuration to overwrite the existing one")

@@ -696,14 +696,36 @@ class DashboardView(View):
         """View for transfer invitations."""
         user = cast(UserProfile, request.user)
         invitations = ProjectTransferInvitation.objects.filter(
-            recipient_email=user.email, status="PENDING"
+            to_email=user.email, status="pending"
         )
+        
+        # Get user's organizations for navbar context
+        user_organizations = Organization.objects.filter(organizationmember__user=user)
+        first_user_organization = user_organizations.first()
+
+        if first_user_organization is None:
+            current_organization_id = ""
+        else:
+            current_organization_id = first_user_organization.id
+
+        # Get user's projects for navbar context
+        user_projects = Project.objects.filter(projectmember__user=user)
+        
+        # Get user's stacks for navbar context
+        user_stacks = Stack.objects.filter(project__projectmember__user=user)
+        
         return render(
             request,
             "dashboard/transfer_invitations.html",
             {
                 "invitations": invitations,
                 "user": user,
+                "user_organizations": user_organizations,
+                "user_projects": user_projects,
+                "user_stacks": user_stacks,
+                "current_organization_id": current_organization_id,
+                "current_project_id": "",
+                "current_stack_id": "",
             },
         )
 
@@ -1767,7 +1789,8 @@ class AuthView(View):
 
     def signup(self, request: HttpRequest) -> HttpResponse:
         """Signup view."""
-        invite_id = request.GET.get('invite')
+        # Handle both 'invite' and 'invite_id' parameters for backward compatibility
+        invite_id = request.GET.get('invite_id') or request.GET.get('invite')
         transfer_id = request.GET.get('transfer_id')
         invite_data = None
         transfer_data = None

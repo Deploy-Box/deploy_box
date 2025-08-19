@@ -164,3 +164,22 @@ def update_iac(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
         return services.update_iac(stack_id, data, section)
     except ValueError:
         return JsonResponse({"error": "Invalid data"}, status=400)
+
+
+def overwrite_iac(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
+    """
+    Legacy function-based view for overwriting IAC configuration
+    """
+    try:
+        # Parse JSON data from request body
+        data = json.loads(request.body)
+        new_iac = data.get('iac')
+        
+        if not new_iac:
+            return JsonResponse({"error": "IAC configuration is required."}, status=400)
+            
+        return services.overwrite_iac(stack_id, new_iac)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON data"}, status=400)
+    except Exception as e:
+        return JsonResponse({"error": f"Failed to overwrite IAC: {str(e)}"}, status=500)
