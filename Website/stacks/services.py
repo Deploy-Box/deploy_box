@@ -1,6 +1,7 @@
 import logging
 import secrets
 import json
+import requests
 from django.http import JsonResponse
 from django.db import transaction
 from stacks.models import (
@@ -28,46 +29,41 @@ import time
 logger = logging.getLogger(__name__)
 
 
-def send_to_service_bus(message_data: dict, queue_name: str = "stack-deployment-queue") -> bool:
+def send_to_azure_function(message_data: dict, function_url: str = "http://localhost:7071/api/http_trigger") -> bool:
     """
-    Sends a message to Azure Service Bus queue.
+    Sends a message to Azure Function via HTTP trigger.
     
     Args:
         message_data (dict): The data to send as a message
-        queue_name (str): The name of the Service Bus queue
+        function_url (str): The URL of the Azure Function HTTP trigger
         
     Returns:
         bool: True if message was sent successfully, False otherwise
     """
     try:
-        # Get Service Bus connection string from environment variables
-        connection_string = os.getenv('AZURE_SERVICE_BUS_CONNECTION_STRING')
-        if not connection_string:
-            logger.error("AZURE_SERVICE_BUS_CONNECTION_STRING not found in environment variables")
-            return False
-            
-        # Create Service Bus client
-        servicebus_client = ServiceBusClient.from_connection_string(connection_string)
-        
-        # Create a message
-        message = ServiceBusMessage(
-            body=json.dumps(message_data),
-            content_type="application/json"
+        # Send HTTP POST request to Azure Function
+        response = requests.post(
+            function_url,
+            json=message_data,
+            headers={'Content-Type': 'application/json'},
+            timeout=30  # 30 second timeout
         )
         
-        # Send the message
-        with servicebus_client:
-            sender = servicebus_client.get_queue_sender(queue_name=queue_name)
-            with sender:
-                sender.send_messages(message)
-                
-        logger.info(f"Successfully sent message to Service Bus queue: {queue_name}")
-        return True
+        # Check if the request was successful
+        if response.status_code in [200, 202]:
+            logger.info(f"Successfully sent message to Azure Function: {function_url}")
+            return True
+        else:
+            logger.error(f"Azure Function returned status code {response.status_code}: {response.text}")
+            return False
         
-    except Exception as e:
-        logger.error(f"Failed to send message to Service Bus: {str(e)}")
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to send message to Azure Function: {str(e)}")
         return False
-
+    except Exception as e:
+        logger.error(f"Unexpected error sending message to Azure Function: {str(e)}")
+        return False
+    
 
 def add_stack(**kwargs) -> Stack:
     name = kwargs.get("name")
@@ -85,24 +81,26 @@ def add_stack(**kwargs) -> Stack:
             name=name, project=project, purchased_stack=purchasable_stack
         )
 
+        
+
         # Put request on Azure Service Bus
         message_data = {
-            "type": "create",            
+            "request_type": "iac.create",            
             "data": {
                 "stack_id": str(stack.id),
                 "stack_type": purchasable_stack.type.upper(),
                 "variant": purchasable_stack.variant.upper(),
                 "version": purchasable_stack.version,
-            },
-            "timestamp": time.time()
+            }
         }
-        
-        # Send message to Service Bus (non-blocking)
+
+
+        # Send message to Azure Function (non-blocking)
         try:
-            send_to_service_bus(message_data, "iac")
+            send_to_azure_function(message_data)
         except Exception as e:
-            logger.warning(f"Failed to send message to Service Bus: {str(e)}")
-            # Continue with deployment even if Service Bus fails
+            logger.warning(f"Failed to send message to Azure Function: {str(e)}")
+            # Continue with deployment even if Azure Function fails
 
         variant = purchasable_stack.variant.lower()
 
