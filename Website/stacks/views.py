@@ -10,22 +10,21 @@ from django.utils.decorators import method_decorator
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.handlers as handlers
-from stacks.models import PrebuiltStack, Stack, PurchasableStack
+from stacks.models import Stack, PurchasableStack
 from stacks.serializers import (
     StackDatabaseSerializer,
     StackSerializer,
-    PurchasableStackSerializer,
     StackCreateSerializer,
     StackUpdateSerializer,
     PurchasableStackCreateSerializer,
     StackDatabaseUpdateSerializer,
-    StackIACOverwriteSerializer
+    StackIACOverwriteSerializer,
+    StackStatusUpdateSerializer,
+    StackIACUpdateSerializer
 )
 from projects.models import Project
-from core.helpers import request_helpers
 import stacks.services as services
 from django.shortcuts import get_object_or_404
-
 
 class StackViewSet(ViewSet):
     """
@@ -180,6 +179,78 @@ class StackViewSet(ViewSet):
             return Response(result.json(), status=status.HTTP_200_OK)
         else:
             return Response(result.json(), status=result.status_code)
+
+    @action(detail=True, methods=['post'])
+    def update_status(self, request, pk=None):
+        """POST: Update the status of a specific stack"""
+        stack = get_object_or_404(Stack, id=pk)
+        serializer = StackStatusUpdateSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        new_status = data.get('status')
+
+        if not new_status:
+            return Response({"error": "Status is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Store the old status before updating
+        old_status = stack.status
+        success = services.update_stack_status(stack, new_status)
+        
+        if success:
+            return Response({
+                "success": True, 
+                "message": f"Stack status updated successfully to '{new_status}'",
+                "stack_id": str(stack.id),
+                "old_status": old_status,
+                "new_status": new_status
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                "success": False,
+                "error": "Failed to update stack status"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    @action(detail=True, methods=['post'])
+    def update_iac(self, request, pk=None):
+        """POST: Update IAC configuration for a specific stack (full overwrite)"""
+        stack = get_object_or_404(Stack, id=pk)
+        serializer = StackIACUpdateSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        new_iac = data.get('data')
+
+        if not new_iac:
+            return Response({"error": "IAC configuration is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Validate that the new IAC is a valid dictionary
+        if not isinstance(new_iac, dict):
+            return Response({"error": "IAC configuration must be a valid JSON object."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Store the old IAC before updating
+        old_iac = stack.iac
+        
+        # Update only the IAC field without deployment
+        success = services.update_stack_iac_only(stack, new_iac)
+        
+        if success:
+            return Response({
+                "success": True,
+                "message": "IAC configuration updated successfully (no deployment)",
+                "stack_id": str(stack.id),
+                "old_iac": old_iac,
+                "new_iac": new_iac
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                "success": False,
+                "error": "Failed to update IAC configuration"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @oauth_required()
     @action(detail=True, methods=['get'])
@@ -442,7 +513,7 @@ def get_logs(request: HttpRequest, service_name: str) -> JsonResponse:
 def update_iac(request: HttpRequest, stack_id: str) -> JsonResponse:
     """Legacy function-based view - use StackViewSet update action instead"""
     if request.method == "POST":
-        return handlers.update_iac(request, stack_id)
+        return handlers.overwrite_iac(request, stack_id)
     else:
         return JsonResponse({"error": "Method not allowed."}, status=405)
 

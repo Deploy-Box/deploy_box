@@ -1,18 +1,14 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from . import views
-from stacks.models import PurchasableStack, StackGoogleCloudRun, Stack
+from stacks.models import Stack
 
 # Create routers for ViewSets
 router = DefaultRouter()
 router.register(r'', views.StackViewSet, basename='stack')
 router.register(r'purchasable-stacks', views.PurchasableStackViewSet, basename='purchasable-stack')
-router.register(r'stack-databases', views.StackDatabaseViewSet, basename='stack-database')
 
 urlpatterns = []
-
-urlpatterns += PurchasableStack.get_urlpatterns(baseurl="purchasables")
-urlpatterns += StackGoogleCloudRun.get_urlpatterns(baseurl="google-cloud-run")
 
 # Include router URLs
 urlpatterns += router.urls
@@ -46,7 +42,6 @@ urlpatterns += [
 
 urlpatterns += [
     path("update-iac/<str:stack_id>/", views.update_iac, name="update_iac"),
-    path("overwrite-iac/<str:stack_id>/", views.overwrite_iac, name="overwrite_iac"),
 ]
 
 # urlpatterns += Stack.get_urlpatterns(baseurl="")

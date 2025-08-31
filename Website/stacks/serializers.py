@@ -27,6 +27,7 @@ class StackSerializer(serializers.ModelSerializer):
             "root_directory",
             "instance_usage",
             "instance_usage_bill_amount",
+            "status",
             "iac",
             "created_at",
             "updated_at",
@@ -74,3 +75,17 @@ class StackDatabaseUpdateSerializer(serializers.Serializer):
 
 class StackIACOverwriteSerializer(serializers.Serializer):
     iac = serializers.JSONField(help_text="Complete IAC configuration to overwrite the existing one")
+
+
+class StackStatusUpdateSerializer(serializers.Serializer):
+    status = serializers.CharField(max_length=100, help_text="New status for the stack")
+
+
+class StackIACUpdateSerializer(serializers.Serializer):
+    data = serializers.JSONField(help_text="IAC data to update")
+    section = serializers.ListField(
+        child=serializers.CharField(),
+        help_text="Top-level sections of the IAC to target",
+        required=False,
+        default=[]
+    )

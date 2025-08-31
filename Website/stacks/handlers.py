@@ -8,7 +8,6 @@ import stacks.services as services
 from projects.models import Project
 from stacks.models import PurchasableStack, Stack
 from core.helpers import request_helpers
-from .serializers import StackDatabaseSerializer
 from django.views.decorators.csrf import csrf_exempt
 
 
@@ -123,15 +122,6 @@ def post_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
 def delete_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
     return JsonResponse({"error": "Not implemented"}, status=501)
 
-
-def get_all_stack_databases() -> JsonResponse:
-    stack_databases = services.get_all_stack_databases()
-    serializer = StackDatabaseSerializer(stack_databases, many=True)
-
-    return JsonResponse(
-        {"success": True, "data": serializer.data},
-        status=200,
-    )
 
 @csrf_exempt
 def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:

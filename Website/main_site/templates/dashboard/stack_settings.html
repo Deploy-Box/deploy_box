@@ -1,6 +1,10 @@
 {% extends 'dashboard_base.html' %}
 {% load static %}
 
+{% block extra_js %}
+<script src="{% static 'dashboards/stack_dashboard.js' %}"></script>
+{% endblock %}
+
 {% block content %}
 <div class="w-full bg-gray-50">
     <header class="bg-zinc-950 pt-16 pb-24 text-center">
@@ -114,6 +118,7 @@
                             </p>
                         </div>
                         <button id="deleteStackBtn" 
+                                data-stack-id="{{ stack.id }}"
                                 class="inline-flex items-center bg-red-500 hover:bg-red-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
@@ -127,65 +132,16 @@
     </main>
 </div>
 
-<!-- Delete Confirmation Modal -->
-<div id="deleteModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-        <div class="flex items-center mb-4">
-            <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                </svg>
-            </div>
-            <div class="ml-3">
-                <h3 class="text-lg font-medium text-gray-900">Delete Stack</h3>
-            </div>
-        </div>
-        <div class="mb-4">
-            <p class="text-sm text-gray-500">
-                Are you sure you want to delete <strong>{{ stack.name }}</strong>? This action cannot be undone and will permanently remove all stack data, including deployments and configurations.
-            </p>
-        </div>
-        <div class="flex justify-end space-x-3">
-            <button id="cancelDelete" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
-                Cancel
-            </button>
-            <form method="post" action="{% url 'main_site:stack_dashboard' organization_id=current_organization_id project_id=project_id stack_id=stack.id %}" class="inline">
-                {% csrf_token %}
-                <input type="hidden" name="action" value="delete">
-                <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors duration-200">
-                    Delete Stack
-                </button>
-            </form>
-        </div>
-    </div>
-</div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const deleteBtn = document.getElementById('deleteStackBtn');
-    const deleteModal = document.getElementById('deleteModal');
-    const cancelDelete = document.getElementById('cancelDelete');
 
+    // Use the deleteStack function from stack_dashboard.js
     deleteBtn.addEventListener('click', function() {
-        deleteModal.classList.remove('hidden');
-    });
-
-    cancelDelete.addEventListener('click', function() {
-        deleteModal.classList.add('hidden');
-    });
-
-    // Close modal when clicking outside
-    deleteModal.addEventListener('click', function(e) {
-        if (e.target === deleteModal) {
-            deleteModal.classList.add('hidden');
-        }
-    });
-
-    // Close modal with Escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && !deleteModal.classList.contains('hidden')) {
-            deleteModal.classList.add('hidden');
-        }
+        const stackId = this.getAttribute('data-stack-id');
+        deleteStack(stackId);
     });
 });
 </script>

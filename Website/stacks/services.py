@@ -1,5 +1,4 @@
 import logging
-import secrets
 import json
 import requests
 from django.http import JsonResponse
@@ -7,29 +6,20 @@ from django.db import transaction
 from stacks.models import (
     Stack,
     PurchasableStack,
-    StackDatabase,
-    StackGoogleCloudRun,
 )
 from projects.models import Project
-from core.utils import MongoDBUtils
 from core.utils.DeployBoxIAC.main import AzureDeployBoxIAC
 from accounts.models import UserProfile
-from dotenv import dotenv_values
 import os
-from typing import Union
-from stacks.MERN_IAC import get_MERN_IAC
-from stacks.Django_IAC import get_Django_IAC
 from core.utils.DeployBoxIAC.main import main, DeployBoxIAC
 from django.views.decorators.csrf import csrf_exempt
 from .service_helpers import ServiceHelper
 from core.utils.DeployBoxIAC.main import DeployBoxIAC
-from azure.servicebus import ServiceBusClient, ServiceBusMessage
-import time
 
 logger = logging.getLogger(__name__)
 
 
-def send_to_azure_function(message_data: dict, function_url: str = "http://localhost:7071/api/http_trigger") -> bool:
+def send_to_azure_function(message_data: dict, function_url: str = "http://deploy-box-iac-fa-dev.azurewebsites.net/api/ingress") -> bool:
     """
     Sends a message to Azure Function via HTTP trigger.
     
@@ -78,38 +68,30 @@ def add_stack(**kwargs) -> Stack:
         print(f"Variant: {purchasable_stack.variant}")
 
         stack = Stack.objects.create(
-            name=name, project=project, purchased_stack=purchasable_stack
+            name=name, project=project, purchased_stack=purchasable_stack, status="PROVISIONING"
         )
 
         
 
         # Put request on Azure Service Bus
         message_data = {
-            "request_type": "iac.create",            
+            "request_type": "iac.create",
+            "source": os.environ.get("HOST"),          
             "data": {
                 "stack_id": str(stack.id),
-                "stack_type": purchasable_stack.type.upper(),
-                "variant": purchasable_stack.variant.upper(),
-                "version": purchasable_stack.version,
+                "project_id": str(project.id),
+                "org_id": str(project.organization.id),
+                "purchasable_stack_type": purchasable_stack.type.upper(),
+                "purchasable_stack_variant": purchasable_stack.variant.upper(),
+                "purchasable_stack_version": purchasable_stack.version,
             }
         }
-
 
         # Send message to Azure Function (non-blocking)
         try:
             send_to_azure_function(message_data)
         except Exception as e:
             logger.warning(f"Failed to send message to Azure Function: {str(e)}")
-            # Continue with deployment even if Azure Function fails
-
-        variant = purchasable_stack.variant.lower()
-
-        # if purchasable_stack.type == "MERN":
-        #     deploy_MERN_stack(project, stack, variant)
-        # elif purchasable_stack.type == "DJANGO":
-        #     deploy_django_stack(project, stack, variant)
-        # else:
-        #     JsonResponse({"error": "Stack type not supported."}, status=400)
 
     return stack
 
@@ -118,103 +100,11 @@ def add_stack(**kwargs) -> Stack:
 # add_stack(name="test", project_id=project.id, purchasable_stack_id=purchasable_stack.id)
 
 
-def update_stack(stack: Stack, root_directory: Union[str, None] = None) -> bool:
-    if root_directory:
-        stack.root_directory = root_directory
-    stack.save()
-    return True
-
-
-def delete_stack(stack: Stack) -> bool:
-    try:
-        print(f"Deleting stack: {stack.id}")
-        resource_group_name = stack.id + "-rg"
-        cloud = DeployBoxIAC()
-        cloud.deploy(resource_group_name, {})
-        # stack.delete()
-    except Exception as e:
-        logger.error(f"Failed to delete stack: {str(e)}")
-        return False
-
-    return True
-
-
-def refresh_stack(stack: Stack) -> bool:
-    """Refresh a stack's infrastructure by running terraform refresh"""
-    try:
-        print(f"Refreshing stack: {stack.id}")
-        resource_group_name = stack.id + "-rg"
-        cloud = DeployBoxIAC()
-        
-        # Use the IAC configuration stored in the stack model
-        iac_config = stack.iac
-        if not iac_config:
-            logger.error(f"No IAC configuration found for stack: {stack.id}")
-            return False
-        
-        # Log the IAC configuration being used for debugging
-        logger.info(f"Using IAC configuration for stack {stack.id}: {iac_config}")
-            
-        cloud.deploy(resource_group_name, iac_config)
-        logger.info(f"Successfully refreshed stack: {stack.id}")
-        return True
-    except FileNotFoundError as e:
-        logger.error(f"State file not found for stack {stack.id}: {str(e)}")
-        return False
-    except ValueError as e:
-        logger.error(f"Invalid IAC configuration for stack {stack.id}: {str(e)}")
-        return False
-    except Exception as e:
-        logger.error(f"Failed to refresh stack {stack.id}: {str(e)}")
-        return False
-
 
 def get_stacks(user: UserProfile) -> list[Stack]:
     projects = Project.objects.filter(projectmember__user=user)
 
     return list(Stack.objects.filter(project__in=projects).order_by("-created_at"))
-
-
-def deploy_MERN_stack(project: Project, stack: Stack, variant: str):
-    """
-    Deploys a MERN stack by creating the necessary backend and frontend services.
-    If any part of the deployment fails, the transaction will be rolled back.
-    """
-    # mongodb_utils = MongoDBUtils()
-
-    stack_id = stack.id
-
-    # Create deployment database
-    # mongo_db_uri = mongodb_utils.deploy_mongodb_database(stack_id)
-
-    resource_group_name, mern_iac = get_MERN_IAC(
-        stack_id, project.id, project.organization.id
-    )
-
-    stack.iac = mern_iac
-
-    main(resource_group_name, mern_iac)
-
-    stack.save()
-
-    # if variant == "premium" or variant == "pro":
-    #     env_dict["JWT_SECRET"] = secrets.token_urlsafe(50)
-
-
-def deploy_django_stack(project: Project, stack: Stack, variant: str):
-    stack_id = stack.id
-
-    django_secret_key = secrets.token_urlsafe(50)
-
-    resource_group_name, django_iac = get_Django_IAC(
-        stack_id, project.id, project.organization.id, django_secret_key
-    )
-
-    stack.iac = django_iac
-
-    main(resource_group_name, django_iac)
-
-    stack.save()
 
 
 def post_purchasable_stack(
@@ -234,9 +124,6 @@ def post_purchasable_stack(
             {"error": f"Failed to create purchasable stack: {str(e)}"}, status=500
         )
 
-
-def get_all_stack_databases() -> list[StackDatabase]:
-    return list(StackDatabase.objects.all())
 
 
 # TODO: show loading indicator
@@ -409,3 +296,146 @@ def overwrite_iac(stack_id: str, new_iac: dict) -> JsonResponse:
     except Exception as e:
         logger.error(f"Failed to overwrite IAC for stack {stack_id}: {str(e)}")
         return JsonResponse({"error": f"Failed to overwrite IAC configuration. {str(e)}"}, status=500)
+
+
+def update_stack_status(stack: Stack, new_status: str) -> bool:
+    """
+    Updates the status of a given stack.
+
+    Args:
+        stack (Stack): The stack object to update.
+        new_status (str): The new status to set.
+
+    Returns:
+        bool: True if the status was updated successfully, False otherwise.
+    """
+    try:
+        logger.info(f"Updating status for stack {stack.id} from '{stack.status}' to '{new_status}'")
+        
+        # Update the stack status
+        stack.status = new_status
+
+        if new_status == "DELETED":
+            stack.delete()
+
+        else:
+            stack.save()
+        
+        logger.info(f"Successfully updated status for stack {stack.id} to '{new_status}'")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to update status for stack {stack.id}: {str(e)}")
+        return False
+
+
+def update_stack_iac(stack: Stack, data: dict, section: list[str]) -> bool:
+    """
+    Updates the IAC for a given stack based on the provided data.
+
+    Args:
+        stack (Stack): The stack object to update.
+        data (dict): The new IAC data to apply.
+        section (list[str]): The top-level sections of the IAC to target.
+
+    Returns:
+        bool: True if the IAC was updated successfully, False otherwise.
+    """
+    try:
+        logger.info(f"Updating IAC for stack {stack.id}")
+        logger.info(f"Stack info: {stack.stack_information}")
+        
+        old_iac = stack.iac
+        logger.info(f"Old IAC: {old_iac}")
+
+        for item in section:
+            iac_section = ServiceHelper().find_nested_value(old_iac, item)
+            logger.info(f"Processing section: {item}")
+            logger.info(f"Section content: {iac_section}")
+            
+            for key, value in data.items():
+                try:
+                    ServiceHelper().update_nested_value(iac_section, key, value)
+                    if key in stack.stack_information:
+                        stack.stack_information[key] = value
+                    else:
+                        continue
+                except Exception as e:
+                    logger.warning(f"Failed to update nested value {key}: {str(e)}")
+                    continue
+
+            # Reassign back just in case it's not by reference
+            ServiceHelper().update_nested_value(old_iac, item, iac_section)
+
+        stack.iac = old_iac
+        stack.save()
+
+        # Deploy the updated IAC
+        resource_group_name = f"{stack.id}-rg"
+        cloud = DeployBoxIAC()
+        cloud.deploy(resource_group_name, old_iac)
+        
+        logger.info(f"Successfully updated IAC for stack {stack.id}")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to update IAC for stack {stack.id}: {str(e)}")
+        return False
+
+
+def update_stack_iac_only(stack: Stack, new_iac: dict) -> bool:
+    """
+    Updates only the IAC field in the database without triggering cloud deployment.
+
+    Args:
+        stack (Stack): The stack object to update.
+        new_iac (dict): The complete new IAC configuration to replace the existing one.
+
+    Returns:
+        bool: True if the IAC was updated successfully, False otherwise.
+    """
+    try:
+        logger.info(f"Updating IAC field only for stack {stack.id}")
+        
+        # Store the old IAC for logging purposes
+        old_iac = stack.iac
+        logger.info(f"Old IAC configuration: {old_iac}")
+        logger.info(f"New IAC configuration: {new_iac}")
+        
+        # Validate that the new IAC is a valid dictionary
+        if not isinstance(new_iac, dict):
+            logger.error(f"Invalid IAC configuration type for stack {stack.id}: {type(new_iac)}")
+            return False
+        
+        # Overwrite the IAC configuration in the database only
+        stack.iac = new_iac
+        stack.save()
+        
+        logger.info(f"Successfully updated IAC field for stack {stack.id} (no deployment)")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to update IAC field for stack {stack.id}: {str(e)}")
+        return False
+
+
+
+def delete_stack(stack: Stack) -> bool:
+    """
+    Deletes a given stack.
+    """
+    print(f"Deleting stack {stack.id}")
+    try:
+        send_to_azure_function(
+            {
+                "request_type": "iac.delete",
+                "source": os.environ.get("HOST"),
+                "data": {
+                    "stack_id": stack.id
+                }
+            }
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Failed to delete stack {stack.id}: {str(e)}")
+        return False

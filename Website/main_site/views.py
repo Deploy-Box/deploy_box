@@ -19,7 +19,7 @@ from organizations.services import get_organizations
 from projects.forms import ProjectCreateFormWithMembers, ProjectSettingsForm
 from projects.models import Project, ProjectMember
 from stacks.forms import EnvFileUploadForm, StackSettingsForm, EnvironmentVariablesForm
-from stacks.models import PurchasableStack, StackGoogleCloudRun, Stack
+from stacks.models import PurchasableStack, Stack
 from stacks.services import post_stack_env
 from core.decorators import oauth_required
 from core.utils.DeployBoxIAC.main import DeployBoxIAC
@@ -294,7 +294,7 @@ class DashboardView(View):
                 # User doesn't have permission to delete
                 pass  # Could add error handling here
 
-        stack_google_cloud_runs = list(StackGoogleCloudRun.objects.filter(stack=stack))
+        stack_google_cloud_runs = list()
 
         for stack_google_cloud_run in stack_google_cloud_runs:
             if not stack_google_cloud_run.url:
