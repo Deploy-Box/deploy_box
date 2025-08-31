@@ -19,6 +19,7 @@ ALLOWED_HOSTS = [
     "deploy-box.onrender.com",
     "deploy-box.kalebwbishop.com",
     "deploy-box.com",
+    "be80e3da2d6a.ngrok-free.app"
 ]
 if DEBUG:
     ALLOWED_HOSTS.extend(

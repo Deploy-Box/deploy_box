@@ -1,5 +1,4 @@
 import logging
-import secrets
 import json
 import requests
 from django.http import JsonResponse
@@ -7,29 +6,20 @@ from django.db import transaction
 from stacks.models import (
     Stack,
     PurchasableStack,
-    StackDatabase,
-    StackGoogleCloudRun,
 )
 from projects.models import Project
-from core.utils import MongoDBUtils
 from core.utils.DeployBoxIAC.main import AzureDeployBoxIAC
 from accounts.models import UserProfile
-from dotenv import dotenv_values
 import os
-from typing import Union
-from stacks.MERN_IAC import get_MERN_IAC
-from stacks.Django_IAC import get_Django_IAC
 from core.utils.DeployBoxIAC.main import main, DeployBoxIAC
 from django.views.decorators.csrf import csrf_exempt
 from .service_helpers import ServiceHelper
 from core.utils.DeployBoxIAC.main import DeployBoxIAC
-from azure.servicebus import ServiceBusClient, ServiceBusMessage
-import time
 
 logger = logging.getLogger(__name__)
 
 
-def send_to_azure_function(message_data: dict, function_url: str = "http://localhost:7071/api/http_trigger") -> bool:
+def send_to_azure_function(message_data: dict, function_url: str = "http://deploy-box-iac-fa-dev.azurewebsites.net/api/ingress") -> bool:
     """
     Sends a message to Azure Function via HTTP trigger.
     
@@ -85,15 +75,17 @@ def add_stack(**kwargs) -> Stack:
 
         # Put request on Azure Service Bus
         message_data = {
-            "request_type": "iac.create",            
+            "request_type": "iac.create",
+            "source": os.environ.get("HOST"),          
             "data": {
                 "stack_id": str(stack.id),
-                "stack_type": purchasable_stack.type.upper(),
-                "variant": purchasable_stack.variant.upper(),
-                "version": purchasable_stack.version,
+                "project_id": str(project.id),
+                "org_id": str(project.organization.id),
+                "purchasable_stack_type": purchasable_stack.type.upper(),
+                "purchasable_stack_variant": purchasable_stack.variant.upper(),
+                "purchasable_stack_version": purchasable_stack.version,
             }
         }
-
 
         # Send message to Azure Function (non-blocking)
         try:
@@ -103,9 +95,9 @@ def add_stack(**kwargs) -> Stack:
 
     return stack
 
-project = Project.objects.all()[0]
-purchasable_stack = PurchasableStack.objects.all()[0]
-add_stack(name="test", project_id=project.id, purchasable_stack_id=purchasable_stack.id)
+# project = Project.objects.all()[0]
+# purchasable_stack = PurchasableStack.objects.all()[0]
+# add_stack(name="test", project_id=project.id, purchasable_stack_id=purchasable_stack.id)
 
 
 
@@ -322,7 +314,12 @@ def update_stack_status(stack: Stack, new_status: str) -> bool:
         
         # Update the stack status
         stack.status = new_status
-        stack.save()
+
+        if new_status == "DELETED":
+            stack.delete()
+
+        else:
+            stack.save()
         
         logger.info(f"Successfully updated status for stack {stack.id} to '{new_status}'")
         return True
@@ -419,4 +416,26 @@ def update_stack_iac_only(stack: Stack, new_iac: dict) -> bool:
         
     except Exception as e:
         logger.error(f"Failed to update IAC field for stack {stack.id}: {str(e)}")
+        return False
+
+
+
+def delete_stack(stack: Stack) -> bool:
+    """
+    Deletes a given stack.
+    """
+    print(f"Deleting stack {stack.id}")
+    try:
+        send_to_azure_function(
+            {
+                "request_type": "iac.delete",
+                "source": os.environ.get("HOST"),
+                "data": {
+                    "stack_id": stack.id
+                }
+            }
+        )
+        return True
+    except Exception as e:
+        logger.error(f"Failed to delete stack {stack.id}: {str(e)}")
         return False

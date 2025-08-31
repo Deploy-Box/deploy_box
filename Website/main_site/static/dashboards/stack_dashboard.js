@@ -376,6 +376,14 @@ window.onload = function () {
         removeRepoBtn.addEventListener('click', removeRepositoryConnection);
     }
 
+    // Set up delete stack functionality
+    const deleteStackBtn = document.getElementById('delete-stack-btn');
+    if (deleteStackBtn) {
+        deleteStackBtn.addEventListener('click', () => {
+            deleteStack(deleteStackBtn.dataset.stackId);
+        });
+    }
+
     // Root Directory Input Handler
     const rootDirectoryInput = document.getElementById('root-directory');
     const stackIdMetadata = document.getElementById('metadata').dataset.stackId;
@@ -400,39 +408,28 @@ window.onload = function () {
     }
 };
 
-
-
-
-
-
-
 function deleteStack(stackId) {
     if (confirm('Are you sure you want to delete this stack? This action cannot be undone.')) {
         fetch(`/api/v1/stacks/${stackId}/`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
             },
         })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    window.location.href = '/dashboard'; // Redirect to dashboard after successful deletion
-                } else {
-                    alert('Failed to delete stack: ' + (data.error || 'Unknown error'));
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to delete stack');
                 }
+                window.location.href = '/dashboard'; // Redirect to dashboard after successful deletion
+                return;
             })
             .catch(error => {
-                console.error('Error:', error);
+                console.error('Error deleting stack:', error);
                 alert('An error occurred while deleting the stack');
             });
     }
 }
-
-const deleteStackBtn = document.getElementById('delete-stack-btn');
-deleteStackBtn.addEventListener('click', () => {
-    deleteStack(deleteStackBtn.dataset.stackId);
-});
 
 async function saveRootDirectory(stackId, rootDirectory) {
     try {

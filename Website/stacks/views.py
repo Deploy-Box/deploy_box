@@ -10,11 +10,10 @@ from django.utils.decorators import method_decorator
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.handlers as handlers
-from stacks.models import PrebuiltStack, Stack, PurchasableStack
+from stacks.models import Stack, PurchasableStack
 from stacks.serializers import (
     StackDatabaseSerializer,
     StackSerializer,
-    PurchasableStackSerializer,
     StackCreateSerializer,
     StackUpdateSerializer,
     PurchasableStackCreateSerializer,
@@ -24,14 +23,8 @@ from stacks.serializers import (
     StackIACUpdateSerializer
 )
 from projects.models import Project
-from core.helpers import request_helpers
 import stacks.services as services
 from django.shortcuts import get_object_or_404
-
-
-test_stack = Stack.objects.get(pk="d9faa53a2020446a")
-print("test_stack.iac", test_stack.iac)
-
 
 class StackViewSet(ViewSet):
     """
@@ -520,7 +513,7 @@ def get_logs(request: HttpRequest, service_name: str) -> JsonResponse:
 def update_iac(request: HttpRequest, stack_id: str) -> JsonResponse:
     """Legacy function-based view - use StackViewSet update action instead"""
     if request.method == "POST":
-        return handlers.update_iac(request, stack_id)
+        return handlers.overwrite_iac(request, stack_id)
     else:
         return JsonResponse({"error": "Method not allowed."}, status=405)
 
