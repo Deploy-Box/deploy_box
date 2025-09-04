@@ -41,7 +41,8 @@ urlpatterns += [
 ]
 
 urlpatterns += [
-    path("update-iac/<str:stack_id>/", views.update_iac, name="update_iac"),
+    path("<str:stack_id>/update-iac/", views.update_iac, name="update_iac"),
+    path("<str:stack_id>/update-stack-information/", views.update_stack_information, name="update_stack_information"),
 ]
 
 # urlpatterns += Stack.get_urlpatterns(baseurl="")

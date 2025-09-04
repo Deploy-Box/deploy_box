@@ -8,16 +8,14 @@ from stacks.models import (
     PurchasableStack,
 )
 from projects.models import Project
-from core.utils.DeployBoxIAC.main import AzureDeployBoxIAC
 from accounts.models import UserProfile
 import os
-from core.utils.DeployBoxIAC.main import main, DeployBoxIAC
 from django.views.decorators.csrf import csrf_exempt
 from .service_helpers import ServiceHelper
-from core.utils.DeployBoxIAC.main import DeployBoxIAC
 
 logger = logging.getLogger(__name__)
 
+# http://deploy-box-iac-fa-dev.azurewebsites.net/api/ingress
 
 def send_to_azure_function(message_data: dict, function_url: str = "http://deploy-box-iac-fa-dev.azurewebsites.net/api/ingress") -> bool:
     """
@@ -197,58 +195,30 @@ def update_stack_databases_usages(data) -> bool:
     except Exception as e:
         logger.error(f"Failed to update stack databases usages: {str(e)}")
         return False
-
-def update_iac(stack_id: str, data: dict, section: list[str]) -> JsonResponse:
+    
+def update_stack_information(stack_id: str, stack_information: dict) -> JsonResponse:
     """
-    Updates the IAC for a given stack based on the provided data.
-
-    Args:
-        stack_id (str): The ID of the stack to update.
-        data (dict): The new IAC data to apply.
-        section (list[str]): The top-level sections of the IAC to target.
-
-    Returns:
-        JsonResponse: Success or error response.
+    Updates the stack information for a given stack.
     """
     try:
+        print(f"Updating stack information for stack: {stack_id}")
+        print(f"Stack information: {stack_information}")
         stack = Stack.objects.get(pk=stack_id)
-        print("stack info: ", stack.stack_information)
-        old_iac = stack.iac
-        print("Old IAC: ", old_iac)
-
-        for item in section:
-            iac_section = ServiceHelper().find_nested_value(old_iac, item)
-            print("item", item)
-            print("section", iac_section)
-            for key, value in data.items():
-                try:
-                    ServiceHelper().update_nested_value(iac_section, key, value)
-                    if key in stack.stack_information:
-                        stack.stack_information[key] = value
-                    else:
-                        continue
-                except Exception as e:
-                    continue
-
-            # Reassign back just in case it's not by reference
-            ServiceHelper().update_nested_value(old_iac, item, iac_section)
-
-        stack.iac = old_iac
+        stack.stack_information = stack_information
         stack.save()
-
-        DeployBoxIAC().deploy(f"{stack_id}-rg", old_iac)
-
-        return JsonResponse({"success": True, "message": "IAC updated successfully.", "iac": old_iac}, status=200)
-
+        return JsonResponse({
+            "success": True,
+            "message": "Stack information updated successfully.",
+            "stack_id": stack_id
+        }, status=200)
     except Stack.DoesNotExist:
         logger.error(f"Stack with ID {stack_id} does not exist.")
         return JsonResponse({"error": "Stack not found."}, status=404)
     except Exception as e:
-        logger.error(f"Failed to update IAC for stack {stack_id}: {str(e)}")
-        return JsonResponse({"error": f"Failed to update IAC. {str(e)}"}, status=500)
+        logger.error(f"Failed to update stack information: {str(e)}")
+        return JsonResponse({"error": f"Failed to update stack information. {str(e)}"}, status=500)
 
-
-def overwrite_iac(stack_id: str, new_iac: dict) -> JsonResponse:
+def update_iac(stack_id: str, new_iac: dict) -> JsonResponse:
     """
     Completely overwrites the IAC configuration for a given stack.
 
@@ -426,12 +396,15 @@ def delete_stack(stack: Stack) -> bool:
     """
     print(f"Deleting stack {stack.id}")
     try:
+        stack.status = "DELETING"
+        stack.save()
         send_to_azure_function(
             {
                 "request_type": "iac.delete",
                 "source": os.environ.get("HOST"),
                 "data": {
-                    "stack_id": stack.id
+                    "stack_id": stack.id,
+                    "iac": stack.iac
                 }
             }
         )

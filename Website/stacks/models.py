@@ -39,15 +39,16 @@ class Stack(models.Model):
     # MERN
     @property
     def mern_frontend_url(self):
-        return "This is a placeholder for the frontend url"
+        return "https://" + self.stack_information.get("azurerm_container_app-1-endpoint", {}).get("value", "")
 
     @property
     def mern_backend_url(self):
-        return "This is a placeholder for the backend url"
+        return "https://" + self.stack_information.get("azurerm_container_app-0-endpoint", {}).get("value", "")
     
     @property
     def mern_mongodb_uri(self):
-        return "This is a placeholder for the mongodb uri"
+        user = self.iac.get("mongodbatlas_database_user", {}).get("user-1", {})
+        return user.get("username", "") + ":" + user.get("password", "") + "@cluster0.yjaoi.mongodb.net/" + user.get("roles", [{}])[0].get("database_name", "")
     
 
     # Django
