@@ -23,12 +23,14 @@ jobs:
           python-version: "3.10"
 
       - name: Install dependencies
+        working-directory: Website
         run: |
           python -m venv venv
           source venv/bin/activate
-          pip install -r Website/requirements.txt
+          pip install -r requirements.txt
 
       - name: Run migrations
+        working-directory: Website
         env:
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
@@ -39,8 +41,8 @@ jobs:
           DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{ secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY }}
         run: |
           source venv/bin/activate
-          python Website/manage.py makemigrations
-          python Website/manage.py migrate
+          python manage.py makemigrations
+          python manage.py migrate
 
   build:
     runs-on: ubuntu-latest
@@ -73,11 +75,12 @@ jobs:
         run: az acr login --name $ACR_NAME
 
       - name: Build and Push Website Docker image to Azure
+        working-directory: Website
         run: |
           IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
           IMAGE_NAME=$ACR_NAME.azurecr.io/$STACK-website:$IMAGE_TAG
 
-          docker build -t $IMAGE_NAME Website/
+          docker build -t $IMAGE_NAME .
           docker push $IMAGE_NAME
 
       - name: Deploy to Azure Container Apps
