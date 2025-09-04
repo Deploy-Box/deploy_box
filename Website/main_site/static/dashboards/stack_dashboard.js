@@ -410,6 +410,11 @@ window.onload = function () {
 
 function deleteStack(stackId) {
     if (confirm('Are you sure you want to delete this stack? This action cannot be undone.')) {
+        // Get the organization_id and project_id from the dashboard element
+        const dashboard = document.getElementById('dashboard');
+        const organizationId = dashboard.dataset.organizationId;
+        const projectId = dashboard.dataset.projectId;
+        
         fetch(`/api/v1/stacks/${stackId}/`, {
             method: 'DELETE',
             headers: {
@@ -421,7 +426,8 @@ function deleteStack(stackId) {
                 if (!response.ok) {
                     throw new Error('Failed to delete stack');
                 }
-                window.location.href = '/dashboard'; // Redirect to dashboard after successful deletion
+                // Redirect to the project dashboard where the user can see their remaining stacks
+                window.location.href = `/dashboard/organizations/${organizationId}/projects/${projectId}/stacks/${stackId}/`;
                 return;
             })
             .catch(error => {

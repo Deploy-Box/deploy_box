@@ -180,10 +180,6 @@
                   {{stack.mern_frontend_url}}
                 </a>
               </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-blue-700">Port:</span>
-                <span class="text-sm text-blue-900">3000</span>
-              </div>
             </div>
           </div>
 
@@ -212,10 +208,6 @@
                   {{stack.mern_backend_url}}
                 </a>
               </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-green-700">Port:</span>
-                <span class="text-sm text-green-900">5000</span>
-              </div>
             </div>
           </div>
 
@@ -243,58 +235,13 @@
                   {{stack.mern_mongodb_uri|truncatechars:20}}
                 </span>
               </div>
-              <div class="flex items-center justify-between">
-                <span class="text-sm text-emerald-700">Collections:</span>
-                <span class="text-sm text-emerald-900">3 active</span>
-              </div>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Google Cloud Run Services -->
-    {% if stack_google_cloud_runs %}
-    <section class="mb-8">
-      <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
-        <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
-          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-          </svg>
-          Google Cloud Run Services
-        </h2>
-        <div class="space-y-4">
-          {% for stack_google_cloud_run in stack_google_cloud_runs %}
-          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
-            <div class="flex justify-between items-center">
-              <div>
-                <h3 class="text-lg font-semibold text-zinc-900">{{stack_google_cloud_run.name}}</h3>
-                <p class="text-sm text-zinc-500 flex items-center">
-                  <svg class="h-4 w-4 mr-1 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 101.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"></path>
-                  </svg>
-                  URL: <a href="{{stack_google_cloud_run.url}}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 hover:text-emerald-800 underline">{{stack_google_cloud_run.url}}</a>
-                </p>
-                <p class="text-sm text-zinc-500 flex items-center">
-                  <svg class="h-4 w-4 mr-1 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
-                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                  </svg>
-                  Status: <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500 mr-1"></span>
-                    {{stack_google_cloud_run.state}}
-                  </span>
-                </p>
-              </div>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-      </div>
-    </section>
-    {% endif %}
-
-
-
+    
     <!-- Stack Actions -->
     <section class="mb-8">
       <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">

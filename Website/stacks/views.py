@@ -119,6 +119,7 @@ class StackViewSet(ViewSet):
     def destroy(self, request, pk=None):
         """DELETE: Delete a specific stack"""
         stack = get_object_or_404(Stack, id=pk)
+        print(f"Deleting stack: {stack.id}")
         stack_deleted = services.delete_stack(stack)
 
         if not stack_deleted:
@@ -172,7 +173,7 @@ class StackViewSet(ViewSet):
             return Response({"error": "IAC configuration is required."}, status=status.HTTP_400_BAD_REQUEST)
 
         # Call the service function and handle the JsonResponse
-        result = services.overwrite_iac(str(stack.id), new_iac)
+        result = services.update_iac(str(stack.id), new_iac)
         
         # Convert JsonResponse to DRF Response
         if result.status_code == 200:
@@ -517,6 +518,13 @@ def update_iac(request: HttpRequest, stack_id: str) -> JsonResponse:
     else:
         return JsonResponse({"error": "Method not allowed."}, status=405)
 
+
+def update_stack_information(request: HttpRequest, stack_id: str) -> JsonResponse:
+    """Legacy function-based view - use StackViewSet update_stack_information action instead"""
+    if request.method == "POST":
+        return handlers.update_stack_information(request, stack_id)
+    else:
+        return JsonResponse({"error": "Method not allowed."}, status=405)
 
 def overwrite_iac(request: HttpRequest, stack_id: str) -> JsonResponse:
     """Legacy function-based view - use StackViewSet overwrite_iac action instead"""

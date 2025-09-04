@@ -2,7 +2,12 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
+from core.utils.config_loader import load_config
+# from core.utils.key_vault_client import KeyVaultClient
+
 load_dotenv()
+load_config()
+# key_vault_client = KeyVaultClient()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 print(f"BASE_DIR: {BASE_DIR}")
@@ -12,14 +17,14 @@ assert HOST is not None, "HOST env must be set"
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-ENV = os.environ.get("ENV", "dev")
-DEBUG = ENV == "dev"
+ENV = os.environ.get("ENV", "LOCAL")
+DEBUG = ENV == "DEV" or ENV == "LOCAL"
 
 ALLOWED_HOSTS = [
     "deploy-box.onrender.com",
     "deploy-box.kalebwbishop.com",
     "deploy-box.com",
-    "be80e3da2d6a.ngrok-free.app"
+    "https://b93437058b73.ngrok-free.app"
 ]
 if DEBUG:
     ALLOWED_HOSTS.extend(
@@ -151,27 +156,27 @@ MIDDLEWARE = [
 ]
 
 # Database
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.postgresql",
-#         "NAME": os.environ.get("DB_NAME"),
-#         "USER": os.environ.get("DB_USER"),
-#         "PASSWORD": os.environ.get("DB_PASSWORD"),
-#         "HOST": os.environ.get("DB_HOST"),
-#         "PORT": os.environ.get("DB_PORT"),
-#         # "OPTIONS": {
-#         #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
-#         # },
-#         "CONN_MAX_AGE": 600,
-#     }
-# }
-
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("DB_NAME"),
+        "USER": os.environ.get("DB_USER"),
+        "PASSWORD": os.environ.get("DB_PASSWORD"),
+        "HOST": os.environ.get("DB_HOST"),
+        "PORT": os.environ.get("DB_PORT"),
+        # "OPTIONS": {
+        #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
+        # },
+        "CONN_MAX_AGE": 600,
     }
 }
+
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 
 
 # Static & Media Files

@@ -140,6 +140,14 @@ def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:
 
     return JsonResponse({"success": True}, status=200)
 
+
+def update_stack_information(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
+    """
+    Legacy function-based view - use StackViewSet update_stack_information action instead
+    """
+    return services.update_stack_information(stack_id, json.loads(request.body))
+
+
 def update_iac(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
     """
     Legacy function-based view - use StackViewSet update action instead
@@ -168,7 +176,7 @@ def overwrite_iac(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
         if not new_iac:
             return JsonResponse({"error": "IAC configuration is required."}, status=400)
             
-        return services.overwrite_iac(stack_id, new_iac)
+        return services.update_iac(stack_id, new_iac)
     except json.JSONDecodeError:
         return JsonResponse({"error": "Invalid JSON data"}, status=400)
     except Exception as e:

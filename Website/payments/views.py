@@ -21,7 +21,6 @@ from accounts.models import UserProfile
 from core.helpers import request_helpers
 from projects.models import Project
 from payments.models import usage_information, billing_history
-from core.utils.DeployBoxIAC.main import DeployBoxIAC
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 

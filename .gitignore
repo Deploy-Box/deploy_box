@@ -10,3 +10,4 @@ nginx.conf
 .DS_Store
 .vscode
 *.sql
+Website/config.local.json

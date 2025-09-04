@@ -22,7 +22,6 @@ from stacks.forms import EnvFileUploadForm, StackSettingsForm, EnvironmentVariab
 from stacks.models import PurchasableStack, Stack
 from stacks.services import post_stack_env
 from core.decorators import oauth_required
-from core.utils.DeployBoxIAC.main import DeployBoxIAC
 
 logger = logging.getLogger(__name__)
 
@@ -280,19 +279,27 @@ class DashboardView(View):
     def stack_dashboard(self, request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
         """Stack-specific dashboard."""
         user = cast(UserProfile, request.user)
-        stack = Stack.objects.get(id=stack_id)
+        try:
+            stack = Stack.objects.get(id=stack_id)
+        except Stack.DoesNotExist:
+            # Redirect to project dashboard if stack doesn't exist
+            return redirect('main_site:project_dashboard', organization_id=organization_id, project_id=project_id)
 
         # Handle stack deletion
         if request.method == 'POST' and request.POST.get('action') == 'delete':
             # Check if user has permission to delete the stack (project admin)
-            project = Project.objects.get(id=project_id)
-            project_member = ProjectMember.objects.filter(user=user, project=project, role='admin').first()
-            if project_member:
-                stack.delete()
-                return redirect('main_site:project_dashboard', organization_id=organization_id, project_id=project_id)
-            else:
-                # User doesn't have permission to delete
-                pass  # Could add error handling here
+            try:
+                project = Project.objects.get(id=project_id)
+                project_member = ProjectMember.objects.filter(user=user, project=project, role='admin').first()
+                if project_member:
+                    stack.delete()
+                    return redirect('main_site:project_dashboard', organization_id=organization_id, project_id=project_id)
+                else:
+                    # User doesn't have permission to delete
+                    pass  # Could add error handling here
+            except Project.DoesNotExist:
+                # Redirect to organization dashboard if project doesn't exist
+                return redirect('main_site:organization_dashboard', organization_id=organization_id)
 
         stack_google_cloud_runs = list()
 
@@ -328,7 +335,11 @@ class DashboardView(View):
         user_projects = Project.objects.filter(projectmember__user=user)
         user_stacks = Stack.objects.filter(project_id=project_id)
         # Get the current project for context
-        project = Project.objects.get(id=project_id)
+        try:
+            project = Project.objects.get(id=project_id)
+        except Project.DoesNotExist:
+            # Redirect to organization dashboard if project doesn't exist
+            return redirect('main_site:organization_dashboard', organization_id=organization_id)
 
         # Determine template based on stack type
         stack_type = stack.purchased_stack.type.lower()
