@@ -97,7 +97,7 @@ resource "azurerm_container_app" "container_app" {
 resource "azurerm_dns_cname_record" "cname_record" {
   name                = "@"
   zone_name           = "dev.deploy-box.com"
-  resource_group_name = azurerm_resource_group.main_rg.name
+  resource_group_name = "deploy-box-shared-resources-rg-dev"
   ttl                 = 300
   record              = azurerm_container_app.container_app.ingress[0].fqdn
 }
