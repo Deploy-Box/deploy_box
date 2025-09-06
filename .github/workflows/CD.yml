@@ -9,6 +9,7 @@ permissions:
   contents: read
 
 env:
+  CONTAINER_DIR: "./Website"
   TF_DIR: "./terraform"
 
 jobs:
@@ -85,10 +86,12 @@ jobs:
         shell: bash
         run: |
           IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
-          IMAGE_NAME=$ACR_NAME.azurecr.io/deploy-box-iac-container-app:$IMAGE_TAG
+          IMAGE_NAME=$ACR_NAME.azurecr.io/deploy-box-container-app:$IMAGE_TAG
 
-          echo "Building image $IMAGE_NAME from ./container-app"
-          docker build -t $IMAGE_NAME ./container-app
+          CONTAINER_DIR=$CONTAINER_DIR
+
+          echo "Building image $IMAGE_NAME from $CONTAINER_DIR"
+          docker build -t $IMAGE_NAME $CONTAINER_DIR
 
           echo "Pushing image $IMAGE_NAME to ACR"
           docker push $IMAGE_NAME
