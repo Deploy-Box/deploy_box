@@ -96,7 +96,7 @@ jobs:
           # expose image name for downstream jobs
           echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
-deploy-infrastructure:
+  deploy-infrastructure:
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     needs: build-container-app
