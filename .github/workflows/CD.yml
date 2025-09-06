@@ -13,55 +13,6 @@ env:
   TF_DIR: "./terraform"
 
 jobs:
-  migrations:
-    runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
-    permissions:
-      id-token: write
-      contents: read
-
-    env:
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Azure Login with OIDC
-        uses: azure/login@v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Install dependencies
-        working-directory: Website
-        run: |
-          python -m venv venv
-          source venv/bin/activate
-          pip install -r requirements.txt
-
-      - name: Run migrations
-        working-directory: Website
-        env:
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
-          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
-          DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{ secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY }}
-        run: |
-          source venv/bin/activate
-          python manage.py makemigrations
-          python manage.py migrate
-
   build-container-app:
     runs-on: ubuntu-latest
     environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
@@ -121,6 +72,9 @@ jobs:
       id-token: write
       contents: read
 
+    outputs:
+      container_app_identity_client_id: ${{ steps.terraform_apply.outputs.container_app_identity_client_id }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -159,7 +113,8 @@ jobs:
             -var="image_name=${{ needs.build-container-app.outputs.image_name }}" \
             -var="environment=${{ github.ref_name == 'main' && 'prod' || github.ref_name }}"
 
-      - name: Terraform Apply
+      - id: terraform_apply
+        name: Terraform Apply
         working-directory: ${{ env.TF_DIR }}
         run: |
           terraform apply \
@@ -167,3 +122,56 @@ jobs:
             -var-file="tfvars/${{ github.ref_name == 'main' && 'prod' || github.ref_name }}.tfvars" \
             -var="image_name=${{ needs.build-container-app.outputs.image_name }}" \
             -var="environment=${{ github.ref_name == 'main' && 'prod' || github.ref_name }}"
+          
+          # Capture Terraform outputs
+          echo "container_app_identity_client_id=$(terraform output -raw container_app_identity_client_id)" >> $GITHUB_OUTPUT
+
+  migrations:
+    runs-on: ubuntu-latest
+    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+    needs: deploy-infrastructure
+    permissions:
+      id-token: write
+      contents: read
+
+    env:
+      AZURE_CLIENT_ID: ${{ needs.deploy-infrastructure.outputs.container_app_identity_client_id }}
+      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
+      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Azure Login with OIDC
+        uses: azure/login@v2
+        with:
+          client-id: ${{ needs.deploy-infrastructure.outputs.container_app_identity_client_id }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Install dependencies
+        working-directory: Website
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r requirements.txt
+
+      - name: Run migrations
+        working-directory: Website
+        env:
+          DB_NAME: ${{ secrets.DB_NAME }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+          DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{ secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY }}
+        run: |
+          source venv/bin/activate
+          python manage.py makemigrations
+          python manage.py migrate
