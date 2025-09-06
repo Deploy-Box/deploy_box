@@ -16,7 +16,7 @@ HOST = os.environ.get("HOST", "https://c361-152-117-84-230.ngrok-free.app")
 assert HOST is not None, "HOST env must be set"
 
 # SECURITY
-SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
+SECRET_KEY = KeyVaultClient().get_secret('deploy-box-django-secret-key')
 ENV = os.environ.get("ENV", "LOCAL").upper()
 DEBUG = ENV == "DEV" or ENV == "LOCAL"
 

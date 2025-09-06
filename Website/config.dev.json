@@ -13,9 +13,6 @@
   "MONGODB_ATLAS_PUBLIC_KEY": "wvnwflmq",
   "DEPLOY_BOX_STACK_ENDPOINT": "https://deployboxsharedsadev.blob.core.windows.net/stack-source-code-container",
   "EMAIL_HOST_USER": "noreplydeploybbox@gmail.com",
-  "ARM_SUBSCRIPTION_ID": "3106bb2d-2f28-445e-ab1e-79d93bd15979",
-  "ARM_CLIENT_ID": "ab4ea46b-e55a-4cf0-b267-478c916e9137",
-  "ARM_TENANT_ID": "13948c46-2012-4ee2-9594-cd6e4cab3026",
   "CONTAINER_NAME": "terraform",
   "DEPLOY_BOX_GITHUB_CLIENT_ID": "Ov23liehxn12PYLCJG5c",
   "NPM_BIN_PATH": "C:\\Program Files\\nodejs\\npm.cmd"
