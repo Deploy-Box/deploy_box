@@ -17,13 +17,14 @@ assert HOST is not None, "HOST env must be set"
 
 # SECURITY
 SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY")
-ENV = os.environ.get("ENV", "LOCAL")
+ENV = os.environ.get("ENV", "LOCAL").upper()
 DEBUG = ENV == "DEV" or ENV == "LOCAL"
 
 ALLOWED_HOSTS = [
     "deploy-box.onrender.com",
     "deploy-box.kalebwbishop.com",
     "deploy-box.com",
+    "dev.deploy-box.com",
     "https://b93437058b73.ngrok-free.app"
 ]
 if DEBUG:
