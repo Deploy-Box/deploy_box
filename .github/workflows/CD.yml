@@ -151,7 +151,7 @@ jobs:
       - name: Azure Login with OIDC
         uses: azure/login@v2
         with:
-          client-id: ${{ needs.deploy-infrastructure.outputs.container_app_identity_client_id }}
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 

@@ -9,6 +9,8 @@ provider "azurerm" {
   use_oidc = true
 }
 
+data "azurerm_client_config" "current" {}
+
 data "azurerm_container_registry" "acr" {
   name                = "deployboxcr${var.environment}"
   resource_group_name = "deploy-box-rg-${var.environment}"
@@ -48,6 +50,18 @@ resource "azurerm_container_app" "container_app" {
       env {
         name  = "ENV"
         value = upper(var.environment)
+      }
+      env {
+        name  = "AZURE_CLIENT_ID"
+        value = azurerm_user_assigned_identity.container_app_identity.client_id
+      }
+      env {
+        name  = "AZURE_TENANT_ID"
+        value = data.azurerm_client_config.current.tenant_id
+      }
+      env {
+        name  = "AZURE_SUBSCRIPTION_ID"
+        value = data.azurerm_client_config.current.subscription_id
       }
     }
 
