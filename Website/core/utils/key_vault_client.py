@@ -48,7 +48,7 @@ class KeyVaultClient:
             self.vault_url = vault_url
         else:
             # Construct vault URL from environment or use default naming convention
-            vault_name = os.getenv('key-vault-name', 'deploy-box-shared-kv-dev')
+            vault_name = os.getenv('key-vault-name', 'deploy-box-kv-dev')
             self.vault_url = f"https://{vault_name}.vault.azure.net/"
         
         # Use DefaultAzureCredential which supports managed identity, service principal, etc.
@@ -67,7 +67,16 @@ class KeyVaultClient:
         except Exception as e:
             logger.error(f"Failed to initialize Key Vault client: {e}")
             logger.error(f"Key Vault initialization error traceback: {traceback.format_exc()}")
-            raise
+            
+            # Check if this is a network/DNS issue during initialization
+            if "getaddrinfo failed" in str(e) or "Failed to resolve" in str(e):
+                logger.warning(f"Network/DNS issue detected during Key Vault initialization.")
+                logger.warning(f"Key Vault client will use environment variable fallbacks for secrets.")
+                # Still initialize the client but mark it as having network issues
+                self._initialized = True
+                self._network_issue = True
+            else:
+                raise
     
     def get_secret(self, secret_name: str, default_value: Optional[str] = None) -> Optional[str]:
         """
@@ -80,6 +89,20 @@ class KeyVaultClient:
         Returns:
             str: The secret value or default_value if not found
         """
+        # If we detected network issues during initialization, skip Key Vault and go straight to fallback
+        if hasattr(self, '_network_issue') and self._network_issue:
+            logger.warning(f"Key Vault has network issues, using environment variable fallback for '{secret_name}'")
+            env_var_name = secret_name.upper().replace("-", "_")
+            env_value = os.getenv(env_var_name)
+            if env_value:
+                logger.info(f"Using environment variable '{env_var_name}' as fallback for secret '{secret_name}'")
+                return env_value
+            elif default_value is not None:
+                logger.warning(f"Using default value for secret '{secret_name}'")
+                return default_value
+            else:
+                raise Exception(f"Key Vault unavailable and no environment variable or default value for '{secret_name}'")
+        
         try:
             logger.info(f"Attempting to retrieve secret '{secret_name}' from Key Vault: {self.vault_url}")
             secret = self.client.get_secret(secret_name)
@@ -88,6 +111,19 @@ class KeyVaultClient:
         except Exception as e:
             logger.error(f"Error retrieving secret '{secret_name}': {str(e)}")
             logger.error(f"Secret retrieval error traceback: {traceback.format_exc()}")
+            
+            # Check if this is a network/DNS issue
+            if "getaddrinfo failed" in str(e) or "Failed to resolve" in str(e):
+                logger.warning(f"Network/DNS issue detected for Key Vault. This is likely a local development environment.")
+                logger.warning(f"Attempting to use environment variable fallback for '{secret_name}'")
+                
+                # Try to get the secret from environment variables as fallback
+                env_var_name = secret_name.upper().replace("-", "_")
+                env_value = os.getenv(env_var_name)
+                if env_value:
+                    logger.info(f"Using environment variable '{env_var_name}' as fallback for secret '{secret_name}'")
+                    return env_value
+            
             if default_value is not None:
                 logger.warning(f"Using default value for secret '{secret_name}'")
                 return default_value
