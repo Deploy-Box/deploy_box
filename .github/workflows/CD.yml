@@ -159,6 +159,7 @@ jobs:
       - name: Run migrations
         working-directory: Website
         env:
+          ENV: ${{ vars.ENV }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_HOST: ${{ secrets.DB_HOST }}
