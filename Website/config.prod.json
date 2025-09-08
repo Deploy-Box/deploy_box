@@ -4,7 +4,7 @@
   "OAUTH2_AUTH_CODE_CLIENT_ID": "R5nrUKC0JQnAhoaM5jExJb5USgftZahkeitEXOsV",
   "DB_NAME": "neondb",
   "DB_USER": "neondb_owner",
-  "DB_HOST": "ep-flat-wave-a89fpp4h-pooler.eastus2.azure.neon.tech",
+  "DB_HOST": "ep-falling-firefly-a886kane-pooler.eastus2.azure.neon.tech",
   "DB_PORT": "5432",
   "STRIPE_PUBLISHABLE_KEY": "pk_test_51R0cehC8awKXIVJajHxovZ30vdMGKtaCMM5I5YcE4L2YjEqrAeISrU2gDmYeun8nz0rzIQYYPbKjQOBzyGuw5zkZ00FyYoTQrE",
   "MONGODB_ORG_ID": "6540f3638586dd56b4522da2",
