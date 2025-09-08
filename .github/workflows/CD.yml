@@ -72,9 +72,6 @@ jobs:
       id-token: write
       contents: read
 
-    outputs:
-      container_app_identity_client_id: ${{ steps.terraform_apply.outputs.container_app_identity_client_id }}
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -122,9 +119,6 @@ jobs:
             -var-file="tfvars/${{ github.ref_name == 'main' && 'prod' || github.ref_name }}.tfvars" \
             -var="image_name=${{ needs.build-container-app.outputs.image_name }}" \
             -var="environment=${{ github.ref_name == 'main' && 'prod' || github.ref_name }}"
-          
-          # Capture Terraform outputs
-          echo "container_app_identity_client_id=$(terraform output -raw container_app_identity_client_id)" >> $GITHUB_OUTPUT
 
   migrations:
     runs-on: ubuntu-latest
@@ -135,7 +129,7 @@ jobs:
       contents: read
 
     env:
-      AZURE_CLIENT_ID: ${{ needs.deploy-infrastructure.outputs.container_app_identity_client_id }}
+      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
       AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
       AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
 
