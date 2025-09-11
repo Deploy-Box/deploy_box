@@ -7,18 +7,17 @@ from core.utils.key_vault_client import KeyVaultClient
 
 load_dotenv()
 load_config()
-# key_vault_client = KeyVaultClient()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-print(f"BASE_DIR: {BASE_DIR}")
 
-HOST = os.environ.get("HOST", "https://c361-152-117-84-230.ngrok-free.app")
+HOST = os.environ.get("HOST")
 assert HOST is not None, "HOST env must be set"
 
 # SECURITY
 SECRET_KEY = KeyVaultClient().get_secret('deploy-box-django-secret-key')
 ENV = os.environ.get("ENV", "LOCAL").upper()
-DEBUG = ENV == "DEV" or ENV == "LOCAL"
+# DEBUG = ENV == "DEV" or ENV == "LOCAL"
+DEBUG = True # TODO: remove eventually
 
 ALLOWED_HOSTS = [
     "deploy-box.onrender.com",
@@ -241,8 +240,8 @@ GCP = {
 
 GITHUB = {
     "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
-    "CLIENT_SECRET": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_SECRET"),
-    "TOKEN_KEY": os.environ.get("DEPLOY_BOX_GITHUB_TOKEN_KEY"),
+    "CLIENT_SECRET": KeyVaultClient().get_secret('deploy-box-github-client-secret'),
+    "TOKEN_KEY": KeyVaultClient().get_secret("deploy-box-github-token-key"),
 }
 
 AZURE = {
