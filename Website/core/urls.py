@@ -52,6 +52,7 @@ urlpatterns = [
     ),
     # OAuth2 provider
     path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
+    path("programmer_marketplace/", include(("programmer_marketplace.urls", "programmer_marketplace"), namespace="programmer_marketplace"))
 ]
 
 if settings.DEBUG:

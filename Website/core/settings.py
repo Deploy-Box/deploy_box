@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "blogs",
     "taggit", # for tagging in blogs
     "django_ckeditor_5",  # for rich text editor in blogs to handle content like images, links, etc.
+    "programmer_marketplace",
 ]
 
 if DEBUG:
@@ -181,6 +182,7 @@ STATICFILES_DIRS = [
     BASE_DIR / "theme" / "static",
     BASE_DIR / "main_site" / "static",
     BASE_DIR / "blogs" / "static",
+    BASE_DIR / "programmer_marketplace" / "static"
 ]
 STORAGES = {
     "staticfiles": {

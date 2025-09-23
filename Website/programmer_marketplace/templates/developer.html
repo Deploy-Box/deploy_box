@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center bg-gray-50 p-8">
+  <div class="w-full max-w-lg rounded-xl bg-white p-8 shadow">
+    <h1 class="mb-6 text-2xl font-semibold text-gray-800">Create Developer Profile</h1>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button
+        type="submit"
+        class="w-full rounded-lg bg-indigo-600 px-4 py-2 text-white shadow hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400"
+      >
+        Save
+      </button>
+    </form>
+  </div>
+</div>
+{% endblock %}

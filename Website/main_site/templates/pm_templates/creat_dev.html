@@ -1,0 +1,31 @@
+
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content%}
+    <section>
+    <h1>Create Developer</h1>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        </div>
+        <div>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        </div>
+        <div>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        </div>
+        <div>
+        <label for="profile_picture">Profile Picture:</label>
+        <input type="file" id="profile_picture" name="profile_picture" accept="image/*">
+        </div>
+        <a href="{% url 'programmer_marketplace:create_developer' %}">Cancel</a>
+        <button type="submit">Create Developer</button>
+    </form>
+    </section>
+{% endblock %}
