@@ -88,7 +88,7 @@
         <!-- Stacks Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {% for stack in stack_options %}
-            {% if stack.variant == 'Basic' or stack.variant == 'FREE' %}
+            {% if stack.variant|lower == 'basic' or stack.variant|lower == 'free' %}
                 <!-- Basic tier - emerald colors -->
                 <div class="stack-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="basic" id="stack-{{ stack.id }}">
                     {% if stack.popular %}
@@ -149,7 +149,7 @@
                         </button>
                     </div>
                 </div>
-            {% elif stack.variant == 'Premium' %}
+            {% elif stack.variant|lower == 'premium' %}
                 <!-- Premium tier - amber colors -->
                 <div class="stack-card bg-white rounded-xl shadow-lg border-2 border-amber-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="premium" id="stack-{{ stack.id }}">
                     {% if stack.popular %}
@@ -404,16 +404,20 @@ document.addEventListener('DOMContentLoaded', function() {
 // Helper function to find stack by ID
 function findStackById(stackId) {
     // Stack data from the template
-    const availableStacks = [
-        {% for stack in stack_options %}
+    const availableStacks = [];
+        
+    for(stack in stack_options){
+
+        availableStacks.append(
         {
-            id: '{{ stack.id }}',
-            name: '{{ stack.name }}',
-            price: {{ stack.price }},
-            isFromDatabase: {{ stack.is_from_database|yesno:'true,false' }}
+            id: stack.id,
+            name: stack.name,
+            price: stack.price,
+            isFromDatabase: stack.is_from_database
         },
-        {% endfor %}
-    ];
+        );
+
+    };
     
     return availableStacks.find(stack => stack.id === stackId);
 }

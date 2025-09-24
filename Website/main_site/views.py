@@ -1705,6 +1705,7 @@ class PaymentView(View):
         
         stack_options = []
         db_stacks = PurchasableStack.objects.all()  # Get all stacks, filter in template
+        print("here is stacks: ", db_stacks)
         
         for stack in db_stacks:
             try:
