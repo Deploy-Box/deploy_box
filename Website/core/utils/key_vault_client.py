@@ -128,3 +128,12 @@ class KeyVaultClient:
                 logger.warning(f"Using default value for secret '{secret_name}'")
                 return default_value
             raise Exception(f"Failed to retrieve secret '{secret_name}' from Key Vault: {str(e)}")
+        
+if __name__ == "__main__":
+    # Example usage
+    kv_client = KeyVaultClient()
+    try:
+        secret_value = kv_client.get_secret("azure-container-app-environment-id")
+        print(f"Retrieved secret value: {secret_value}")
+    except Exception as e:
+        print(f"Error: {e}")
