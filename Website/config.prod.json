@@ -19,5 +19,6 @@
   "CONTAINER_NAME": "terraform",
   "DEPLOY_BOX_GITHUB_CLIENT_ID": "Ov23liehxn12PYLCJG5c",
   "NPM_BIN_PATH": "C:\\Program Files\\nodejs\\npm.cmd",
-  "KEY-VAULT-NAME": "deploy-box-kv-prod"
+  "KEY-VAULT-NAME": "deploy-box-kv-prod",
+  "AZURE_FUNCTION_URL": "http://deploy-box-iac-fa-prod.azurewebsites.net/api/ingress"
 }
