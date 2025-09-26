@@ -7,6 +7,7 @@ from stacks.models import (
     Stack,
     PurchasableStack,
 )
+from django.conf import settings
 from projects.models import Project
 from accounts.models import UserProfile
 import os
@@ -15,9 +16,7 @@ from .service_helpers import ServiceHelper
 
 logger = logging.getLogger(__name__)
 
-# http://deploy-box-iac-fa-dev.azurewebsites.net/api/ingress
-
-def send_to_azure_function(message_data: dict, function_url: str = "http://deploy-box-iac-fa-dev.azurewebsites.net/api/ingress") -> bool:
+def send_to_azure_function(message_data: dict, function_url: str | None = None) -> bool:
     """
     Sends a message to Azure Function via HTTP trigger.
     
@@ -28,6 +27,12 @@ def send_to_azure_function(message_data: dict, function_url: str = "http://deplo
     Returns:
         bool: True if message was sent successfully, False otherwise
     """
+    function_url = function_url or os.environ.get('AZURE_FUNCTION_URL')
+
+    if not function_url:
+        logger.error("Azure Function URL is not configured.")
+        return False
+
     try:
         # Send HTTP POST request to Azure Function
         response = requests.post(
