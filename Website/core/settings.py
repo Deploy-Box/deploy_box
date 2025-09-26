@@ -221,9 +221,9 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 #  External Services
 STRIPE = {
-    "PUBLISHABLE_KEY": KeyVaultClient().get_secret("STRIPE_PUBLISHABLE_KEY"),
-    "SECRET_KEY": KeyVaultClient().get_secret("STRIPE_SECRET_KEY"),
-    "WEBHOOK_SECRET": KeyVaultClient().get_secret("STRIPE_WEBHOOK_SECRET"),
+    "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key"),
+    "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key"),
+    "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret"),
 }
 
 MONGO_DB = {
