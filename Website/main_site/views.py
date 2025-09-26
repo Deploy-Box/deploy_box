@@ -186,12 +186,14 @@ class DashboardView(View):
         num_days_in_month = calendar.monthrange(current_time.year, current_time.month)[1]
 
         # Calculate usage metrics
-        billing_info = DeployBoxIAC().get_billing_info()
+        # billing_info = DeployBoxIAC().get_billing_info()
+        billing_info = {}
 
         for info in billing_info.values():
             if info.get("cost") < current_time.day / num_days_in_month:
                 info["cost"] = current_time.day / num_days_in_month
 
+        # current_usage = sum(billing_info.get(stack.id, {}).get("cost", 0.00) for stack in organization_stacks)
         current_usage = sum(billing_info.get(stack.id, {}).get("cost", 0.00) for stack in organization_stacks)
         daily_usage = current_usage / (current_time.day or 1)
         projected_monthly_usage = current_usage * (num_days_in_month / (current_time.day or 1))
@@ -1705,6 +1707,7 @@ class PaymentView(View):
         
         stack_options = []
         db_stacks = PurchasableStack.objects.all()  # Get all stacks, filter in template
+        print("here is stacks: ", db_stacks)
         
         for stack in db_stacks:
             try:

@@ -1,5 +1,5 @@
 {
-  "HOST": "https://dev.deploy-box.com",
+  "HOST": "https://dev.deploy-box.com/",
   "OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID": "G5uGZZZnMojr0pRo4MiZDr6FLjkRxk2PrkuR3Ymd",
   "OAUTH2_AUTH_CODE_CLIENT_ID": "R5nrUKC0JQnAhoaM5jExJb5USgftZahkeitEXOsV",
   "DB_NAME": "neondb",
