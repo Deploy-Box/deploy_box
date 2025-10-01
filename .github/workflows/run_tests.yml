@@ -34,7 +34,6 @@ jobs:
         working-directory: Website
 
     env:
-      DJANGO_SETTINGS_MODULE: website.settings
       STRIPE_SECRET_KEY: "sk_test_dummy"
       CI: "true"
 
