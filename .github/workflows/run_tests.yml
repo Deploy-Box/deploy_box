@@ -31,7 +31,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: website
+        working-directory: Website
 
     env:
       DJANGO_SETTINGS_MODULE: website.settings
@@ -51,7 +51,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('website/requirements*.txt') }}
+          key: pip-${{ runner.os }}-${{ hashFiles('Website/requirements*.txt') }}
           restore-keys: |
             pip-${{ runner.os }}-
 
