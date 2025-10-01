@@ -3,7 +3,7 @@ name: Tests (dev → prod PR)
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
-    branches: [prod]
+    branches: [main]
 
 concurrency:
   group: pr-to-prod-${{ github.event.pull_request.number }}
@@ -12,7 +12,7 @@ concurrency:
 jobs:
   run-tests:
     # Only run if the PR base is prod AND the head branch is dev
-    if: ${{ github.event.pull_request.base.ref == 'prod' && github.event.pull_request.head.ref == 'dev' }}
+    if: ${{ github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev' }}
     runs-on: ubuntu-latest
 
     env:
