@@ -7,12 +7,15 @@ from stacks.models import PurchasableStack
 from projects.models import Project
 from payments.views import create_checkout_session, check_organization_payment_methods
 from core.decorators import AuthHttpRequest
+from django.urls import reverse
+import json
+from rest_framework.test import APIRequestFactory, force_authenticate, APIClient
+from rest_framework.renderers import JSONRenderer
 
 User = get_user_model()
 
 class PaymentViewsTestCase(TestCase):
     def setUp(self):
-        self.factory = RequestFactory()
         
         # Create test user
         self.user = User.objects.create_user(
@@ -42,48 +45,51 @@ class PaymentViewsTestCase(TestCase):
             variant='test'
         )
 
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
     @patch('payments.views.stripe')
     def test_create_checkout_session_creates_stripe_customer(self, mock_stripe):
-        """Test that create_checkout_session creates a Stripe customer when organization doesn't have one."""
-        
-        # Mock Stripe responses
-        mock_price = MagicMock()
-        mock_price.unit_amount = 1000  # $10.00
+        mock_price = MagicMock(); mock_price.unit_amount = 1000
         mock_stripe.Price.retrieve.return_value = mock_price
-        
-        mock_customer = MagicMock()
-        mock_customer.id = 'cus_test123'
+        mock_customer = MagicMock(); mock_customer.id = 'cus_test123'
         mock_stripe.Customer.create.return_value = mock_customer
-        
-        mock_session = MagicMock()
-        mock_session.id = 'cs_test123'
+        mock_session = MagicMock(); mock_session.id = 'cs_test123'
         mock_stripe.checkout.Session.create.return_value = mock_session
-        
-        # Create request
-        request = self.factory.post('/api/v1/payments/checkout/create/test-org/')
+
+        factory = APIRequestFactory()
+        payload = {
+            "stack_id": str(self.purchasable_stack.id),
+            "project_id": str(self.project.id),
+        }
+        # Build a DRF request with JSON
+        request = factory.post(
+            f"/api/v1/payments/checkout/create/{self.organization.id}/",
+            data=payload,
+            format='json'
+        )
+        force_authenticate(request, user=self.user)
         request.auth_user = self.user
-        request.body = b'{"stack_id": "' + str(self.purchasable_stack.id).encode() + b'", "project_id": "' + str(self.project.id).encode() + b'"}'
-        
-        # Mock get_organization to return our test organization
+
         with patch('payments.views.get_organization', return_value=self.organization):
-            response = create_checkout_session(request, str(self.organization.id))
-        
-        # Verify Stripe customer was created
+            # Bypass oauth decorator so we can control rendering
+            resp = create_checkout_session.__wrapped__(request, str(self.organization.id))
+
+        # Attach a renderer so resp.render() works if exercised
+        resp.accepted_renderer = JSONRenderer()
+        resp.accepted_media_type = 'application/json'
+        resp.renderer_context = {}
+
+        self.assertEqual(resp.status_code, 200)
         mock_stripe.Customer.create.assert_called_once_with(
             email=self.organization.email,
             name=self.organization.name,
             metadata={'organization_id': str(self.organization.id)}
         )
-        
-        # Verify organization was updated with new stripe_customer_id
         self.organization.refresh_from_db()
         self.assertEqual(self.organization.stripe_customer_id, 'cus_test123')
-        
-        # Verify checkout session was created
         mock_stripe.checkout.Session.create.assert_called_once()
-        
-        # Verify response
-        self.assertEqual(response.status_code, 200)
+
 
     @patch('payments.views.stripe')
     def test_check_organization_payment_methods_creates_stripe_customer(self, mock_stripe):

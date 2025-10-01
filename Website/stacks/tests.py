@@ -8,7 +8,10 @@ import json
 
 from stacks.models import Stack, PurchasableStack
 from projects.models import Project
-from accounts.models import UserProfile, Organization
+from organizations.models import Organization
+from django.contrib.auth import get_user_model
+
+UserProfile = get_user_model()
 
 
 class StackIACOverwriteTestCase(APITestCase):
@@ -17,22 +20,21 @@ class StackIACOverwriteTestCase(APITestCase):
     def setUp(self):
         """Set up test data"""
         # Create test user
-        self.user = User.objects.create_user(
+        self.user_profile = UserProfile.objects.create_user(
             username='testuser',
             email='test@example.com',
             password='testpass123'
         )
         
-        # Create user profile
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            email_verified=True
-        )
+        # # Create user profile
+        # self.user_profile = UserProfile.objects.create(
+        #     user=self.user,
+        #     email_verified=True
+        # )
         
         # Create organization
         self.organization = Organization.objects.create(
             name='Test Organization',
-            owner=self.user_profile
         )
         
         # Create project
@@ -151,7 +153,7 @@ class StackIACOverwriteTestCase(APITestCase):
         mock_deploy_box_iac.return_value = mock_instance
         
         new_iac = {'test': 'configuration'}
-        url = reverse('overwrite_iac', kwargs={'stack_id': str(self.stack.id)})
+        url = reverse('stacks:overwrite_iac', kwargs={'stack_id': str(self.stack.id)})
         
         response = self.client.post(
             url,
@@ -178,22 +180,21 @@ class StackIACOverwriteIntegrationTestCase(TestCase):
     def setUp(self):
         """Set up test data for integration tests"""
         # Create test user
-        self.user = User.objects.create_user(
+        self.user_profile = UserProfile.objects.create_user(
             username='integrationuser',
             email='integration@example.com',
             password='testpass123'
         )
         
-        # Create user profile
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            email_verified=True
-        )
+        # # Create user profile
+        # self.user_profile = UserProfile.objects.create(
+        #     user=self.user,
+        #     email_verified=True
+        # )
         
         # Create organization
         self.organization = Organization.objects.create(
             name='Integration Organization',
-            owner=self.user_profile
         )
         
         # Create project
@@ -328,22 +329,21 @@ class StackStatusUpdateTestCase(APITestCase):
     def setUp(self):
         """Set up test data"""
         # Create test user
-        self.user = User.objects.create_user(
+        self.user_profile = UserProfile.objects.create_user(
             username='statususer',
             email='status@example.com',
             password='testpass123'
         )
         
-        # Create user profile
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            email_verified=True
-        )
+        # # Create user profile
+        # self.user_profile = UserProfile.objects.create(
+        #     user=self.user,
+        #     email_verified=True
+        # )
         
         # Create organization
         self.organization = Organization.objects.create(
             name='Status Test Organization',
-            owner=self.user_profile
         )
         
         # Create project
@@ -474,22 +474,22 @@ class StackIACUpdateTestCase(APITestCase):
     def setUp(self):
         """Set up test data"""
         # Create test user
-        self.user = User.objects.create_user(
+        self.user_profile = UserProfile.objects.create_user(
             username='iacuser',
             email='iac@example.com',
             password='testpass123'
         )
         
-        # Create user profile
-        self.user_profile = UserProfile.objects.create(
-            user=self.user,
-            email_verified=True
-        )
+        # # Create user profile
+        # self.user_profile = UserProfile.objects.create(
+        #     user=self.user,
+        #     email_verified=True
+        # )
         
         # Create organization
         self.organization = Organization.objects.create(
             name='IAC Test Organization',
-            owner=self.user_profile
+
         )
         
         # Create project
