@@ -32,7 +32,11 @@ class Stack(models.Model):
     instance_usage_bill_amount = models.FloatField(default=0)
     status = models.CharField(max_length=100, default="STARTING")
     iac = models.JSONField(default=dict)
+    iac_state = models.JSONField(default=dict)
     stack_information = models.JSONField(default=dict)
+    parent_stack = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='child_stacks')
+    environment_type = models.CharField(max_length=50, default="DEV")
+    environment_name = models.CharField(max_length=50, default="Development")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
