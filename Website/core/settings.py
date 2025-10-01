@@ -176,17 +176,21 @@ def get_db_password():
 
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": get_db_password(),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
-        # "OPTIONS": {
-        #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
-        # },
-        "CONN_MAX_AGE": 600,
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / 'db.sqlite3',
     }
+    # "default": {
+    #     "ENGINE": "django.db.backends.postgresql",
+    #     "NAME": os.environ.get("DB_NAME"),
+    #     "USER": os.environ.get("DB_USER"),
+    #     "PASSWORD": get_db_password(),
+    #     "HOST": os.environ.get("DB_HOST"),
+    #     "PORT": os.environ.get("DB_PORT"),
+    #     # "OPTIONS": {
+    #     #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
+    #     # },
+    #     "CONN_MAX_AGE": 600,
+    # }
 }
 
 # DATABASES = {
