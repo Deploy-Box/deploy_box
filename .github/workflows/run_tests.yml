@@ -11,16 +11,17 @@ concurrency:
 
 jobs:
   run-tests:
-    # Only run if the PR base is prod AND the head branch is dev
     if: ${{ github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev' }}
     runs-on: ubuntu-latest
 
+    # all `run:` steps execute from repo/website
+    defaults:
+      run:
+        working-directory: website
+
     env:
-      # Django/pytest env you need for tests (adjust as needed)
-      DJANGO_SETTINGS_MODULE: website.settings  # or your settings module
-      # If your tests touch Stripe or other APIs, set fake keys here or in repo secrets:
+      DJANGO_SETTINGS_MODULE: website.settings
       STRIPE_SECRET_KEY: "sk_test_dummy"
-      # If your code loads settings from JSON/config, consider test-safe toggles:
       CI: "true"
 
     steps:
@@ -36,7 +37,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: pip-${{ runner.os }}-${{ hashFiles('**/requirements*.txt') }}
+          # requirements live in website/, so hash that path
+          key: pip-${{ runner.os }}-${{ hashFiles('website/requirements*.txt') }}
           restore-keys: |
             pip-${{ runner.os }}-
 
@@ -45,12 +47,8 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-
-      - name: Run migrations
-        run: |
-          python manage.py migrate --noinput
+      - name: Migrate (SQLite)
+        run: python manage.py migrate --noinput
 
       - name: Run tests
-        # If you use pytest: `pytest -q`
-        run: |
-          python manage.py test --verbosity 2
+        run: python manage.py test --verbosity 2
