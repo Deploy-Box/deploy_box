@@ -228,36 +228,13 @@ STRIPE = {
     "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key"),
     "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key"),
     "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret"),
-}
-
-MONGO_DB = {
-    "ORG_ID": os.environ.get("MONGODB_ORG_ID"),
-    "PROJECT_ID": os.environ.get("MONGODB_PROJECT_ID"),
-    "CLIENT_ID": os.environ.get("MONGODB_CLIENT_ID"),
-    "CLIENT_SECRET": os.environ.get("MONGODB_CLIENT_SECRET"),
-}
-
-GCP = {
-    "KEY_PATH": os.environ.get("GCP_KEY_PATH"),
-    "PROJECT_ID": os.environ.get("GCP_PROJECT_ID"),
+    # "WEBHOOK_SECRET": os.environ.get("STRIPE_WEBHOOK_SECRET"),
 }
 
 GITHUB = {
     "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
     "CLIENT_SECRET": KeyVaultClient().get_secret('deploy-box-github-client-secret'),
     "TOKEN_KEY": KeyVaultClient().get_secret("deploy-box-github-token-key"),
-}
-
-AZURE = {
-    "CLIENT_ID": os.environ.get("ARM_CLIENT_ID"),
-    "CLIENT_SECRET": os.environ.get("ARM_CLIENT_SECRET"), 
-    "TENANT_ID": os.environ.get("ARM_TENANT_ID"),
-    "SUBSCRIPTION_ID": os.environ.get("ARM_SUBSCRIPTION_ID"),
-    "STORAGE_CONNECTION_STRING": os.environ.get("AZURE_STORAGE_CONNECTION_STRING"),
-    "CONTAINER_NAME": os.environ.get("CONTAINER_NAME"),
-    "RESOURCE_GROUP_NAME": os.environ.get("RESOURCE_GROUP_NAME"),
-    "ACR_NAME": os.environ.get("ACR_NAME"),
-    "ACR_PASSWORD": os.environ.get("ACR_PASSWORD"),
 }
 
 # DeployBox Stack Endpoint for file downloads

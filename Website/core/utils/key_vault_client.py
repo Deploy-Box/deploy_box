@@ -48,7 +48,10 @@ class KeyVaultClient:
             self.vault_url = vault_url
         else:
             # Construct vault URL from environment or use default naming convention
-            vault_name = os.getenv('KEY-VAULT-NAME', 'deploy-box-kv-dev')
+            vault_name = os.getenv('KEY_VAULT_NAME')
+            if not vault_name:
+                raise ValueError("KEY_VAULT_NAME environment variable is not set and no vault_url provided.")
+            
             self.vault_url = f"https://{vault_name}.vault.azure.net/"
         
         # Use DefaultAzureCredential which supports managed identity, service principal, etc.
