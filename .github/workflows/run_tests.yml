@@ -1,26 +1,39 @@
-name: Tests (dev → prod PR)
+name: Tests (dev → main PR + manual)
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     branches: [main]
+  workflow_dispatch:
+    inputs:
+      test_path:
+        description: 'Optional test target (e.g. "payments.tests" or "apps/accounts")'
+        required: false
+        default: ''
+      python_version:
+        description: 'Python version'
+        required: false
+        default: '3.11'
+      run_migrate:
+        description: 'Run migrations before tests'
+        required: false
+        default: 'true'   # 'true' or 'false'
 
 concurrency:
-  group: pr-to-prod-${{ github.event.pull_request.number }}
+  group: tests-${{ github.event_name }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
   run-tests:
-    if: ${{ github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev' }}
+    # Run for manual dispatch OR for PRs where base is main and head is dev
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev') }}
     runs-on: ubuntu-latest
 
-    # all `run:` steps execute from repo/website
     defaults:
       run:
-        working-directory: website
+        working-directory: Website
 
     env:
-      DJANGO_SETTINGS_MODULE: website.settings
       STRIPE_SECRET_KEY: "sk_test_dummy"
       CI: "true"
 
@@ -31,14 +44,13 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: ${{ inputs.python_version || '3.11' }}
 
       - name: Cache pip
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          # requirements live in website/, so hash that path
-          key: pip-${{ runner.os }}-${{ hashFiles('website/requirements*.txt') }}
+          key: pip-${{ runner.os }}-${{ hashFiles('Website/requirements*.txt') }}
           restore-keys: |
             pip-${{ runner.os }}-
 
@@ -48,7 +60,14 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Migrate (SQLite)
+        if: ${{ inputs.run_migrate != 'false' }}  # run by default; can disable in manual run
         run: python manage.py migrate --noinput
 
       - name: Run tests
-        run: python manage.py test --verbosity 2
+        run: |
+          if [ -n "${{ inputs.test_path }}" ]; then
+            python manage.py test --verbosity 2 "${{ inputs.test_path }}"
+          else
+            python manage.py test --verbosity 2
+          fi
+

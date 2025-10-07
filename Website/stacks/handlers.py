@@ -122,6 +122,25 @@ def post_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
 def delete_stack_env(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
     return JsonResponse({"error": "Not implemented"}, status=501)
 
+def update_iac_state(request: AuthHttpRequest, stack_id: str) -> JsonResponse:
+    """
+    Legacy function-based view - use StackViewSet update_iac_state action instead
+    """
+    stack = get_object_or_404(Stack, id=stack_id)
+
+    try:
+        (new_iac_state,) = request_helpers.assertRequestFields(
+            request, ["data"]
+        )
+    except request_helpers.MissingFieldError as e:
+        return e.to_response()
+
+    success = services.update_stack_iac_state_only(stack, new_iac_state)
+
+    if not success:
+        return JsonResponse({"error": "Failed to update IAC state."}, status=500)
+
+    return JsonResponse({"success": True, "new_iac_state": new_iac_state}, status=200)
 
 @csrf_exempt
 def update_stack_databases_usages(request: HttpRequest) -> JsonResponse:

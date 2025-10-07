@@ -128,6 +128,41 @@ def post_purchasable_stack(
         )
 
 
+def update_stack_iac_state_only(stack: Stack, new_iac_state: dict) -> bool:
+    """
+    Updates only the IAC state field in the database without triggering cloud deployment.
+
+    Args:
+        stack (Stack): The stack object to update.
+        new_iac_state (dict): The complete new IAC state configuration to replace the existing one.
+
+    Returns:
+        bool: True if the IAC state was updated successfully, False otherwise.
+    """
+    try:
+        logger.info(f"Updating IAC state field only for stack {stack.id}")
+        
+        # Store the old IAC state for logging purposes
+        old_iac_state = stack.iac_state
+        logger.info(f"Old IAC state configuration: {old_iac_state}")
+        logger.info(f"New IAC state configuration: {new_iac_state}")
+        
+        # Validate that the new IAC state is a valid dictionary
+        if not isinstance(new_iac_state, dict):
+            logger.error(f"Invalid IAC state configuration type for stack {stack.id}: {type(new_iac_state)}")
+            return False
+        
+        # Overwrite the IAC state configuration in the database only
+        stack.iac_state = new_iac_state
+        stack.save()
+        
+        logger.info(f"Successfully updated IAC state field for stack {stack.id} (no deployment)")
+        return True
+        
+    except Exception as e:
+        logger.error(f"Failed to update IAC state field for stack {stack.id}: {str(e)}")
+        return False
+
 
 # TODO: show loading indicator
 def post_stack_env(

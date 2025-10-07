@@ -6,19 +6,10 @@
   "DB_USER": "neondb_owner",
   "DB_HOST": "ep-falling-firefly-a886kane-pooler.eastus2.azure.neon.tech",
   "DB_PORT": "5432",
-  "STRIPE_PUBLISHABLE_KEY": "pk_test_51R0cehC8awKXIVJajHxovZ30vdMGKtaCMM5I5YcE4L2YjEqrAeISrU2gDmYeun8nz0rzIQYYPbKjQOBzyGuw5zkZ00FyYoTQrE",
-  "MONGODB_ORG_ID": "6540f3638586dd56b4522da2",
-  "MONGODB_PROJECT_ID": "67b8c16290da0876c07a781b",
-  "MONGODB_CLIENT_ID": "mdb_sa_id_67b6a0240638822396e26566",
-  "MONGODB_ATLAS_PUBLIC_KEY": "wvnwflmq",
   "DEPLOY_BOX_STACK_ENDPOINT": "https://deployboxsharedsadev.blob.core.windows.net/stack-source-code-container",
   "EMAIL_HOST_USER": "noreplydeploybbox@gmail.com",
-  "ARM_SUBSCRIPTION_ID": "3106bb2d-2f28-445e-ab1e-79d93bd15979",
-  "ARM_CLIENT_ID": "ab4ea46b-e55a-4cf0-b267-478c916e9137",
-  "ARM_TENANT_ID": "13948c46-2012-4ee2-9594-cd6e4cab3026",
-  "CONTAINER_NAME": "terraform",
   "DEPLOY_BOX_GITHUB_CLIENT_ID": "Ov23liehxn12PYLCJG5c",
   "NPM_BIN_PATH": "C:\\Program Files\\nodejs\\npm.cmd",
-  "KEY-VAULT-NAME": "deploy-box-kv-prod",
-  "AZURE_FUNCTION_URL": "http://deploy-box-iac-fa-prod.azurewebsites.net/api/ingress"
+  "KEY_VAULT_NAME": "deploy-box-kv-prod",
+  "AZURE_FUNCTION_URL": "http://deploy-box-sbns-ingress-fa-prod.azurewebsites.net/api/ingress"
 }
