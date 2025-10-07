@@ -249,15 +249,13 @@ GITHUB = {
 }
 
 AZURE = {
-    "CLIENT_ID": os.environ.get("ARM_CLIENT_ID"),
-    "CLIENT_SECRET": os.environ.get("ARM_CLIENT_SECRET"), 
-    "TENANT_ID": os.environ.get("ARM_TENANT_ID"),
-    "SUBSCRIPTION_ID": os.environ.get("ARM_SUBSCRIPTION_ID"),
-    "STORAGE_CONNECTION_STRING": os.environ.get("AZURE_STORAGE_CONNECTION_STRING"),
-    "CONTAINER_NAME": os.environ.get("CONTAINER_NAME"),
-    "RESOURCE_GROUP_NAME": os.environ.get("RESOURCE_GROUP_NAME"),
-    "ACR_NAME": os.environ.get("ACR_NAME"),
-    "ACR_PASSWORD": os.environ.get("ACR_PASSWORD"),
+    "CLIENT_ID": KeyVaultClient().get_secret("arm-client-id"),
+    "CLIENT_SECRET": KeyVaultClient().get_secret("arm-client-secret"), 
+    "TENANT_ID": KeyVaultClient().get_secret("arm-tenant-id"),
+    "STORAGE_CONNECTION_STRING": KeyVaultClient().get_secret("azure-storage-connection-string"),
+    "CONTAINER_NAME": KeyVaultClient().get_secret("container-name"),
+    # "RESOURCE_GROUP_NAME": KeyVaultClient().get_secret("resource-group-name"),
+    "ACR_PASSWORD": KeyVaultClient().get_secret("acr-password"),
 }
 
 # DeployBox Stack Endpoint for file downloads
