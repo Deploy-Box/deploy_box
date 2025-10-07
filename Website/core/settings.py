@@ -228,18 +228,7 @@ STRIPE = {
     "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key"),
     "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key"),
     "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret"),
-}
-
-MONGO_DB = {
-    "ORG_ID": os.environ.get("MONGODB_ORG_ID"),
-    "PROJECT_ID": os.environ.get("MONGODB_PROJECT_ID"),
-    "CLIENT_ID": os.environ.get("MONGODB_CLIENT_ID"),
-    "CLIENT_SECRET": os.environ.get("MONGODB_CLIENT_SECRET"),
-}
-
-GCP = {
-    "KEY_PATH": os.environ.get("GCP_KEY_PATH"),
-    "PROJECT_ID": os.environ.get("GCP_PROJECT_ID"),
+    # "WEBHOOK_SECRET": os.environ.get("STRIPE_WEBHOOK_SECRET"),
 }
 
 GITHUB = {

@@ -89,3 +89,6 @@ class StackIACUpdateSerializer(serializers.Serializer):
         required=False,
         default=[]
     )
+
+class StackIACStateUpdateSerializer(serializers.Serializer):
+    data = serializers.JSONField(help_text="IAC state data to update")

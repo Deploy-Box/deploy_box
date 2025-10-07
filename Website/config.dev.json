@@ -1,21 +1,15 @@
 {
-  "HOST": "https://dev.deploy-box.com/",
+  "HOST": "https://dev.deploy-box.com",
   "OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID": "G5uGZZZnMojr0pRo4MiZDr6FLjkRxk2PrkuR3Ymd",
   "OAUTH2_AUTH_CODE_CLIENT_ID": "R5nrUKC0JQnAhoaM5jExJb5USgftZahkeitEXOsV",
   "DB_NAME": "neondb",
   "DB_USER": "neondb_owner",
   "DB_HOST": "ep-flat-wave-a89fpp4h-pooler.eastus2.azure.neon.tech",
   "DB_PORT": "5432",
-  "STRIPE_PUBLISHABLE_KEY": "pk_test_51R0cehC8awKXIVJajHxovZ30vdMGKtaCMM5I5YcE4L2YjEqrAeISrU2gDmYeun8nz0rzIQYYPbKjQOBzyGuw5zkZ00FyYoTQrE",
-  "MONGODB_ORG_ID": "6540f3638586dd56b4522da2",
-  "MONGODB_PROJECT_ID": "67b8c16290da0876c07a781b",
-  "MONGODB_CLIENT_ID": "mdb_sa_id_67b6a0240638822396e26566",
-  "MONGODB_ATLAS_PUBLIC_KEY": "wvnwflmq",
   "DEPLOY_BOX_STACK_ENDPOINT": "https://deployboxsharedsadev.blob.core.windows.net/stack-source-code-container",
   "EMAIL_HOST_USER": "noreplydeploybbox@gmail.com",
-  "CONTAINER_NAME": "terraform",
   "DEPLOY_BOX_GITHUB_CLIENT_ID": "Ov23liehxn12PYLCJG5c",
   "NPM_BIN_PATH": "C:\\Program Files\\nodejs\\npm.cmd",
-  "KEY-VAULT-NAME": "deploy-box-kv-dev",
-  "AZURE_FUNCTION_URL": "http://deploy-box-iac-fa-dev.azurewebsites.net/api/ingress"
+  "KEY_VAULT_NAME": "deploy-box-kv-dev",
+  "AZURE_FUNCTION_URL": "http://deploy-box-sbns-ingress-fa-dev.azurewebsites.net/api/ingress"
 }

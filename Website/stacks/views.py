@@ -29,7 +29,8 @@ from stacks.serializers import (
     StackDatabaseUpdateSerializer,
     StackIACOverwriteSerializer,
     StackStatusUpdateSerializer,
-    StackIACUpdateSerializer
+    StackIACUpdateSerializer,
+    StackIACStateUpdateSerializer,
 )
 from projects.models import Project
 import stacks.services as services
@@ -260,6 +261,41 @@ class StackViewSet(ViewSet):
             return Response({
                 "success": False,
                 "error": "Failed to update IAC configuration"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+    @action(detail=True, methods=['post'])
+    def update_iac_state(self, request, pk=None):
+        """POST: Update IAC state for a specific stack"""
+        stack = get_object_or_404(Stack, id=pk)
+        serializer = StackIACStateUpdateSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        data = serializer.validated_data
+        new_iac_state = data.get('data')
+
+        if not new_iac_state:
+            return Response({"error": "IAC state is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Store the old IAC state before updating
+        old_iac_state = stack.iac_state
+
+        # Update only the IAC state field without deployment
+        success = services.update_stack_iac_state_only(stack, new_iac_state)
+
+        if success:
+            return Response({
+                "success": True,
+                "message": "IAC state updated successfully (no deployment)",
+                "stack_id": str(stack.id),
+                "old_iac_state": old_iac_state,
+                "new_iac_state": new_iac_state
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                "success": False,
+                "error": "Failed to update IAC state"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     @oauth_required()
@@ -596,3 +632,10 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
         # Log server-side for diagnostics and return minimal error to client
         print(f"Failed uploading source zip to Azure: {str(e)}")
         return JsonResponse({"error": f"Failed to upload file: {str(e)}"}, status=500)
+
+def update_iac_state(request: HttpRequest, stack_id: str) -> JsonResponse:
+    """Legacy function-based view - use StackViewSet update_iac_state action instead"""
+    if request.method == "POST":
+        return handlers.update_iac_state(request, stack_id)
+    else:
+        return JsonResponse({"error": "Method not allowed."}, status=405)
