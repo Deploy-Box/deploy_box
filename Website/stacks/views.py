@@ -616,7 +616,7 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
         # Build a unique blob name preserving stack context
         ts = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
         unique = uuid.uuid4().hex
-        blob_name = f"stacks/{stack_id}/source-{ts}-{unique}.zip"
+        blob_name = f"{stack_id}/source-{ts}-{unique}.zip"
 
         blob_client = container_client.get_blob_client(blob_name)
 
@@ -625,6 +625,8 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
 
         # upload_blob accepts a file-like object or bytes
         blob_client.upload_blob(file_stream, overwrite=True)
+
+        services.update_stack(stack_id=stack_id, source_code_path=blob_name)
 
         return JsonResponse({"success": True, "blob_name": blob_name, "blob_url": blob_client.url}, status=200)
 
