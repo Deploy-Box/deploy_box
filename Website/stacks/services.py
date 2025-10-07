@@ -116,7 +116,7 @@ def update_stack(**kwargs) -> Stack:
 
         # Put request on Azure Service Bus
         message_data = {
-            "request_type": "iac.create",
+            "request_type": "iac.update",
             "source": os.environ.get("HOST"),
             "data": {
                 "stack_id": str(stack.id),
