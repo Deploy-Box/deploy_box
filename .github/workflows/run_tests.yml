@@ -34,8 +34,21 @@ jobs:
         working-directory: Website
 
     env:
-      STRIPE_SECRET_KEY: "sk_test_dummy"
+      # Use GitHub Secrets for sensitive values. Replace the secret names below in your repo
+      # Settings -> Secrets with the actual secret names/values for your environment.
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
       CI: "true"
+      # Django secret key (placeholder secret name - set in repo Secrets)
+      SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      # Database password used by settings.get_db_password fallback in CI
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      # Optional Azure / Key Vault related secrets (placeholders)
+      AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+      CONTAINER_NAME: ${{ secrets.CONTAINER_APP_NAME }}
+      KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }}
+      # GitHub app / OAuth secrets (placeholders)
+      DEPLOY_BOX_GITHUB_CLIENT_ID: "DUMMY"
+      DEPLOY_BOX_GITHUB_CLIENT_SECRET: "DUMMY"
 
     steps:
       - name: Checkout
