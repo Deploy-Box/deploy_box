@@ -41,7 +41,8 @@ jobs:
       # Django secret key (placeholder secret name - set in repo Secrets)
       SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
       # Database password used by settings.get_db_password fallback in CI
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD}}
+      DEPLOY_BOX_POSTGRESQL_DB_PASSWORD: ${{secrets.DEPLOY_BOX_POSTGRESQL_DB_PASSWORD}}
       # Optional Azure / Key Vault related secrets (placeholders)
       AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
       CONTAINER_NAME: ${{ secrets.CONTAINER_APP_NAME }}
@@ -50,6 +51,7 @@ jobs:
       DEPLOY_BOX_GITHUB_CLIENT_ID: "DUMMY"
       DEPLOY_BOX_GITHUB_CLIENT_SECRET: "DUMMY"
       DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
+
 
     steps:
       - name: Checkout
