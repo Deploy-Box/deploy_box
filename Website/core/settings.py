@@ -244,7 +244,7 @@ AZURE = {
     "STORAGE_CONNECTION_STRING": KeyVaultClient().get_secret("azure-storage-connection-string", os.getenv("AZURE_STORAGE_CONNECTION_STRING")),
     "CONTAINER_NAME": KeyVaultClient().get_secret("container-name", os.getenv("CONTAINER_NAME")),
     # "RESOURCE_GROUP_NAME": KeyVaultClient().get_secret("resource-group-name"),
-    "ACR_PASSWORD": KeyVaultClient().get_secret("acr-password"),
+    "ACR_PASSWORD": KeyVaultClient().get_secret("acr-password", os.getenv("ACR_PASSWORD")),
 }
 
 # DeployBox Stack Endpoint for file downloads
