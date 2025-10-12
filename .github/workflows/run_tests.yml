@@ -41,7 +41,7 @@ jobs:
       STRIPE_WEBHOOK_SECRET: ${{secrets.STRIPE_WEBHOOK_SECRET}}
 
       DEPLOY_BOX_GITHUB_CLIENT_SECRET: ${{secrets.DEPLOY_BOX_GITHUB_CLIENT_SECRET}}
-      DEPLOY_BOX_GITHUB_CLIENT_ID: ${{secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY}}
+      DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY}}
 
       CI: "true"
       # Django secret key (placeholder secret name - set in repo Secrets)

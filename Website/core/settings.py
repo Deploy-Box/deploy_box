@@ -234,7 +234,7 @@ STRIPE = {
 GITHUB = {
     "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
     "CLIENT_SECRET": KeyVaultClient().get_secret('deploy-box-github-client-secret', os.getenv("DEPLOY_BOX_GITHUB_CLIENT_SECRET")),
-    "TOKEN_KEY": KeyVaultClient().get_secret("deploy-box-github-token-key"),
+    "TOKEN_KEY": KeyVaultClient().get_secret("deploy-box-github-token-key", os.getenv("DEPLOY_BOX_GITHUB_TOKEN_KEY")),
 }
 
 AZURE = {
