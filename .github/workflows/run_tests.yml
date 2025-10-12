@@ -37,6 +37,7 @@ jobs:
       # Use GitHub Secrets for sensitive values. Replace the secret names below in your repo
       # Settings -> Secrets with the actual secret names/values for your environment.
       STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_PUBLISHABLE_KEY: ${{secrets.STRIPE_PUBLISHABLE_KEY}}
       CI: "true"
       # Django secret key (placeholder secret name - set in repo Secrets)
       SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}

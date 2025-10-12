@@ -225,8 +225,8 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 #  External Services
 STRIPE = {
-    "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key"),
-    "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key"),
+    "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key", os.getenv("STRIPE_PUBLISHABLE_KEY")),
+    "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key", os.getenv("STRIPE_SECRET_KEY")),
     # Prefer Key Vault, fall back to STRIPE_WEBHOOK_SECRET env var if Key Vault unavailable
     "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret", os.environ.get("STRIPE_WEBHOOK_SECRET")),
 }
