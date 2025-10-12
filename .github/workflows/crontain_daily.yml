@@ -1,0 +1,18 @@
+name: Daily CRON
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs at midnight (00:00) UTC every day
+  workflow_dispatch:
+
+jobs:
+  migrations:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Daily Usage Update
+        run: |
+          curl -X POST "${{ secrets.HOST }}/api/v1/payments/get_daily_usage/"

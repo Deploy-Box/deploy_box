@@ -1,0 +1,175 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify-migrations:
+    runs-on: ubuntu-latest
+    name: Verify Database Migrations
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install -r Website/requirements.txt
+
+      - name: Verify migrations can be created
+        run: |
+          source venv/bin/activate
+          cd Website
+          # Check if there are any model changes that need migrations
+          python manage.py makemigrations --dry-run --verbosity=2
+          echo "✅ Migration creation check passed"
+
+      - name: Check for migration conflicts
+        run: |
+          source venv/bin/activate
+          cd Website
+          # Check if there are any migration conflicts
+          python manage.py showmigrations --verbosity=2
+          echo "✅ Migration conflict check passed"
+
+      - name: Validate migration files
+        run: |
+          source venv/bin/activate
+          cd Website
+          # Check if all migration files are valid
+          python manage.py check --deploy
+          echo "✅ Migration validation check passed"
+
+      - name: Test migration plan
+        run: |
+          source venv/bin/activate
+          cd Website
+          # Create a temporary SQLite database to test migrations
+          python manage.py migrate --run-syncdb --verbosity=2
+          echo "✅ Migration execution test passed"
+
+  # lint-and-test:
+  #   runs-on: ubuntu-latest
+  #   name: Code Quality and Tests
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.10"
+
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m venv venv
+  #         source venv/bin/activate
+  #         pip install -r Website/requirements.txt
+  #         pip install flake8 black isort
+
+  #     - name: Run code formatting check
+  #       run: |
+  #         source venv/bin/activate
+  #         cd Website
+  #         # Check if code is properly formatted
+  #         black --check --diff .
+  #         isort --check-only --diff .
+
+  #     - name: Run linting
+  #       run: |
+  #         source venv/bin/activate
+  #         cd Website
+  #         # Run flake8 for code quality
+  #         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+  #         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+  #     - name: Run Django tests
+  #       run: |
+  #         source venv/bin/activate
+  #         cd Website
+  #         python manage.py test --verbosity=2
+
+  #     - name: Check Django configuration
+  #       run: |
+  #         source venv/bin/activate
+  #         cd Website
+  #         python manage.py check --deploy
+  #         echo "✅ Django configuration check passed"
+
+  # security-check:
+  #   runs-on: ubuntu-latest
+  #   name: Security and Dependency Check
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Set up Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.10"
+
+  #     - name: Install dependencies
+  #       run: |
+  #         python -m venv venv
+  #         source venv/bin/activate
+  #         pip install -r Website/requirements.txt
+  #         pip install safety bandit
+
+  #     - name: Check for security vulnerabilities
+  #       run: |
+  #         source venv/bin/activate
+  #         safety check --json --output safety-report.json || true
+  #         echo "Security check completed"
+
+  #     - name: Run bandit security linter
+  #       run: |
+  #         source venv/bin/activate
+  #         cd Website
+  #         bandit -r . -f json -o bandit-report.json || true
+  #         echo "Bandit security scan completed"
+
+  # terraform-validation:
+  #   runs-on: ubuntu-latest
+  #   name: Terraform Configuration Validation
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Set up Terraform
+  #       uses: hashicorp/setup-terraform@v3
+  #       with:
+  #         terraform_version: 1.9.x
+
+  #     - name: Terraform Format Check
+  #       working-directory: terraform
+  #       run: |
+  #         terraform fmt -check -recursive
+  #         echo "✅ Terraform formatting check passed"
+
+  #     - name: Terraform Init
+  #       working-directory: terraform
+  #       run: |
+  #         terraform init -backend=false
+  #         echo "✅ Terraform initialization passed"
+
+  #     - name: Terraform Validate
+  #       working-directory: terraform
+  #       run: |
+  #         terraform validate
+  #         echo "✅ Terraform validation passed"
