@@ -227,8 +227,8 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 STRIPE = {
     "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key"),
     "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key"),
-    "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret"),
-    "WEBHOOK_SECRET": KeyVaultClient("stripe-webhook-secret", os.environ.get("STRIPE_WEBHOOK_SECRET")),
+    # Prefer Key Vault, fall back to STRIPE_WEBHOOK_SECRET env var if Key Vault unavailable
+    "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret", os.environ.get("STRIPE_WEBHOOK_SECRET")),
 }
 
 GITHUB = {
