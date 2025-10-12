@@ -14,7 +14,7 @@ HOST = os.environ.get("HOST")
 assert HOST is not None, "HOST env must be set"
 
 # SECURITY
-SECRET_KEY = KeyVaultClient().get_secret('deploy-box-django-secret-key')
+SECRET_KEY = KeyVaultClient().get_secret('deploy-box-django-secret-key', os.getenv("DJANGO_SECRET_KEY"))
 ENV = os.environ.get("ENV", "LOCAL").upper()
 # DEBUG = ENV == "DEV" or ENV == "LOCAL"
 DEBUG = True # TODO: remove eventually
@@ -228,7 +228,7 @@ STRIPE = {
     "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key"),
     "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key"),
     "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret"),
-    # "WEBHOOK_SECRET": os.environ.get("STRIPE_WEBHOOK_SECRET"),
+    "WEBHOOK_SECRET": KeyVaultClient("stripe-webhook-secret", os.environ.get("STRIPE_WEBHOOK_SECRET")),
 }
 
 GITHUB = {
