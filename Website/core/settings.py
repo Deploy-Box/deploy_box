@@ -161,18 +161,25 @@ def get_db_password():
     Get database password from Key Vault with environment variable fallback.
     This provides a robust fallback mechanism for local development.
     """
+    # First prefer explicit CI / deployment environment variable (if set)
+    env_password = os.environ.get("DEPLOY_BOX_POSTGRESQL_DB_PASSWORD") or os.environ.get("DB_PASSWORD")
+    if env_password:
+        # Provide visibility in CI logs that an env var was used instead of Key Vault
+        print("Info: Using environment variable for database password (DEPLOY_BOX_POSTGRESQL_DB_PASSWORD or DB_PASSWORD)")
+        return env_password
+
+    # Next, fall back to Key Vault if available (with KeyVaultClient handling its own fallbacks)
     try:
-        # Try to get from Key Vault first
-        return KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DEPLOY_BOX_POSTGRESQL_DB_PASSWORD"))
+        kv_password = KeyVaultClient().get_secret("deploy-box-postgresql-db-password")
+        if kv_password:
+            return kv_password
+        # if KeyVaultClient returned None, treat as missing and continue to final error
     except Exception as e:
-        # Fallback to environment variable
-        env_password = os.environ.get("DB_PASSWORD")
-        if env_password:
-            print(f"Warning: Using environment variable DB_PASSWORD as fallback for Key Vault secret")
-            return env_password
-        else:
-            print(f"Error: No database password available from Key Vault or environment variables")
-            raise Exception(f"Database password not available: {str(e)}")
+        # Don't crash immediately here; we'll raise a clearer error below if nothing found
+        print(f"Warning: Key Vault access failed while retrieving DB password: {e}")
+
+    # If we reached here, no password was found
+    raise Exception("Database password not available: please set DEPLOY_BOX_POSTGRESQL_DB_PASSWORD or DB_PASSWORD in the environment, or ensure Key Vault access is configured")
 
 DATABASES = {
     # "default": {
