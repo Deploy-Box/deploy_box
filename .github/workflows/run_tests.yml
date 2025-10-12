@@ -49,7 +49,7 @@ jobs:
       # GitHub app / OAuth secrets (placeholders)
       DEPLOY_BOX_GITHUB_CLIENT_ID: "DUMMY"
       DEPLOY_BOX_GITHUB_CLIENT_SECRET: "DUMMY"
-      DJANGO_SECRET_KEY: "DUMMY"
+      DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
 
     steps:
       - name: Checkout
