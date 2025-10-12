@@ -39,20 +39,24 @@ jobs:
       STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
       STRIPE_PUBLISHABLE_KEY: ${{secrets.STRIPE_PUBLISHABLE_KEY}}
       STRIPE_WEBHOOK_SECRET: ${{secrets.STRIPE_WEBHOOK_SECRET}}
-      
+
+      DEPLOY_BOX_GITHUB_CLIENT_SECRET: ${{secrets.DEPLOY_BOX_GITHUB_CLIENT_SECRET}}
+      DEPLOY_BOX_GITHUB_CLIENT_ID: ${{secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY}}
+
       CI: "true"
       # Django secret key (placeholder secret name - set in repo Secrets)
       SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
       # Database password used by settings.get_db_password fallback in CI
       DB_PASSWORD: ${{ secrets.DB_PASSWORD}}
       DEPLOY_BOX_POSTGRESQL_DB_PASSWORD: ${{secrets.DEPLOY_BOX_POSTGRESQL_DB_PASSWORD}}
-      # Optional Azure / Key Vault related secrets (placeholders)
-      AZURE_STORAGE_CONNECTION_STRING: ${{ secrets.AZURE_STORAGE_CONNECTION_STRING }}
+
+      ARM_CLIENT_ID: ${{secrets.ARM_CLIENT_ID}}
+      ARM_CLIENT_SECRET: ${{secrets.ARM_CLIENT_SECRET}}
+      ARM_TENANT_ID: ${{secrets.ARM_TENANT_ID}}
+      AZURE_STORAGE_CONNECTION_STRING: ${{secrets.AZURE_STORAGE_CONNECTION_STRING}}
       CONTAINER_NAME: ${{ secrets.CONTAINER_APP_NAME }}
       KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }}
-      # GitHub app / OAuth secrets (placeholders)
-      DEPLOY_BOX_GITHUB_CLIENT_ID: "DUMMY"
-      DEPLOY_BOX_GITHUB_CLIENT_SECRET: "DUMMY"
+
       DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
 
 
