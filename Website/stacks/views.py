@@ -1,3 +1,4 @@
+import json
 from django.http import JsonResponse, HttpRequest, HttpResponse
 from rest_framework import status
 from rest_framework.decorators import action
@@ -626,7 +627,18 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
         # upload_blob accepts a file-like object or bytes
         blob_client.upload_blob(file_stream, overwrite=True)
 
-        services.update_stack(stack_id=stack_id, source_code_path=blob_name)
+        stack = Stack.objects.get(id=stack_id)
+
+        print("Current IAC:", stack.iac)
+
+        stack_iac = stack.iac
+
+        # TODO: This will only work for Django Stacks, still need to figure out how this will work in general
+
+        del stack_iac["azurerm_container_app"]["azurerm_container_app-1"]["template"]["container"][0]["image"]
+        stack_iac["azurerm_container_app"]["azurerm_container_app-1"]["template"]["container"][0].update({"build_context": "source_code"})
+
+        services.update_stack(stack_id=stack_id, source_code_path=blob_name, stack_iac=stack_iac)
 
         return JsonResponse({"success": True, "blob_name": blob_name, "blob_url": blob_client.url}, status=200)
 

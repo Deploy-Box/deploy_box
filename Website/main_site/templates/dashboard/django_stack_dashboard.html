@@ -182,7 +182,7 @@
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-green-700">Port:</span>
-                <span class="text-sm text-green-900">8000</span>
+                <span class="text-sm text-green-900">{{stack.django_port}}</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-green-700">Framework:</span>
@@ -191,37 +191,37 @@
             </div>
           </div>
 
-          <!-- MongoDB Database -->
-          <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-lg border border-emerald-200">
+          <!-- PostgreSQL Database -->
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
             <div class="flex items-center mb-4">
-              <div class="bg-emerald-500 p-2 rounded-lg mr-3">
+              <div class="bg-blue-500 p-2 rounded-lg mr-3">
                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm-1.1 18.7c-1.2 0-2.2-.4-3-.9l.4-.7c.7.5 1.6.8 2.6.8 1.3 0 2.3-.6 2.3-1.4 0-.7-.5-1.1-1.8-1.5l-.6-.2c-1.7-.6-2.8-1.3-2.8-2.8 0-1.4 1.1-2.5 2.9-2.5 1 0 1.8.3 2.4.7l-.4.7c-.5-.4-1.2-.6-2-.6-1.2 0-2 .6-2 1.3 0 .6.5 1 1.6 1.3l.6.2c2 .7 3 1.4 3 3 0 1.5-1.2 2.6-3.2 2.6z"/>
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-emerald-900">MongoDB Database</h3>
+              <h3 class="text-lg font-semibold text-blue-900">PostgreSQL Database</h3>
             </div>
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <span class="text-sm text-emerald-700">Status:</span>
+                <span class="text-sm text-blue-700">Status:</span>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
                   Connected
                 </span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-sm text-emerald-700">URI:</span>
-                <span class="text-sm text-emerald-900 font-mono truncate max-w-32" title="{{stack.django_mongodb_uri}}">
-                  {{stack.django_mongodb_uri|truncatechars:20}}
+                <span class="text-sm text-blue-700">Host:</span>
+                <span class="text-sm text-blue-900 font-mono truncate max-w-32" title="{{stack.django_postgres_host}}">
+                  {{stack.django_postgres_host|truncatechars:20}}
                 </span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-sm text-emerald-700">Collections:</span>
-                <span class="text-sm text-emerald-900">5 active</span>
+                <span class="text-sm text-blue-700">Database:</span>
+                <span class="text-sm text-blue-900">{{stack.django_postgres_database}}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-sm text-emerald-700">Engine:</span>
-                <span class="text-sm text-emerald-900">djongo</span>
+                <span class="text-sm text-blue-700">Engine:</span>
+                <span class="text-sm text-blue-900">psycopg2</span>
               </div>
             </div>
           </div>
@@ -314,7 +314,7 @@
           </svg>
           Stack Actions
         </h2>
-        <div class="mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+        <!-- <div class="mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
           <h3 class="text-md font-semibold mb-3">GitHub Integration</h3>
           <div class="flex items-center space-x-4">
             <div id="github-connect" class="hidden">
@@ -344,7 +344,6 @@
                 <div id="repo-dropdown"
                   class="hidden absolute z-10 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200">
                   <div class="py-2 max-h-60 overflow-y-auto">
-                    <!-- Repository list will be populated here -->
                   </div>
                 </div>
               </div>
@@ -359,7 +358,7 @@
               </button>
             </div>
           </div>
-        </div>
+        </div> -->
         <div class="mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
           <h3 class="text-md font-semibold mb-3">Root Directory</h3>
           <div class="flex items-center space-x-4">
@@ -448,4 +447,83 @@
 <script src="{% static 'dashboards/stack_dashboard.js' %}"></script>
 <script src="{% static 'dashboards/django_stack_dashboard.js' %}"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-{% endblock %} 
+<!-- JSZip CDN (load without SRI to avoid integrity mismatch preventing load) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+
+<script>
+  (function() {
+    const folderInput = document.getElementById('folder-input');
+    const uploadBtn = document.getElementById('upload-folder-btn');
+    const loadingSpinner = uploadBtn.querySelector('.loading-spinner');
+
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    async function zipAndUpload(files, uploadUrl) {
+      const zip = new JSZip();
+
+      for (const file of files) {
+        // file.webkitRelativePath preserves folder structure in Chrome/Edge
+        const path = file.webkitRelativePath || file.name;
+        const arrayBuffer = await file.arrayBuffer();
+        zip.file(path, arrayBuffer);
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+
+      const formData = new FormData();
+      formData.append('source_zip', content, 'source.zip');
+
+      // include CSRF token if available as cookie
+      const csrftoken = getCookie('csrftoken');
+
+      const resp = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        headers: csrftoken ? { 'X-CSRFToken': csrftoken } : {}
+      });
+
+      return resp;
+    }
+
+    uploadBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      folderInput.click();
+    });
+
+    folderInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      const uploadUrl = uploadBtn.getAttribute('data-upload-url');
+
+      // show spinner
+      loadingSpinner.classList.remove('hidden');
+      uploadBtn.disabled = true;
+
+      try {
+        const resp = await zipAndUpload(files, uploadUrl);
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => resp.statusText);
+          alert('Upload failed: ' + (text || resp.status));
+        } else {
+          alert('Upload successful');
+          // optionally refresh or handle UI update
+          location.reload();
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Upload error: ' + err.message);
+      } finally {
+        loadingSpinner.classList.add('hidden');
+        uploadBtn.disabled = false;
+        // reset input so same folder can be selected again
+        folderInput.value = null;
+      }
+    });
+  })();
+</script>
+{% endblock %}

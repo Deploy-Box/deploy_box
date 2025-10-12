@@ -105,6 +105,7 @@ def add_stack(**kwargs) -> Stack:
 
 def update_stack(**kwargs) -> Stack:
     stack_id = kwargs.get("stack_id")
+    stack_iac = kwargs.get("stack_iac", {})
     source_code_path = kwargs.get("source_code_path", "")
 
 
@@ -112,7 +113,8 @@ def update_stack(**kwargs) -> Stack:
 
         stack = Stack.objects.get(pk=stack_id)
 
-        
+        if not stack_iac:
+            stack_iac = stack.iac
 
         # Put request on Azure Service Bus
         message_data = {
@@ -121,7 +123,7 @@ def update_stack(**kwargs) -> Stack:
             "data": {
                 "stack_id": str(stack.id),
                 "source_code_path": str(source_code_path),
-                "iac": stack.iac,   
+                "iac": stack_iac,
             }
         }
 
