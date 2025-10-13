@@ -164,7 +164,7 @@ def get_db_password():
     """
     try:
         # Try to get from Key Vault first
-        return KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DEPLOY_BOX_POSTGRESQL_DB_PASSWORD"))
+        return KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD"))
     except Exception as e:
         # Fallback to environment variable
         env_password = os.environ.get("DB_PASSWORD")
