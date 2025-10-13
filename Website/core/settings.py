@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "organizations",
     "payments",
     "blogs",
+    "deploy_box_apis",
     "taggit", # for tagging in blogs
     "django_ckeditor_5",  # for rich text editor in blogs to handle content like images, links, etc.
 ]

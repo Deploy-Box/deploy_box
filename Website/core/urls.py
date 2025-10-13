@@ -47,6 +47,15 @@ urlpatterns = [
                 ),
                 # GitHub integration
                 path("github/", include(("github.urls", "github"), namespace="github")),
+
+                # Deploy Box APIs
+                path(
+                    "deploy-box-apis/",
+                    include(
+                        ("deploy_box_apis.urls", "deploy_box_apis"),
+                        namespace="deploy_box_apis",
+                    ),
+                ),
             ]
         ),
     ),
