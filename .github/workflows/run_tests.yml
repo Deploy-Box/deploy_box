@@ -45,17 +45,17 @@ jobs:
 
       CI: "true"
       # Django secret key (placeholder secret name - set in repo Secrets)
-      SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+      SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
       # Database password used by settings.get_db_password fallback in CI
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD}}
+      DB_PASSWORD: ${{secrets.DB_PASSWORD}}
       DEPLOY_BOX_POSTGRESQL_DB_PASSWORD: ${{secrets.DEPLOY_BOX_POSTGRESQL_DB_PASSWORD}}
 
       ARM_CLIENT_ID: ${{secrets.ARM_CLIENT_ID}}
       ARM_CLIENT_SECRET: ${{secrets.ARM_CLIENT_SECRET}}
       ARM_TENANT_ID: ${{secrets.ARM_TENANT_ID}}
       AZURE_STORAGE_CONNECTION_STRING: ${{secrets.AZURE_STORAGE_CONNECTION_STRING}}
-      CONTAINER_NAME: ${{ secrets.CONTAINER_APP_NAME }}
-      KEY_VAULT_NAME: ${{ secrets.KEY_VAULT_NAME }}
+      CONTAINER_NAME: ${{secrets.CONTAINER_APP_NAME}}
+      KEY_VAULT_NAME: ${{secrets.KEY_VAULT_NAME}}
       ACR_PASSWORD: ${{secrets.ACR_PASSWORD}}
 
       DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}

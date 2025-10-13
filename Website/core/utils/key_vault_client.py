@@ -93,6 +93,9 @@ class KeyVaultClient:
         Returns:
             str: The secret value or default_value if not found
         """
+        if not secret_name:
+            logger.error("secret name not provided")
+            return None
         # If credentials are not available or we detected network issues, use environment fallback
         if not getattr(self, '_credential_available', True) or getattr(self, '_network_issue', False):
             logger.warning(f"Key Vault credential unavailable or network issue; using environment variable fallback for '{secret_name}'")
