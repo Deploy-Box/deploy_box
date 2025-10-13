@@ -27,6 +27,7 @@ jobs:
   run-tests:
     # Run for manual dispatch OR for PRs where base is main and head is dev
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev') }}
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     runs-on: ubuntu-latest
 
     defaults:

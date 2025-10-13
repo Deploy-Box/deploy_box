@@ -156,26 +156,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# Database
-def get_db_password():
-    """
-    Get database password from Key Vault with environment variable fallback.
-    This provides a robust fallback mechanism for local development.
-    """
-    try:
-        # Try to get from Key Vault first
-        password = KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD"))
-        print("here it is: ", password)
-        return password
-    except Exception as e:
-        # Fallback to environment variable
-        env_password = os.environ.get("DB_PASSWORD")
-        if env_password:
-            print(f"Warning: Using environment variable DB_PASSWORD as fallback for Key Vault secret")
-            return env_password
-        else:
-            print(f"Error: No database password available from Key Vault or environment variables")
-            raise Exception(f"Database password not available: {str(e)}")
 
 DATABASES = {
     # "default": {
@@ -186,7 +166,7 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("DB_NAME"),
         "USER": os.environ.get("DB_USER"),
-        "PASSWORD": get_db_password(),
+        "PASSWORD": KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD")),
         "HOST": os.environ.get("DB_HOST"),
         "PORT": os.environ.get("DB_PORT"),
         # "OPTIONS": {
