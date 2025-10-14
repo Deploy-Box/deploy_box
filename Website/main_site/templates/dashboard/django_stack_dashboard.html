@@ -143,6 +143,53 @@
       </div>
     </section>
 
+    <section id="qr-viewer" class="mb-8">
+      <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 10V13h8v10h-8z" />
+          </svg>
+          QR Code
+        </h2>
+
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+          <div class="flex-shrink-0">
+            <div class="w-56 h-56 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-200">
+              <!-- Large placeholder QR image; your JS should populate #qr-preview.src -->
+              <img id="qr-preview" class="w-48 h-48 object-contain" src="{{ qr_code }}" alt="QR code preview" data-frontend-url="{{ stack.mern_frontend_url }}" />
+            </div>
+          </div>
+
+          <div class="flex-1 w-full">
+            <p class="text-sm text-zinc-600 mb-2">Scan this QR to open your site's frontend on a mobile device.</p>
+
+            <div class="bg-zinc-50 p-3 rounded-md border border-zinc-200 flex items-center justify-between">
+              <div class="truncate">
+                <a id="qr-frontend-url" href="{{ stack.mern_frontend_url }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 hover:text-emerald-800 underline text-sm truncate block" title="{{ stack.mern_frontend_url }}">{{ stack.mern_frontend_url }}</a>
+              </div>
+              <div class="ml-4 flex items-center space-x-2">
+                <button id="copy-qr-url" class="inline-flex items-center px-3 py-2 bg-white border border-zinc-200 rounded-md text-sm hover:bg-zinc-100 transition">
+                  <svg class="w-4 h-4 mr-2 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2" />
+                    <rect x="8" y="8" width="12" height="12" rx="2" ry="2" />
+                  </svg>
+                  Copy
+                </button>
+
+                <button id="download-qr-large" class="inline-flex items-center px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md text-sm transition">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
+                  </svg>
+                  Download
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-zinc-500 mt-3">If the QR does not appear, ensure your frontend URL is set and reload the page. You can also copy the URL directly.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
 
     <!-- Django Stack Services -->
@@ -526,4 +573,117 @@
     });
   })();
 </script>
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              try {
+                const img = document.getElementById('qr-preview');
+                const urlLink = document.getElementById('qr-frontend-url');
+                const copyBtn = document.getElementById('copy-qr-url');
+                const downloadBtn = document.getElementById('download-qr-large');
+
+                const frontendUrl = (img && img.dataset && img.dataset.frontendUrl) || (urlLink && urlLink.href) || '';
+
+                function setDisabled(btn, disabled) {
+                  if (!btn) return;
+                  btn.disabled = disabled;
+                  if (disabled) {
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                  } else {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                  }
+                }
+
+                function flashText(btn, text, ms = 1400) {
+                  if (!btn) return;
+                  const orig = btn.innerHTML;
+                  btn.innerHTML = text;
+                  setTimeout(() => { btn.innerHTML = orig; }, ms);
+                }
+
+                if (!frontendUrl) {
+                  // no URL: disable actions and show helpful alt
+                  if (img) img.alt = 'No frontend URL configured';
+                  setDisabled(copyBtn, true);
+                  setDisabled(downloadBtn, true);
+                  return;
+                }
+
+                // Generate preview if image src is empty or is a template placeholder
+                if (img && (!img.src || img.src.trim() === '')) {
+                  QRCode.toDataURL(frontendUrl, { width: 320 })
+                    .then((dataUrl) => { img.src = dataUrl; })
+                    .catch((err) => { console.error('QR preview error', err); img.alt = 'QR generation failed'; });
+                }
+
+                // Copy URL
+                if (copyBtn) {
+                  copyBtn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    try {
+                      if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(frontendUrl);
+                      } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = frontendUrl;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        ta.remove();
+                      }
+                      flashText(copyBtn, 'Copied!');
+                    } catch (err) {
+                      console.error('Copy failed', err);
+                      alert('Unable to copy to clipboard.');
+                    }
+                  });
+                }
+
+                // Download PNG: prefer server-provided QR image if available, otherwise generate client-side
+                if (downloadBtn) {
+                  downloadBtn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    try {
+                      // If the backend already provided an image src for #qr-preview, use it
+                      const existingSrc = img && img.src && img.src.trim() !== '' ? img.src : null;
+                      if (existingSrc) {
+                        const a = document.createElement('a');
+                        a.href = existingSrc;
+                        try {
+                          const host = (new URL(frontendUrl)).hostname.replace(/[:@]/g, '_');
+                          a.download = `${host || 'frontend'}-qr.png`;
+                        } catch (err) {
+                          a.download = 'frontend-qr.png';
+                        }
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        flashText(downloadBtn, 'Downloading...');
+                        return;
+                      }
+
+                      // fallback: generate high-res QR (1024px) client-side
+                      const dataUrl = await QRCode.toDataURL(frontendUrl, { width: 1024 });
+                      const a = document.createElement('a');
+                      a.href = dataUrl;
+                      try {
+                        const host = (new URL(frontendUrl)).hostname.replace(/[:@]/g, '_');
+                        a.download = `${host || 'frontend'}-qr.png`;
+                      } catch (err) {
+                        a.download = 'frontend-qr.png';
+                      }
+                      document.body.appendChild(a);
+                      a.click();
+                      a.remove();
+                      flashText(downloadBtn, 'Downloading...');
+                    } catch (err) {
+                      console.error('Download QR failed', err);
+                      alert('Unable to generate or download QR.');
+                    }
+                  });
+                }
+              } catch (err) {
+                console.error('QR wiring error', err);
+              }
+            });
+          </script>
 {% endblock %}

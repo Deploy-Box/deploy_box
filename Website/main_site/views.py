@@ -346,7 +346,7 @@ class DashboardView(View):
             frontend_url = stack.mern_frontend_url
         elif stack_type == "django":
             template_name = "dashboard/django_stack_dashboard.html"
-            frontend_url = stack.django_uri
+            frontend_url = stack.django_url
         else:
             template_name = "dashboard/stack_dashboard.html"
 
