@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  migrations:
+  daily-usage-update:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,4 +15,4 @@ jobs:
 
       - name: Run Daily Usage Update
         run: |
-          curl -X POST "${{ secrets.HOST }}/api/v1/payments/get_daily_usage/"
+          curl -X POST "https://${{ github.ref_name == 'main' && 'www' || github.ref_name }}.deploy-box.com/api/v1/payments/get_daily_usage/"

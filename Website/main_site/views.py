@@ -1257,24 +1257,23 @@ class DashboardView(View):
         user_stacks = Stack.objects.filter(project__projectmember__user=user)
 
 
-        from deploy_box_apis.views import temporary
+        from deploy_box_apis.views import get_project_api_info
 
-        deploy_box_api_render_info = temporary(project_id=project_id)
+        deploy_box_api_render_info = get_project_api_info(project_id=project_id)
 
         render_data = {
-                "organization": organization,
-                "project": project,
-                "user": user,
-                "user_organizations": user_organizations,
-                "user_projects": user_projects,
-                "user_stacks": user_stacks,
-                "current_organization_id": organization_id,
-                "current_project_id": project_id,
-                "current_stack_id": "",
-            }
+            "organization": organization,
+            "project": project,
+            "user": user,
+            "user_organizations": user_organizations,
+            "user_projects": user_projects,
+            "user_stacks": user_stacks,
+            "current_organization_id": organization_id,
+            "current_project_id": project_id,
+            "current_stack_id": "",
+        }
 
         render_data.update(deploy_box_api_render_info)
-        
         return render(
             request,
             "dashboard/api_marketplace.html",

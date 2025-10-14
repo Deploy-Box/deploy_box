@@ -1,5 +1,5 @@
 {
-  "HOST": "http://127.0.0.1:8000/",
+  "HOST": "https://dev.deploy-box.com",
   "OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID": "G5uGZZZnMojr0pRo4MiZDr6FLjkRxk2PrkuR3Ymd",
   "OAUTH2_AUTH_CODE_CLIENT_ID": "R5nrUKC0JQnAhoaM5jExJb5USgftZahkeitEXOsV",
   "DB_NAME": "neondb",
@@ -11,5 +11,6 @@
   "DEPLOY_BOX_GITHUB_CLIENT_ID": "Ov23liehxn12PYLCJG5c",
   "NPM_BIN_PATH": "C:\\Program Files\\nodejs\\npm.cmd",
   "KEY_VAULT_NAME": "deploy-box-kv-dev",
-  "AZURE_FUNCTION_URL": "http://deploy-box-sbns-ingress-fa-dev.azurewebsites.net/api/ingress"
+  "AZURE_FUNCTION_URL": "http://deploy-box-sbns-ingress-fa-dev.azurewebsites.net/api/ingress",
+  "DEPLOY_BOX_API_BASE_URL": "http://deploy-box-apis-func-dev.azurewebsites.net"
 }
