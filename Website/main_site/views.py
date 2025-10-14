@@ -7,6 +7,10 @@ from typing import cast
 import logging
 import calendar
 import stripe
+import qrcode
+from io import BytesIO
+import base64
+
 
 from accounts.forms import CustomUserCreationForm
 from accounts.models import UserProfile
@@ -339,10 +343,28 @@ class DashboardView(View):
         stack_type = stack.purchased_stack.type.lower()
         if stack_type == "mern":
             template_name = "dashboard/mern_stack_dashboard.html"
+            frontend_url = stack.mern_frontend_url
         elif stack_type == "django":
             template_name = "dashboard/django_stack_dashboard.html"
+            frontend_url = stack.django_uri
         else:
             template_name = "dashboard/stack_dashboard.html"
+
+        qr = qrcode.QRCode(
+            version = 4,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border = 4,
+        )
+        qr.add_data(frontend_url)
+        qr.make(fit=True)
+
+        img = qr.make_image(back_color="white", fill_color=(18, 185, 129))
+
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        qr_code = f"data:image/png;base64,{img_str}"
 
         return render(
             request,
@@ -361,6 +383,8 @@ class DashboardView(View):
                 "current_stack_id": stack_id,
                 "repository_name": repository_name,
                 "stack_google_cloud_runs": stack_google_cloud_runs,
+                "frontend_url": frontend_url,
+                "qr_code": qr_code
             },
         )
 
