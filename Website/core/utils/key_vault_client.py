@@ -62,24 +62,25 @@ class KeyVaultClient:
         logger.info(f"Environment variables: AZURE_SUBSCRIPTION_ID={os.getenv('AZURE_SUBSCRIPTION_ID')}")
         
         try:
+            # Attempt to create a credential and client. Authentication may fail in CI/local
+            # environments where no Azure authentication is available; handle that gracefully.
             self.credential = DefaultAzureCredential()
             logger.info("DefaultAzureCredential initialized successfully")
             self.client = SecretClient(vault_url=self.vault_url, credential=self.credential)
             logger.info("SecretClient initialized successfully")
+            self._credential_available = True
             self._initialized = True
         except Exception as e:
+            # Don't raise here: make KeyVaultClient resilient so Django can import in CI
             logger.error(f"Failed to initialize Key Vault client: {e}")
             logger.error(f"Key Vault initialization error traceback: {traceback.format_exc()}")
-            
-            # Check if this is a network/DNS issue during initialization
+            # Mark credential as unavailable and allow get_secret to use environment fallbacks
+            self._credential_available = False
+            self._initialized = True
+            # If this looks like a network/DNS issue, set a network flag too
             if "getaddrinfo failed" in str(e) or "Failed to resolve" in str(e):
-                logger.warning(f"Network/DNS issue detected during Key Vault initialization.")
-                logger.warning(f"Key Vault client will use environment variable fallbacks for secrets.")
-                # Still initialize the client but mark it as having network issues
-                self._initialized = True
+                logger.warning("Network/DNS issue detected during Key Vault initialization.")
                 self._network_issue = True
-            else:
-                raise
     
     def get_secret(self, secret_name: str, default_value: Optional[str] = None) -> Optional[str]:
         """
@@ -92,9 +93,12 @@ class KeyVaultClient:
         Returns:
             str: The secret value or default_value if not found
         """
-        # If we detected network issues during initialization, skip Key Vault and go straight to fallback
-        if hasattr(self, '_network_issue') and self._network_issue:
-            logger.warning(f"Key Vault has network issues, using environment variable fallback for '{secret_name}'")
+        if not secret_name:
+            logger.error("secret name not provided")
+            return None
+        # If credentials are not available or we detected network issues, use environment fallback
+        if not getattr(self, '_credential_available', True) or getattr(self, '_network_issue', False):
+            logger.warning(f"Key Vault credential unavailable or network issue; using environment variable fallback for '{secret_name}'")
             env_var_name = secret_name.upper().replace("-", "_")
             env_value = os.getenv(env_var_name)
             if env_value:
@@ -104,7 +108,9 @@ class KeyVaultClient:
                 logger.warning(f"Using default value for secret '{secret_name}'")
                 return default_value
             else:
-                raise Exception(f"Key Vault unavailable and no environment variable or default value for '{secret_name}'")
+                # Don't raise an exception during Django settings import; return None and let caller decide
+                logger.error(f"Key Vault unavailable and no environment variable or default for '{secret_name}'. Returning None.")
+                return None
         
         try:
             logger.info(f"Attempting to retrieve secret '{secret_name}' from Key Vault: {self.vault_url}")

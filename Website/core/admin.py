@@ -7,8 +7,11 @@ from stacks.admin import PurchasableStackAdmin, StackAdmin
 from stacks.models import PurchasableStack, Stack
 from accounts.admin import UserProfileAdmin
 from accounts.models import UserProfile
-from payments.models import usage_information, billing_history
-from payments.admin import UsageInformationAdmin, BillingHistoryAdmin
+from deploy_box_apis.admin import APIAdmin
+from deploy_box_apis.models import API
+
+# from payments.models import usage_information, billing_history
+# from payments.admin import UsageInformationAdmin, BillingHistoryAdmin
 
 class NoCSRFAdminSite(AdminSite):
     def get_urls(self):
@@ -27,7 +30,8 @@ admin_site.register(Application)
 admin_site.register(PurchasableStack, PurchasableStackAdmin)
 admin_site.register(Stack, StackAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
-admin_site.register(usage_information, UsageInformationAdmin)
-admin_site.register(billing_history, BillingHistoryAdmin)
+# admin_site.register(usage_information, UsageInformationAdmin)
+# admin_site.register(billing_history, BillingHistoryAdmin)
 admin_site.register(BlogPost, BlogPostAdmin)
+admin_site.register(API, APIAdmin)
 

@@ -14,7 +14,7 @@
                     <svg class="h-4 w-4 mr-2 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                         <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                     </svg>
-                    Monthly subscription
+                    Per request pricing
                 </span>
                 <span class="flex items-center">
                     <svg class="h-4 w-4 mr-2 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
@@ -32,82 +32,108 @@
         </div>
     </header>
 
-    <!-- Development Banner -->
-    <div class="w-full bg-amber-50 border-b border-amber-200">
-        <div class="max-w-7xl mx-auto px-4 py-4">
-            <div class="flex items-center">
-                <div class="flex-shrink-0">
-                    <svg class="h-5 w-5 text-amber-600" fill="currentColor" viewBox="0 0 20 20">
-                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path>
-                    </svg>
-                </div>
-                <div class="ml-3">
-                    <h3 class="text-sm font-medium text-amber-800">
-                        🚧 This page is currently in development
-                    </h3>
-                    <div class="mt-2 text-sm text-amber-700">
-                        <p>The API Marketplace is being built and will be available soon. This is a preview of the interface.</p>
+
+    <main class="w-full max-w-7xl mx-auto px-4 pb-12 mt-8">
+
+        <!-- API Key Management Section -->
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 mb-8 overflow-hidden">
+            <div class="bg-gradient-to-r from-emerald-50 to-blue-50 px-6 py-4 border-b border-gray-200">
+                <div class="flex items-center space-x-3">
+                    <div class="text-2xl">🔑</div>
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">API Key Management</h2>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <main class="w-full max-w-7xl mx-auto px-4 pb-12">
-
-        <!-- Filter Section -->
-        <div class="mb-8">
-            <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-                    <div class="mb-4 sm:mb-0">
-                        <h3 class="text-lg font-semibold text-gray-900 mb-2">Filter by Category & Tier</h3>
-                        <p class="text-sm text-gray-600">Choose which APIs to display</p>
+            
+            <div class="p-6">
+                <!-- Active API Keys -->
+                <div class="mb-6">
+                    {% if api_key %}
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <div class="bg-white rounded-md p-3 border border-gray-200">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                        Primary
+                                    </span>
+                                    <div class="flex flex-col">
+                                        <span class="flex items-center space-x-2 text-xs text-gray-600">
+                                            <span class="font-mono">Client ID: <span id="clientIdValue">{{ api_key.client_id }}</span></span>
+                                            <button type="button" id="copyClientIdBtn" class="inline-flex items-center px-2 py-1 rounded-md hover:bg-gray-200 text-gray-700" title="Copy Client ID">
+                                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                                                    <path d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                                </svg>
+                                            </button>
+                                        </span>
+                                        <span class="text-xs text-gray-600 font-mono">Secret Hint: {{ api_key.client_secret_hint }}</span>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button id="rotateBtn" type="button" class="px-3 py-1 text-xs font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 rounded-md transition-colors duration-200">
+                                        Rotate
+                                    </button>
+                                    <form id="revokeForm" method="post" action="{% url 'deploy_box_apis:api-revoke' %}" onsubmit="return false;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="project_id" value="{{ project.id }}">
+                                        <button id="revokeBtn" type="button" class="px-3 py-1 text-xs font-medium text-red-700 bg-red-100 hover:bg-red-200 rounded-md transition-colors duration-200">
+                                            Revoke
+                                        </button>
+                                    </form>
+                                        <button id="showTokenExamplesBtn" type="button" class="px-3 py-1 text-xs font-medium text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-md transition-colors duration-200">
+                                            Show Token Examples
+                                        </button>
+                                        <button id="generateBearerTokenBtn" type="button" class="px-3 py-1 text-xs font-medium text-purple-700 bg-purple-100 hover:bg-purple-200 rounded-md transition-colors duration-200">
+                                            Generate Bearer Token
+                                        </button>
+                                </div>
+                            </div>
+                                <!-- Token Example Modal -->
+                                <div id="tokenExampleModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+                                    <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-4">How to Get Token</h3>
+                                        <div class="mb-4">
+                                            <p class="text-sm text-gray-700 mb-2">Use your <span class="font-mono">Client ID</span> and <span class="font-mono">Client Secret</span> to obtain an access token. Here are examples in different languages:</p>
+                                            <div>
+                                                <ul class="flex space-x-2 mb-2">
+                                                    <li><button class="token-lang-btn px-2 py-1 rounded bg-gray-100 text-xs font-medium" data-lang="python">Python</button></li>
+                                                    <li><button class="token-lang-btn px-2 py-1 rounded bg-gray-100 text-xs font-medium" data-lang="javascript">JavaScript</button></li>
+                                                    <li><button class="token-lang-btn px-2 py-1 rounded bg-gray-100 text-xs font-medium" data-lang="curl">cURL</button></li>
+                                                </ul>
+                                                <pre id="tokenExampleCode" class="bg-gray-50 border border-gray-200 rounded p-3 text-xs overflow-x-auto"></pre>
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-end">
+                                            <button id="closeTokenExampleModal" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">Close</button>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
                     </div>
-                    <div class="flex flex-wrap gap-2">
-                        <button 
-                            onclick="filterAPIs('all')" 
-                            id="filter-all"
-                            class="filter-btn active px-4 py-2 text-sm font-medium rounded-lg border-2 border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200">
-                            All APIs
-                        </button>
-                        <button 
-                            onclick="filterAPIs('basic')" 
-                            id="filter-basic"
-                            class="filter-btn px-4 py-2 text-sm font-medium rounded-lg border-2 border-emerald-300 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-all duration-200">
-                            <span class="flex items-center">
-                                <div class="w-3 h-3 bg-emerald-500 rounded-full mr-2"></div>
-                                Basic
-                            </span>
-                        </button>
-                        <button 
-                            onclick="filterAPIs('premium')" 
-                            id="filter-premium"
-                            class="filter-btn px-4 py-2 text-sm font-medium rounded-lg border-2 border-amber-300 text-amber-700 bg-amber-50 hover:bg-amber-100 transition-all duration-200">
-                            <span class="flex items-center">
-                                <div class="w-3 h-3 bg-amber-500 rounded-full mr-2"></div>
-                                Premium
-                            </span>
-                        </button>
-                        <button 
-                            onclick="filterAPIs('pro')" 
-                            id="filter-pro"
-                            class="filter-btn px-4 py-2 text-sm font-medium rounded-lg border-2 border-purple-400 text-purple-300 bg-purple-50 hover:bg-purple-100 transition-all duration-200">
-                            <span class="flex items-center">
-                                <div class="w-3 h-3 bg-purple-400 rounded-full mr-2"></div>
-                                Pro
-                            </span>
-                        </button>
+                    {% else %}
+                    <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <form id="generateForm" method="post" action="{% url 'deploy_box_apis:api-generate' %}" onsubmit="return false;">
+                            {% csrf_token %}
+                            <input type="hidden" name="project_id" value="{{ project.id }}">
+                            <div class="bg-white rounded-md p-3 border border-gray-200 flex items-center justify-between">
+                                <span class="text-sm text-gray-600">No API token found for this project.</span>
+                                <button id="generateTokenBtn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
+                                    Generate Token
+                                </button>
+                            </div>
+                        </form>
                     </div>
+                    {% endif %}
                 </div>
+                
+                
             </div>
         </div>
 
         <!-- APIs Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {% for api in available_apis %}
-            {% if api.tier == 'Basic' %}
-                <!-- Basic tier - emerald colors -->
-                <div class="api-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="basic" data-category="{{ api.category|lower }}" id="api-{{ api.id }}">
+                <div class="api-card bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" id="api-{{ api.id }}" data-usage-count="{{ api.usage_count }}" onclick="purchaseAPI('{{ api.id }}', '{{ api.name }}', {{ api.price_per_1000_requests }}, '{{ api.icon }}', '{{ api.category }}')">
                     {% if api.popular %}
                     <div class="absolute top-0 right-0 bg-emerald-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
                         POPULAR
@@ -121,7 +147,7 @@
                                 <div class="text-3xl">{{ api.icon }}</div>
                                 <div>
                                     <h3 class="font-bold text-gray-900 text-lg">{{ api.name }}</h3>
-                                    <p class="text-sm text-emerald-600 font-medium">{{ api.category }} - {{ api.tier }}</p>
+                                    <p class="text-sm text-emerald-600 font-medium">{{ api.category }}</p>
                                 </div>
                             </div>
                         </div>
@@ -131,8 +157,8 @@
 
                         <!-- Price -->
                         <div class="mb-4">
-                            <span class="text-2xl font-bold text-emerald-600">${{ api.price }}</span>
-                            <span class="text-sm text-gray-500 ml-1">/month</span>
+                            <span class="text-2xl font-bold text-emerald-600">${{ api.price_per_1000_requests|floatformat:"2" }}</span>
+                            <span class="text-sm text-gray-500 ml-1">/1000 requests</span>
                         </div>
 
                         <!-- API Details -->
@@ -143,12 +169,14 @@
                                 </svg>
                                 {{ api.endpoint }}
                             </div>
+                            {% if api.response_time != "-1" %}
                             <div class="flex items-center text-sm text-gray-600">
                                 <svg class="h-4 w-4 mr-2 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
                                 </svg>
                                 {{ api.response_time }}
                             </div>
+                            {% endif %}
                         </div>
 
                         <!-- Features -->
@@ -170,176 +198,64 @@
                                 {% endif %}
                             </ul>
                         </div>
-
-                        <!-- Purchase Button -->
-                        <button 
-                            onclick="purchaseAPI('{{ api.id }}', '{{ api.name }}', {{ api.price }})"
-                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                            </svg>
-                            <span>Subscribe to API</span>
-                        </button>
                     </div>
                 </div>
-            {% elif api.tier == 'Premium' %}
-                <!-- Premium tier - amber colors -->
-                <div class="api-card bg-white rounded-xl shadow-lg border-2 border-amber-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="premium" data-category="{{ api.category|lower }}" id="api-{{ api.id }}">
-                    {% if api.popular %}
-                    <div class="absolute top-0 right-0 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                        POPULAR
-                    </div>
-                    {% endif %}
-                    
-                    <div class="p-6">
-                        <!-- API Header -->
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="text-3xl">{{ api.icon }}</div>
-                                <div>
-                                    <h3 class="font-bold text-gray-900 text-lg">{{ api.name }}</h3>
-                                    <p class="text-sm text-amber-600 font-medium">{{ api.category }} - {{ api.tier }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Description -->
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ api.description }}</p>
-
-                        <!-- Price -->
-                        <div class="mb-4">
-                            <span class="text-2xl font-bold text-amber-600">${{ api.price }}</span>
-                            <span class="text-sm text-gray-500 ml-1">/month</span>
-                        </div>
-
-                        <!-- API Details -->
-                        <div class="mb-4 space-y-2">
-                            <div class="flex items-center text-sm text-gray-600">
-                                <svg class="h-4 w-4 mr-2 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                </svg>
-                                {{ api.endpoint }}
-                            </div>
-                            <div class="flex items-center text-sm text-gray-600">
-                                <svg class="h-4 w-4 mr-2 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-                                </svg>
-                                {{ api.response_time }}
-                            </div>
-                        </div>
-
-                        <!-- Features -->
-                        <div class="mb-6">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Includes:</h4>
-                            <ul class="space-y-1">
-                                {% for feature in api.features|slice:":4" %}
-                                <li class="flex items-center text-sm text-gray-600">
-                                    <svg class="h-4 w-4 mr-2 text-amber-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    {{ feature }}
-                                </li>
-                                {% endfor %}
-                                {% if api.features|length > 4 %}
-                                <li class="text-sm text-gray-500 italic">
-                                    +{{ api.features|length|add:"-4" }} more features
-                                </li>
-                                {% endif %}
-                            </ul>
-                        </div>
-
-                        <!-- Purchase Button -->
-                        <button 
-                            onclick="purchaseAPI('{{ api.id }}', '{{ api.name }}', {{ api.price }})"
-                            class="w-full bg-amber-500 hover:bg-amber-600 text-zinc-950 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                            </svg>
-                            <span>Subscribe to API</span>
-                        </button>
-                    </div>
-                </div>
-            {% else %}
-                <!-- Pro tier - purple colors -->
-                <div class="api-card bg-white rounded-xl shadow-lg border-2 border-purple-400 overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 relative cursor-pointer" data-tier="pro" data-category="{{ api.category|lower }}" id="api-{{ api.id }}">
-                    {% if api.popular %}
-                    <div class="absolute top-0 right-0 bg-purple-400 text-white text-xs font-bold px-3 py-1 rounded-bl-lg">
-                        POPULAR
-                    </div>
-                    {% endif %}
-                    
-                    <div class="p-6">
-                        <!-- API Header -->
-                        <div class="flex items-center justify-between mb-4">
-                            <div class="flex items-center space-x-3">
-                                <div class="text-3xl">{{ api.icon }}</div>
-                                <div>
-                                    <h3 class="font-bold text-gray-900 text-lg">{{ api.name }}</h3>
-                                    <p class="text-sm text-purple-300 font-medium">{{ api.category }} - {{ api.tier }}</p>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Description -->
-                        <p class="text-gray-600 text-sm mb-4 line-clamp-2">{{ api.description }}</p>
-
-                        <!-- Price -->
-                        <div class="mb-4">
-                            <span class="text-2xl font-bold text-zinc-100">${{ api.price }}</span>
-                            <span class="text-sm text-zinc-400 ml-1">/month</span>
-                        </div>
-
-                        <!-- API Details -->
-                        <div class="mb-4 space-y-2">
-                            <div class="flex items-center text-sm text-gray-600">
-                                <svg class="h-4 w-4 mr-2 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                                </svg>
-                                {{ api.endpoint }}
-                            </div>
-                            <div class="flex items-center text-sm text-gray-600">
-                                <svg class="h-4 w-4 mr-2 text-purple-300" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-                                </svg>
-                                {{ api.response_time }}
-                            </div>
-                        </div>
-
-                        <!-- Features -->
-                        <div class="mb-6">
-                            <h4 class="text-sm font-semibold text-gray-700 mb-2">Includes:</h4>
-                            <ul class="space-y-1">
-                                {% for feature in api.features|slice:":4" %}
-                                <li class="flex items-center text-sm text-gray-600">
-                                    <svg class="h-4 w-4 mr-2 text-purple-300 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    {{ feature }}
-                                </li>
-                                {% endfor %}
-                                {% if api.features|length > 4 %}
-                                <li class="text-sm text-gray-500 italic">
-                                    +{{ api.features|length|add:"-4" }} more features
-                                </li>
-                                {% endif %}
-                            </ul>
-                        </div>
-
-                        <!-- Purchase Button -->
-                        <button 
-                            onclick="purchaseAPI('{{ api.id }}', '{{ api.name }}', {{ api.price }})"
-                            class="w-full bg-purple-300 hover:bg-purple-400 text-zinc-950 font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center space-x-2">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                            </svg>
-                            <span>Subscribe to API</span>
-                        </button>
-                    </div>
-                </div>
-            {% endif %}
             {% endfor %}
         </div>
     </main>
+    </div>
+
+    <!-- API Key Modal -->
+    <div id="apiKeyModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-2xl w-full mx-4">
+            <h3 class="text-lg font-bold text-gray-900 mb-4">API Key Generated</h3>
+            <div class="mb-4">
+                <div class="mb-2 flex items-center space-x-2">
+                    <span class="font-semibold text-gray-700">Client ID:</span>
+                    <span id="modalClientId" class="font-mono text-xs text-gray-900"></span>
+                    <button type="button" id="copyModalClientIdBtn" class="inline-flex items-center px-2 py-1 rounded-md hover:bg-gray-200 text-gray-700" title="Copy Client ID" aria-label="Copy Client ID">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                            <path d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="mb-2 flex items-center space-x-2">
+                    <span class="font-semibold text-gray-700">Client Secret:</span>
+                    <span id="modalClientSecret" class="font-mono text-xs text-gray-900"></span>
+                    <button type="button" id="copyModalClientSecretBtn" class="inline-flex items-center px-2 py-1 rounded-md hover:bg-gray-200 text-gray-700" title="Copy Client Secret" aria-label="Copy Client Secret">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                            <path d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="text-xs text-amber-700 mt-2">Copy and save your client secret now. You will not be able to view it again!</div>
+            </div>
+            <div class="flex justify-end">
+                <button id="closeApiKeyModal" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bearer Token Modal -->
+<div id="bearerTokenModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-lg font-bold text-gray-900 mb-4">Bearer Token</h3>
+        <div class="mb-4">
+            <span class="font-semibold text-gray-700">Token:</span>
+            <div class="flex items-center space-x-2">
+                <pre id="bearerTokenValue" class="bg-gray-50 border border-gray-200 rounded p-3 text-xs overflow-x-auto"></pre>
+                <button type="button" id="copyBearerTokenBtn" class="inline-flex items-center px-2 py-1 rounded-md hover:bg-gray-200 text-gray-700" title="Copy Bearer Token" aria-label="Copy Bearer Token">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v12h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="flex justify-end">
+            <button id="closeBearerTokenModal" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">Close</button>
+        </div>
+    </div>
 </div>
 
 <!-- Purchase Modal -->
@@ -347,31 +263,31 @@
     <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
         <div class="flex items-center mb-4">
             <div class="flex-shrink-0">
-                <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
-                </svg>
+                <div id="modalAPIIcon" class="text-3xl">🛒</div>
             </div>
             <div class="ml-3">
-                <h3 class="text-lg font-medium text-gray-900">Subscribe to API</h3>
+                <h3 class="text-lg font-medium text-gray-900" id="modalHeaderTitle">Add API</h3>
+                <p class="text-sm text-emerald-600 font-medium" id="modalAPICategory"></p>
             </div>
         </div>
         
         <div class="mb-4">
-            <p class="text-sm text-gray-500 mb-4">
-                You're about to subscribe to <span id="modalAPIName" class="font-semibold text-gray-900"></span> for <span id="modalAPIPrice" class="font-semibold text-gray-900"></span> per month.
-            </p>
-            <p class="text-sm text-gray-500">
-                This will add the API to your project and you'll be able to integrate it immediately.
-            </p>
-        </div>
-        
-        <div class="flex justify-end space-x-3">
-            <button id="cancelPurchase" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
-                Cancel
-            </button>
-            <button id="confirmPurchase" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
-                Confirm Subscription
-            </button>
+                <p class="text-sm text-gray-500 mb-4">
+                    <span id="modalAPIDescription" class="font-semibold text-gray-900"></span>
+                </p>
+                <div class="flex items-center space-x-2 mt-2 mb-2">
+                    <span class="font-semibold text-gray-700 flex items-center">
+                        <svg class="h-4 w-4 mr-1 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm-1-7V7a1 1 0 112 0v4a1 1 0 01-.293.707l-2.828 2.829a1 1 0 11-1.415-1.415L9 11.586V11z" clip-rule="evenodd"></path>
+                        </svg>
+                        Usage:
+                    </span>
+                    <span id="modalAPIUsageCount" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 font-mono">0</span>
+                    <span class="text-xs text-gray-600">requests so far</span>
+                </div>
+            </div>
+        <div class="flex justify-end">
+            <button id="closePurchaseModal" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">Close</button>
         </div>
     </div>
 </div>
@@ -379,34 +295,100 @@
 <script>
 let selectedAPI = null;
 
-function purchaseAPI(apiId, apiName, apiPrice) {
-    selectedAPI = { id: apiId, name: apiName, price: apiPrice };
-    
-    document.getElementById('modalAPIName').textContent = apiName;
-    document.getElementById('modalAPIPrice').textContent = `$${apiPrice}`;
+function purchaseAPI(apiId, apiName, apiPrice, apiIcon, apiCategory) {
+    selectedAPI = { id: apiId, name: apiName, price: apiPrice, icon: apiIcon, category: apiCategory };
+    document.getElementById('modalAPIIcon').textContent = apiIcon;
+    document.getElementById('modalHeaderTitle').textContent = apiName;
+    document.getElementById('modalAPICategory').textContent = apiCategory;
+    // Get API description from the card and set it in the modal
+    const card = document.getElementById(`api-${apiId}`);
+    let apiDescription = apiName;
+    if (card) {
+        const descEl = card.querySelector('p.text-gray-600.text-sm');
+        if (descEl) {
+            apiDescription = descEl.textContent.trim();
+        }
+    }
+    document.getElementById('modalAPIDescription').textContent = apiDescription;
     document.getElementById('purchaseModal').classList.remove('hidden');
+
+    // Get endpoint and usage count from the card
+    let endpoint = '/api/example';
+    let method = 'POST';
+    let usageCount = 0;
+    if (card) {
+        const endpointEls = card.querySelectorAll('.flex.items-center.text-sm.text-gray-600');
+        if (endpointEls && endpointEls.length > 0) {
+            let endpointText = endpointEls[0].textContent.trim();
+            endpoint = endpointText.replace(/^[^\w/]+/, '').replace(/\s+$/, '');
+        }
+        usageCount = card.getAttribute('data-usage-count') || 0;
+    }
+    document.getElementById('modalAPIUsageCount').textContent = usageCount;
+
+    // Prefill interactive tester fields
+    const endpointInput = document.getElementById('modalAPIEndpoint');
+    const methodSelect = document.getElementById('modalAPIMethod');
+    const bodyTextarea = document.getElementById('modalAPIBody');
+    // Build full URL using base_url from Django context
+    const baseUrl = '{{ base_url }}';
+    let fullUrl = endpoint;
+    if (baseUrl) {
+        const base = baseUrl.replace(/\/$/, '');
+        const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+        fullUrl = `${base}${path}`;
+    }
+    if (endpointInput) endpointInput.value = fullUrl;
+    if (methodSelect) methodSelect.value = method;
+    if (bodyTextarea) bodyTextarea.value = '{\n  "example": true\n}';
 }
 
-document.getElementById('cancelPurchase').addEventListener('click', function() {
+document.getElementById('closePurchaseModal')?.addEventListener('click', function() {
     document.getElementById('purchaseModal').classList.add('hidden');
     selectedAPI = null;
 });
 
-document.getElementById('confirmPurchase').addEventListener('click', function() {
-    if (!selectedAPI) return;
-    
-    // Show loading state
-    const confirmBtn = document.getElementById('confirmPurchase');
-    const originalText = confirmBtn.textContent;
-    confirmBtn.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Processing...';
-    confirmBtn.disabled = true;
-    
-    // Simulate purchase process (replace with actual API call)
-    setTimeout(() => {
-        // For now, just redirect back to project dashboard
-        // In a real implementation, you would make an API call to subscribe to the API
-        window.location.href = "{% url 'main_site:project_dashboard' organization.id project.id %}";
-    }, 2000);
+// Send Request from interactive tester
+document.getElementById('modalSendRequest')?.addEventListener('click', async function() {
+    const endpoint = document.getElementById('modalAPIEndpoint').value.trim();
+    const method = document.getElementById('modalAPIMethod').value.trim().toUpperCase();
+    const apiKey = document.getElementById('modalAPIKey').value.trim();
+    const bodyRaw = document.getElementById('modalAPIBody').value;
+    const responsePre = document.getElementById('modalAPIResponse');
+
+    if (!endpoint) {
+        responsePre.textContent = 'Please provide an endpoint URL.';
+        return;
+    }
+
+    let headers = { 'Content-Type': 'application/json' };
+    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;
+
+    let options = { method, headers };
+    if (method !== 'GET' && method !== 'HEAD') {
+        try {
+            options.body = bodyRaw ? JSON.stringify(JSON.parse(bodyRaw)) : undefined;
+        } catch (e) {
+            responsePre.textContent = 'Body must be valid JSON.\n' + e.message;
+            return;
+        }
+    }
+
+    responsePre.textContent = 'Sending...';
+    try {
+        const res = await fetch(endpoint, options);
+        const contentType = res.headers.get('content-type') || '';
+        let dataText = '';
+        if (contentType.includes('application/json')) {
+            const json = await res.json();
+            dataText = JSON.stringify(json, null, 2);
+        } else {
+            dataText = await res.text();
+        }
+        responsePre.textContent = `Status: ${res.status}\n\n${dataText}`;
+    } catch (err) {
+        responsePre.textContent = 'Request failed.\n' + (err?.message || err);
+    }
 });
 
 // Close modal when clicking outside
@@ -425,51 +407,257 @@ document.addEventListener('keydown', function(e) {
     }
 });
 
-// Filter functionality
-function filterAPIs(tier) {
-    // Update active filter button
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        btn.classList.remove('bg-gray-100', 'border-gray-400', 'text-gray-900');
-    });
-    
-    const activeBtn = document.getElementById(`filter-${tier}`);
-    activeBtn.classList.add('active');
-    
-    if (tier === 'all') {
-        activeBtn.classList.add('bg-gray-100', 'border-gray-400', 'text-gray-900');
-    }
-    
-    // Show/hide API cards based on filter
-    const apiCards = document.querySelectorAll('.api-card');
-    apiCards.forEach(card => {
-        if (tier === 'all' || card.getAttribute('data-tier') === tier) {
-            card.style.display = 'block';
-            card.style.opacity = '1';
-            card.style.transform = 'scale(1)';
-        } else {
-            card.style.display = 'none';
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.95)';
-        }
-    });
-    
-    // Update results count
-    updateResultsCount(tier);
-}
+// Token Example Modal logic
+const tokenExamples = {
+    python: `import requests\n\nurl = '{{ token_endpoint|default:"https://your-api.com/oauth/token" }}'\ndata = {\n    'grant_type': 'client_credentials',\n    'client_id': '{{ api_key.client_id|default:"YOUR_CLIENT_ID" }}',\n    'client_secret': 'YOUR_CLIENT_SECRET'\n}\nresponse = requests.post(url, data=data)\nprint(response.json())`,
+    javascript: `fetch('{{ token_endpoint|default:"https://your-api.com/oauth/token" }}', {\n  method: 'POST',\n  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n  body: new URLSearchParams({\n    grant_type: 'client_credentials',\n    client_id: '{{ api_key.client_id|default:"YOUR_CLIENT_ID" }}',\n    client_secret: 'YOUR_CLIENT_SECRET'\n  })\n})\n.then(res => res.json())\n.then(data => console.log(data));`,
+    curl: `curl -X POST {{ token_endpoint|default:'https://your-api.com/oauth/token' }} \\\n  -d "grant_type=client_credentials" \\\n  -d "client_id={{ api_key.client_id|default:'YOUR_CLIENT_ID' }}" \\\n  -d "client_secret=YOUR_CLIENT_SECRET"`
+};
 
-function updateResultsCount(tier) {
-    const visibleCards = document.querySelectorAll(`.api-card${tier !== 'all' ? `[data-tier="${tier}"]` : ''}`);
-    const totalCards = document.querySelectorAll('.api-card');
-    
-    // You could add a results counter here if needed
-    console.log(`Showing ${visibleCards.length} of ${totalCards.length} APIs`);
-}
+document.getElementById('showTokenExamplesBtn')?.addEventListener('click', function() {
+    document.getElementById('tokenExampleModal').classList.remove('hidden');
+    document.getElementById('tokenExampleCode').textContent = tokenExamples.python;
+});
+document.getElementById('closeTokenExampleModal')?.addEventListener('click', function() {
+    document.getElementById('tokenExampleModal').classList.add('hidden');
+});
+document.querySelectorAll('.token-lang-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+        const lang = btn.getAttribute('data-lang');
+        document.getElementById('tokenExampleCode').textContent = tokenExamples[lang];
+    });
+});
+// Main page Client ID copy button feedback
+document.getElementById('copyClientIdBtn')?.addEventListener('click', function() {
+    const clientIdEl = document.getElementById('clientIdValue');
+    const clientId = clientIdEl?.textContent?.trim();
+    if (!clientId) return;
+    navigator.clipboard.writeText(clientId)
+        .then(() => {
+            const btn = document.getElementById('copyClientIdBtn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="text-emerald-700 text-xs">Copied</span>';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 1500);
+        })
+        .catch(() => {
+            alert('Failed to copy Client ID');
+        });
+});
+// Modal clipboard copy buttons
+document.getElementById('copyModalClientIdBtn')?.addEventListener('click', function() {
+    const clientIdEl = document.getElementById('modalClientId');
+    const clientId = clientIdEl?.textContent?.trim();
+    if (!clientId) return;
+    navigator.clipboard.writeText(clientId)
+        .then(() => {
+            const btn = document.getElementById('copyModalClientIdBtn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="text-emerald-700 text-xs">Copied</span>';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 1500);
+        })
+        .catch(() => {
+            alert('Failed to copy Client ID');
+        });
+});
+
+document.getElementById('copyModalClientSecretBtn')?.addEventListener('click', function() {
+    const secretEl = document.getElementById('modalClientSecret');
+    const secret = secretEl?.textContent?.trim();
+    if (!secret) return;
+    navigator.clipboard.writeText(secret)
+        .then(() => {
+            const btn = document.getElementById('copyModalClientSecretBtn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="text-emerald-700 text-xs">Copied</span>';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 1500);
+        })
+        .catch(() => {
+            alert('Failed to copy Client Secret');
+        });
+});
+document.getElementById('generateTokenBtn')?.addEventListener('click', function() {
+    const form = document.getElementById('generateForm');
+    const url = form.action;
+    const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    const projectId = form.querySelector('input[name="project_id"]').value;
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `project_id=${encodeURIComponent(projectId)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.client_id && data.client_secret) {
+            document.getElementById('modalClientId').textContent = data.client_id;
+            document.getElementById('modalClientSecret').textContent = data.client_secret;
+            document.getElementById('apiKeyModal').classList.remove('hidden');
+        } else {
+            window.location.reload();
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.textContent = 'Generate Token';
+        alert('Error generating API key.');
+    });
+});
+
+document.getElementById('closeApiKeyModal')?.addEventListener('click', function() {
+    document.getElementById('apiKeyModal').classList.add('hidden');
+    window.location.reload();
+});
+
+document.getElementById('revokeBtn')?.addEventListener('click', function() {
+    const form = document.getElementById('revokeForm');
+    const url = form.action;
+    const csrfToken = form.querySelector('input[name="csrfmiddlewaretoken"]').value;
+    const projectId = form.querySelector('input[name="project_id"]').value;
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Revoking...';
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `project_id=${encodeURIComponent(projectId)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        window.location.reload();
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.textContent = 'Revoke';
+        alert('Error revoking API key.');
+    });
+});
+// Rotate API key
+document.getElementById('rotateBtn')?.addEventListener('click', function() {
+    // Reuse csrf and project_id from the existing revoke form if present
+    const revokeForm = document.getElementById('revokeForm');
+    const csrfToken = revokeForm?.querySelector('input[name="csrfmiddlewaretoken"]')?.value
+        || document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+    const projectId = revokeForm?.querySelector('input[name="project_id"]')?.value
+        || document.querySelector('input[name="project_id"]')?.value;
+
+    const url = "{% url 'deploy_box_apis:api-rotate' %}";
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Rotating...';
+
+    if (!csrfToken || !projectId) {
+        btn.disabled = false;
+        btn.textContent = 'Rotate';
+        alert('Missing CSRF token or Project ID.');
+        return;
+    }
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `project_id=${encodeURIComponent(projectId)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        // If rotation returns new credentials, show them in the modal
+        if (data.client_id && data.client_secret) {
+            document.getElementById('modalClientId').textContent = data.client_id;
+            document.getElementById('modalClientSecret').textContent = data.client_secret;
+            document.getElementById('apiKeyModal').classList.remove('hidden');
+        } else {
+            // Fallback to reload to reflect updated hint/state
+            window.location.reload();
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.textContent = 'Rotate';
+        alert('Error rotating API key.');
+    });
+});
+
+document.getElementById('generateBearerTokenBtn')?.addEventListener('click', function() {
+    const projectId = '{{ project.id }}';
+    const url = "{% url 'deploy_box_apis:api-token' %}";
+    const csrfToken = document.querySelector('input[name="csrfmiddlewaretoken"]')?.value;
+    const btn = this;
+    btn.disabled = true;
+    btn.textContent = 'Generating...';
+    console.log('Generating bearer token for project ID:', projectId, url);
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken
+        },
+        body: `project_id=${encodeURIComponent(projectId)}`
+    })
+    .then(res => res.json())
+    .then(data => {
+        btn.disabled = false;
+        btn.textContent = 'Generate Bearer Token';
+        if (data.access_token) {
+            document.getElementById('bearerTokenValue').textContent = data.access_token;
+            document.getElementById('bearerTokenModal').classList.remove('hidden');
+        } else {
+            document.getElementById('bearerTokenValue').textContent = 'No token returned.';
+            document.getElementById('bearerTokenModal').classList.remove('hidden');
+        }
+    })
+    .catch(err => {
+        btn.disabled = false;
+        btn.textContent = 'Generate Bearer Token';
+        document.getElementById('bearerTokenValue').textContent = 'Error generating token.';
+        document.getElementById('bearerTokenModal').classList.remove('hidden');
+    });
+});
+
+
+document.getElementById('closeBearerTokenModal')?.addEventListener('click', function() {
+    document.getElementById('bearerTokenModal').classList.add('hidden');
+});
+
+// Bearer Token copy button
+document.getElementById('copyBearerTokenBtn')?.addEventListener('click', function() {
+    const tokenEl = document.getElementById('bearerTokenValue');
+    const token = tokenEl?.textContent?.trim();
+    if (!token) return;
+    navigator.clipboard.writeText(token)
+        .then(() => {
+            const btn = document.getElementById('copyBearerTokenBtn');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<span class="text-purple-700 text-xs">Copied</span>';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 1500);
+        })
+        .catch(() => {
+            alert('Failed to copy Bearer Token');
+        });
+});
 </script>
 
 <style>
 .line-clamp-2 {
     display: -webkit-box;
+    line-clamp: 2;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;

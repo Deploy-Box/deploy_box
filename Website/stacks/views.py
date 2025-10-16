@@ -1,3 +1,4 @@
+import json
 from django.http import JsonResponse, HttpRequest, HttpResponse
 from rest_framework import status
 from rest_framework.decorators import action
@@ -7,6 +8,15 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+from django.conf import settings
+import uuid
+import datetime
+
+try:
+    # azure-storage-blob is in requirements.txt; import here so module import error surfaces at runtime
+    from azure.storage.blob import BlobServiceClient
+except Exception:
+    BlobServiceClient = None
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.handlers as handlers
@@ -568,6 +578,74 @@ def overwrite_iac(request: HttpRequest, stack_id: str) -> JsonResponse:
         return handlers.overwrite_iac(request, stack_id)
     else:
         return JsonResponse({"error": "Method not allowed."}, status=405)
+    
+def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
+    """Accept a multipart/form-data POST with a file field named 'source_zip' and upload it to Azure Blob Storage.
+
+    Expects Azure configuration in Django settings under `AZURE.STORAGE_CONNECTION_STRING` and
+    `AZURE.CONTAINER_NAME` (or environment variables `AZURE_STORAGE_CONNECTION_STRING` and `CONTAINER_NAME`).
+    Returns JSON with the uploaded blob URL on success.
+    """
+    # Only allow POST
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed."}, status=405)
+
+    # Ensure file present
+    if "source_zip" not in request.FILES:
+        return JsonResponse({"error": "No file uploaded under 'source_zip'."}, status=400)
+
+    uploaded_file = request.FILES["source_zip"]
+
+    # Verify Azure Blob client available
+    if BlobServiceClient is None:
+        return JsonResponse({"error": "Azure Blob Storage client not available (missing package)."}, status=500)
+
+    # Read Azure configuration from settings
+    azure_cfg = getattr(settings, 'AZURE', {}) if hasattr(settings, 'AZURE') else {}
+    print(azure_cfg)
+    conn_str = azure_cfg.get('STORAGE_CONNECTION_STRING') or getattr(settings, 'AZURE_STORAGE_CONNECTION_STRING', None)
+    container = azure_cfg.get('CONTAINER_NAME') or getattr(settings, 'CONTAINER_NAME', None)
+
+    if not conn_str or not container:
+        return JsonResponse({"error": "Azure storage configuration missing. Set AZURE_STORAGE_CONNECTION_STRING and CONTAINER_NAME."}, status=500)
+
+    try:
+        # Create client and upload
+        blob_service_client = BlobServiceClient.from_connection_string(conn_str)
+        container_client = blob_service_client.get_container_client(container)
+
+        # Build a unique blob name preserving stack context
+        ts = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        unique = uuid.uuid4().hex
+        blob_name = f"{stack_id}/source-{ts}-{unique}.zip"
+
+        blob_client = container_client.get_blob_client(blob_name)
+
+        # streamed upload from the uploaded file file-like object
+        file_stream = uploaded_file.file if hasattr(uploaded_file, 'file') else uploaded_file
+
+        # upload_blob accepts a file-like object or bytes
+        blob_client.upload_blob(file_stream, overwrite=True)
+
+        stack = Stack.objects.get(id=stack_id)
+
+        print("Current IAC:", stack.iac)
+
+        stack_iac = stack.iac
+
+        # TODO: This will only work for Django Stacks, still need to figure out how this will work in general
+
+        del stack_iac["azurerm_container_app"]["azurerm_container_app-1"]["template"]["container"][0]["image"]
+        stack_iac["azurerm_container_app"]["azurerm_container_app-1"]["template"]["container"][0].update({"build_context": "source_code"})
+
+        services.update_stack(stack_id=stack_id, source_code_path=blob_name, stack_iac=stack_iac)
+
+        return JsonResponse({"success": True, "blob_name": blob_name, "blob_url": blob_client.url}, status=200)
+
+    except Exception as e:
+        # Log server-side for diagnostics and return minimal error to client
+        print(f"Failed uploading source zip to Azure: {str(e)}")
+        return JsonResponse({"error": f"Failed to upload file: {str(e)}"}, status=500)
 
 def update_iac_state(request: HttpRequest, stack_id: str) -> JsonResponse:
     """Legacy function-based view - use StackViewSet update_iac_state action instead"""

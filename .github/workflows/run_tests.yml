@@ -27,6 +27,7 @@ jobs:
   run-tests:
     # Run for manual dispatch OR for PRs where base is main and head is dev
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev') }}
+    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     runs-on: ubuntu-latest
 
     defaults:
@@ -34,8 +35,32 @@ jobs:
         working-directory: Website
 
     env:
-      STRIPE_SECRET_KEY: "sk_test_dummy"
+      # Use GitHub Secrets for sensitive values. Replace the secret names below in your repo
+      # Settings -> Secrets with the actual secret names/values for your environment.
+      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
+      STRIPE_PUBLISHABLE_KEY: ${{secrets.STRIPE_PUBLISHABLE_KEY}}
+      STRIPE_WEBHOOK_SECRET: ${{secrets.STRIPE_WEBHOOK_SECRET}}
+
+      DEPLOY_BOX_GITHUB_CLIENT_SECRET: ${{secrets.DEPLOY_BOX_GITHUB_CLIENT_SECRET}}
+      DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY}}
+
       CI: "true"
+      # Django secret key (placeholder secret name - set in repo Secrets)
+      SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
+      # Database password used by settings.get_db_password fallback in CI
+      DB_PASSWORD: ${{secrets.DB_PASSWORD}}
+      DEPLOY_BOX_POSTGRESQL_DB_PASSWORD: ${{secrets.DEPLOY_BOX_POSTGRESQL_DB_PASSWORD}}
+
+      ARM_CLIENT_ID: ${{secrets.ARM_CLIENT_ID}}
+      ARM_CLIENT_SECRET: ${{secrets.ARM_CLIENT_SECRET}}
+      ARM_TENANT_ID: ${{secrets.ARM_TENANT_ID}}
+      AZURE_STORAGE_CONNECTION_STRING: ${{secrets.AZURE_STORAGE_CONNECTION_STRING}}
+      CONTAINER_NAME: ${{secrets.CONTAINER_APP_NAME}}
+      KEY_VAULT_NAME: ${{secrets.KEY_VAULT_NAME}}
+      ACR_PASSWORD: ${{secrets.ACR_PASSWORD}}
+
+      DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
+
 
     steps:
       - name: Checkout
@@ -66,8 +91,8 @@ jobs:
       - name: Run tests
         run: |
           if [ -n "${{ inputs.test_path }}" ]; then
-            python manage.py test --verbosity 2 "${{ inputs.test_path }}"
+            python manage.py test --keepdb "${{ inputs.test_path }}"
           else
-            python manage.py test --verbosity 2
+            python manage.py test --keepdb
           fi
 

@@ -14,7 +14,7 @@ HOST = os.environ.get("HOST")
 assert HOST is not None, "HOST env must be set"
 
 # SECURITY
-SECRET_KEY = KeyVaultClient().get_secret('deploy-box-django-secret-key')
+SECRET_KEY = KeyVaultClient().get_secret('deploy-box-django-secret-key', os.getenv("DJANGO_SECRET_KEY"))
 ENV = os.environ.get("ENV", "LOCAL").upper()
 # DEBUG = ENV == "DEV" or ENV == "LOCAL"
 DEBUG = True # TODO: remove eventually
@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "organizations",
     "payments",
     "blogs",
+    "deploy_box_apis",
     "taggit", # for tagging in blogs
     "django_ckeditor_5",  # for rich text editor in blogs to handle content like images, links, etc.
 ]
@@ -155,24 +156,6 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-# Database
-def get_db_password():
-    """
-    Get database password from Key Vault with environment variable fallback.
-    This provides a robust fallback mechanism for local development.
-    """
-    try:
-        # Try to get from Key Vault first
-        return KeyVaultClient().get_secret("deploy-box-postgresql-db-password")
-    except Exception as e:
-        # Fallback to environment variable
-        env_password = os.environ.get("DB_PASSWORD")
-        if env_password:
-            print(f"Warning: Using environment variable DB_PASSWORD as fallback for Key Vault secret")
-            return env_password
-        else:
-            print(f"Error: No database password available from Key Vault or environment variables")
-            raise Exception(f"Database password not available: {str(e)}")
 
 DATABASES = {
     # "default": {
@@ -183,13 +166,14 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("DB_NAME"),
         "USER": os.environ.get("DB_USER"),
-        "PASSWORD": get_db_password(),
+        "PASSWORD": KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD")),
         "HOST": os.environ.get("DB_HOST"),
         "PORT": os.environ.get("DB_PORT"),
         # "OPTIONS": {
         #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
         # },
         "CONN_MAX_AGE": 600,
+        "OPTIONS": {"sslmode": "require"}
     }
 }
 
@@ -225,16 +209,26 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 #  External Services
 STRIPE = {
-    "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key"),
-    "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key"),
-    "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret"),
-    # "WEBHOOK_SECRET": os.environ.get("STRIPE_WEBHOOK_SECRET"),
+    "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key", os.getenv("STRIPE_PUBLISHABLE_KEY")),
+    "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key", os.getenv("STRIPE_SECRET_KEY")),
+    # Prefer Key Vault, fall back to STRIPE_WEBHOOK_SECRET env var if Key Vault unavailable
+    "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret", os.environ.get("STRIPE_WEBHOOK_SECRET")),
 }
 
 GITHUB = {
     "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
-    "CLIENT_SECRET": KeyVaultClient().get_secret('deploy-box-github-client-secret'),
-    "TOKEN_KEY": KeyVaultClient().get_secret("deploy-box-github-token-key"),
+    "CLIENT_SECRET": KeyVaultClient().get_secret('deploy-box-github-client-secret', os.getenv("DEPLOY_BOX_GITHUB_CLIENT_SECRET")),
+    "TOKEN_KEY": KeyVaultClient().get_secret("deploy-box-github-token-key", os.getenv("DEPLOY_BOX_GITHUB_TOKEN_KEY")),
+}
+
+AZURE = {
+    "CLIENT_ID": KeyVaultClient().get_secret("arm-client-id", os.getenv("ARM_CLIENT_ID")),
+    "CLIENT_SECRET": KeyVaultClient().get_secret("arm-client-secret", os.getenv("ARM_CLIENT_SECRET")), 
+    "TENANT_ID": KeyVaultClient().get_secret("arm-tenant-id", os.getenv("ARM_TENANT_ID")),
+    "STORAGE_CONNECTION_STRING": KeyVaultClient().get_secret("azure-storage-connection-string", os.getenv("AZURE_STORAGE_CONNECTION_STRING")),
+    "CONTAINER_NAME": KeyVaultClient().get_secret("container-name", os.getenv("CONTAINER_NAME")),
+    # "RESOURCE_GROUP_NAME": KeyVaultClient().get_secret("resource-group-name"),
+    "ACR_PASSWORD": KeyVaultClient().get_secret("acr-password", os.getenv("ACR_PASSWORD")),
 }
 
 # DeployBox Stack Endpoint for file downloads

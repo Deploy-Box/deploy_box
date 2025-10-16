@@ -1,3 +1,4 @@
+from inspect import stack
 import json
 import time
 import stripe
@@ -10,6 +11,7 @@ logger = logging.getLogger(__name__)
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
+from django.utils import timezone
 from typing import Union
 
 from core.decorators import oauth_required, AuthHttpRequest
@@ -20,7 +22,10 @@ from organizations.services import get_organization
 from accounts.models import UserProfile
 from core.helpers import request_helpers
 from projects.models import Project
-from payments.models import usage_information, billing_history
+from payments.models import (
+    Account, Product, Meter, UsageEvent, Charge, ChargeSource, Currency
+)
+from decimal import Decimal
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 
@@ -681,90 +686,193 @@ def update_organization_usage(request: HttpRequest) -> JsonResponse:
     else:
         return JsonResponse({"error": "Invalid request method."}, status=405)
 
-def update_billing_history(request: HttpRequest) -> JsonResponse:
-    if request.method == "POST":
+import os
+import requests
 
-        deploy_box = DeployBoxIAC()
-        billing_info = deploy_box.get_billing_info(request.body)
+def send_to_azure_function(message_data: dict, function_url: str | None = None) -> bool:
+    """
+    Sends a message to Azure Function via HTTP trigger.
+    
+    Args:
+        message_data (dict): The data to send as a message
+        function_url (str): The URL of the Azure Function HTTP trigger
+        
+    Returns:
+        bool: True if message was sent successfully, False otherwise
+    """
+    function_url = function_url or os.environ.get('AZURE_FUNCTION_URL')
 
-        print("Billing info: ", billing_info)
+    if not function_url:
+        logger.error("Azure Function URL is not configured.")
+        return False
 
-        for stack_id, usage in billing_info.items():
-            if usage.get("cost") < 1:
-                usage["cost"] = 1.00
-            try:
-                stack = Stack.objects.get(pk=stack_id)
-            except Stack.DoesNotExist:
-                print(f"Stack with id {stack_id} not found.")
-                continue
-            description = f"Billed usage for stack {stack_id}"
-            organization = stack.project.organization
+    try:
+        # Send HTTP POST request to Azure Function
+        response = requests.post(
+            function_url,
+            json=message_data,
+            headers={'Content-Type': 'application/json'},
+            timeout=30  # 30 second timeout
+        )
+        
+        # Check if the request was successful
+        if response.status_code in [200, 202]:
+            logger.info(f"Successfully sent message to Azure Function: {function_url}")
+            return True
+        else:
+            logger.error(f"Azure Function returned status code {response.status_code}: {response.text}")
+            return False
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to send message to Azure Function: {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error sending message to Azure Function: {str(e)}")
+        return False
+    
 
-            customer_id = get_customer_id(organization.id)
-            if not customer_id:
-                print(f"No customer id found for organization {organization.id}")
-                continue
+def get_billing_info(request: HttpRequest) -> JsonResponse:
+    if request.method == "GET":
+        # Get all stacks
+        stacks = Stack.objects.all()
 
-            invoice_id, invoice_url = create_invoice(customer_id, usage.get("cost", 0.0), description)
+        # Put request on Azure Service Bus
+        message_data = {
+            "request_type": "iac.billing",
+            "source": os.environ.get("HOST"),          
+            "data": {
+                "stack_ids": [str(stack.id) for stack in stacks]
+            }
+        }
 
-            if not invoice_id:
-                print(f"Failed to create invoice for stack {stack_id}")
-                continue
-
-            billing_history.objects.create(
-                organization_id=organization.id,
-                billed_usage=usage.get("billed_usage", 0),
-                amount=usage.get("cost", 0.0),
-                description=description,
-                stripe_invoice_id=invoice_id,
-                stripe_invoice_hosted_url=invoice_url,
-                payment_method="default",
-                status="pending",
-            )
-
-        return JsonResponse({"message": "Billing history updated successfully.", "billing_info": billing_info}, status=200)
-
-        data = json.loads(request.body)
-        update_status = data.get("status", None)
-        billing_id = data.get("billing_id", None)
-        print("update_status: ", update_status)
-        billed_ids = []
-
-        if update_status:
-            try:
-                entry = billing_history.objects.get(id=billing_id)
-                entry.status = update_status
-                entry.save()
-                return JsonResponse({"message": "Billing history updated successfully."}, status=200)
-            except billing_history.DoesNotExist:
-                print(f"Billing history entry with id {billing_id} not found.")
-                return JsonResponse({"error": "Billing history entry not found."}, status=404)
-
+        # Send message to Azure Function (non-blocking)
         try:
-            print("Data: ", data)
-            for stack_id, usage in data.items():
-                stack_id = stack_id.strip('-rg')  # Remove '-rg' suffix if present
-                stack = get_object_or_404(Stack, id=stack_id)
-                organization = stack.project.organization
-
-                # Create new entry
-                try:
-                    billed_instance = billing_history.objects.create(
-                        organization_id=organization.id,
-                        billed_usage=usage.get("billed_usage", 0),
-                        amount=usage.get("cost", 0.0),
-                        description=usage.get("description", "No description provided"),
-                        payment_method=usage.get("payment_method", "default"),
-                        status=usage.get("status", "pending"),
-                    )
-
-                    billed_ids.append(billed_instance.id)
-
-                except Exception as e:
-                    print(f"Failed to update billing history for stack {stack_id}: {str(e)}")
-                    continue
-            return JsonResponse({"message": "Billing history updated successfully.", "billed_ids": billed_ids}, status=200)
+            send_to_azure_function(message_data)
         except Exception as e:
-            return JsonResponse({"message": "Failed to update billing history."}, status=500)
+            logger.warning(f"Failed to send message to Azure Function: {str(e)}")
+
+    return JsonResponse({"error": "Invalid request method."}, status=405)
+
+def _process_stack_billing(stack_id: str, cost_str: str, infrastructure_product: Product, daily_cost_meter: Meter, today) -> tuple:
+    """
+    Process billing information for a single stack.
+    Returns tuple of (usage_event_id, charge_id) or (None, None) if processing failed.
+    """
+    try:
+        # Get the stack
+        stack = Stack.objects.get(id=stack_id)
+        
+        # Get or create account for the stack's organization
+        account, _ = Account.objects.get_or_create(
+            organization=stack.project.organization,
+            defaults={
+                "name": f"{stack.project.organization.name} Account",
+                "email_billing": stack.project.organization.email,
+                "currency": Currency.USD
+            }
+        )
+        
+        # Convert cost to decimal (assuming it comes as string)
+        cost_decimal = Decimal(str(cost_str))
+        
+        # Create usage event for the infrastructure cost
+        usage_event = UsageEvent.objects.create(
+            account=account,
+            product=infrastructure_product,
+            meter=daily_cost_meter,
+            stack=stack,
+            quantity=cost_decimal,
+            occurred_at=timezone.now(),
+            metadata={
+                "source": "azure_function",
+                "billing_date": today.isoformat(),
+                "stack_name": stack.name
+            }
+        )
+        
+        # Create charge for billing purposes
+        cost_cents = int(cost_decimal * 100)  # Convert to cents
+        
+        charge = Charge.objects.create(
+            account=account,
+            product=infrastructure_product,
+            meter=daily_cost_meter,
+            source=ChargeSource.USAGE,
+            usage_date=today,
+            description=f"Infrastructure cost for {stack.name} on {today}",
+            quantity=Decimal('1'),  # One daily charge
+            unit_name="day",
+            unit_price_cents=cost_cents,
+            amount_cents=cost_cents,
+            currency=Currency.USD,
+            invoiced=False
+        )
+        
+        print(f"Created billing records for stack {stack_id}: ${cost_decimal}")
+        return usage_event.id, charge.id
+        
+    except Stack.DoesNotExist:
+        print(f"Warning: Stack {stack_id} not found, skipping")
+        return None, None
+    except (ValueError, TypeError) as e:
+        print(f"Warning: Invalid cost value '{cost_str}' for stack {stack_id}: {e}")
+        return None, None
+    except Exception as e:
+        print(f"Error processing stack {stack_id}: {e}")
+        return None, None
+
+
+def receive_billing_info(request: HttpRequest) -> JsonResponse:
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body).get("data", {})
+            print("Received billing info:", data)
+            
+            # Validate input format: {"<stack_id>": "cost"}
+            if not isinstance(data, dict):
+                return JsonResponse({"error": "Invalid data format. Expected dictionary."}, status=400)
+            
+            # Get or create infrastructure product and meter
+            infrastructure_product, _ = Product.objects.get_or_create(
+                code="infrastructure",
+                defaults={
+                    "name": "Infrastructure Costs",
+                    "taxable": True
+                }
+            )
+            
+            daily_cost_meter, _ = Meter.objects.get_or_create(
+                code="daily_cost",
+                defaults={
+                    "description": "Daily infrastructure cost in USD",
+                    "unit_name": "USD"
+                }
+            )
+            
+            created_events = []
+            created_charges = []
+            today = timezone.localdate()
+            
+            for stack_id, cost_str in data.items():
+                usage_event_id, charge_id = _process_stack_billing(
+                    stack_id, cost_str, infrastructure_product, daily_cost_meter, today
+                )
+                if usage_event_id and charge_id:
+                    created_events.append(usage_event_id)
+                    created_charges.append(charge_id)
+            
+            return JsonResponse({
+                "message": "Billing info received and processed successfully.",
+                "created_events": len(created_events),
+                "created_charges": len(created_charges),
+                "usage_events": created_events,
+                "charges": created_charges
+            }, status=200)
+            
+        except json.JSONDecodeError:
+            return JsonResponse({"error": "Invalid JSON data."}, status=400)
+        except Exception as e:
+            print(f"Unexpected error processing billing info: {e}")
+            return JsonResponse({"error": "An error occurred while processing billing info."}, status=500)
     else:
-        return JsonResponse({"error": "Invalid request method."}, status=405)
+        return JsonResponse({"error": "Invalid request method"}, status=405)

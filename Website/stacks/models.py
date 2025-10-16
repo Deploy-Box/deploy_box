@@ -58,12 +58,27 @@ class Stack(models.Model):
     # Django
     @property
     def django_url(self):
-        return "This is a placeholder for the django url"
+        return f'https://{self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("fqdn", "")}'
     
     @property
-    def django_mongodb_uri(self):
-        return "This is a placeholder for the mongodb uri"
+    def django_port(self):
+        return self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("target_port", "")
+
+    @property
+    def django_postgres_host(self):
+        return self.get_attributes_from_resource("neon_project-1").get("database_host", "")
     
+    @property
+    def django_postgres_database(self):
+        return self.get_attributes_from_resource("neon_project-1").get("database_name", "")
+
+    def get_attributes_from_resource(self, value) -> dict: 
+        key = "name"
+        resource_list = self.iac_state.get("resources", [])
+        for resource in resource_list:
+            if resource.get(key) == value:
+                return resource.get("instances", [{}])[0].get("attributes", {})
+        return {}
 
     @classmethod
     def get_service(cls, **kwargs):
@@ -137,3 +152,4 @@ class StackState(models.TextChoices):
     DELETING = "DELETING"
     UPDATING = "UPDATING"
     ERROR = "ERROR"
+

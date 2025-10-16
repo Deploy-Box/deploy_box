@@ -143,6 +143,53 @@
       </div>
     </section>
 
+    <section id="qr-viewer" class="mb-8">
+      <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M3 3h8v8H3V3zm10 0h8v8h-8V3zM3 13h8v8H3v-8zm10 10V13h8v10h-8z" />
+          </svg>
+          QR Code
+        </h2>
+
+        <div class="flex flex-col md:flex-row items-center md:items-start gap-6">
+          <div class="flex-shrink-0">
+            <div class="w-56 h-56 bg-zinc-50 rounded-lg flex items-center justify-center border border-zinc-200">
+              <!-- Large placeholder QR image; your JS should populate #qr-preview.src -->
+              <img id="qr-preview" class="w-48 h-48 object-contain" src="{{ qr_code }}" alt="QR code preview" data-frontend-url="{{ stack.mern_frontend_url }}" />
+            </div>
+          </div>
+
+          <div class="flex-1 w-full">
+            <p class="text-sm text-zinc-600 mb-2">Scan this QR to open your site's frontend on a mobile device.</p>
+
+            <div class="bg-zinc-50 p-3 rounded-md border border-zinc-200 flex items-center justify-between">
+              <div class="truncate">
+                <a id="qr-frontend-url" href="{{ stack.mern_frontend_url }}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 hover:text-emerald-800 underline text-sm truncate block" title="{{ stack.mern_frontend_url }}">{{ stack.mern_frontend_url }}</a>
+              </div>
+              <div class="ml-4 flex items-center space-x-2">
+                <button id="copy-qr-url" class="inline-flex items-center px-3 py-2 bg-white border border-zinc-200 rounded-md text-sm hover:bg-zinc-100 transition">
+                  <svg class="w-4 h-4 mr-2 text-zinc-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2" />
+                    <rect x="8" y="8" width="12" height="12" rx="2" ry="2" />
+                  </svg>
+                  Copy
+                </button>
+
+                <button id="download-qr-large" class="inline-flex items-center px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-md text-sm transition">
+                  <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v14m7-7H5" />
+                  </svg>
+                  Download
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-zinc-500 mt-3">If the QR does not appear, ensure your frontend URL is set and reload the page. You can also copy the URL directly.</p>
+          </div>
+        </div>
+      </div>
+    </section>
 
 
     <!-- Django Stack Services -->
@@ -182,7 +229,7 @@
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-green-700">Port:</span>
-                <span class="text-sm text-green-900">8000</span>
+                <span class="text-sm text-green-900">{{stack.django_port}}</span>
               </div>
               <div class="flex items-center justify-between">
                 <span class="text-sm text-green-700">Framework:</span>
@@ -191,37 +238,37 @@
             </div>
           </div>
 
-          <!-- MongoDB Database -->
-          <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-6 rounded-lg border border-emerald-200">
+          <!-- PostgreSQL Database -->
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
             <div class="flex items-center mb-4">
-              <div class="bg-emerald-500 p-2 rounded-lg mr-3">
+              <div class="bg-blue-500 p-2 rounded-lg mr-3">
                 <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm-1.1 18.7c-1.2 0-2.2-.4-3-.9l.4-.7c.7.5 1.6.8 2.6.8 1.3 0 2.3-.6 2.3-1.4 0-.7-.5-1.1-1.8-1.5l-.6-.2c-1.7-.6-2.8-1.3-2.8-2.8 0-1.4 1.1-2.5 2.9-2.5 1 0 1.8.3 2.4.7l-.4.7c-.5-.4-1.2-.6-2-.6-1.2 0-2 .6-2 1.3 0 .6.5 1 1.6 1.3l.6.2c2 .7 3 1.4 3 3 0 1.5-1.2 2.6-3.2 2.6z"/>
                 </svg>
               </div>
-              <h3 class="text-lg font-semibold text-emerald-900">MongoDB Database</h3>
+              <h3 class="text-lg font-semibold text-blue-900">PostgreSQL Database</h3>
             </div>
             <div class="space-y-3">
               <div class="flex items-center justify-between">
-                <span class="text-sm text-emerald-700">Status:</span>
+                <span class="text-sm text-blue-700">Status:</span>
                 <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                   <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
                   Connected
                 </span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-sm text-emerald-700">URI:</span>
-                <span class="text-sm text-emerald-900 font-mono truncate max-w-32" title="{{stack.django_mongodb_uri}}">
-                  {{stack.django_mongodb_uri|truncatechars:20}}
+                <span class="text-sm text-blue-700">Host:</span>
+                <span class="text-sm text-blue-900 font-mono truncate max-w-32" title="{{stack.django_postgres_host}}">
+                  {{stack.django_postgres_host|truncatechars:20}}
                 </span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-sm text-emerald-700">Collections:</span>
-                <span class="text-sm text-emerald-900">5 active</span>
+                <span class="text-sm text-blue-700">Database:</span>
+                <span class="text-sm text-blue-900">{{stack.django_postgres_database}}</span>
               </div>
               <div class="flex items-center justify-between">
-                <span class="text-sm text-emerald-700">Engine:</span>
-                <span class="text-sm text-emerald-900">djongo</span>
+                <span class="text-sm text-blue-700">Engine:</span>
+                <span class="text-sm text-blue-900">psycopg2</span>
               </div>
             </div>
           </div>
@@ -314,7 +361,7 @@
           </svg>
           Stack Actions
         </h2>
-        <div class="mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+        <!-- <div class="mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
           <h3 class="text-md font-semibold mb-3">GitHub Integration</h3>
           <div class="flex items-center space-x-4">
             <div id="github-connect" class="hidden">
@@ -344,7 +391,6 @@
                 <div id="repo-dropdown"
                   class="hidden absolute z-10 w-full mt-2 bg-white rounded-lg shadow-lg border border-gray-200">
                   <div class="py-2 max-h-60 overflow-y-auto">
-                    <!-- Repository list will be populated here -->
                   </div>
                 </div>
               </div>
@@ -359,7 +405,7 @@
               </button>
             </div>
           </div>
-        </div>
+        </div> -->
         <div class="mb-6 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
           <h3 class="text-md font-semibold mb-3">Root Directory</h3>
           <div class="flex items-center space-x-4">
@@ -384,7 +430,8 @@
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
           <button data-download-url="{% url 'stacks:download_stack' stack.id %}"
-            class="bg-zinc-500 hover:bg-zinc-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+            class="bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+            
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
               <path
                 d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z">
@@ -400,6 +447,25 @@
               </path>
             </svg>
           </button>
+          <!-- Hidden folder input for directory uploads -->
+          <input id="folder-input" type="file" webkitdirectory directory multiple class="hidden" />
+
+          <button id="upload-folder-btn" data-upload-url="{% url 'stacks:upload_source_code' stack.id %}"
+            class="bg-yellow-500 hover:bg-yellow-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5V6.75A2.25 2.25 0 015.25 4.5h13.5A2.25 2.25 0 0121 6.75V10.5M7.5 13.5l4.5-4.5 4.5 4.5M12 9v9" />
+            </svg>
+            <span class="button-text">Upload Source Code</span>
+            <svg class="loading-spinner hidden h-5 w-5 ml-2 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none"
+              viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+              </circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+          </button>
+
           <button id="refresh-stack-btn" data-stack-id="{{ stack.id }}"
             class="bg-blue-500 hover:bg-blue-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
@@ -428,4 +494,196 @@
 <script src="{% static 'dashboards/stack_dashboard.js' %}"></script>
 <script src="{% static 'dashboards/django_stack_dashboard.js' %}"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-{% endblock %} 
+<!-- JSZip CDN (load without SRI to avoid integrity mismatch preventing load) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+
+<script>
+  (function() {
+    const folderInput = document.getElementById('folder-input');
+    const uploadBtn = document.getElementById('upload-folder-btn');
+    const loadingSpinner = uploadBtn.querySelector('.loading-spinner');
+
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    async function zipAndUpload(files, uploadUrl) {
+      const zip = new JSZip();
+
+      for (const file of files) {
+        // file.webkitRelativePath preserves folder structure in Chrome/Edge
+        const path = file.webkitRelativePath || file.name;
+        const arrayBuffer = await file.arrayBuffer();
+        zip.file(path, arrayBuffer);
+      }
+
+      const content = await zip.generateAsync({ type: 'blob' });
+
+      const formData = new FormData();
+      formData.append('source_zip', content, 'source.zip');
+
+      // include CSRF token if available as cookie
+      const csrftoken = getCookie('csrftoken');
+
+      const resp = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        headers: csrftoken ? { 'X-CSRFToken': csrftoken } : {}
+      });
+
+      return resp;
+    }
+
+    uploadBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      folderInput.click();
+    });
+
+    folderInput.addEventListener('change', async (e) => {
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      const uploadUrl = uploadBtn.getAttribute('data-upload-url');
+
+      // show spinner
+      loadingSpinner.classList.remove('hidden');
+      uploadBtn.disabled = true;
+
+      try {
+        const resp = await zipAndUpload(files, uploadUrl);
+        if (!resp.ok) {
+          const text = await resp.text().catch(() => resp.statusText);
+          alert('Upload failed: ' + (text || resp.status));
+        } else {
+          alert('Upload successful');
+          // optionally refresh or handle UI update
+          location.reload();
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Upload error: ' + err.message);
+      } finally {
+        loadingSpinner.classList.add('hidden');
+        uploadBtn.disabled = false;
+        // reset input so same folder can be selected again
+        folderInput.value = null;
+      }
+    });
+  })();
+</script>
+          <script>
+            document.addEventListener('DOMContentLoaded', function () {
+              try {
+                const img = document.getElementById('qr-preview');
+                const urlLink = document.getElementById('qr-frontend-url');
+                const copyBtn = document.getElementById('copy-qr-url');
+                const downloadBtn = document.getElementById('download-qr-large');
+
+                const frontendUrl = (img && img.dataset && img.dataset.frontendUrl) || (urlLink && urlLink.href) || '';
+
+                function setDisabled(btn, disabled) {
+                  if (!btn) return;
+                  btn.disabled = disabled;
+                  if (disabled) {
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                  } else {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                  }
+                }
+
+                function flashText(btn, text, ms = 1400) {
+                  if (!btn) return;
+                  const orig = btn.innerHTML;
+                  btn.innerHTML = text;
+                  setTimeout(() => { btn.innerHTML = orig; }, ms);
+                }
+
+                if (!frontendUrl) {
+                  // no URL: disable actions and show helpful alt
+                  if (img) img.alt = 'No frontend URL configured';
+                  setDisabled(copyBtn, true);
+                  setDisabled(downloadBtn, true);
+                  return;
+                }
+
+                // Generate preview if image src is empty or is a template placeholder
+                if (img && (!img.src || img.src.trim() === '')) {
+                  QRCode.toDataURL(frontendUrl, { width: 320 })
+                    .then((dataUrl) => { img.src = dataUrl; })
+                    .catch((err) => { console.error('QR preview error', err); img.alt = 'QR generation failed'; });
+                }
+
+                // Copy URL
+                if (copyBtn) {
+                  copyBtn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    try {
+                      if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(frontendUrl);
+                      } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = frontendUrl;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        ta.remove();
+                      }
+                      flashText(copyBtn, 'Copied!');
+                    } catch (err) {
+                      console.error('Copy failed', err);
+                      alert('Unable to copy to clipboard.');
+                    }
+                  });
+                }
+
+                // Download PNG: prefer server-provided QR image if available, otherwise generate client-side
+                if (downloadBtn) {
+                  downloadBtn.addEventListener('click', async function (e) {
+                    e.preventDefault();
+                    try {
+                      // If the backend already provided an image src for #qr-preview, use it
+                      const existingSrc = img && img.src && img.src.trim() !== '' ? img.src : null;
+                      if (existingSrc) {
+                        const a = document.createElement('a');
+                        a.href = existingSrc;
+                        try {
+                          const host = (new URL(frontendUrl)).hostname.replace(/[:@]/g, '_');
+                          a.download = `${host || 'frontend'}-qr.png`;
+                        } catch (err) {
+                          a.download = 'frontend-qr.png';
+                        }
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        flashText(downloadBtn, 'Downloading...');
+                        return;
+                      }
+
+                      // fallback: generate high-res QR (1024px) client-side
+                      const dataUrl = await QRCode.toDataURL(frontendUrl, { width: 1024 });
+                      const a = document.createElement('a');
+                      a.href = dataUrl;
+                      try {
+                        const host = (new URL(frontendUrl)).hostname.replace(/[:@]/g, '_');
+                        a.download = `${host || 'frontend'}-qr.png`;
+                      } catch (err) {
+                        a.download = 'frontend-qr.png';
+                      }
+                      document.body.appendChild(a);
+                      a.click();
+                      a.remove();
+                      flashText(downloadBtn, 'Downloading...');
+                    } catch (err) {
+                      console.error('Download QR failed', err);
+                      alert('Unable to generate or download QR.');
+                    }
+                  });
+                }
+              } catch (err) {
+                console.error('QR wiring error', err);
+              }
+            });
+          </script>
+{% endblock %}

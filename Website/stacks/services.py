@@ -103,6 +103,38 @@ def add_stack(**kwargs) -> Stack:
 # add_stack(name="test", project_id=project.id, purchasable_stack_id=purchasable_stack.id)
 
 
+def update_stack(**kwargs) -> Stack:
+    stack_id = kwargs.get("stack_id")
+    stack_iac = kwargs.get("stack_iac", {})
+    source_code_path = kwargs.get("source_code_path", "")
+
+
+    with transaction.atomic():
+
+        stack = Stack.objects.get(pk=stack_id)
+
+        if not stack_iac:
+            stack_iac = stack.iac
+
+        # Put request on Azure Service Bus
+        message_data = {
+            "request_type": "iac.update",
+            "source": os.environ.get("HOST"),
+            "data": {
+                "stack_id": str(stack.id),
+                "source_code_path": str(source_code_path),
+                "iac": stack_iac,
+            }
+        }
+
+        # Send message to Azure Function (non-blocking)
+        try:
+            send_to_azure_function(message_data)
+        except Exception as e:
+            logger.warning(f"Failed to send message to Azure Function: {str(e)}")
+
+    return stack
+
 
 def get_stacks(user: UserProfile) -> list[Stack]:
     projects = Project.objects.filter(projectmember__user=user)
