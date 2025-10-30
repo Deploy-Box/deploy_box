@@ -16,7 +16,7 @@ from typing import Union
 
 from core.decorators import oauth_required, AuthHttpRequest
 import stacks.services as stack_services
-from stacks.models import PurchasableStack, StackDatabase, Stack
+from stacks.models import PurchasableStack, Stack
 from organizations.models import Organization
 from organizations.services import get_organization
 from accounts.models import UserProfile

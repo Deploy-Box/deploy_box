@@ -1,29 +1,21 @@
 import logging
 import json
+import re
 import requests
 from django.http import JsonResponse
 from django.db import transaction
 from stacks.models import (
     Stack,
     PurchasableStack,
+    StackIACAttribute,
 )
 from django.conf import settings
 from projects.models import Project
 from accounts.models import UserProfile
 import os
-from django.views.decorators.csrf import csrf_exempt
-from .service_helpers import ServiceHelper
 
 import json
-from django.http import JsonResponse, HttpRequest, HttpResponse
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.viewsets import ViewSet, ModelViewSet
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
+from django.http import JsonResponse, HttpRequest
 from django.conf import settings
 import uuid
 import datetime
@@ -34,69 +26,11 @@ try:
 except Exception:
     BlobServiceClient = None
 
-from core.decorators import oauth_required, AuthHttpRequest
 from stacks.models import Stack, PurchasableStack
-from stacks.serializers import (
-    StackDatabaseSerializer,
-    StackSerializer,
-    StackCreateSerializer,
-    StackUpdateSerializer,
-    PurchasableStackCreateSerializer,
-    StackDatabaseUpdateSerializer,
-    StackIACOverwriteSerializer,
-    StackStatusUpdateSerializer,
-    StackIACUpdateSerializer,
-    StackIACStateUpdateSerializer,
-)
 from projects.models import Project
-import stacks.services as services
-from django.shortcuts import get_object_or_404
-from rest_framework import permissions, filters
-from rest_framework import viewsets
+from stacks.stack_managers import get_stack_manager
 
-logger = logging.getLogger(__name__)
-
-def send_to_azure_function(message_data: dict, function_url: str | None = None) -> bool:
-    """
-    Sends a message to Azure Function via HTTP trigger.
-    
-    Args:
-        message_data (dict): The data to send as a message
-        function_url (str): The URL of the Azure Function HTTP trigger
-        
-    Returns:
-        bool: True if message was sent successfully, False otherwise
-    """
-    function_url = function_url or os.environ.get('AZURE_FUNCTION_URL')
-
-    if not function_url:
-        logger.error("Azure Function URL is not configured.")
-        return False
-
-    try:
-        # Send HTTP POST request to Azure Function
-        response = requests.post(
-            function_url,
-            json=message_data,
-            headers={'Content-Type': 'application/json'},
-            timeout=30  # 30 second timeout
-        )
-        
-        # Check if the request was successful
-        if response.status_code in [200, 202]:
-            logger.info(f"Successfully sent message to Azure Function: {function_url}")
-            return True
-        else:
-            logger.error(f"Azure Function returned status code {response.status_code}: {response.text}")
-            return False
-        
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Failed to send message to Azure Function: {str(e)}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error sending message to Azure Function: {str(e)}")
-        return False
-    
+logger = logging.getLogger(__name__)    
 
 def add_stack(**kwargs) -> Stack:
     name = kwargs.get("name")
@@ -114,62 +48,42 @@ def add_stack(**kwargs) -> Stack:
             name=name, project=project, purchased_stack=purchasable_stack, status="PROVISIONING"
         )
 
-        
+        stack_manager = get_stack_manager(stack)
 
-        # Put request on Azure Service Bus
-        message_data = {
-            "request_type": "iac.create",
-            "source": os.environ.get("HOST"),          
-            "data": {
-                "stack_id": str(stack.id),
-                "project_id": str(project.id),
-                "org_id": str(project.organization.id),
-                "purchasable_stack_type": purchasable_stack.type.upper(),
-                "purchasable_stack_variant": purchasable_stack.variant.upper(),
-                "purchasable_stack_version": purchasable_stack.version,
-            }
-        }
+        for key, value in stack_manager.get_starter_stack_iac_attributes().items():
+            StackIACAttribute.objects.create(
+                stack_id=stack.id,
+                attribute_name=key,
+                attribute_value=value,
+            )
 
-        # Send message to Azure Function (non-blocking)
-        try:
-            send_to_azure_function(message_data)
-        except Exception as e:
-            logger.warning(f"Failed to send message to Azure Function: {str(e)}")
+        # try:
+        send_to_azure_function("iac.create", {
+            "stack_id": str(stack.id),
+            "project_id": str(project.id),
+            "org_id": str(project.organization.id),
+            "iac": get_iac_attribute_dict_as_json(stack),
+        })
+        # except Exception as e:
+        #     logger.warning(f"Failed to send message to Azure Function: {str(e)}")
 
     return stack
 
-# project = Project.objects.all()[0]
-# purchasable_stack = PurchasableStack.objects.all()[0]
-# add_stack(name="test", project_id=project.id, purchasable_stack_id=purchasable_stack.id)
-
-
 def update_stack(**kwargs) -> Stack:
     stack_id = kwargs.get("stack_id")
-    stack_iac = kwargs.get("stack_iac", {})
     source_code_path = kwargs.get("source_code_path", "")
-
 
     with transaction.atomic():
 
         stack = Stack.objects.get(pk=stack_id)
+        stack_iac = get_iac_attribute_dict_as_json(stack)
 
-        if not stack_iac:
-            stack_iac = stack.iac
-
-        # Put request on Azure Service Bus
-        message_data = {
-            "request_type": "iac.update",
-            "source": os.environ.get("HOST"),
-            "data": {
+        try:
+            send_to_azure_function("iac.update", {
                 "stack_id": str(stack.id),
                 "source_code_path": str(source_code_path),
                 "iac": stack_iac,
-            }
-        }
-
-        # Send message to Azure Function (non-blocking)
-        try:
-            send_to_azure_function(message_data)
+            })
         except Exception as e:
             logger.warning(f"Failed to send message to Azure Function: {str(e)}")
 
@@ -204,20 +118,30 @@ def delete_stack(stack: Stack) -> bool:
         stack.status = "DELETING"
         stack.save()
 
-        print(f"Deleting stack {stack.id}...")
-        send_to_azure_function(
+        send_to_azure_function("iac.delete",
             {
-                "request_type": "iac.delete",
-                "source": os.environ.get("HOST"),
-                "data": {
-                    "stack_id": stack.id,
-                    "iac": stack.iac
-                }
+                "stack_id": stack.id
             }
         )
+
         return True
     except Exception as e:
         logger.error(f"Failed to delete stack {stack.id}: {str(e)}")
+        return False
+    
+def set_is_persistent_stack(stack: Stack, is_persistent: bool) -> bool:
+    try:
+        stack_manager = get_stack_manager(stack)
+        stack_manager.set_is_persistent(is_persistent)
+
+        send_to_azure_function("iac.update", {
+            "stack_id": str(stack.id),
+            "iac": get_iac_attribute_dict_as_json(stack),
+        })
+
+        return True
+    except Exception as e:
+        logger.error(f"Failed to set persistent for stack {stack.id}: {str(e)}")
         return False
     
 def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
@@ -270,16 +194,10 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
 
         stack = Stack.objects.get(id=stack_id)
 
-        print("Current IAC:", stack.iac)
+        stack_manager = get_stack_manager(stack)
+        stack_manager.set_source_code_upload()
 
-        stack_iac = stack.iac
-
-        # TODO: This will only work for Django Stacks, still need to figure out how this will work in general
-
-        del stack_iac["azurerm_container_app"]["azurerm_container_app-1"]["template"]["container"][0]["image"]
-        stack_iac["azurerm_container_app"]["azurerm_container_app-1"]["template"]["container"][0].update({"build_context": "source_code"})
-
-        services.update_stack(stack_id=stack_id, source_code_path=blob_name, stack_iac=stack_iac)
+        update_stack(stack_id=stack_id, source_code_path=blob_name)
 
         return JsonResponse({"success": True, "blob_name": blob_name, "blob_url": blob_client.url}, status=200)
 
@@ -287,3 +205,165 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
         # Log server-side for diagnostics and return minimal error to client
         print(f"Failed uploading source zip to Azure: {str(e)}")
         return JsonResponse({"error": f"Failed to upload file: {str(e)}"}, status=500)
+
+def get_iac_attribute_dict_as_json(stack: Stack) -> dict:
+    """Convert StackIACAttribute entries for the given stack into nested JSON structure."""
+    attribute_dict = {}
+    for attr in StackIACAttribute.objects.filter(stack=stack).all():
+        attribute_dict[attr.attribute_name] = attr.attribute_value
+
+    logger.warning(f"IAC Attribute Dict for Stack {stack.id}: {json.dumps(attribute_dict, indent=2)}")
+
+    def parse_value(value):
+        """Convert string representations to their actual types."""
+        if not isinstance(value, str):
+            return value
+        
+        # Strip whitespace
+        value = value.strip()
+        
+        # Empty dictionary
+        if value == "{}":
+            return {}
+        
+        # Empty list
+        if value == "[]":
+            return []
+        
+        # Try to parse as decimal number (int or float)
+        try:
+            # Check if it's a number (including decimals)
+            if re.match(r'^-?\d+(\.\d+)?$', value):
+                if '.' in value:
+                    return float(value)
+                else:
+                    return int(value)
+        except ValueError:
+            pass
+        
+        # Return original string if no conversion applies
+        return value
+
+    def ensure_list(container, key):
+        if key not in container or not isinstance(container[key], list):
+            container[key] = []
+        return container[key]
+
+    def ensure_dict(container, key):
+        if key not in container or not isinstance(container[key], dict):
+            container[key] = {}
+        return container[key]
+
+    index_re = re.compile(r"^(?P<name>[^\[\]]+)(?:\[(?P<idx>\d+)\])?$")
+
+    def parse_segment(segment):
+        # ("container[0]") -> ("container", 0, None, None)
+        # ("value?name=FOO") -> ("value", None, "name", "FOO")
+        # ("env") -> ("env", None, None, None)
+        if "?" in segment:
+            base, query = segment.split("?", 1)
+            if "=" in query:
+                qk, qv = query.split("=", 1)
+            else:
+                qk, qv = query, None
+        else:
+            base, qk, qv = segment, None, None
+
+        m = index_re.match(base)
+        if not m:
+            return base, None, qk, qv
+        name = m.group("name")
+        idx = m.group("idx")
+        return name, (int(idx) if idx is not None else None), qk, qv
+
+    iac_json = {}
+
+    for full_key, value in attribute_dict.items():
+        parts = full_key.split(".")
+        current = iac_json
+        parent = None
+        parent_key = None
+
+        # Traverse all but last segment
+        for i, seg in enumerate(parts[:-1]):
+            name, idx, _, _ = parse_segment(seg)
+            next_is_query_leaf = "?" in parts[i+1] and (i+1) == len(parts) - 1
+
+            if idx is None:
+                if next_is_query_leaf:
+                    # parent[name] should be a list; we’ll append at the leaf
+                    current_list = ensure_list(current, name)
+                    parent = current
+                    parent_key = name
+                    current = current_list
+                else:
+                    current = ensure_dict(current, name)
+            else:
+                arr = ensure_list(current, name)
+                while len(arr) <= idx:
+                    arr.append({})
+                current = arr[idx]
+
+        # Handle the final segment
+        last_seg = parts[-1]
+        name, idx, qk, qv = parse_segment(last_seg)
+
+        if qk is not None:
+            # e.g. "...env.value?name=FOO": append {"name": qv, "value": value} to parent[parent_key]
+            target_list = current if (parent is None or parent_key is None) else ensure_list(parent, parent_key)
+            target_list.append({qk: qv, name: parse_value(value)})
+        else:
+            if idx is None:
+                if isinstance(current, list):
+                    current.append({name: parse_value(value)})
+                else:
+                    current[name] = parse_value(value)
+            else:
+                arr = ensure_list(current, name)
+                while len(arr) <= idx:
+                    arr.append(None)
+                arr[idx] = parse_value(value)
+
+    return iac_json
+
+
+def send_to_azure_function(request_type: str, message_data: dict) -> bool:
+    """
+    Sends a message to Azure Function via HTTP trigger.
+    """
+    
+    function_url = os.environ.get('AZURE_FUNCTION_URL')
+
+    if not function_url:
+        logger.error("Azure Function URL is not configured.")
+        return False
+    
+    data = {
+        "request_type": request_type,
+        "data": message_data
+    }
+
+    try:
+        # Send HTTP POST request to Azure Function
+        print("Sending data to Azure Function:", function_url, data)
+        response = requests.post(
+            function_url,
+            json=data,
+            headers={'Content-Type': 'application/json'},
+            timeout=30  # 30 second timeout
+        )
+        
+        # Check if the request was successful
+        if response.status_code in [200, 202]:
+            logger.info(f"Successfully sent message to Azure Function: {function_url}")
+            return True
+        else:
+            logger.error(f"Azure Function returned status code {response.status_code}: {response.text}")
+            return False
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to send message to Azure Function: {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error sending message to Azure Function: {str(e)}")
+        return False
