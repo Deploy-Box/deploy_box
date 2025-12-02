@@ -11,13 +11,11 @@
 <body class="min-h-screen bg-gray-100 flex flex-col justify-center sm:py-12">
 
   <div class="p-10 xs:p-0 mx-auto md:w-full md:max-w-md">
-    <h1 class="font-bold text-center text-2xl mb-5">Deploy Box</h1>
+    {% include 'accounts/components/auth_header.html' %}
 
-    <div id="error-banner" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      <span class="block sm:inline" id="error-message"></span>
-    </div>
+    {% include 'accounts/components/error_banner.html' %}
 
-    <div class="bg-white ring-2 ring-gray-200 shadow-2xl w-full rounded-lg divide-y divide-gray-200">
+    <div class="bg-white ring-2 ring-gray-200 shadow-2xl w-full rounded-lg">
       <form id="login-form" class="p-6">
         <input type="hidden" name="next" value="{{ next }}" />
 
@@ -30,7 +28,11 @@
         <div class="mb-5">
           <label for="password" class="font-semibold text-sm text-gray-600 pb-1 block">Password</label>
           <input type="password" name="password" id="password"
-            class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full" placeholder="Enter your password" required />
+            class="border rounded-lg px-3 py-2 mt-1 text-sm w-full" placeholder="Enter your password" required />
+          <div class="text-right mt-2 mb-3">
+            <a href="{% url 'main_site:password_reset' %}"
+              class="text-xs text-emerald-500 hover:text-emerald-600">Forgot password?</a>
+          </div>
         </div>
 
         <button type="submit" id="login-submit"
@@ -44,50 +46,57 @@
         </button>
       </form>
 
-      <div class="py-3 text-center">
-        <a href="{% url 'main_site:password_reset' %}"
-          class="transition duration-200 text-sm text-gray-500 hover:text-gray-700">Forgot your password?</a>
+      <div class="py-6 px-6">
+        {% include 'accounts/components/form_divider.html' %}
+
+        {% include 'accounts/components/oauth_buttons.html' with google_button_id='google-login' github_button_id='github-login' %}
       </div>
 
-      <div class="py-5">
-        <div class="grid grid-cols-2 gap-1">
-          <div class="text-center sm:text-right flex items-center justify-end">
-            <a href="{% url 'main_site:signup' %}"
-              class="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-sm rounded-lg text-gray-500 hover:bg-gray-100">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                class="w-4 h-4 inline-block align-text-bottom">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-              <span class="inline-block ml-1">Sign Up</span>
-            </a>
-          </div>
-          <div class="text-center sm:text-right flex items-center justify-end">
-            <button
-              class="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-sm rounded-lg text-gray-500 hover:bg-gray-100">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                class="w-4 h-4 inline-block align-text-bottom">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <span class="inline-block ml-1">Help</span>
-            </button>
-          </div>
-        </div>
-      </div>
+    </div>
 
+    <div class="pt-5 flex justify-end">
+      <a href="{% url 'main_site:signup' %}"
+        class="transition duration-200 inline-flex items-center px-5 py-4 cursor-pointer font-normal text-sm rounded-lg text-gray-500 hover:bg-gray-100">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          class="w-4 h-4 inline-block align-text-bottom">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+        <span class="inline-block ml-1">Sign Up</span>
+      </a>
     </div>
   </div>
 
   <script>
+    function showError(message) {
+      document.getElementById('error-message').textContent = message;
+      document.getElementById('error-banner').classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideError() {
+      document.getElementById('error-banner').classList.add('hidden');
+    }
+
     document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const form = e.target;
       const formData = new FormData(form);
+      const username = formData.get("username");
+      const password = formData.get("password");
+
+      // Validate fields
+      if (!username || !password) {
+        showError('Please fill in all fields.');
+        return;
+      }
+
+      hideError();
+
       const body = {
-        username: formData.get("username"),
-        password: formData.get("password"),
+        username: username,
+        password: password,
       };
 
       // UI: Show spinner, disable button
@@ -136,6 +145,22 @@
         document.getElementById("login-button-text").textContent = "Login";
         document.getElementById("login-submit").disabled = false;
       }
+    });
+
+    // Google OAuth Login
+    document.getElementById("google-login").addEventListener("click", () => {
+      const nextUrl = document.querySelector("input[name='next']").value;
+      const redirectUri = encodeURIComponent(window.location.origin + "/api/v1/accounts/oauth/google/callback/");
+      const state = nextUrl && nextUrl !== "None" ? encodeURIComponent(nextUrl) : "";
+      window.location.href = `/api/v1/accounts/oauth/google/?redirect_uri=${redirectUri}&state=${state}`;
+    });
+
+    // GitHub OAuth Login
+    document.getElementById("github-login").addEventListener("click", () => {
+      const nextUrl = document.querySelector("input[name='next']").value;
+      const redirectUri = encodeURIComponent(window.location.origin + "/api/v1/accounts/oauth/github/callback/");
+      const state = nextUrl && nextUrl !== "None" ? encodeURIComponent(nextUrl) : "";
+      window.location.href = `/api/v1/accounts/oauth/github/?redirect_uri=${redirectUri}&state=${state}`;
     });
   </script>
 

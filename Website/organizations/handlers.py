@@ -36,6 +36,11 @@ def get_organization(request: AuthHttpRequest, organization_id: str) -> JsonResp
     return JsonResponse(organization, status=200)
 
 def create_organization(request: AuthHttpRequest) -> JsonResponse:
+    # Add user email to the form data
+    request.POST = request.POST.copy()
+    print(request.auth_user.email)
+    request.POST['email'] = request.auth_user.email
+
     form = OrganizationCreateFormWithMembers(request.POST)
 
     if form.is_valid():

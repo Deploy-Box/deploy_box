@@ -109,6 +109,16 @@ OAUTH2_CLIENT_CREDENTIALS = {
     "token_url": f"{HOST}/o/token/",
 }
 
+# Google OAuth Configuration
+GOOGLE_OAUTH_CLIENT_ID = os.environ.get("GOOGLE_OAUTH_CLIENT_ID")
+GOOGLE_OAUTH_CLIENT_SECRET = os.environ.get("GOOGLE_OAUTH_CLIENT_SECRET")
+GOOGLE_OAUTH_REDIRECT_URI = f"{HOST}/api/v1/accounts/oauth/google/callback/"
+
+# GitHub OAuth Configuration
+GITHUB_OAUTH_CLIENT_ID = os.environ.get("GITHUB_OAUTH_CLIENT_ID")
+GITHUB_OAUTH_CLIENT_SECRET = os.environ.get("GITHUB_OAUTH_CLIENT_SECRET")
+GITHUB_OAUTH_REDIRECT_URI = f"{HOST}/api/v1/accounts/oauth/github/callback/"
+
 # Sessions & Security
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_SECURE = not DEBUG

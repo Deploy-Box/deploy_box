@@ -1,0 +1,384 @@
+<!-- Infrastructure Canvas -->
+<section class="mb-8">
+  <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+    <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+      <path d="M3 3h14v3h-1V4H4v6h4v1H3V3zm5 8h4v1H8v-1zm5-1h4v6h-4v-6zm1 1v4h2v-4h-2zM3 12h4v6H3v-6zm1 1v4h2v-4H4zm8-1h4v6h-4v-6zm1 1v4h2v-4h-2zM7.5 2h1v2h-1V2zm0 9h1v2h-1v-2zM8 3.5h8v1H8v-1z"/>
+    </svg>
+      Infrastructure Diagram
+    </h2>
+    <div class="bg-gray-50 rounded-lg border-2 border-gray-200 overflow-hidden">
+      <canvas id="infrastructureCanvas" class="w-full cursor-move" width="1400" height="700"></canvas>
+    </div>
+    <div class="mt-4 text-sm text-gray-600">
+      <p class="flex items-center">
+        <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path>
+        </svg>
+        Drag to pan • Scroll to zoom
+      </p>
+    </div>
+    <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <h3 class="text-sm font-semibold text-blue-900 mb-2">Selected Component</h3>
+      <div id="selectedComponentInfo" class="text-sm text-blue-700">
+        <span class="italic">Click on a component to see its details</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script>
+// Infrastructure Canvas Diagram
+(function() {
+  const canvas = document.getElementById('infrastructureCanvas');
+  if (!canvas) return;
+  
+  const ctx = canvas.getContext('2d');
+  let isDraggingCanvas = false;
+  let viewOffsetX = 0;
+  let viewOffsetY = 0;
+  let lastMouseX = 0;
+  let lastMouseY = 0;
+  let selectedNode = null;
+  let hasMouseMoved = false;
+  let scale = 1.0;
+  const minScale = 0.5;
+  const maxScale = 3.0;
+  const scaleStep = 0.1;
+
+  // Get data from template variables, with fallback defaults
+  const wrappers = {{ infrastructure_wrappers|safe|default:"[]" }};
+  const nodes = {{ infrastructure_nodes|safe|default:"[]" }};
+  const connections = {{ infrastructure_connections|safe|default:"[]" }};
+
+  function drawArrow(fromX, fromY, toX, toY, label) {
+    const headlen = 10;
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    
+    // Draw line
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(toX, toY);
+    ctx.strokeStyle = '#6b7280';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    
+    // Draw arrowhead
+    ctx.beginPath();
+    ctx.moveTo(toX, toY);
+    ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+    ctx.lineTo(toX, toY);
+    ctx.fillStyle = '#6b7280';
+    ctx.fill();
+    
+    // Draw label
+    if (label) {
+      const midX = (fromX + toX) / 2;
+      const midY = (fromY + toY) / 2;
+      ctx.font = '12px Arial';
+      ctx.fillStyle = '#4b5563';
+      ctx.textAlign = 'center';
+      ctx.fillText(label, midX, midY - 10);
+    }
+  }
+
+  function drawNode(node) {
+    const isSelected = selectedNode && selectedNode.id === node.id;
+    
+    // Shadow
+    ctx.shadowColor = isSelected ? 'rgba(59, 130, 246, 0.3)' : 'rgba(0, 0, 0, 0.1)';
+    ctx.shadowBlur = isSelected ? 15 : 10;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 4;
+    
+    // Node background
+    ctx.fillStyle = node.color;
+    ctx.beginPath();
+    ctx.roundRect(node.x, node.y, node.width, node.height, 8);
+    ctx.fill();
+    
+    // Reset shadow
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Border (highlight if selected)
+    ctx.strokeStyle = isSelected ? '#3b82f6' : 'rgba(255, 255, 255, 0.5)';
+    ctx.lineWidth = isSelected ? 3 : 2;
+    ctx.stroke();
+    
+    // Icon
+    ctx.font = '32px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(node.icon, node.x + node.width / 2, node.y + 30);
+    
+    // Label
+    ctx.font = 'bold 14px Arial';
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(node.label, node.x + node.width / 2, node.y + node.height - 30);
+    
+    // Sublabel
+    ctx.font = '11px Arial';
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+    ctx.fillText(node.sublabel, node.x + node.width / 2, node.y + node.height - 15);
+  }
+
+  function drawWrapper(wrapper) {
+    const isSelected = selectedNode && selectedNode.id === wrapper.id;
+    
+    // Draw wrapper background with rounded corners
+    ctx.fillStyle = wrapper.color;
+    ctx.strokeStyle = wrapper.borderColor;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([5, 5]);
+    
+    ctx.beginPath();
+    ctx.roundRect(wrapper.x, wrapper.y, wrapper.width, wrapper.height, 12);
+    ctx.fill();
+    ctx.stroke();
+    
+    // Reset line dash
+    ctx.setLineDash([]);
+    
+    // Draw wrapper label
+    ctx.font = 'bold 12px Arial';
+    ctx.fillStyle = wrapper.borderColor;
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
+    ctx.fillText(wrapper.label, wrapper.x + 10, wrapper.y + 8);
+    
+    // If selected, add highlight
+    if (isSelected) {
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 3;
+      ctx.setLineDash([]);
+      ctx.beginPath();
+      ctx.roundRect(wrapper.x, wrapper.y, wrapper.width, wrapper.height, 12);
+      ctx.stroke();
+    }
+  }
+
+  function draw() {
+    // Clear canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Save context and apply view offset and scale
+    ctx.save();
+    ctx.translate(viewOffsetX, viewOffsetY);
+    ctx.scale(scale, scale);
+    
+    // Draw wrappers first (in the background)
+    wrappers.forEach(wrapper => drawWrapper(wrapper));
+    
+    // Draw connections
+    connections.forEach(conn => {
+      // Check if connection is from/to a node or wrapper
+      const fromNode = nodes.find(n => n.id === conn.from);
+      const fromWrapper = wrappers.find(w => w.id === conn.from);
+      const toNode = nodes.find(n => n.id === conn.to);
+      const toWrapper = wrappers.find(w => w.id === conn.to);
+      
+      let fromX, fromY, toX, toY;
+      
+      // Calculate from position
+      if (fromNode) {
+        fromX = fromNode.x + fromNode.width;
+        fromY = fromNode.y + fromNode.height / 2;
+      } else if (fromWrapper) {
+        fromX = fromWrapper.x + fromWrapper.width;
+        fromY = fromWrapper.y + fromWrapper.height / 2;
+      }
+      
+      // Calculate to position
+      if (toNode) {
+        toX = toNode.x;
+        toY = toNode.y + toNode.height / 2;
+      } else if (toWrapper) {
+        toX = toWrapper.x;
+        toY = toWrapper.y + toWrapper.height / 2;
+      }
+      
+      if (fromX !== undefined && toX !== undefined) {
+        drawArrow(fromX, fromY, toX, toY, conn.label);
+      }
+    });
+    
+    // Draw nodes
+    nodes.forEach(node => drawNode(node));
+    
+    // Restore context
+    ctx.restore();
+  }
+
+  function getNodeAtPosition(x, y) {
+    // Adjust for view offset and scale
+    const adjustedX = (x - viewOffsetX) / scale;
+    const adjustedY = (y - viewOffsetY) / scale;
+    
+    // Check nodes first (they're on top)
+    const node = nodes.find(node => 
+      adjustedX >= node.x && adjustedX <= node.x + node.width &&
+      adjustedY >= node.y && adjustedY <= node.y + node.height
+    );
+    
+    if (node) return node;
+    
+    // Check wrappers
+    return wrappers.find(wrapper => 
+      adjustedX >= wrapper.x && adjustedX <= wrapper.x + wrapper.width &&
+      adjustedY >= wrapper.y && adjustedY <= wrapper.y + wrapper.height
+    );
+  }
+
+  function getCanvasCoordinates(event) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY
+    };
+  }
+
+  function updateSelectedInfo() {
+    const infoDiv = document.getElementById('selectedComponentInfo');
+    if (!infoDiv) return;
+    
+    if (selectedNode) {
+      // Check if it's a wrapper
+      const isWrapper = wrappers.find(w => w.id === selectedNode.id);
+      
+      if (isWrapper) {
+        const containedNodes = nodes.filter(n => isWrapper.nodeIds.includes(n.id));
+        const nodeList = containedNodes.map(n => n.label).join(', ');
+        
+        infoDiv.innerHTML = `
+          <div class="space-y-1">
+            <p><strong>Container:</strong> ${selectedNode.label}</p>
+            <p><strong>Type:</strong> Infrastructure Wrapper</p>
+            <p><strong>Contains:</strong> ${nodeList}</p>
+            <p><strong>Status:</strong> <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              <span class="h-1.5 w-1.5 rounded-full bg-purple-500 mr-1"></span>Active
+            </span></p>
+          </div>
+        `;
+      } else {
+        infoDiv.innerHTML = `
+          <div class="space-y-1">
+            <p><strong>Component:</strong> ${selectedNode.label}</p>
+            <p><strong>Type:</strong> ${selectedNode.sublabel}</p>
+            <p><strong>Status:</strong> <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              <span class="h-1.5 w-1.5 rounded-full bg-green-500 mr-1"></span>Active
+            </span></p>
+          </div>
+        `;
+      }
+    } else {
+      infoDiv.innerHTML = '<span class="italic">Click on a component to see its details</span>';
+    }
+  }
+
+  canvas.addEventListener('mousedown', (e) => {
+    const coords = getCanvasCoordinates(e);
+    hasMouseMoved = false;
+    
+    // Start dragging canvas
+    isDraggingCanvas = true;
+    lastMouseX = coords.x;
+    lastMouseY = coords.y;
+    canvas.style.cursor = 'grabbing';
+  });
+
+  canvas.addEventListener('mousemove', (e) => {
+    const coords = getCanvasCoordinates(e);
+    
+    if (isDraggingCanvas) {
+      // Drag the entire canvas view
+      const deltaX = coords.x - lastMouseX;
+      const deltaY = coords.y - lastMouseY;
+      
+      if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
+        hasMouseMoved = true;
+      }
+      
+      viewOffsetX += deltaX;
+      viewOffsetY += deltaY;
+      
+      lastMouseX = coords.x;
+      lastMouseY = coords.y;
+      
+      draw();
+    }
+  });
+
+  canvas.addEventListener('mouseup', (e) => {
+    if (!hasMouseMoved) {
+      // This was a click, not a drag
+      const coords = getCanvasCoordinates(e);
+      const clickedNode = getNodeAtPosition(coords.x, coords.y);
+      
+      selectedNode = clickedNode;
+      updateSelectedInfo();
+      draw();
+    }
+    
+    isDraggingCanvas = false;
+    hasMouseMoved = false;
+    canvas.style.cursor = 'grab';
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    isDraggingCanvas = false;
+    hasMouseMoved = false;
+    canvas.style.cursor = 'grab';
+  });
+
+  // Mouse wheel zoom
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = (e.clientX - rect.left) * (canvas.width / rect.width);
+    const mouseY = (e.clientY - rect.top) * (canvas.height / rect.height);
+    
+    // Get world coordinates before zoom
+    const worldX = (mouseX - viewOffsetX) / scale;
+    const worldY = (mouseY - viewOffsetY) / scale;
+    
+    // Update scale
+    const zoomFactor = e.deltaY < 0 ? 1 + scaleStep : 1 - scaleStep;
+    const newScale = Math.min(Math.max(scale * zoomFactor, minScale), maxScale);
+    
+    if (newScale !== scale) {
+      scale = newScale;
+      
+      // Adjust offset to keep mouse position fixed
+      viewOffsetX = mouseX - worldX * scale;
+      viewOffsetY = mouseY - worldY * scale;
+      
+      draw();
+    }
+  }, { passive: false });
+
+  // Global reset function
+  window.resetInfrastructureDiagram = function() {
+    nodes[0].x = 200;
+    nodes[0].y = 200;
+    nodes[1].x = 450;
+    nodes[1].y = 200;
+    viewOffsetX = 0;
+    viewOffsetY = 0;
+    scale = 1.0;
+    selectedNode = null;
+    updateSelectedInfo();
+    draw();
+  };
+
+  // Initial draw
+  draw();
+  updateSelectedInfo();
+})();
+</script>

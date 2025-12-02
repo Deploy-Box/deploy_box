@@ -1,10 +1,28 @@
 import os
-import hashlib
 from django.db import transaction
 from stacks.stack_managers.stack_manager import StackManager
 from stacks.models import StackIACAttribute
 
 class MERNStackManager(StackManager):
+    @staticmethod
+    def get_purchasable_stack_info():
+        return {
+            "name": "MERN",
+            "type": "MERN",
+            "variant": "STARTER",
+            "version": "1.0",
+            "description": "A full-stack MERN application with MongoDB Atlas database and React frontend deployed on Azure Container Apps.",
+            "price_id": "TEST",
+            "features": [
+                "Azure Container Apps hosting for backend and frontend",
+                "MongoDB Atlas database integration",
+                "Express.js backend API",
+                "React frontend application",
+                "Auto-scaling from 0 to 1 replica per container",
+                "Pre-configured environment variables and database connection"
+            ]
+        }
+    
     def get_starter_stack_iac_attributes(self):
         return {
             "mongodbatlas_database_user.user-1": "{}",

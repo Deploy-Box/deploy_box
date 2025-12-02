@@ -36,12 +36,19 @@ class StackViewSet(viewsets.ModelViewSet):
     # permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
 
-    def create(self, _):
-        # return Response({"error": "Method not allowed"}, status=status.HTTP_405_METHOD_NOT_ALLOWED)
+    def create(self, request):
+        project_id = request.data.get('project_id')
+        purchasable_stack_id = request.data.get('purchasable_stack_id')
+        
+        if not project_id or not purchasable_stack_id:
+            return Response(
+                {"error": "project_id and purchasable_stack_id are required"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
         services.add_stack(
-            name="Test Stack",
-            project_id="d444675afae0429d",
-            purchasable_stack_id="c384c494c79a43cf",
+            project_id=project_id,
+            purchasable_stack_id=purchasable_stack_id,
         )
         return Response({"message": "Stack creation initiated"}, status=status.HTTP_201_CREATED)
     

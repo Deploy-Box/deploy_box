@@ -1,192 +1,119 @@
 {% extends 'welcome_base.html' %}
-{% load static %}
+{% load static tailwind_tags %}
 
 {% block content %}
-<div class="min-h-screen flex">
-    <!-- Left Side - Welcome Content -->
-    <div class="flex-1 bg-gradient-to-br from-emerald-600 to-emerald-800 flex items-center justify-center p-8">
-        <div class="max-w-lg text-center text-white">
-            <div class="mb-8">
-                <div class="inline-flex items-center justify-center w-20 h-20 bg-white bg-opacity-20 rounded-full mb-6">
-                    <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+<body class="min-h-screen bg-gray-100 flex flex-col justify-center sm:py-12">
+    <div class="p-10 xs:p-0 mx-auto md:w-full md:max-w-md">
+        {% include 'accounts/components/auth_header.html' %}
+
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+            <div class="flex">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
                     </svg>
                 </div>
-                <h1 class="text-4xl md:text-5xl font-bold mb-4">
-                    Welcome to <span class="text-emerald-200">DeployBox</span>
-                </h1>
-                <p class="text-xl text-emerald-100 mb-8">
-                    Create your first organization to start deploying applications.
-                </p>
-            </div>
-
-            <!-- What is an Organization -->
-            <div class="bg-white bg-opacity-10 backdrop-blur-sm rounded-xl p-6 mb-6">
-                <div class="text-center mb-6">
-                    <div class="inline-flex items-center justify-center w-12 h-12 bg-white bg-opacity-20 rounded-full mb-3">
-                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                        </svg>
-                    </div>
-                    <h2 class="text-2xl font-bold mb-3">What is an Organization?</h2>
-                    <p class="text-emerald-100">
-                        Organizations help you manage teams, projects, and resources in one place.
-                    </p>
-                </div>
-
-                <!-- Features Grid -->
-                <div class="grid grid-cols-3 gap-4">
-                    <div class="text-center">
-                        <div class="inline-flex items-center justify-center w-10 h-10 bg-white bg-opacity-20 rounded-lg mb-2">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-sm font-semibold mb-1">Team Collaboration</h3>
-                        <p class="text-xs text-emerald-100">Invite team members and work together on projects.</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="inline-flex items-center justify-center w-10 h-10 bg-white bg-opacity-20 rounded-lg mb-2">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-sm font-semibold mb-1">Project Management</h3>
-                        <p class="text-xs text-emerald-100">Organize and manage your applications.</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="inline-flex items-center justify-center w-10 h-10 bg-white bg-opacity-20 rounded-lg mb-2">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                            </svg>
-                        </div>
-                        <h3 class="text-sm font-semibold mb-1">Resource Management</h3>
-                        <p class="text-xs text-emerald-100">Track usage and manage billing.</p>
+                <div class="ml-3">
+                    <h3 class="text-sm font-medium text-blue-800">Welcome to Deploy Box!</h3>
+                    <div class="mt-2 text-sm text-blue-700">
+                        <p>Create your first organization to start deploying applications and managing your projects.</p>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Right Side - Form -->
-    <div class="flex-1 bg-gray-50 flex items-center justify-center p-8">
-        <div class="w-full max-w-md">
-            <div class="text-center mb-8">
-                <h2 class="text-3xl font-bold text-gray-900 mb-2">Get Started</h2>
-                <p class="text-gray-600">
-                    Create your first organization to start deploying applications.
-                </p>
-            </div>
-            
-            <!-- Create Organization Form -->
-            <div class="bg-white rounded-xl shadow-lg p-8 border border-gray-100">
-                <!-- Error Alert -->
-                <div id="errorAlert" class="hidden mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div class="flex items-start">
-                        <div class="flex-shrink-0">
-                            <svg class="h-5 w-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
-                            </svg>
-                        </div>
-                        <div class="ml-3">
-                            <h3 class="text-sm font-medium text-red-800">Error</h3>
-                            <div id="errorMessage" class="mt-1 text-sm text-red-700"></div>
-                        </div>
-                    </div>
-                </div>
+        <!-- Error Alert -->
+        <div id="errorAlert" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+            <span class="block sm:inline" id="errorMessage"></span>
+        </div>
 
-                <form id="createOrgForm" class="space-y-6">
-                    <div>
-                        <label for="orgName" class="block text-sm font-medium text-gray-700 mb-2">
-                            Organization Name
-                        </label>
-                        <input 
-                            type="text" 
-                            id="orgName" 
-                            name="name" 
-                            required
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                            placeholder="Enter organization name"
-                        >
-                        <div id="orgNameError" class="hidden mt-1 text-sm text-red-600"></div>
-                    </div>
-                    <div>
-                        <label for="orgEmail" class="block text-sm font-medium text-gray-700 mb-2">
-                            Organization Email
-                        </label>
-                        <input 
-                            type="email" 
-                            id="orgEmail" 
-                            name="email" 
-                            required
-                            value="{{ user.email }}"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
-                            placeholder="Enter organization email"
-                        >
-                        <div id="orgEmailError" class="hidden mt-1 text-sm text-red-600"></div>
-                    </div>
-                    <button 
-                        type="submit" 
-                        id="createOrgBtn"
-                        class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+        <div class="bg-white ring-2 ring-gray-200 shadow-2xl w-full rounded-lg">
+            <form id="createOrgForm" class="p-6">
+                <div class="mb-5">
+                    <label for="orgName" class="font-semibold text-sm text-gray-600 pb-1 block">
+                        Organization Name
+                    </label>
+                    <input 
+                        type="text" 
+                        id="orgName" 
+                        name="name" 
+                        required
+                        class="border rounded-lg px-3 py-2 mt-1 text-sm w-full"
+                        placeholder="Enter organization name"
                     >
-                        <span class="flex items-center justify-center">
-                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                            </svg>
-                            Create Organization
-                        </span>
-                    </button>
-                </form>
-            </div>
+                </div>
+
+                <button 
+                    type="submit" 
+                    id="createOrgBtn"
+                    class="transition duration-200 bg-emerald-400 hover:bg-emerald-500 focus:bg-emerald-600 focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm font-semibold inline-flex items-center justify-center"
+                >
+                    <svg id="spinner" class="hidden animate-spin h-4 w-4 mr-2 text-white" xmlns="http://www.w3.org/2000/svg"
+                        fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                    </svg>
+                    <span id="button-text">Create Organization</span>
+                </button>
+            </form>
         </div>
     </div>
-</div>
+</body>
 
 <script>
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorAlert').classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hideError() {
+    document.getElementById('errorAlert').classList.add('hidden');
+}
+
+function isValidEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('createOrgForm');
     const createOrgBtn = document.getElementById('createOrgBtn');
+    const spinner = document.getElementById('spinner');
+    const buttonText = document.getElementById('button-text');
     const orgName = document.getElementById('orgName');
-    const orgEmail = document.getElementById('orgEmail');
 
     form.addEventListener('submit', function(e) {
         e.preventDefault();
         
-        // Clear previous errors
-        clearErrors();
-        
         const name = orgName.value.trim();
-        const email = orgEmail.value.trim();
-        let hasErrors = false;
 
         // Validation
         if (!name) {
-            showFieldError('orgName', 'Organization name is required');
-            hasErrors = true;
-        }
-
-        if (!email) {
-            showFieldError('orgEmail', 'Organization email is required');
-            hasErrors = true;
-        } else if (!isValidEmail(email)) {
-            showFieldError('orgEmail', 'Please enter a valid email address');
-            hasErrors = true;
-        }
-
-        if (hasErrors) {
+            showError('Please enter an organization name.');
             return;
         }
 
+        hideError();
+
         // Show loading state
-        const originalText = createOrgBtn.innerHTML;
-        createOrgBtn.innerHTML = `
-            <svg class="animate-spin h-5 w-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Creating Organization...
-        `;
+        spinner.classList.remove('hidden');
+        buttonText.textContent = 'Creating...';
         createOrgBtn.disabled = true;
 
         // Submit form
@@ -196,104 +123,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'X-CSRFToken': getCookie('csrftoken')
             },
-            body: `name=${encodeURIComponent(name)}&email=${encodeURIComponent(email)}`
+            body: `name=${encodeURIComponent(name)}`
         })
-        .then(response => {
-            if (response.ok) {
-                return response.json().then(data => {
-                    if (data.error) {
-                        showGeneralError(data.error);
-                        return;
-                    }
-                    if (data.id) {
-                        // Redirect to the new organization dashboard
-                        window.location.href = `/dashboard/organizations/${data.id}/`;
-                    } else if (data.message) {
-                        showGeneralError(data.message);
-                    }
-                });
+        .then(response => response.json())
+        .then(data => {
+            if (data.id) {
+                // Redirect to the new organization dashboard
+                window.location.href = `/dashboard/organizations/${data.id}/`;
             } else {
-                return response.json().then(data => {
-                    throw new Error(data.error || data.message || 'Failed to create organization');
-                });
+                showError(data.error || data.message || 'Failed to create organization.');
             }
         })
         .catch(error => {
             console.error('Error creating organization:', error);
-            showGeneralError('Failed to create organization. Please try again.');
+            showError('Failed to create organization. Please try again.');
         })
         .finally(() => {
-            createOrgBtn.innerHTML = originalText;
+            spinner.classList.add('hidden');
+            buttonText.textContent = 'Create Organization';
             createOrgBtn.disabled = false;
         });
     });
-
-    // Email validation function
-    function isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
-    // Error handling functions
-    function showFieldError(fieldId, message) {
-        const errorElement = document.getElementById(fieldId + 'Error');
-        const inputElement = document.getElementById(fieldId);
-        
-        if (errorElement && inputElement) {
-            errorElement.textContent = message;
-            errorElement.classList.remove('hidden');
-            inputElement.classList.add('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
-            inputElement.classList.remove('border-gray-300', 'focus:ring-emerald-500', 'focus:border-emerald-500');
-        }
-    }
-
-    function showGeneralError(message) {
-        const errorAlert = document.getElementById('errorAlert');
-        const errorMessage = document.getElementById('errorMessage');
-        
-        if (errorAlert && errorMessage) {
-            errorMessage.textContent = message;
-            errorAlert.classList.remove('hidden');
-        }
-    }
-
-    function clearErrors() {
-        // Clear field errors
-        const errorElements = document.querySelectorAll('[id$="Error"]');
-        errorElements.forEach(element => {
-            element.classList.add('hidden');
-            element.textContent = '';
-        });
-
-        // Clear input styling
-        const inputs = [orgName, orgEmail];
-        inputs.forEach(input => {
-            input.classList.remove('border-red-500', 'focus:ring-red-500', 'focus:border-red-500');
-            input.classList.add('border-gray-300', 'focus:ring-emerald-500', 'focus:border-emerald-500');
-        });
-
-        // Clear general error
-        const errorAlert = document.getElementById('errorAlert');
-        if (errorAlert) {
-            errorAlert.classList.add('hidden');
-        }
-    }
-
-    // Helper function to get CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
-    }
 });
 </script>
 {% endblock %} 

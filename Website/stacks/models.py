@@ -12,6 +12,7 @@ class PurchasableStack(models.Model):
     variant = models.CharField(max_length=10)
     version = models.CharField(max_length=10)
     price_id = models.CharField(max_length=50)
+    features = models.JSONField(default=list, blank=True)
     description = models.CharField(default="check out this stack", max_length=512)
     name = models.CharField(default="this is a stack", max_length=128)
     prebuilt_quantity = models.PositiveIntegerField(default=0, help_text="Number of prebuilt stacks available for immediate use")
@@ -76,6 +77,12 @@ class Stack(models.Model):
     @property
     def django_postgres_database(self):
         return self.get_attributes_from_resource("neon_project-1").get("database_name", "")
+    
+    # Redis
+    @property
+    def redis_url(self):
+        ip_address = self.get_attributes_from_resource("azurerm_public_ip-1").get("ip_address", "Not Assigned")
+        return f"http://{ip_address}"
 
     def get_attributes_from_resource(self, value) -> dict: 
         key = "name"

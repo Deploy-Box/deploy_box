@@ -1,6 +1,7 @@
 import logging
 import json
 import re
+import random
 import requests
 from django.http import JsonResponse
 from django.db import transaction
@@ -39,6 +40,18 @@ def add_stack(**kwargs) -> Stack:
 
     project = Project.objects.get(pk=project_id)
     purchasable_stack = PurchasableStack.objects.get(pk=purchasable_stack_id)
+
+    if not name:
+        # Generate default name
+        first_word_options = [
+            "Awesome", "Incredible", "Fantastic", "Superb", "Brilliant", "Majestic", "Dynamic", "Vibrant", "Radiant", "Stellar", "Epic", "Legendary", "Spectacular", "Magnificent", "Glorious", "Splendid", "Fabulous", "Marvelous", "Phenomenal", "Remarkable"
+        ]
+
+        second_word_options = [
+            "Falcon", "Tiger", "Eagle", "Lion", "Panther", "Wolf", "Dragon", "Phoenix", "Leopard", "Cheetah", "Hawk", "Shark", "Bear", "Raven", "Stallion", "Cougar", "Viper", "Jaguar", "Griffin", "Hydra"
+        ]
+
+        name = f"{random.choice(first_word_options)} {random.choice(second_word_options)} {purchasable_stack.type.capitalize()} Stack"
 
     with transaction.atomic():
 
@@ -118,9 +131,12 @@ def delete_stack(stack: Stack) -> bool:
         stack.status = "DELETING"
         stack.save()
 
+        stack_iac = get_iac_attribute_dict_as_json(stack)
+
         send_to_azure_function("iac.delete",
             {
-                "stack_id": stack.id
+                "stack_id": str(stack.id),
+                "iac": stack_iac,
             }
         )
 
@@ -229,6 +245,17 @@ def get_iac_attribute_dict_as_json(stack: Stack) -> dict:
         # Empty list
         if value == "[]":
             return []
+        
+        # Try to parse as JSON (handles lists, dicts, etc.)
+        if value.startswith(('[', '{')) or value.startswith(("'[", '"[')):
+            try:
+                # Handle Python-style lists with single quotes
+                # Convert Python representation to JSON
+                python_list_value = value.replace("'", '"')
+                parsed = json.loads(python_list_value)
+                return parsed
+            except json.JSONDecodeError:
+                pass
         
         # Try to parse as decimal number (int or float)
         try:
@@ -350,7 +377,7 @@ def send_to_azure_function(request_type: str, message_data: dict) -> bool:
             function_url,
             json=data,
             headers={'Content-Type': 'application/json'},
-            timeout=30  # 30 second timeout
+            timeout=3000  # 30 second timeout
         )
         
         # Check if the request was successful

@@ -22,9 +22,6 @@ from organizations.services import get_organization
 from accounts.models import UserProfile
 from core.helpers import request_helpers
 from projects.models import Project
-from payments.models import (
-    Account, Product, Meter, UsageEvent, Charge, ChargeSource, Currency
-)
 from decimal import Decimal
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
@@ -753,126 +750,126 @@ def get_billing_info(request: HttpRequest) -> JsonResponse:
 
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
-def _process_stack_billing(stack_id: str, cost_str: str, infrastructure_product: Product, daily_cost_meter: Meter, today) -> tuple:
-    """
-    Process billing information for a single stack.
-    Returns tuple of (usage_event_id, charge_id) or (None, None) if processing failed.
-    """
-    try:
-        # Get the stack
-        stack = Stack.objects.get(id=stack_id)
+# def _process_stack_billing(stack_id: str, cost_str: str, infrastructure_product: Product, daily_cost_meter: Meter, today) -> tuple:
+#     """
+#     Process billing information for a single stack.
+#     Returns tuple of (usage_event_id, charge_id) or (None, None) if processing failed.
+#     """
+#     try:
+#         # Get the stack
+#         stack = Stack.objects.get(id=stack_id)
         
-        # Get or create account for the stack's organization
-        account, _ = Account.objects.get_or_create(
-            organization=stack.project.organization,
-            defaults={
-                "name": f"{stack.project.organization.name} Account",
-                "email_billing": stack.project.organization.email,
-                "currency": Currency.USD
-            }
-        )
+#         # Get or create account for the stack's organization
+#         account, _ = Account.objects.get_or_create(
+#             organization=stack.project.organization,
+#             defaults={
+#                 "name": f"{stack.project.organization.name} Account",
+#                 "email_billing": stack.project.organization.email,
+#                 "currency": Currency.USD
+#             }
+#         )
         
-        # Convert cost to decimal (assuming it comes as string)
-        cost_decimal = Decimal(str(cost_str))
+#         # Convert cost to decimal (assuming it comes as string)
+#         cost_decimal = Decimal(str(cost_str))
         
-        # Create usage event for the infrastructure cost
-        usage_event = UsageEvent.objects.create(
-            account=account,
-            product=infrastructure_product,
-            meter=daily_cost_meter,
-            stack=stack,
-            quantity=cost_decimal,
-            occurred_at=timezone.now(),
-            metadata={
-                "source": "azure_function",
-                "billing_date": today.isoformat(),
-                "stack_name": stack.name
-            }
-        )
+#         # Create usage event for the infrastructure cost
+#         usage_event = UsageEvent.objects.create(
+#             account=account,
+#             product=infrastructure_product,
+#             meter=daily_cost_meter,
+#             stack=stack,
+#             quantity=cost_decimal,
+#             occurred_at=timezone.now(),
+#             metadata={
+#                 "source": "azure_function",
+#                 "billing_date": today.isoformat(),
+#                 "stack_name": stack.name
+#             }
+#         )
         
-        # Create charge for billing purposes
-        cost_cents = int(cost_decimal * 100)  # Convert to cents
+#         # Create charge for billing purposes
+#         cost_cents = int(cost_decimal * 100)  # Convert to cents
         
-        charge = Charge.objects.create(
-            account=account,
-            product=infrastructure_product,
-            meter=daily_cost_meter,
-            source=ChargeSource.USAGE,
-            usage_date=today,
-            description=f"Infrastructure cost for {stack.name} on {today}",
-            quantity=Decimal('1'),  # One daily charge
-            unit_name="day",
-            unit_price_cents=cost_cents,
-            amount_cents=cost_cents,
-            currency=Currency.USD,
-            invoiced=False
-        )
+#         charge = Charge.objects.create(
+#             account=account,
+#             product=infrastructure_product,
+#             meter=daily_cost_meter,
+#             source=ChargeSource.USAGE,
+#             usage_date=today,
+#             description=f"Infrastructure cost for {stack.name} on {today}",
+#             quantity=Decimal('1'),  # One daily charge
+#             unit_name="day",
+#             unit_price_cents=cost_cents,
+#             amount_cents=cost_cents,
+#             currency=Currency.USD,
+#             invoiced=False
+#         )
         
-        print(f"Created billing records for stack {stack_id}: ${cost_decimal}")
-        return usage_event.id, charge.id
+#         print(f"Created billing records for stack {stack_id}: ${cost_decimal}")
+#         return usage_event.id, charge.id
         
-    except Stack.DoesNotExist:
-        print(f"Warning: Stack {stack_id} not found, skipping")
-        return None, None
-    except (ValueError, TypeError) as e:
-        print(f"Warning: Invalid cost value '{cost_str}' for stack {stack_id}: {e}")
-        return None, None
-    except Exception as e:
-        print(f"Error processing stack {stack_id}: {e}")
-        return None, None
+#     except Stack.DoesNotExist:
+#         print(f"Warning: Stack {stack_id} not found, skipping")
+#         return None, None
+#     except (ValueError, TypeError) as e:
+#         print(f"Warning: Invalid cost value '{cost_str}' for stack {stack_id}: {e}")
+#         return None, None
+#     except Exception as e:
+#         print(f"Error processing stack {stack_id}: {e}")
+#         return None, None
 
 
-def receive_billing_info(request: HttpRequest) -> JsonResponse:
-    if request.method == "POST":
-        try:
-            data = json.loads(request.body).get("data", {})
-            print("Received billing info:", data)
+# def receive_billing_info(request: HttpRequest) -> JsonResponse:
+#     if request.method == "POST":
+#         try:
+#             data = json.loads(request.body).get("data", {})
+#             print("Received billing info:", data)
             
-            # Validate input format: {"<stack_id>": "cost"}
-            if not isinstance(data, dict):
-                return JsonResponse({"error": "Invalid data format. Expected dictionary."}, status=400)
+#             # Validate input format: {"<stack_id>": "cost"}
+#             if not isinstance(data, dict):
+#                 return JsonResponse({"error": "Invalid data format. Expected dictionary."}, status=400)
             
-            # Get or create infrastructure product and meter
-            infrastructure_product, _ = Product.objects.get_or_create(
-                code="infrastructure",
-                defaults={
-                    "name": "Infrastructure Costs",
-                    "taxable": True
-                }
-            )
+#             # Get or create infrastructure product and meter
+#             infrastructure_product, _ = Product.objects.get_or_create(
+#                 code="infrastructure",
+#                 defaults={
+#                     "name": "Infrastructure Costs",
+#                     "taxable": True
+#                 }
+#             )
             
-            daily_cost_meter, _ = Meter.objects.get_or_create(
-                code="daily_cost",
-                defaults={
-                    "description": "Daily infrastructure cost in USD",
-                    "unit_name": "USD"
-                }
-            )
+#             daily_cost_meter, _ = Meter.objects.get_or_create(
+#                 code="daily_cost",
+#                 defaults={
+#                     "description": "Daily infrastructure cost in USD",
+#                     "unit_name": "USD"
+#                 }
+#             )
             
-            created_events = []
-            created_charges = []
-            today = timezone.localdate()
+#             created_events = []
+#             created_charges = []
+#             today = timezone.localdate()
             
-            for stack_id, cost_str in data.items():
-                usage_event_id, charge_id = _process_stack_billing(
-                    stack_id, cost_str, infrastructure_product, daily_cost_meter, today
-                )
-                if usage_event_id and charge_id:
-                    created_events.append(usage_event_id)
-                    created_charges.append(charge_id)
+#             for stack_id, cost_str in data.items():
+#                 usage_event_id, charge_id = _process_stack_billing(
+#                     stack_id, cost_str, infrastructure_product, daily_cost_meter, today
+#                 )
+#                 if usage_event_id and charge_id:
+#                     created_events.append(usage_event_id)
+#                     created_charges.append(charge_id)
             
-            return JsonResponse({
-                "message": "Billing info received and processed successfully.",
-                "created_events": len(created_events),
-                "created_charges": len(created_charges),
-                "usage_events": created_events,
-                "charges": created_charges
-            }, status=200)
+#             return JsonResponse({
+#                 "message": "Billing info received and processed successfully.",
+#                 "created_events": len(created_events),
+#                 "created_charges": len(created_charges),
+#                 "usage_events": created_events,
+#                 "charges": created_charges
+#             }, status=200)
             
-        except json.JSONDecodeError:
-            return JsonResponse({"error": "Invalid JSON data."}, status=400)
-        except Exception as e:
-            print(f"Unexpected error processing billing info: {e}")
-            return JsonResponse({"error": "An error occurred while processing billing info."}, status=500)
-    else:
-        return JsonResponse({"error": "Invalid request method"}, status=405)
+#         except json.JSONDecodeError:
+#             return JsonResponse({"error": "Invalid JSON data."}, status=400)
+#         except Exception as e:
+#             print(f"Unexpected error processing billing info: {e}")
+#             return JsonResponse({"error": "An error occurred while processing billing info."}, status=500)
+#     else:
+#         return JsonResponse({"error": "Invalid request method"}, status=405)

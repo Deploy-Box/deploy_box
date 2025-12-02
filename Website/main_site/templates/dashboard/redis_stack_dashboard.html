@@ -1,0 +1,186 @@
+{% extends 'dashboard_base.html' %} {%load static%} {% block extra_head %}
+<div id="dashboard" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
+  data-stack-id="{{ stack.id }}" data-service-name="{{ stack_google_cloud_runs.0.id }}" data-stack-type="redis"></div>
+{% endblock %} {% block content %}
+<div class="w-full bg-gray-50">
+  {% include 'dashboard/components/_header.html' with stack_type="Redis" %}
+  <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
+    <div id="metadata" class="hidden" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
+      data-stack-id="{{ stack.id }}"></div>
+
+    {% include 'dashboard/components/_stack_overview.html' with stack_type="Redis" %}
+
+    {% include 'dashboard/components/_qr_viewer.html' with frontend_url=frontend_url %}
+
+
+    <!-- Redis Stack Services -->
+    <section class="mb-8">
+      <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-xl font-bold text-emerald-400 mb-6 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          Redis Stack Services
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Redis Web Application -->
+          <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
+            <div class="flex items-center mb-4">
+              <div class="bg-green-500 p-2 rounded-lg mr-3">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-green-900">Redis Web Application</h3>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-green-700">Status:</span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                  Running
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-green-700">URL:</span>
+                <a href="{{stack.redis_url}}" target="_blank" rel="noopener noreferrer" 
+                   class="text-green-600 hover:text-green-800 underline text-sm truncate max-w-32">
+                  {{stack.redis_url}}
+                </a>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-green-700">Port:</span>
+                <span class="text-sm text-green-900">{{stack.redis_port}}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-green-700">Framework:</span>
+                <span class="text-sm text-green-900">Redis 4.2</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PostgreSQL Database -->
+          <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+            <div class="flex items-center mb-4">
+              <div class="bg-blue-500 p-2 rounded-lg mr-3">
+                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm-1.1 18.7c-1.2 0-2.2-.4-3-.9l.4-.7c.7.5 1.6.8 2.6.8 1.3 0 2.3-.6 2.3-1.4 0-.7-.5-1.1-1.8-1.5l-.6-.2c-1.7-.6-2.8-1.3-2.8-2.8 0-1.4 1.1-2.5 2.9-2.5 1 0 1.8.3 2.4.7l-.4.7c-.5-.4-1.2-.6-2-.6-1.2 0-2 .6-2 1.3 0 .6.5 1 1.6 1.3l.6.2c2 .7 3 1.4 3 3 0 1.5-1.2 2.6-3.2 2.6z"/>
+                </svg>
+              </div>
+              <h3 class="text-lg font-semibold text-blue-900">PostgreSQL Database</h3>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-blue-700">Status:</span>
+                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                  <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                  Connected
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-blue-700">Host:</span>
+                <span class="text-sm text-blue-900 font-mono truncate max-w-32" title="{{stack.Redis_postgres_host}}">
+                  {{stack.Redis_postgres_host|truncatechars:20}}
+                </span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-blue-700">Database:</span>
+                <span class="text-sm text-blue-900">{{stack.Redis_postgres_database}}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-sm text-blue-700">Engine:</span>
+                <span class="text-sm text-blue-900">psycopg2</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Redis Admin Panel -->
+    <section class="mb-8">
+      <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          Redis Admin Panel
+        </h2>
+        <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="text-lg font-semibold text-blue-900 mb-2">Redis Admin Interface</h3>
+              <p class="text-sm text-blue-700 mb-4">Access your Redis admin panel to manage models, users, and content</p>
+              <div class="flex items-center space-x-4">
+                <span class="text-sm text-blue-700">Admin URL:</span>
+                <a href="{{stack.Redis_url}}/admin/" target="_blank" rel="noopener noreferrer" 
+                   class="text-blue-600 hover:text-blue-800 underline text-sm">
+                  {{stack.Redis_url}}/admin/
+                </a>
+              </div>
+            </div>
+            <a href="{{stack.Redis_url}}/admin/" target="_blank" rel="noopener noreferrer"
+               class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg transition-all duration-300 shadow-md hover:shadow-lg">
+              Open Admin Panel
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Google Cloud Run Services -->
+    {% if stack_google_cloud_runs %}
+    <section class="mb-8">
+      <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+        <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+          <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          Google Cloud Run Services
+        </h2>
+        <div class="space-y-4">
+          {% for stack_google_cloud_run in stack_google_cloud_runs %}
+          <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-semibold text-zinc-900">{{stack_google_cloud_run.name}}</h3>
+                <p class="text-sm text-zinc-500 flex items-center">
+                  <svg class="h-4 w-4 mr-1 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 101.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd"></path>
+                  </svg>
+                  URL: <a href="{{stack_google_cloud_run.url}}" target="_blank" rel="noopener noreferrer" class="text-emerald-600 hover:text-emerald-800 underline">{{stack_google_cloud_run.url}}</a>
+                </p>
+                <p class="text-sm text-zinc-500 flex items-center">
+                  <svg class="h-4 w-4 mr-1 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                  </svg>
+                  Status: <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 mr-1"></span>
+                    {{stack_google_cloud_run.state}}
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+    {% endif %}
+
+
+
+    {% include 'dashboard/components/_stack_actions.html' with show_github_integration=false %}
+
+  </main>
+</div>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'dashboards/environment_switcher.js' %}"></script>
+<script src="{% static 'dashboards/stack_dashboard.js' %}"></script>
+<script src="{% static 'dashboards/Redis_stack_dashboard.js' %}"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+<!-- JSZip CDN is now included in stack actions component -->
+
+{% endblock %}

@@ -5,6 +5,24 @@ from stacks.stack_managers.stack_manager import StackManager
 from stacks.models import StackIACAttribute
 
 class DjangoStackManager(StackManager):
+    @staticmethod
+    def get_purchasable_stack_info():
+        return {
+            "name": "Django",
+            "type": "DJANGO",
+            "variant": "STARTER",
+            "version": "1.0",
+            "description": "A Django web application deployed on Azure Container Apps with PostgreSQL database.",
+            "price_id": "TEST",
+            "features": [
+                "Azure Container Apps hosting Django application",
+                "Neon PostgreSQL database integration",
+                "Pre-configured Django environment with secret key",
+                "Auto-scaling from 0 to 1 replica",
+                "Basic monitoring and logging setup"
+            ]
+        }
+
     def get_starter_stack_iac_attributes(self):
         secret_key = hashlib.sha256(os.urandom(64)).hexdigest()
 

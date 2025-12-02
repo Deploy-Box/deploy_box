@@ -653,3 +653,238 @@ class DeleteAccountAPIView(APIView):
                 "success": False,
                 "error": "Failed to delete account"
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class GoogleOAuthInitiateView(APIView):
+    """Initiate Google OAuth flow."""
+    
+    def get(self, request):
+        """Redirect user to Google OAuth consent screen."""
+        try:
+            google_client_id = settings.GOOGLE_OAUTH_CLIENT_ID
+            redirect_uri = request.GET.get('redirect_uri', settings.GOOGLE_OAUTH_REDIRECT_URI)
+            state = request.GET.get('state', '')
+            
+            auth_url = (
+                f"https://accounts.google.com/o/oauth2/v2/auth?"
+                f"client_id={google_client_id}&"
+                f"redirect_uri={redirect_uri}&"
+                f"response_type=code&"
+                f"scope=openid%20email%20profile&"
+                f"state={state}"
+            )
+            
+            from django.shortcuts import redirect
+            return redirect(auth_url)
+            
+        except Exception as e:
+            logger.error(f"Google OAuth initiation error: {e}")
+            return Response({
+                "error": "Failed to initiate Google OAuth"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class GoogleOAuthCallbackView(APIView):
+    """Handle Google OAuth callback."""
+    
+    def get(self, request):
+        """Exchange authorization code for access token and authenticate user."""
+        try:
+            code = request.GET.get('code')
+            state = request.GET.get('state', '')
+            
+            if not code:
+                return Response({
+                    "error": "Authorization code not provided"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Exchange code for access token
+            token_url = "https://oauth2.googleapis.com/token"
+            token_data = {
+                'code': code,
+                'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
+                'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
+                'redirect_uri': settings.GOOGLE_OAUTH_REDIRECT_URI,
+                'grant_type': 'authorization_code'
+            }
+            
+            token_response = requests.post(token_url, data=token_data)
+            token_json = token_response.json()
+            
+            if not token_response.ok:
+                logger.error(f"Google token exchange failed: {token_json}")
+                return Response({
+                    "error": "Failed to exchange authorization code"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            access_token = token_json.get('access_token')
+            
+            # Get user info from Google
+            user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
+            headers = {'Authorization': f'Bearer {access_token}'}
+            user_info_response = requests.get(user_info_url, headers=headers)
+            user_info = user_info_response.json()
+            
+            if not user_info_response.ok:
+                logger.error(f"Failed to get Google user info: {user_info}")
+                return Response({
+                    "error": "Failed to get user information"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get or create user
+            email = user_info.get('email')
+            given_name = user_info.get('given_name', '')
+            family_name = user_info.get('family_name', '')
+            
+            user, created = UserProfile.objects.get_or_create(
+                email=email,
+                defaults={
+                    'username': email.split('@')[0],
+                    'first_name': given_name,
+                    'last_name': family_name,
+                }
+            )
+            
+            # Log the user in
+            login(request, user)
+            
+            # Generate OAuth token for the user
+            token_url = settings.OAUTH2_PASSWORD_CREDENTIALS["token_url"]
+            client_id = settings.OAUTH2_PASSWORD_CREDENTIALS["client_id"]
+            client_secret = settings.OAUTH2_PASSWORD_CREDENTIALS["client_secret"]
+            
+            # For OAuth social login, we'll create a session-based token
+            # Redirect to dashboard or state URL
+            from django.shortcuts import redirect
+            redirect_url = state if state else '/dashboard/'
+            return redirect(redirect_url)
+            
+        except Exception as e:
+            logger.error(f"Google OAuth callback error: {e}")
+            return Response({
+                "error": "Failed to complete Google OAuth"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class GitHubOAuthInitiateView(APIView):
+    """Initiate GitHub OAuth flow."""
+    
+    def get(self, request):
+        """Redirect user to GitHub OAuth authorization."""
+        try:
+            github_client_id = settings.GITHUB_OAUTH_CLIENT_ID
+            redirect_uri = request.GET.get('redirect_uri', settings.GITHUB_OAUTH_REDIRECT_URI)
+            state = request.GET.get('state', '')
+            
+            auth_url = (
+                f"https://github.com/login/oauth/authorize?"
+                f"client_id={github_client_id}&"
+                f"redirect_uri={redirect_uri}&"
+                f"scope=user:email&"
+                f"state={state}"
+            )
+            
+            from django.shortcuts import redirect
+            return redirect(auth_url)
+            
+        except Exception as e:
+            logger.error(f"GitHub OAuth initiation error: {e}")
+            return Response({
+                "error": "Failed to initiate GitHub OAuth"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class GitHubOAuthCallbackView(APIView):
+    """Handle GitHub OAuth callback."""
+    
+    def get(self, request):
+        """Exchange authorization code for access token and authenticate user."""
+        try:
+            code = request.GET.get('code')
+            state = request.GET.get('state', '')
+            
+            if not code:
+                return Response({
+                    "error": "Authorization code not provided"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Exchange code for access token
+            token_url = "https://github.com/login/oauth/access_token"
+            token_data = {
+                'client_id': settings.GITHUB_OAUTH_CLIENT_ID,
+                'client_secret': settings.GITHUB_OAUTH_CLIENT_SECRET,
+                'code': code,
+                'redirect_uri': settings.GITHUB_OAUTH_REDIRECT_URI,
+            }
+            
+            headers = {'Accept': 'application/json'}
+            token_response = requests.post(token_url, data=token_data, headers=headers)
+            token_json = token_response.json()
+            
+            if not token_response.ok or 'access_token' not in token_json:
+                logger.error(f"GitHub token exchange failed: {token_json}")
+                return Response({
+                    "error": "Failed to exchange authorization code"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            access_token = token_json.get('access_token')
+            
+            # Get user info from GitHub
+            user_info_url = "https://api.github.com/user"
+            headers = {
+                'Authorization': f'Bearer {access_token}',
+                'Accept': 'application/json'
+            }
+            user_info_response = requests.get(user_info_url, headers=headers)
+            user_info = user_info_response.json()
+            
+            if not user_info_response.ok:
+                logger.error(f"Failed to get GitHub user info: {user_info}")
+                return Response({
+                    "error": "Failed to get user information"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get user email from GitHub (may require separate call)
+            email = user_info.get('email')
+            if not email:
+                email_url = "https://api.github.com/user/emails"
+                email_response = requests.get(email_url, headers=headers)
+                emails = email_response.json()
+                
+                if email_response.ok and isinstance(emails, list) and len(emails) > 0:
+                    # Get primary email
+                    primary_email = next((e for e in emails if e.get('primary')), emails[0])
+                    email = primary_email.get('email')
+            
+            if not email:
+                return Response({
+                    "error": "Email not available from GitHub"
+                }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Get or create user
+            username = user_info.get('login', email.split('@')[0])
+            name = user_info.get('name', '')
+            name_parts = name.split(' ', 1) if name else ['', '']
+            
+            user, created = UserProfile.objects.get_or_create(
+                email=email,
+                defaults={
+                    'username': username,
+                    'first_name': name_parts[0] if len(name_parts) > 0 else '',
+                    'last_name': name_parts[1] if len(name_parts) > 1 else '',
+                }
+            )
+            
+            # Log the user in
+            login(request, user)
+            
+            # Redirect to dashboard or state URL
+            from django.shortcuts import redirect
+            redirect_url = state if state else '/dashboard/'
+            return redirect(redirect_url)
+            
+        except Exception as e:
+            logger.error(f"GitHub OAuth callback error: {e}")
+            return Response({
+                "error": "Failed to complete GitHub OAuth"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
