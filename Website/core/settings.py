@@ -79,7 +79,6 @@ REST_FRAMEWORK = {
     ]
 }
 
-
 # Authentication
 OAUTH2_PROVIDER = {
     "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,  # 1 hour

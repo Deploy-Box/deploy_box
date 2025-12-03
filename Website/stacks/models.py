@@ -49,16 +49,17 @@ class Stack(models.Model):
     # MERN
     @property
     def mern_frontend_url(self):
-        return "https://"
+        return f'https://{self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("fqdn", "")}'
 
     @property
     def mern_backend_url(self):
-        return "https://"
+        return f'https://{self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("fqdn", "")}'
     
     @property
     def mern_mongodb_uri(self):
-        user = self.iac.get("mongodbatlas_database_user", {}).get("user-1", {})
-        return user.get("username", "") + ":" + user.get("password", "") + "@cluster0.yjaoi.mongodb.net/" + user.get("roles", [{}])[0].get("database_name", "")
+        return "Getting there"
+        # user = self.iac.get("mongodbatlas_database_user", {}).get("user-1", {})
+        # return user.get("username", "") + ":" + user.get("password", "") + "@cluster0.yjaoi.mongodb.net/" + user.get("roles", [{}])[0].get("database_name", "")
     
 
     # Django

@@ -16,6 +16,6 @@ def load_config():
         config = json.load(f)
         for key, value in config.items():
             os.environ[key] = value
-            print(f"Loaded {key} from {filename}", os.environ.get(key))
+            # print(f"Loaded {key} from {filename}", os.environ.get(key))
     
 

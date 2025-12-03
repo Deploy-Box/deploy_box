@@ -6,13 +6,11 @@ class StackManager(ABC):
         self.stack = stack
 
     @staticmethod
-    @abstractmethod
     def get_purchasable_stack_info() -> dict:
         """Retrieve information about the purchasable stack."""
         raise NotImplementedError("Subclasses must implement this method")
     
     @staticmethod
-    @abstractmethod
     def get_infrastructure_diagram_data() -> tuple[list[dict], list[dict], list[dict]]:
         """Retrieve the infrastructure diagram data for the stack."""
         return [], [], []

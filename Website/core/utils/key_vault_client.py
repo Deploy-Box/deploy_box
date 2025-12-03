@@ -60,7 +60,6 @@ class KeyVaultClient:
         logger.info(f"Environment variables: AZURE_CLIENT_ID={os.getenv('AZURE_CLIENT_ID')}")
         logger.info(f"Environment variables: AZURE_TENANT_ID={os.getenv('AZURE_TENANT_ID')}")
         logger.info(f"Environment variables: AZURE_SUBSCRIPTION_ID={os.getenv('AZURE_SUBSCRIPTION_ID')}")
-        
         try:
             # Attempt to create a credential and client. Authentication may fail in CI/local
             # environments where no Azure authentication is available; handle that gracefully.
@@ -74,6 +73,7 @@ class KeyVaultClient:
             # Don't raise here: make KeyVaultClient resilient so Django can import in CI
             logger.error(f"Failed to initialize Key Vault client: {e}")
             logger.error(f"Key Vault initialization error traceback: {traceback.format_exc()}")
+            print("Warning: Key Vault client initialization failed. Secrets will be fetched from environment variables if available.")
             # Mark credential as unavailable and allow get_secret to use environment fallbacks
             self._credential_available = False
             self._initialized = True
@@ -102,12 +102,14 @@ class KeyVaultClient:
             env_var_name = secret_name.upper().replace("-", "_")
             env_value = os.getenv(env_var_name)
             if env_value:
+                print(f"Using environment variable '{env_var_name}' as fallback for secret '{secret_name}'")
                 logger.info(f"Using environment variable '{env_var_name}' as fallback for secret '{secret_name}'")
                 return env_value
             elif default_value is not None:
                 logger.warning(f"Using default value for secret '{secret_name}'")
                 return default_value
             else:
+                print("Warning: Key Vault is unavailable and no environment variable or default is set.")
                 # Don't raise an exception during Django settings import; return None and let caller decide
                 logger.error(f"Key Vault unavailable and no environment variable or default for '{secret_name}'. Returning None.")
                 return None
@@ -115,9 +117,11 @@ class KeyVaultClient:
         try:
             logger.info(f"Attempting to retrieve secret '{secret_name}' from Key Vault: {self.vault_url}")
             secret = self.client.get_secret(secret_name)
+            print(f"Successfully retrieved secret '{secret_name}' from Key Vault.")
             logger.info(f"Successfully retrieved secret '{secret_name}'")
             return secret.value
         except Exception as e:
+            print(f"Error retrieving secret '{secret_name}': {str(e)}")
             logger.error(f"Error retrieving secret '{secret_name}': {str(e)}")
             logger.error(f"Secret retrieval error traceback: {traceback.format_exc()}")
             

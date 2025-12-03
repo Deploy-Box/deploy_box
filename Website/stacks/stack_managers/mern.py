@@ -88,8 +88,8 @@ class MERNStackManager(StackManager):
             attribute.save()
 
     def get_is_persistent(self) -> bool:
-        backend_attribute = StackIACAttribute.objects.filter(stack_id=self.stack.id, key="azurerm_container_app.azurerm_container_app-1.template.min_replicas").first()
-        frontend_attribute = StackIACAttribute.objects.filter(stack_id=self.stack.id, key="azurerm_container_app.azurerm_container_app-2.template.min_replicas").first()
+        backend_attribute = StackIACAttribute.objects.filter(stack_id=self.stack.id, attribute_name="azurerm_container_app.azurerm_container_app-1.template.min_replicas").first()
+        frontend_attribute = StackIACAttribute.objects.filter(stack_id=self.stack.id, attribute_name="azurerm_container_app.azurerm_container_app-2.template.min_replicas").first()
 
         if backend_attribute and frontend_attribute:
             return backend_attribute.attribute_value == "1" and frontend_attribute.attribute_value == "1"
@@ -97,8 +97,15 @@ class MERNStackManager(StackManager):
 
     def set_is_persistent(self, is_persistent: bool) -> None:
         with transaction.atomic():
-            backend_attribute = StackIACAttribute.objects.filter(stack_id=self.stack.id, key="azurerm_container_app.azurerm_container_app-1.template.min_replicas").first()
-            frontend_attribute = StackIACAttribute.objects.filter(stack_id=self.stack.id, key="azurerm_container_app.azurerm_container_app-2.template.min_replicas").first()
+            backend_attributes = StackIACAttribute.objects.filter(stack_id=self.stack.id, attribute_name="azurerm_container_app.azurerm_container_app-1.template.min_replicas")
+            assert backend_attributes.exists(), "Backend attribute not found"
+            backend_attribute = backend_attributes.first()
+            assert backend_attribute is not None, "Backend attribute not found"
+
+            frontend_attributes = StackIACAttribute.objects.filter(stack_id=self.stack.id, attribute_name="azurerm_container_app.azurerm_container_app-2.template.min_replicas")
+            assert frontend_attributes.exists(), "Frontend attribute not found"
+            frontend_attribute = frontend_attributes.first()
+            assert frontend_attribute is not None, "Frontend attribute not found"
 
             if is_persistent:
                 backend_attribute.attribute_value = "1"
@@ -109,53 +116,3 @@ class MERNStackManager(StackManager):
 
             backend_attribute.save()
             frontend_attribute.save()
-
-def get_iac():
-    return {
-        "mongodbatlas_database_user": {
-            "user-1": {}
-        },
-        "azurerm_resource_group": {
-            "rg-1": {}
-        },
-        "azurerm_container_app": {
-            "azurerm_container_app-1": {
-                "secret": [],
-                "ingress": {
-                    "target_port": 5000
-                },
-                "template": {
-                    "container": [
-                        {
-                            "image": f"{os.environ.get('acr-name')}.azurecr.io/mern-backend:latest",
-                            "env": [
-                                {
-                                    "name": "MONGO_URI",
-                                    "value": "${format(\"mongodb+srv://%s:%s@" + os.environ.get('mongodb-host') + "/%s\", mongodbatlas_database_user.user-1.username, mongodbatlas_database_user.user-1.password, one([for r in mongodbatlas_database_user.user-1.roles : r.database_name]))}"
-                                }
-                            ],
-                        }
-                    ],
-                },
-            },
-            "azurerm_container_app-2": {
-                "secret": [],
-                "ingress": {
-                    "target_port": 8080
-                },
-                "template": {
-                    "container": [
-                        {
-                            "image": f"{os.environ.get('acr-name')}.azurecr.io/mern-frontend:latest",
-                            "env": [
-                                {
-                                    "name": "REACT_APP_BACKEND_URL",
-                                    "value": f"https://${{azurerm_container_app.azurerm_container_app-1.ingress[0].fqdn}}",
-                                }
-                            ],
-                        }
-                    ]
-                },
-            },
-        },
-    }
