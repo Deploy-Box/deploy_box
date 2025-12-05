@@ -49,7 +49,9 @@
       <div class="py-6 px-6">
         {% include 'accounts/components/form_divider.html' %}
 
-        {% include 'accounts/components/oauth_buttons.html' with google_button_id='google-login' github_button_id='github-login' %}
+        <div class="oauth-buttons-disabled" title="OAuth login coming soon">
+          {% include 'accounts/components/oauth_buttons.html' with google_button_id='google-login' github_button_id='github-login' %}
+        </div>
       </div>
 
     </div>
@@ -66,6 +68,17 @@
       </a>
     </div>
   </div>
+
+  <style>
+    .oauth-buttons-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      position: relative;
+    }
+    .oauth-buttons-disabled button {
+      pointer-events: none;
+    }
+  </style>
 
   <script>
     function showError(message) {
@@ -147,21 +160,9 @@
       }
     });
 
-    // Google OAuth Login
-    document.getElementById("google-login").addEventListener("click", () => {
-      const nextUrl = document.querySelector("input[name='next']").value;
-      const redirectUri = encodeURIComponent(window.location.origin + "/api/v1/accounts/oauth/google/callback/");
-      const state = nextUrl && nextUrl !== "None" ? encodeURIComponent(nextUrl) : "";
-      window.location.href = `/api/v1/accounts/oauth/google/?redirect_uri=${redirectUri}&state=${state}`;
-    });
-
-    // GitHub OAuth Login
-    document.getElementById("github-login").addEventListener("click", () => {
-      const nextUrl = document.querySelector("input[name='next']").value;
-      const redirectUri = encodeURIComponent(window.location.origin + "/api/v1/accounts/oauth/github/callback/");
-      const state = nextUrl && nextUrl !== "None" ? encodeURIComponent(nextUrl) : "";
-      window.location.href = `/api/v1/accounts/oauth/github/?redirect_uri=${redirectUri}&state=${state}`;
-    });
+    // OAuth buttons are disabled in development - Coming soon!
+    // Google OAuth Login - Disabled
+    // GitHub OAuth Login - Disabled
   </script>
 
 </body>

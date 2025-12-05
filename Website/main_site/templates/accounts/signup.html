@@ -376,27 +376,7 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
     });
 });
 
-// Google OAuth Signup
-document.getElementById("google-signup").addEventListener("click", () => {
-    const redirectUri = encodeURIComponent(window.location.origin + "/api/v1/accounts/oauth/google/callback/");
-    {% if invite_data %}
-    const inviteId = "{{ invite_data.invite_id }}";
-    const state = encodeURIComponent(JSON.stringify({ invite_id: inviteId }));
-    {% else %}
-    const state = "";
-    {% endif %}
-    window.location.href = `/api/v1/accounts/oauth/google/?redirect_uri=${redirectUri}&state=${state}`;
-});
-
-// GitHub OAuth Signup
-document.getElementById("github-signup").addEventListener("click", () => {
-    const redirectUri = encodeURIComponent(window.location.origin + "/api/v1/accounts/oauth/github/callback/");
-    {% if invite_data %}
-    const inviteId = "{{ invite_data.invite_id }}";
-    const state = encodeURIComponent(JSON.stringify({ invite_id: inviteId }));
-    {% else %}
-    const state = "";
-    {% endif %}
-    window.location.href = `/api/v1/accounts/oauth/github/?redirect_uri=${redirectUri}&state=${state}`;
-});
+// OAuth buttons are disabled in development
+// Google OAuth Signup - Disabled
+// GitHub OAuth Signup - Disabled
 </script>

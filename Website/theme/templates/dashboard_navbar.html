@@ -49,6 +49,7 @@
                                 </option>
                                 {% endfor %}
                                 <option value="" disabled>──────────</option>
+                                <option value="view_all">📋 View All Organizations</option>
                                 <option value="add_org">+ Add Organization</option>
                             </select>
                         </div>
@@ -300,6 +301,9 @@
                     if (createOrgModal) {
                         createOrgModal.classList.remove('hidden');
                     }
+                } else if (selectedOrgId === 'view_all') {
+                    // Navigate to organization select page
+                    window.location.href = '/dashboard/organizations/';
                 } else if (selectedOrgId) {
                     window.location.href = `/dashboard/organizations/${selectedOrgId}/`;
                 }

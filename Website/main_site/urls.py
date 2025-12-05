@@ -20,6 +20,7 @@ urlpatterns = [
     # Dashboard
     path("dashboard/", views.dashboard_view.get, name="dashboard"),
     path("dashboard/welcome/", views.dashboard_view.get, name="welcome"),
+    path("dashboard/organizations/", views.dashboard_view.organization_select, name="organization_select"),
     path(
         "dashboard/organizations/<str:organization_id>/",
         views.dashboard_view.organization_dashboard,

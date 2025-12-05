@@ -1,0 +1,309 @@
+{% extends 'dashboard_base.html' %}
+{% load static tailwind_tags %}
+
+{% block content %}
+<div class="w-full bg-gray-50">
+    <header class="bg-zinc-950 pt-16 pb-24 text-center">
+        <h1 class="text-2xl font-bold text-gray-100 mb-2">
+            {% if organizations %}
+                Select an Organization
+            {% else %}
+                Welcome to Deploy Box!
+            {% endif %}
+        </h1>
+        <p class="text-md text-gray-100 max-w-2xl mx-auto">
+            {% if organizations %}
+                Choose an organization to continue or create a new one
+            {% else %}
+                Create your first organization to start deploying applications and managing your projects
+            {% endif %}
+        </p>
+    </header>
+    
+    <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
+        <!-- Welcome Info Section -->
+        {% if not organizations %}
+        <section class="mb-8">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-blue-800">Get Started</h3>
+                            <div class="mt-2 text-sm text-blue-700">
+                                <p>Organizations help you organize your projects, manage team members, and control access to your deployments.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Error Alert -->
+        <div id="errorAlert" class="hidden mb-8">
+            <div class="bg-white shadow-2xl rounded-lg border border-gray-200">
+                <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg">
+                    <span class="block sm:inline" id="errorMessage"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Success Alert -->
+        <div id="successAlert" class="hidden mb-8">
+            <div class="bg-white shadow-2xl rounded-lg border border-gray-200">
+                <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded-lg">
+                    <span class="block sm:inline" id="successMessage"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Existing Organizations Section -->
+        {% if organizations %}
+        <section class="mb-8">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a1 1 0 110 2h-3a1 1 0 01-1-1v-2a1 1 0 00-1-1H9a1 1 0 00-1 1v2a1 1 0 01-1 1H4a1 1 0 110-2V4zm3 1h2v2H7V5zm2 4H7v2h2V9zm2-4h2v2h-2V5zm2 4h-2v2h2V9z" clip-rule="evenodd" />
+                    </svg>
+                    Your Organizations
+                </h2>
+                <div id="organizationsList" class="space-y-4">
+                    {% for org in organizations %}
+                    <a
+                        href="{% url 'main_site:organization_dashboard' org.id %}"
+                        class="block bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100 transform hover:scale-[1.02] cursor-pointer"
+                    >
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-semibold text-zinc-900">{{ org.name }}</h3>
+                                <p class="text-sm text-zinc-500 flex items-center mt-1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Created: {{ org.created_at|date:"M d, Y" }}
+                                </p>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+        {% endif %}
+
+        <!-- Create Organization Section -->
+        <section class="mb-8">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-emerald-400 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        {% if organizations %}
+                            Create New Organization
+                        {% else %}
+                            Create Your First Organization
+                        {% endif %}
+                    </h2>
+                    {% if organizations %}
+                    <button 
+                        id="toggleCreateForm"
+                        class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                        </svg>
+                        New Organization
+                    </button>
+                    {% endif %}
+                </div>
+                
+                <div id="createOrgFormContainer" class="{% if organizations %}hidden{% endif %}">
+                    <form id="createOrgForm" class="space-y-6">
+                        <div>
+                            <label for="orgName" class="block text-sm font-medium text-gray-700 mb-2">
+                                Organization Name
+                            </label>
+                            <input 
+                                type="text" 
+                                id="orgName" 
+                                name="name" 
+                                required
+                                class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                                placeholder="Enter organization name"
+                            >
+                        </div>
+
+                        <div class="flex space-x-3">
+                            {% if organizations %}
+                            <button 
+                                type="button"
+                                id="cancelCreateOrg"
+                                class="flex-1 inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 px-6 py-3 text-sm text-gray-700 rounded-lg font-medium transition-all duration-300"
+                            >
+                                Cancel
+                            </button>
+                            {% endif %}
+                            <button 
+                                type="submit" 
+                                id="createOrgBtn"
+                                class="{% if organizations %}flex-1{% else %}w-full{% endif %} inline-flex items-center justify-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105"
+                            >
+                                <svg id="spinner" class="hidden animate-spin h-4 w-4 mr-2 text-white" xmlns="http://www.w3.org/2000/svg"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                </svg>
+                                <span id="button-text">Create Organization</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+function showError(message) {
+    document.getElementById('errorMessage').textContent = message;
+    document.getElementById('errorAlert').classList.remove('hidden');
+    hideSuccess();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hideError() {
+    document.getElementById('errorAlert').classList.add('hidden');
+}
+
+function showSuccess(message) {
+    document.getElementById('successMessage').textContent = message;
+    document.getElementById('successAlert').classList.remove('hidden');
+    hideError();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hideSuccess() {
+    document.getElementById('successAlert').classList.add('hidden');
+}
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('createOrgForm');
+    const createOrgBtn = document.getElementById('createOrgBtn');
+    const spinner = document.getElementById('spinner');
+    const buttonText = document.getElementById('button-text');
+    const orgName = document.getElementById('orgName');
+    const toggleCreateForm = document.getElementById('toggleCreateForm');
+    const createOrgFormContainer = document.getElementById('createOrgFormContainer');
+    const cancelCreateOrg = document.getElementById('cancelCreateOrg');
+
+    // Toggle form visibility
+    if (toggleCreateForm) {
+        toggleCreateForm.addEventListener('click', function() {
+            createOrgFormContainer.classList.toggle('hidden');
+            if (!createOrgFormContainer.classList.contains('hidden')) {
+                orgName.focus();
+                window.scrollTo({ 
+                    top: createOrgFormContainer.offsetTop - 100, 
+                    behavior: 'smooth' 
+                });
+            }
+        });
+    }
+
+    // Cancel button
+    if (cancelCreateOrg) {
+        cancelCreateOrg.addEventListener('click', function() {
+            createOrgFormContainer.classList.add('hidden');
+            form.reset();
+            hideError();
+        });
+    }
+
+    // Form submission
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const name = orgName.value.trim();
+
+        // Validation
+        if (!name) {
+            showError('Please enter an organization name.');
+            return;
+        }
+
+        hideError();
+        hideSuccess();
+
+        // Show loading state
+        spinner.classList.remove('hidden');
+        buttonText.textContent = 'Creating...';
+        createOrgBtn.disabled = true;
+
+        // Submit form
+        fetch('/api/v1/organizations/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: `name=${encodeURIComponent(name)}`
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.id) {
+                showSuccess('Organization created successfully! Redirecting...');
+                // Redirect to the new organization dashboard after a brief delay
+                setTimeout(() => {
+                    window.location.href = `/dashboard/organizations/${data.id}/`;
+                }, 1000);
+            } else {
+                showError(data.error || data.message || 'Failed to create organization.');
+                spinner.classList.add('hidden');
+                buttonText.textContent = 'Create Organization';
+                createOrgBtn.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error creating organization:', error);
+            showError('Failed to create organization. Please try again.');
+            spinner.classList.add('hidden');
+            buttonText.textContent = 'Create Organization';
+            createOrgBtn.disabled = false;
+        });
+    });
+
+    // Close form with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !createOrgFormContainer.classList.contains('hidden')) {
+            createOrgFormContainer.classList.add('hidden');
+            form.reset();
+            hideError();
+        }
+    });
+});
+</script>
+{% endblock %} 

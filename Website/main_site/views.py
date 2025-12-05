@@ -96,7 +96,7 @@ class DashboardView(View):
             print("Showing welcome screen for users with no organizations")
             return render(
                 request,
-                "dashboard/welcome.html",
+                "dashboard/organization_select.html",
                 {
                     "user": user,
                     "organizations": organizations,
@@ -107,6 +107,31 @@ class DashboardView(View):
                     "current_stack_id": None,
                 },
             )
+
+    @oauth_required()
+    def organization_select(self, request: HttpRequest) -> HttpResponse:
+        """Organization selection view - shows all organizations user has access to."""
+        user = cast(UserProfile, request.user)
+        logger.info(f"Organization select accessed by user: {user.username}")
+        organizations = Organization.objects.filter(organizationmember__user=user)
+        projects = Project.objects.filter(projectmember__user=user)
+        logger.info(
+            f"Found {organizations.count()} organizations for user"
+        )
+
+        return render(
+            request,
+            "dashboard/organization_select.html",
+            {
+                "user": user,
+                "organizations": organizations,
+                "projects": projects,
+                "user_organizations": organizations,
+                "current_organization_id": None,
+                "current_project_id": None,
+                "current_stack_id": None,
+            },
+        )
 
     @oauth_required()
     def organization_dashboard(self, request: HttpRequest, organization_id: str) -> HttpResponse:
