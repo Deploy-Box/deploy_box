@@ -207,14 +207,15 @@ def leave_organization(user: UserProfile, organization_id: str) -> JsonResponse:
 
 def invite_new_user_to_org(user: UserProfile, organization: Organization, email: str ):
     try:
-        # Use get_or_create to handle unique constraint
-        pending_invite, created = PendingInvites.objects.get_or_create(
-            organization=organization,
-            email=email
-        )
-        
-        invite_org_member.send_invite_new_user_to_org(user, organization, email)
-        return JsonResponse({"message": "invite email has been sent to user"}, status=200)
+        # with transaction.atomic():
+            # Use get_or_create to handle unique constraint
+            pending_invite, created = PendingInvites.objects.get_or_create(
+                organization=organization,
+                email=email
+            )
+            
+            invite_org_member.send_invite_new_user_to_org(user, organization, email)
+            return JsonResponse({"message": "invite email has been sent to user"}, status=200)
     except Exception as e:
         return JsonResponse({"message": f"an unexpected error occured: {e}"}, status=400)
 

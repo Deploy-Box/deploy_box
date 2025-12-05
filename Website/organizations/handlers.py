@@ -36,21 +36,20 @@ def get_organization(request: AuthHttpRequest, organization_id: str) -> JsonResp
     return JsonResponse(organization, status=200)
 
 def create_organization(request: AuthHttpRequest) -> JsonResponse:
-    # Add user email to the form data
-    request.POST = request.POST.copy()
-    print(request.auth_user.email)
-    request.POST['email'] = request.auth_user.email
-
-    form = OrganizationCreateFormWithMembers(request.POST)
+    user = request.auth_user
+    
+    # Automatically use the authenticated user's email
+    data = {**dict(request.POST), 'email': user.email}
+    form = OrganizationCreateFormWithMembers(data)
 
     if form.is_valid():
         try:
-            name, email, _, _ = request_helpers.assertRequestFields(request, ["name", "email"], ["member", "role"], mimetype='application/x-www-form-urlencoded')
+            name, _, _ = request_helpers.assertRequestFields(request, ["name"], ["member", "role"], mimetype='application/x-www-form-urlencoded')
         except request_helpers.MissingFieldError as e:
             return JsonResponse({"message": e.message}, status=400)
 
-        user = request.auth_user
-        organization = services.create_organization(user, name, email)
+        # Use the email from the authenticated user
+        organization = services.create_organization(user, name, user.email)
 
         return JsonResponse(organization, status=201)
 
