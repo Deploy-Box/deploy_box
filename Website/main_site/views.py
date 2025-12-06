@@ -219,6 +219,9 @@ class DashboardView(View):
         except Exception:
             projected_monthly_usage = 123.45
 
+        # Calculate actual monthly cost (usage minus $10 free tier credit)
+        actual_monthly_cost = max(0, projected_monthly_usage - 10.0)
+
         import datetime
         try:
             # Try to use a real month start attribute; default to first of this month
@@ -252,6 +255,7 @@ class DashboardView(View):
                 "current_daily_usage": f"{daily_usage:.2f}",
                 "current_usage": f"{current_usage:.2f}",
                 "projected_monthly_usage": f"{projected_monthly_usage:.2f}",
+                "actual_monthly_cost": f"{actual_monthly_cost:.2f}",
                 "month_start_formatted": month_start.strftime("%b 1, %Y"),
                 "billing_history_records": billing_history_records,
             },

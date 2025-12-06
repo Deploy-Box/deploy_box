@@ -94,9 +94,11 @@
         </div>
         
         <div class="flex justify-end space-x-3">
+            {% if cancel_text %}
             <button id="{{ modal_id }}_cancel" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
-                {{ cancel_text|default:"Cancel" }}
+                {{ cancel_text }}
             </button>
+            {% endif %}
             {% if confirm_color == 'emerald' %}
             <button id="{{ modal_id }}_confirm" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
                 {{ confirm_text|default:"Confirm" }}
