@@ -113,13 +113,13 @@
 <input type="hidden" id="organizationId" value="{{ organization.id }}">
 
 <!-- Modals -->
-{% include 'dashboard/components/_modal.html' with modal_id='inviteModal' modal_title='Invite New Member' modal_message='Enter the email address of the person you want to invite to this organization. They will receive an invitation to join.' icon_color='emerald' confirm_text='Send Invitation' confirm_color='emerald' has_input=True input_label='Email Address' input_placeholder='Enter email address' %}
+{% include 'dashboard/components/_modal.html' with modal_id='inviteModal' modal_title='Invite New Member' modal_message='Enter the email address of the person you want to invite to this organization. They will receive an invitation to join.' icon_color='emerald' confirm_text='Send Invitation' confirm_color='emerald' cancel_text='Cancel' has_input=True input_label='Email Address' input_placeholder='Enter email address' %}
 
-{% include 'dashboard/components/_modal.html' with modal_id='leaveOrgModal' modal_title='Leave Organization' modal_message='Are you sure you want to leave this organization? This action cannot be undone.' icon_color='amber' confirm_text='Leave Organization' confirm_color='amber' %}
+{% include 'dashboard/components/_modal.html' with modal_id='leaveOrgModal' modal_title='Leave Organization' modal_message='Are you sure you want to leave this organization? This action cannot be undone.' icon_color='amber' confirm_text='Leave Organization' confirm_color='amber' cancel_text='Cancel' %}
 
-{% include 'dashboard/components/_modal.html' with modal_id='removeMemberModal' modal_title='Remove Member' modal_message='Are you sure you want to remove this member from the organization?' icon_color='red' confirm_text='Remove Member' confirm_color='red' %}
+{% include 'dashboard/components/_modal.html' with modal_id='removeMemberModal' modal_title='Remove Member' modal_message='Are you sure you want to remove this member from the organization?' icon_color='red' confirm_text='Remove Member' confirm_color='red' cancel_text='Cancel' %}
 
-{% include 'dashboard/components/_modal.html' with modal_id='cancelInviteModal' modal_title='Cancel Invitation' modal_message='Are you sure you want to cancel this invitation?' icon_color='red' confirm_text='Cancel Invitation' confirm_color='red' %}
+{% include 'dashboard/components/_modal.html' with modal_id='cancelInviteModal' modal_title='Cancel Invitation' modal_message='Are you sure you want to cancel this invitation?' icon_color='red' confirm_text='Cancel Invitation' confirm_color='red' cancel_text='Cancel' %}
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -164,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         const organizationId = document.getElementById('organizationId').value;
         
-        fetch(`/api/v1/organizations/${organizationId}/invite_new_user_to_org`, {
+        fetch(`/api/v1/organizations/organizations/${organizationId}/invite/`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',

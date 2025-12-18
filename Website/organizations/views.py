@@ -1,4 +1,9 @@
 from django.http import JsonResponse
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.viewsets import ViewSet
+from rest_framework.response import Response
 
 import organizations.handlers as handlers
 from core.decorators import oauth_required, AuthHttpRequest
@@ -45,16 +50,6 @@ def update_user(
 ) -> JsonResponse:
     if request.method == "POST":
         return handlers.update_user(request, organization_id, user_id)
-    else:
-        return JsonResponse({"message": "method not allowed"}, status=405)
-
-@oauth_required()
-def add_org_member(
-    request: AuthHttpRequest,
-    organization_id: str,
-) -> JsonResponse:
-    if request.method == "POST":
-        return handlers.add_org_member(request, organization_id)
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
@@ -159,3 +154,21 @@ def transfer_project_to_organization(
         return handlers.transfer_project_to_organization(request, project_id)
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
+    
+class OrganizationViewSet(ViewSet):
+    # permission_classes = [IsAuthenticated]
+
+    def retrieve(self, request, pk=None):
+        return Response({"organization": pk})
+
+    @action(detail=True, methods=["post"])
+    def invite(self, request, pk=None):
+        # Get the authenticated user from the request
+        user = request.user
+        
+        # Get user data from request body
+        user_data = request.data.get("user")
+
+        print(user)
+        print(user_data)
+        return Response({"message": "Invite new user to organization"})

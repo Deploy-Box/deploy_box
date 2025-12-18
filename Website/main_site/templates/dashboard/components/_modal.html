@@ -21,10 +21,13 @@
   - has_input: Boolean to show email input field (default: false)
   - input_label: Label for input field (default: 'Email Address')
   - input_placeholder: Placeholder for input field (default: 'Enter email address')
+  - has_custom_content: Boolean to use custom content block (default: false)
+  - modal_size: Size of modal - 'sm' (max-w-md), 'md' (max-w-lg), 'lg' (max-w-2xl), 'xl' (max-w-4xl) (default: 'sm')
+  - max_height: Boolean to add max-height and scrollable content (default: false)
 -->
 
 <div id="{{ modal_id }}" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
-    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+    <div class="bg-white rounded-lg p-6 {% if modal_size == 'xl' %}max-w-4xl{% elif modal_size == 'lg' %}max-w-2xl{% elif modal_size == 'md' %}max-w-lg{% else %}max-w-md{% endif %} w-full mx-4 {% if max_height %}max-h-[90vh] overflow-y-auto{% endif %}">
         <div class="flex items-center mb-4">
             <div class="flex-shrink-0">
                 {% if icon_color == 'emerald' %}
@@ -75,6 +78,12 @@
         </div>
         
         <div class="mb-4">
+            {% if has_custom_content %}
+            <!-- Custom content block -->
+            <div id="{{ modal_id }}_custom_content">
+                {% block modal_custom_content %}{% endblock %}
+            </div>
+            {% else %}
             <p class="text-sm text-gray-500" id="{{ modal_id }}_message">
                 {{ modal_message }}
             </p>
@@ -90,6 +99,7 @@
                            placeholder="{{ input_placeholder|default:'Enter email address' }}">
                 </div>
             </form>
+            {% endif %}
             {% endif %}
         </div>
         
