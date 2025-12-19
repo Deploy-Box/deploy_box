@@ -18,10 +18,3 @@ class ShortUUIDField(models.CharField):
             setattr(model_instance, self.attname, value)
             return value
         return super().pre_save(model_instance, add)
-
-
-if __name__ == "__main__":
-    from datetime import datetime
-
-    print(datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-    print(str(uuid.uuid4()).replace("-", "")[:16])
