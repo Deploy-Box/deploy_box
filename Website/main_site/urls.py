@@ -13,6 +13,12 @@ urlpatterns = [
     path("stacks/mean/", views.mean_stack, name="mean_stack"),
     path("stacks/lamp/", views.lamp_stack, name="lamp_stack"),
     path("stacks/mevn/", views.mevn_stack, name="mevn_stack"),
+    path("stacks/mobile/", views.mobile_stack, name="mobile_stack"),
+    path("stacks/llm/", views.llm_stack, name="llm_stack"),
+    path("stacks/ai-data/", views.ai_data_stack, name="ai_data_stack"),
+    path("stacks/computer-vision/", views.computer_vision_stack, name="computer_vision_stack"),
+    path("stacks/image-generation/", views.image_generation_stack, name="image_generation_stack"),
+    path("stacks/ai-agents/", views.ai_agents_stack, name="ai_agents_stack"),
     path("pricing/", views.pricing, name="pricing"),
     path("contact/", views.maintenance, name="contact"),
     # User profile

@@ -57,9 +57,14 @@ class Stack(models.Model):
     
     @property
     def mern_mongodb_uri(self):
+<<<<<<< Updated upstream
         return "Getting there"
         # user = self.iac.get("mongodbatlas_database_user", {}).get("user-1", {})
         # return user.get("username", "") + ":" + user.get("password", "") + "@cluster0.yjaoi.mongodb.net/" + user.get("roles", [{}])[0].get("database_name", "")
+=======
+        user = self.iac_state.get("mongodbatlas_database_user", {}).get("user-1", {})
+        return user.get("username", "") + ":" + user.get("password", "") + "@cluster0.yjaoi.mongodb.net/" + user.get("roles", [{}])[0].get("database_name", "")
+>>>>>>> Stashed changes
     
 
     # Django

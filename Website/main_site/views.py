@@ -59,6 +59,30 @@ def mevn_stack(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks/mevn_stack.html", {"show_footer": False})
 
 
+def mobile_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/mobile_stack.html", {"show_footer": False})
+
+
+def llm_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/llm_stack.html", {"show_footer": False})
+
+
+def ai_data_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/ai_data_stack.html", {"show_footer": False})
+
+
+def computer_vision_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/computer_vision_stack.html", {"show_footer": False})
+
+
+def image_generation_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/image_generation_stack.html", {"show_footer": False})
+
+
+def ai_agents_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/ai_agents_stack.html", {"show_footer": False})
+
+
 def pricing(request: HttpRequest) -> HttpResponse:
     return render(request, "pricing.html", {"show_footer": False})
 

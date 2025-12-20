@@ -1,4 +1,5 @@
 {% extends 'base.html' %} {% load static %} {% block content %}
+<<<<<<< Updated upstream
 <div
   class="w-full min-h-screen py-16 px-4 bg-gradient-to-r from-emerald-900 via-emerald-800 to-gray-950"
 >
@@ -174,9 +175,32 @@
           title="Get Started Free"
           >Get Started Free</a
         >
+=======
+<div class="bg-zinc-950 text-white min-h-screen font-sans selection:bg-emerald-500 selection:text-black relative overflow-hidden">
+    
+   <!-- Isometric Container Pattern Background -->
+   <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2310b981\' fill-opacity=\'0.15\'%3E%3Cpath d=\'M30 0L0 15v30l30 15 30-15V15L30 0zm0 30L0 15 30 0l30 15-30 15zm0 0v30L0 45V15l30 15zm0 0v30l30-15V15L30 30z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+   
+   <!-- Dark Gradient Overlay -->
+   <div class="absolute inset-0 z-0 bg-gradient-to-b from-zinc-950 via-zinc-950/90 to-zinc-950/80 pointer-events-none"></div>
+
+  <div class="relative z-10 w-full min-h-screen pt-48 pb-32 px-4">
+    <!-- Header -->
+    <div class="max-w-4xl mx-auto text-center mb-32">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs font-mono mb-6">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        SIMPLE PRICING
+>>>>>>> Stashed changes
       </div>
+      <h1 class="text-5xl md:text-7xl font-bold tracking-tighter text-white mb-6">
+        Pay once. <span class="text-emerald-400">Own it forever.</span>
+      </h1>
+      <p class="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+        No monthly subscriptions. Choose your stack, pay a one-time fee, and get full access to your containerized environment.
+      </p>
     </div>
 
+<<<<<<< Updated upstream
     <!-- Consumption Tier Card -->
     <div
       class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col border-4 border-amber-400 transition duration-300 hover:-translate-y-2 hover:scale-105"
@@ -381,8 +405,216 @@
           title="Start with Consumption"
           >Start with Consumption</a
         >
+=======
+    <!-- Pricing Grid (Uniform Height) -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch px-4 mb-48">
+      
+      <!-- Free Plan Card -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col hover:border-emerald-500/30 transition-all duration-300 group relative overflow-hidden h-full">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+        <p class="text-emerald-400 font-bold mb-2 uppercase text-xs tracking-wider">Starter</p>
+        <h3 class="text-3xl font-bold text-white mb-4">Free</h3>
+        <p class="text-zinc-500 text-sm mb-8">Perfect for hobbyists and students.</p>
+        
+        <div class="mb-8">
+            <span class="text-5xl font-bold text-white">$<span x-text="basicPrice">0</span></span>
+            <span class="text-zinc-500 text-sm">/ container</span>
+        </div>
+
+        <div class="space-y-4 mb-8 flex-grow">
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Frontend Setup
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Backend Setup
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Pre-Integrated Database
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Setup Instructions
+             </div>
+             <!-- Disabled Items -->
+             <div class="flex items-center gap-3 text-sm text-zinc-600">
+                <svg class="w-5 h-5 text-zinc-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                Built-in Auth Support
+             </div>
+              <div class="flex items-center gap-3 text-sm text-zinc-600">
+                <svg class="w-5 h-5 text-zinc-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                Payment Processing
+             </div>
+        </div>
+        
+        <a href="{% url 'main_site:payments_home' variant='FREE' %}" class="mt-auto w-full block text-center py-3 rounded-lg border border-zinc-700 text-white font-semibold hover:border-emerald-500 hover:text-emerald-400 transition-colors">
+            Get Starter
+        </a>
       </div>
+
+      <!-- Premium Plan Card -->
+      <div class="bg-zinc-900 border border-emerald-500/50 rounded-xl p-8 flex flex-col shadow-[0_0_40px_rgba(16,185,129,0.1)] relative overflow-hidden h-full">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+        <div class="absolute top-0 right-4 bg-emerald-500 text-black text-[10px] font-bold px-3 py-1 rounded-b-lg uppercase tracking-wider">Most Popular</div>
+        
+        <p class="text-amber-400 font-bold mb-2 uppercase text-xs tracking-wider mt-4">Growth</p>
+        <h3 class="text-3xl font-bold text-white mb-4">Premium</h3>
+        <p class="text-zinc-500 text-sm mb-8">Everything you need to ship a production app.</p>
+        
+        <div class="mb-8">
+            <span class="text-5xl font-bold text-white">$<span x-text="premiumPrice">2.50</span></span>
+            <span class="text-zinc-500 text-sm">/ container</span>
+        </div>
+
+         <div class="space-y-4 mb-8 flex-grow">
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span class="font-bold text-white">All Free Features</span>
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Premium Stacks Access
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Built-in Authentication
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Payment Processing Integration
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Priority Support
+             </div>
+        </div>
+
+        <a href="{% url 'main_site:payments_home' variant='PREMIUM' %}" class="mt-auto w-full block text-center py-4 rounded-lg bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+            Get Premium
+        </a>
+>>>>>>> Stashed changes
+      </div>
+
+      <!-- Pro Plan Card -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col hover:border-purple-500/50 transition-all duration-300 group relative overflow-hidden h-full">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+        <p class="text-purple-400 font-bold mb-2 uppercase text-xs tracking-wider">Enterprise</p>
+        <h3 class="text-3xl font-bold text-white mb-4">Pro</h3>
+        <p class="text-zinc-500 text-sm mb-8">For agencies and heavy scalers.</p>
+        
+        <div class="mb-8">
+            <span class="text-5xl font-bold text-white">$<span x-text="proPrice">5.00</span></span>
+            <span class="text-zinc-500 text-sm">/ container</span>
+        </div>
+
+         <div class="space-y-4 mb-8 flex-grow">
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span class="font-bold text-white">All Premium Features</span>
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Dedicated Account Manager
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Custom Integrations
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Early Access Updates
+             </div>
+        </div>
+        
+        <a href="{% url 'main_site:payments_home' variant='PRO' %}" class="mt-auto w-full block text-center py-3 rounded-lg border border-zinc-700 text-white font-semibold hover:border-purple-500 hover:text-purple-400 transition-colors">
+            Get Pro
+        </a>
+      </div>
+
     </div>
+
+    <!-- NEW SECTION: Features Breakdown -->
+    <div class="max-w-6xl mx-auto mb-48">
+        <h2 class="text-3xl font-bold text-center mb-16"><span class="text-emerald-400">Everything</span> you need to scale</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">High Performance</h3>
+                <p class="text-zinc-500 text-sm">Deploy on high-speed servers optimized for container workloads.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center text-purple-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">Secure by Default</h3>
+                <p class="text-zinc-500 text-sm">Automated SSL certificates and isolated container environments.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">Auto-Scaling</h3>
+                <p class="text-zinc-500 text-sm">Resources adapt to your traffic needs automatically.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">Developer First</h3>
+                <p class="text-zinc-500 text-sm">CLI tools, API access, and git-push deployment workflow.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">24/7 Monitoring</h3>
+                <p class="text-zinc-500 text-sm">Real-time metrics and alerts for your application health.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-teal-500/10 rounded-lg flex items-center justify-center text-teal-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">Database Backups</h3>
+                <p class="text-zinc-500 text-sm">Daily automated backups of your data for peace of mind.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW SECTION: FAQ -->
+    <div class="max-w-3xl mx-auto mb-40">
+        <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+        <div class="space-y-6">
+            <div class="group">
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">What happens after I pay?</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">
+                    You instantly get access to your container dashboard where you can launch your pre-configured stack. The entire environment is provisioned in seconds.
+                </p>
+            </div>
+            <div class="border-t border-zinc-800 pt-6 group">
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">Can I upgrade later?</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">
+                    Yes! You can upgrade from Basic to Premium or Pro at any time from your dashboard. You'll only pay the difference.
+                </p>
+            </div>
+            <div class="border-t border-zinc-800 pt-6 group">
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">Do I own the code?</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">
+                    Absolutely. The stack is deployed for you to use, but the code is yours to modify, export, and deploy elsewhere if you choose.
+                </p>
+            </div>
+             <div class="border-t border-zinc-800 pt-6 group">
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">What if I need help?</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">
+                    We offer community support for all plans. Premium and Pro plans get priority email support and direct access to our engineering team.
+                </p>
+            </div>
+        </div>
+    </div>
+
   </div>
 
   <!-- Pricing Details Table -->
