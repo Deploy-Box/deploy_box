@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "stacks",
     "projects",
     "organizations",
+    "marketplace",
     "payments",
     "blogs",
     "deploy_box_apis",

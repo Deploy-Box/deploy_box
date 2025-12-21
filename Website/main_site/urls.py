@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
@@ -21,6 +21,7 @@ urlpatterns = [
     path("stacks/ai-agents/", views.ai_agents_stack, name="ai_agents_stack"),
     path("pricing/", views.pricing, name="pricing"),
     path("contact/", views.maintenance, name="contact"),
+    path("marketplace/", include(("marketplace.urls", "marketplace"), namespace="marketplace")),
     # User profile
     path("profile/", views.profile, name="profile"),
     # Dashboard
