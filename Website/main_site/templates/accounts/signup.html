@@ -8,15 +8,23 @@
   {% tailwind_css %}
 </head>
 
-<body class="min-h-screen bg-gray-100 flex flex-col justify-center sm:py-12">
+<body class="min-h-screen bg-zinc-950 flex flex-col justify-center sm:py-12 relative overflow-hidden font-sans">
+    <!-- Background Texture -->
+    <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
 
-  <div class="p-10 xs:p-0 mx-auto md:w-full md:max-w-md">
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-teal-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+  <div class="p-10 xs:p-0 mx-auto md:w-full md:max-w-md relative z-10">
     {% include 'accounts/components/auth_header.html' %}
 
     {% include 'accounts/components/error_banner.html' %}
         
         {% if invite_data %}
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <div class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-4 mb-4 backdrop-blur-sm">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <svg class="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -24,14 +32,14 @@
                     </svg>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-sm font-medium text-blue-800">
+                    <h3 class="text-sm font-medium text-blue-300">
                         {% if transfer_data %}
                             🎉 Your Project is Ready!
                         {% else %}
                             You've been invited to join {{ invite_data.organization_name }}
                         {% endif %}
                     </h3>
-                    <div class="mt-2 text-sm text-blue-700">
+                    <div class="mt-2 text-sm text-blue-200/80">
                         {% if transfer_data %}
                             <p>You'll be joining <strong>{{ invite_data.organization_name }}</strong> and taking ownership of <strong>{{ transfer_data.project_name }}</strong>.</p>
                         {% else %}
@@ -43,7 +51,7 @@
         </div>
         
         {% if transfer_data %}
-        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-4">
+        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl p-4 mb-4 backdrop-blur-sm">
             <div class="flex">
                 <div class="flex-shrink-0">
                     <svg class="h-5 w-5 text-emerald-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -51,10 +59,10 @@
                     </svg>
                 </div>
                 <div class="ml-3">
-                    <h3 class="text-sm font-medium text-emerald-800">
+                    <h3 class="text-sm font-medium text-emerald-300">
                         Project Transfer Details
                     </h3>
-                    <div class="mt-2 text-sm text-emerald-700">
+                    <div class="mt-2 text-sm text-emerald-200/80">
                         <ul class="list-disc list-inside space-y-1">
                             <li><strong>Project:</strong> {{ transfer_data.project_name }}</li>
                             <li><strong>Developer:</strong> {{ transfer_data.developer_name }}</li>
@@ -70,19 +78,19 @@
         {% endif %}
         {% endif %}
         
-        <div class="bg-white ring-2 ring-gray-200 shadow-2xl w-full rounded-lg">
+        <div class="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/50 shadow-2xl w-full rounded-2xl overflow-hidden">
             <!-- Progress indicator -->
-            <div class="px-6 pt-6 pb-4">
+            <div class="px-8 pt-6 pb-4">
                 <div class="flex items-center justify-between mb-2">
-                    <span class="text-xs font-semibold text-emerald-600" id="step-indicator">Step 1 of 2</span>
-                    <span class="text-xs text-gray-500" id="step-title">Account Details</span>
+                    <span class="text-xs font-semibold text-emerald-400" id="step-indicator">Step 1 of 2</span>
+                    <span class="text-xs text-zinc-500" id="step-title">Account Details</span>
                 </div>
-                <div class="w-full bg-gray-200 rounded-full h-2">
-                    <div class="bg-emerald-400 h-2 rounded-full transition-all duration-300" id="progress-bar" style="width: 50%"></div>
+                <div class="w-full bg-zinc-800 rounded-full h-1.5">
+                    <div class="bg-emerald-500 h-1.5 rounded-full transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]" id="progress-bar" style="width: 50%"></div>
                 </div>
             </div>
 
-            <form method="POST" action="{% url 'accounts:api-signup' %}" class="p-6 pt-2" id="signup-form">
+            <form method="POST" action="{% url 'accounts:api-signup' %}" class="p-8 pt-2" id="signup-form">
                 {% csrf_token %}
                 
                 {% if invite_data %}
@@ -98,40 +106,48 @@
                 <!-- Step 1: Account Credentials -->
                 <div id="step-1" class="step-content">
                     <div class="mb-5">
-                        <label for="username" class="font-semibold text-sm text-gray-600 pb-1 block">Username</label>
+                        <label for="username" class="font-semibold text-sm text-zinc-300 pb-2 block">Username</label>
                         <div class="mt-1">
-                            {{ form.username }}
+                            <input type="text" name="username" id="id_username" 
+                                class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300" 
+                                placeholder="Enter username" required />
                         </div>
                     </div>
 
                     <div class="mb-5">
-                        <label for="email" class="font-semibold text-sm text-gray-600 pb-1 block">Email</label>
+                        <label for="email" class="font-semibold text-sm text-zinc-300 pb-2 block">Email</label>
                         <div class="mt-1">
                             {% if invite_data %}
                             <input type="email" name="email" id="email" value="{{ invite_data.invite_email }}"
-                                class="border rounded-lg px-3 py-2 mt-1 text-sm w-full bg-gray-50" readonly />
+                                class="w-full px-4 py-3 bg-zinc-900 border border-zinc-700 text-zinc-400 text-sm rounded-xl cursor-not-allowed" readonly />
                             {% else %}
-                            {{ form.email }}
+                            <input type="email" name="email" id="id_email"
+                                class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
+                                placeholder="Enter email address" required />
                             {% endif %}
                         </div>
                     </div>
 
                     <div class="mb-5">
-                        <label for="password1" class="font-semibold text-sm text-gray-600 pb-1 block">Password</label>
+                        <label for="password1" class="font-semibold text-sm text-zinc-300 pb-2 block">Password</label>
                         <div class="mt-1">
-                            {{ form.password1 }}
+                            <input type="password" name="password1" id="id_password1"
+                                class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
+                                placeholder="Create password" required />
                         </div>
                     </div>
 
                     <div class="mb-5">
-                        <label for="password2" class="font-semibold text-sm text-gray-600 pb-1 block">Confirm Password</label>
+                        <label for="password2" class="font-semibold text-sm text-zinc-300 pb-2 block">Confirm Password</label>
                         <div class="mt-1">
-                            {{ form.password2 }}
+                             <input type="password" name="password2" id="id_password2"
+                                class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
+                                placeholder="Confirm password" required />
                         </div>
                     </div>
 
                     <button type="button" id="next-btn"
-                        class="transition duration-200 bg-emerald-400 hover:bg-emerald-500 focus:bg-emerald-600 focus:shadow-sm focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-flex items-center justify-center">
+                        class="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-transparent inline-flex items-center justify-center">
                         <span class="inline-block mr-2">Continue</span>
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                             class="w-4 h-4 inline-block">
@@ -144,29 +160,35 @@
                 <!-- Step 2: Personal Information -->
                 <div id="step-2" class="step-content hidden">
                     <div class="mb-5">
-                        <label for="first_name" class="font-semibold text-sm text-gray-600 pb-1 block">First Name</label>
+                        <label for="first_name" class="font-semibold text-sm text-zinc-300 pb-2 block">First Name</label>
                         <div class="mt-1">
-                            {{ form.first_name }}
+                             <input type="text" name="first_name" id="id_first_name"
+                                class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
+                                placeholder="Enter first name" required />
                         </div>
                     </div>
 
                     <div class="mb-5">
-                        <label for="last_name" class="font-semibold text-sm text-gray-600 pb-1 block">Last Name</label>
+                        <label for="last_name" class="font-semibold text-sm text-zinc-300 pb-2 block">Last Name</label>
                         <div class="mt-1">
-                            {{ form.last_name }}
+                             <input type="text" name="last_name" id="id_last_name"
+                                class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
+                                placeholder="Enter last name" required />
                         </div>
                     </div>
 
                     <div class="mb-5">
-                        <label for="birthdate" class="font-semibold text-sm text-gray-600 pb-1 block">Birthdate</label>
+                        <label for="birthdate" class="font-semibold text-sm text-zinc-300 pb-2 block">Birthdate</label>
                         <div class="mt-1">
-                            {{ form.birthdate }}
+                            <input type="date" name="birthdate" id="id_birthdate"
+                                class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
+                                required />
                         </div>
                     </div>
 
                     <div class="flex gap-3">
                         <button type="button" id="back-btn"
-                            class="transition duration-200 bg-gray-200 hover:bg-gray-300 focus:bg-gray-400 text-gray-700 py-2.5 px-4 rounded-lg text-sm font-semibold inline-flex items-center justify-center">
+                            class="px-5 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border border-zinc-700 hover:border-zinc-600 rounded-xl text-sm font-semibold transition-all duration-200 inline-flex items-center justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                                 class="w-4 h-4 inline-block mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -175,7 +197,7 @@
                             <span>Back</span>
                         </button>
                         <button type="submit" id="submit-btn"
-                            class="flex-1 transition duration-200 bg-emerald-400 hover:bg-emerald-500 focus:bg-emerald-600 focus:shadow-sm focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50 text-white py-2.5 rounded-lg text-sm shadow-sm hover:shadow-md font-semibold text-center inline-flex items-center justify-center">
+                            class="flex-1 px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-transparent inline-flex items-center justify-center">
                             <span class="inline-block mr-2">
                                 {% if transfer_data %}
                                     🚀 Create Account & Accept Project
@@ -195,29 +217,38 @@
                 </div>
             </form>
 
-            <div class="py-6 px-6">
+            <div class="pb-6 px-8">
                 {% include 'accounts/components/form_divider.html' with divider_text='Or sign up with' %}
 
-                {% include 'accounts/components/oauth_buttons.html' with google_button_id='google-signup' github_button_id='github-signup' %}
+                <div class="oauth-buttons-disabled mt-4" title="OAuth signup coming soon">
+                    {% include 'accounts/components/oauth_buttons.html' with google_button_id='google-signup' github_button_id='github-signup' %}
+                </div>
             </div>
         </div>
 
-        <div class="pt-5 flex justify-end">
+        <div class="pt-6 flex justify-center">
             <a href="{% url 'main_site:login' %}"
-                class="transition duration-200 inline-flex items-center px-5 py-4 cursor-pointer font-normal text-sm rounded-lg text-gray-500 hover:bg-gray-100">
+                class="transition duration-200 inline-flex items-center px-5 py-2 cursor-pointer font-normal text-sm rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50">
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                    class="w-4 h-4 inline-block align-text-bottom">
+                    class="w-4 h-4 inline-block align-text-bottom mr-1">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
                 </svg>
-                <span class="inline-block ml-1">Already have an account? Sign in</span>
+                <span>Already have an account? Sign in</span>
             </a>
         </div>
     </div>
 
-</body>
-
-</html>
+  <style>
+    .oauth-buttons-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      position: relative;
+    }
+    .oauth-buttons-disabled button, .oauth-buttons-disabled a {
+      pointer-events: none;
+    }
+  </style>
 
 <script>
 // Multi-step form navigation
@@ -241,14 +272,19 @@ function updateStep(step) {
 }
 
 function showError(message) {
-    document.getElementById('error-message').textContent = message;
-    document.getElementById('error-banner').classList.remove('hidden');
+    const errorEl = document.getElementById('error-message');
+    if (errorEl) errorEl.textContent = message;
+    
+    const bannerEl = document.getElementById('error-banner');
+    if (bannerEl) bannerEl.classList.remove('hidden');
+    
     // Scroll to top to show error
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function hideError() {
-    document.getElementById('error-banner').classList.add('hidden');
+    const bannerEl = document.getElementById('error-banner');
+    if (bannerEl) bannerEl.classList.add('hidden');
 }
 
 function validateStep1() {
@@ -305,7 +341,7 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
         '{% else %}' +
             'Creating Account...' +
         '{% endif %}' +
-        '</span><svg class="animate-spin w-4 h-4 inline-block" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
+        '</span><svg class="animate-spin w-4 h-4 inline-block text-zinc-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
     submitBtn.disabled = true;
     
     // Remove any existing error messages
@@ -323,14 +359,10 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
         password2: formData.get('password2')
     };
     
-
-    
-    // Add invite data if present
     if (formData.get('invite_id')) {
         requestData.invite_id = formData.get('invite_id');
     }
     
-    // Add transfer data if present
     if (formData.get('transfer_id')) {
         requestData.transfer_id = formData.get('transfer_id');
     }
@@ -375,8 +407,6 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
         submitBtn.disabled = false;
     });
 });
-
-// OAuth buttons are disabled in development
-// Google OAuth Signup - Disabled
-// GitHub OAuth Signup - Disabled
 </script>
+</body>
+</html>

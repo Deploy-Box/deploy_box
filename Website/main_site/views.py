@@ -88,7 +88,7 @@ def pricing(request: HttpRequest) -> HttpResponse:
 
 
 def profile(request: HttpRequest) -> HttpResponse:
-    return render(request, "profile.html", {})
+    return render(request, "profile.html", {"show_footer": False})
 
 
 def maintenance(request: HttpRequest) -> HttpResponse:
