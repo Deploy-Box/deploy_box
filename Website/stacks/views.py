@@ -1,3 +1,4 @@
+from inspect import stack
 import json
 from django.http import JsonResponse, HttpRequest, HttpResponse
 from rest_framework import status
@@ -11,6 +12,7 @@ from django.utils.decorators import method_decorator
 from django.conf import settings
 import uuid
 import datetime
+import json
 
 try:
     # azure-storage-blob is in requirements.txt; import here so module import error surfaces at runtime
@@ -27,8 +29,8 @@ from stacks.serializers import (
 from projects.models import Project
 import stacks.services as services
 from django.shortcuts import get_object_or_404
-from rest_framework import permissions, filters
-from rest_framework import viewsets
+from rest_framework import permissions, filters, viewsets
+from stacks.resources.resource_manager import ResourceManager
 
 class StackViewSet(viewsets.ModelViewSet):
     queryset = Stack.objects.exclude(status="DELETED")
@@ -37,20 +39,27 @@ class StackViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
 
     def create(self, request):
-        project_id = request.data.get('project_id')
-        purchasable_stack_id = request.data.get('purchasable_stack_id')
+
+        stack_infrastructure = {}
+        with open("stacks/stack_infrastructure/testing.json", "r") as f:
+            stack_infrastructure = json.load(f)
+
         
-        if not project_id or not purchasable_stack_id:
-            return Response(
-                {"error": "project_id and purchasable_stack_id are required"}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        
-        services.add_stack(
-            project_id=project_id,
-            purchasable_stack_id=purchasable_stack_id,
-        )
-        return Response({"message": "Stack creation initiated"}, status=status.HTTP_201_CREATED)
+        for resource in stack_infrastructure:
+            print(resource)
+
+
+        stack = Stack.objects.get(pk="cd1fcf5e926345e0")
+        created_resources = ResourceManager.create(stack_infrastructure, stack)
+
+        data = {
+            "stack_id": stack.pk,
+            "resources": ResourceManager.serialize(created_resources)
+        }
+
+        services.send_to_azure_function('IAC.CREATE', data)
+
+        return Response(data, status=status.HTTP_201_CREATED)
     
     
     # Delete

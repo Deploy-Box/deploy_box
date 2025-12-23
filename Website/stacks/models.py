@@ -4,7 +4,7 @@ from django.db.models import UniqueConstraint
 from projects.models import Project
 
 from core.fields import ShortUUIDField
-
+from stacks.resources import *
 
 class PurchasableStack(models.Model):
     id = ShortUUIDField(primary_key=True)

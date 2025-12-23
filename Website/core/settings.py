@@ -226,19 +226,19 @@ STRIPE = {
 }
 
 GITHUB = {
-    "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
-    "CLIENT_SECRET": KeyVaultClient().get_secret('deploy-box-github-client-secret', os.getenv("DEPLOY_BOX_GITHUB_CLIENT_SECRET")),
+    # "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
+    # "CLIENT_SECRET": KeyVaultClient().get_secret('deploy-box-github-client-secret', os.getenv("DEPLOY_BOX_GITHUB_CLIENT_SECRET")),
     "TOKEN_KEY": KeyVaultClient().get_secret("deploy-box-github-token-key", os.getenv("DEPLOY_BOX_GITHUB_TOKEN_KEY")),
 }
 
 AZURE = {
-    "CLIENT_ID": KeyVaultClient().get_secret("arm-client-id", os.getenv("ARM_CLIENT_ID")),
-    "CLIENT_SECRET": KeyVaultClient().get_secret("arm-client-secret", os.getenv("ARM_CLIENT_SECRET")), 
-    "TENANT_ID": KeyVaultClient().get_secret("arm-tenant-id", os.getenv("ARM_TENANT_ID")),
-    "STORAGE_CONNECTION_STRING": KeyVaultClient().get_secret("azure-storage-connection-string", os.getenv("AZURE_STORAGE_CONNECTION_STRING")),
-    "CONTAINER_NAME": KeyVaultClient().get_secret("container-name", os.getenv("CONTAINER_NAME")),
+    # "CLIENT_ID": KeyVaultClient().get_secret("arm-client-id", os.getenv("ARM_CLIENT_ID")),
+    # "CLIENT_SECRET": KeyVaultClient().get_secret("arm-client-secret", os.getenv("ARM_CLIENT_SECRET")), 
+    # "TENANT_ID": KeyVaultClient().get_secret("arm-tenant-id", os.getenv("ARM_TENANT_ID")),
+    # "STORAGE_CONNECTION_STRING": KeyVaultClient().get_secret("azure-storage-connection-string", os.getenv("AZURE_STORAGE_CONNECTION_STRING")),
+    # "CONTAINER_NAME": KeyVaultClient().get_secret("container-name", os.getenv("CONTAINER_NAME")),
     # "RESOURCE_GROUP_NAME": KeyVaultClient().get_secret("resource-group-name"),
-    "ACR_PASSWORD": KeyVaultClient().get_secret("acr-password", os.getenv("ACR_PASSWORD")),
+    # "ACR_PASSWORD": KeyVaultClient().get_secret("acr-password", os.getenv("ACR_PASSWORD")),
 }
 
 # DeployBox Stack Endpoint for file downloads
