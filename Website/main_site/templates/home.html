@@ -11,43 +11,49 @@
         <!-- Background Video -->
         <div class="absolute inset-0 z-0 opacity-40">
             <video class="absolute inset-0 w-full h-full object-cover"
-                src="https://videos.pexels.com/video-files/2943126/2943126-uhd_2560_1440_24fps.mp4"
-                autoplay muted loop playsinline></video>
+                src="https://videos.pexels.com/video-files/2943126/2943126-uhd_2560_1440_24fps.mp4" autoplay muted loop
+                playsinline></video>
         </div>
 
         <!-- Isometric Container Pattern Background (Overlay) -->
-        <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2310b981\' fill-opacity=\'0.15\'%3E%3Cpath d=\'M30 0L0 15v30l30 15 30-15V15L30 0zm0 30L0 15 30 0l30 15-30 15zm0 0v30L0 45V15l30 15zm0 0v30l30-15V15L30 30z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
-        
+        <div class="absolute inset-0 z-0 opacity-20 pointer-events-none"
+            style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2310b981\' fill-opacity=\'0.15\'%3E%3Cpath d=\'M30 0L0 15v30l30 15 30-15V15L30 0zm0 30L0 15 30 0l30 15-30 15zm0 0v30L0 45V15l30 15zm0 0v30l30-15V15L30 30z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');">
+        </div>
+
         <!-- Dark Gradient Overlay for Contrast -->
         <div class="absolute inset-0 z-0 bg-gradient-to-t from-zinc-950 via-zinc-950/80 to-zinc-950/60"></div>
 
         <div class="container mx-auto px-4 relative z-10 text-center">
             <div class="max-w-4xl mx-auto">
                 <!-- Badge -->
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs font-mono mb-8">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs font-mono mb-8">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     DEPLOY_BOX_V2.0
                 </div>
 
                 <h1 class="text-6xl md:text-8xl font-bold tracking-tighter leading-none mb-8 text-white">
-                    Ship projects <br/>
+                    Ship projects <br />
                     <span class="text-emerald-400">faster than ever.</span>
                 </h1>
-                
+
                 <p class="text-xl text-zinc-400 max-w-2xl mb-12 leading-relaxed mx-auto">
-                    Instantly deploy pre-containerized tech stacks. Skip configuration, start coding, and scale globally with a single click.
+                    Instantly deploy pre-containerized tech stacks. Skip configuration, start coding, and scale globally
+                    with a single click.
                 </p>
-                
+
                 <div class="flex flex-wrap gap-4 items-center justify-center">
                     <!-- Primary Button: Solid Emerald, High Contrast -->
-                    <a href="#stacks" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-md transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)]">
+                    <a href="{% url 'main_site:stacks' %}"
+                        class="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-black font-bold rounded-md transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] hover:shadow-[0_0_30px_rgba(16,185,129,0.4)]">
                         Explore Stacks
-                   </a>
-                   
-                   <!-- Secondary Button: Solid Dark, Distinct Border -->
-                   <a href="#community" class="px-8 py-4 bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 text-white font-semibold rounded-md transition-all">
-                        Find Talent
-                   </a>
+                    </a>
+
+                    <!-- Secondary Button: Solid Dark, Distinct Border -->
+                    <a href="https://discord.gg/dEhfnWRaWv"
+                        class="px-8 py-4 bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 text-white font-semibold rounded-md transition-all">
+                        Discord
+                    </a>
                 </div>
             </div>
         </div>
@@ -63,18 +69,28 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <!-- Large Card -->
-                <div class="md:col-span-2 p-8 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors group">
+                <div
+                    class="md:col-span-2 p-8 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors group">
                     <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center mb-6 text-black">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                        </svg>
                     </div>
                     <h3 class="text-2xl font-bold text-white mb-3">Instant Environments</h3>
-                    <p class="text-zinc-400 max-w-md">Stop fighting with Dockerfiles and dependency hell. Our pre-configured containers are optimized for performance and security out of the box.</p>
+                    <p class="text-zinc-400 max-w-md">Stop fighting with Dockerfiles and dependency hell. Our
+                        pre-configured containers are optimized for performance and security out of the box.</p>
                 </div>
 
                 <!-- Small Card -->
                 <div class="p-8 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors">
-                     <div class="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center mb-6 text-emerald-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <div
+                        class="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center mb-6 text-emerald-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
+                            </path>
+                        </svg>
                     </div>
                     <h3 class="text-xl font-bold text-white mb-2">Modern Stacks</h3>
                     <p class="text-zinc-400 text-sm">MERN, MEAN, Django, and more. Always up to date.</p>
@@ -82,23 +98,34 @@
 
                 <!-- Small Card -->
                 <div class="p-8 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors">
-                    <div class="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center mb-6 text-emerald-400">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    <div
+                        class="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center mb-6 text-emerald-400">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                            </path>
+                        </svg>
                     </div>
                     <h3 class="text-xl font-bold text-white mb-2">Talent Network</h3>
                     <p class="text-zinc-400 text-sm">Hire experts who know your stack inside out.</p>
                 </div>
-                 <!-- Large Card -->
-                 <div class="md:col-span-2 p-8 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors">
+                <!-- Large Card -->
+                <div
+                    class="md:col-span-2 p-8 bg-zinc-900 border border-zinc-800 rounded-xl hover:border-zinc-700 transition-colors">
                     <div class="flex items-center justify-between mb-6">
-                         <div class="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center text-emerald-400">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <div class="w-10 h-10 bg-zinc-800 rounded-lg flex items-center justify-center text-emerald-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                                </path>
+                            </svg>
                         </div>
                         <span class="text-emerald-400 font-mono text-sm">marketplace_v1</span>
                     </div>
-                  
+
                     <h3 class="text-xl font-bold text-white mb-3">Community Marketplace</h3>
-                    <p class="text-zinc-400 max-w-md">Whether you are a freelancer looking for work or a founder looking for a CTO, our marketplace connects you with the right people.</p>
+                    <p class="text-zinc-400 max-w-md">Whether you are a freelancer looking for work or a founder looking
+                        for a CTO, our marketplace connects you with the right people.</p>
                 </div>
             </div>
         </div>
@@ -107,91 +134,110 @@
     <!-- Stacks Grid -->
     <section id="stacks" class="py-24 bg-zinc-950 border-t border-zinc-900">
         <div class="container mx-auto px-4">
-             <div class="flex justify-between items-end mb-12">
+            <div class="flex justify-between items-end mb-12">
                 <div>
-                     <h2 class="text-3xl font-bold text-white mb-2">Supported Stacks</h2>
-                     <p class="text-zinc-500">Production-ready containers.</p>
+                    <h2 class="text-3xl font-bold text-white mb-2">Supported Stacks</h2>
+                    <p class="text-zinc-500">Production-ready containers.</p>
                 </div>
                 <a href="/stacks" class="text-emerald-400 text-sm font-bold hover:underline mb-1">View All -></a>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Stack Card MERN -->
-                <div class="bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 p-6 rounded-lg transition-all group">
+                <div
+                    class="bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 p-6 rounded-lg transition-all group">
                     <div class="flex justify-between items-start mb-4">
-                        <h3 class="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">MERN</h3>
-                        <span class="px-2 py-1 bg-zinc-800 text-zinc-400 text-[10px] uppercase font-bold tracking-wider rounded">Popular</span>
+                        <h3 class="text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">MERN
+                        </h3>
+                        <span
+                            class="px-2 py-1 bg-zinc-800 text-zinc-400 text-[10px] uppercase font-bold tracking-wider rounded">Popular</span>
                     </div>
-                    <p class="text-zinc-400 text-sm mb-6 h-10">MongoDB, Express, React, Node. The standard for web apps.</p>
+                    <p class="text-zinc-400 text-sm mb-6 h-10">MongoDB, Express, React, Node. The standard for web apps.
+                    </p>
                     <div class="grid grid-cols-2 gap-3">
-                        <a href="{% url 'main_site:mern_stack' %}" class="py-2 px-3 bg-white text-black text-xs font-bold text-center rounded hover:bg-zinc-200 transition-colors">
+                        <a href="{% url 'main_site:mern_stack' %}"
+                            class="py-2 px-3 bg-white text-black text-xs font-bold text-center rounded hover:bg-zinc-200 transition-colors">
                             Deploy
                         </a>
-                        <button class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
+                        <button
+                            class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
                             Experts
                         </button>
                     </div>
                 </div>
 
                 <!-- Stack Card MEAN -->
-                <div class="bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 p-6 rounded-lg transition-all group">
+                <div
+                    class="bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 p-6 rounded-lg transition-all group">
                     <div class="flex justify-between items-start mb-4">
                         <h3 class="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">MEAN</h3>
                     </div>
                     <p class="text-zinc-400 text-sm mb-6 h-10">Angular-based stack for enterprise-grade scalability.</p>
                     <div class="grid grid-cols-2 gap-3">
-                        <a href="{% url 'main_site:mean_stack' %}" class="py-2 px-3 bg-white text-black text-xs font-bold text-center rounded hover:bg-zinc-200 transition-colors">
+                        <a href="{% url 'main_site:mean_stack' %}"
+                            class="py-2 px-3 bg-white text-black text-xs font-bold text-center rounded hover:bg-zinc-200 transition-colors">
                             Deploy
                         </a>
-                        <button class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
+                        <button
+                            class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
                             Experts
                         </button>
                     </div>
                 </div>
 
                 <!-- Stack Card DJANGO -->
-                 <div class="bg-zinc-900 border border-zinc-800 hover:border-pink-500/50 p-6 rounded-lg transition-all group">
+                <div
+                    class="bg-zinc-900 border border-zinc-800 hover:border-pink-500/50 p-6 rounded-lg transition-all group">
                     <div class="flex justify-between items-start mb-4">
                         <h3 class="text-xl font-bold text-white group-hover:text-pink-400 transition-colors">Django</h3>
                     </div>
                     <p class="text-zinc-400 text-sm mb-6 h-10">High-level Python framework for rapid development.</p>
                     <div class="grid grid-cols-2 gap-3">
-                        <a href="{% url 'main_site:django_stack' %}" class="py-2 px-3 bg-white hover:bg-emerald-400 hover:text-black text-black text-xs font-bold text-center rounded transition-colors">
+                        <a href="{% url 'main_site:django_stack' %}"
+                            class="py-2 px-3 bg-white hover:bg-emerald-400 hover:text-black text-black text-xs font-bold text-center rounded transition-colors">
                             Deploy
                         </a>
-                        <button class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
+                        <button
+                            class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
                             Experts
                         </button>
                     </div>
                 </div>
 
                 <!-- Stack Card LAMP -->
-                 <div class="bg-zinc-900 border border-zinc-800 hover:border-yellow-500/50 p-6 rounded-lg transition-all group">
+                <div
+                    class="bg-zinc-900 border border-zinc-800 hover:border-yellow-500/50 p-6 rounded-lg transition-all group">
                     <div class="flex justify-between items-start mb-4">
                         <h3 class="text-xl font-bold text-white group-hover:text-yellow-400 transition-colors">LAMP</h3>
                     </div>
                     <p class="text-zinc-400 text-sm mb-6 h-10">The reliable classic. Linux, Apache, MySQL, PHP.</p>
                     <div class="grid grid-cols-2 gap-3">
-                        <a href="{% url 'main_site:lamp_stack' %}" class="py-2 px-3 bg-white hover:bg-emerald-400 hover:text-black text-black text-xs font-bold text-center rounded transition-colors">
+                        <a href="{% url 'main_site:lamp_stack' %}"
+                            class="py-2 px-3 bg-white hover:bg-emerald-400 hover:text-black text-black text-xs font-bold text-center rounded transition-colors">
                             Deploy
                         </a>
-                        <button class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
+                        <button
+                            class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
                             Experts
                         </button>
                     </div>
                 </div>
-                 <!-- Stack Card MEVN (Standard Size) -->
-                 <div class="bg-zinc-900 border border-zinc-800 hover:border-purple-500/50 p-6 rounded-lg transition-all group">
+                <!-- Stack Card MEVN (Standard Size) -->
+                <div
+                    class="bg-zinc-900 border border-zinc-800 hover:border-purple-500/50 p-6 rounded-lg transition-all group">
                     <div class="flex justify-between items-start mb-4">
                         <h3 class="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">MEVN</h3>
-                        <span class="px-2 py-1 bg-zinc-800 text-zinc-400 text-[10px] uppercase font-bold tracking-wider rounded">New</span>
+                        <span
+                            class="px-2 py-1 bg-zinc-800 text-zinc-400 text-[10px] uppercase font-bold tracking-wider rounded">New</span>
                     </div>
                     <p class="text-zinc-400 text-sm mb-6 h-10">Vue.js + Node.js. Progressive and flexible.</p>
                     <div class="grid grid-cols-2 gap-3">
-                        <a href="{% url 'main_site:mevn_stack' %}" class="py-2 px-3 bg-white text-black text-xs font-bold text-center rounded hover:bg-zinc-200 transition-colors">
+                        <a href="{% url 'main_site:mevn_stack' %}"
+                            class="py-2 px-3 bg-white text-black text-xs font-bold text-center rounded hover:bg-zinc-200 transition-colors">
                             Deploy
                         </a>
-                        <button class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
+                        <button
+                            class="py-2 px-3 bg-zinc-800 text-white text-xs font-bold rounded hover:bg-zinc-700 transition-colors">
                             Experts
                         </button>
                     </div>
@@ -205,32 +251,38 @@
         <div class="container mx-auto px-4">
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
                 <div>
-                     <h2 class="text-4xl font-bold text-white mb-6">Join the Community</h2>
-                     <p class="text-zinc-400 text-lg mb-8 leading-relaxed">
-                        Deploy Box isn't just about containers. It's about connecting with 10,000+ developers who are building the future.
-                     </p>
-                     
-                     <div class="grid grid-cols-2 gap-8 mb-10">
+                    <h2 class="text-4xl font-bold text-white mb-6">Join the Community</h2>
+                    <p class="text-zinc-400 text-lg mb-8 leading-relaxed">
+                        Deploy Box isn't just about containers. It's about connecting with a community of passionate
+                        developers. Join our discord with the link below
+                        and reach out to other creators to help debug or build your next project.
+                    </p>
+
+                    <!-- <div class="grid grid-cols-2 gap-8 mb-10">
                         <div>
                             <div class="text-3xl font-bold text-white">10k+</div>
                             <div class="text-zinc-500 text-sm">Active Developers</div>
                         </div>
                         <div>
-                             <div class="text-3xl font-bold text-white">50+</div>
+                            <div class="text-3xl font-bold text-white">50+</div>
                             <div class="text-zinc-500 text-sm">Tech Stacks</div>
                         </div>
-                     </div>
+                    </div> -->
 
-                     <a href="/community" class="text-emerald-400 font-bold hover:text-emerald-300 flex items-center gap-2">
-                        View Community Hub <span aria-hidden="true">&rarr;</span>
-                     </a>
+                    <a href="https://discord.gg/dEhfnWRaWv"
+                        class="text-emerald-400 font-bold hover:text-emerald-300 flex items-center gap-2">
+                        Join Discord <span aria-hidden="true">&rarr;</span>
+                    </a>
                 </div>
                 <div class="relative">
-                     <!-- Smaller, more restrained image use -->
-                     <div class="w-full aspect-video rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 relative group">
-                        <img src="{% static 'about_image.png' %}" alt="Community" class="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700 grayscale group-hover:grayscale-0">
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent"></div>
-                     </div>
+                    <!-- Smaller, more restrained image use -->
+                    <div
+                        class="w-full aspect-video rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900 relative group">
+                        <img src="{% static 'about_image.png' %}" alt="Community"
+                            class="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-700 grayscale group-hover:grayscale-0">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
