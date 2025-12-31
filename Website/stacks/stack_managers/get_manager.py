@@ -37,4 +37,4 @@ def create_purchasable_stacks() -> None:
         )
 
 
-create_purchasable_stacks()
+# create_purchasable_stacks()
