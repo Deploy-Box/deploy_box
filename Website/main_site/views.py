@@ -12,6 +12,7 @@ from io import BytesIO
 import base64
 
 
+from stacks.stack_managers.get_manager import get_stack_manager
 from accounts.forms import CustomUserCreationForm
 from accounts.models import UserProfile
 from organizations.models import Organization, OrganizationMember, PendingInvites, ProjectTransferInvitation
@@ -24,7 +25,6 @@ from projects.forms import ProjectCreateFormWithMembers, ProjectSettingsForm
 from projects.models import Project, ProjectMember
 from stacks.forms import EnvFileUploadForm, StackSettingsForm, EnvironmentVariablesForm
 from stacks.models import PurchasableStack, Stack
-from stacks.services import post_stack_env
 from core.decorators import oauth_required
 
 logger = logging.getLogger(__name__)
@@ -59,12 +59,36 @@ def mevn_stack(request: HttpRequest) -> HttpResponse:
     return render(request, "stacks/mevn_stack.html", {"show_footer": False})
 
 
+def mobile_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/mobile_stack.html", {"show_footer": False})
+
+
+def llm_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/llm_stack.html", {"show_footer": False})
+
+
+def ai_data_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/ai_data_stack.html", {"show_footer": False})
+
+
+def computer_vision_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/computer_vision_stack.html", {"show_footer": False})
+
+
+def image_generation_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/image_generation_stack.html", {"show_footer": False})
+
+
+def ai_agents_stack(request: HttpRequest) -> HttpResponse:
+    return render(request, "stacks/ai_agents_stack.html", {"show_footer": False})
+
+
 def pricing(request: HttpRequest) -> HttpResponse:
     return render(request, "pricing.html", {"show_footer": False})
 
 
 def profile(request: HttpRequest) -> HttpResponse:
-    return render(request, "profile.html", {})
+    return render(request, "profile.html", {"show_footer": False})
 
 
 def maintenance(request: HttpRequest) -> HttpResponse:
@@ -96,7 +120,7 @@ class DashboardView(View):
             print("Showing welcome screen for users with no organizations")
             return render(
                 request,
-                "dashboard/welcome.html",
+                "dashboard/organization_select.html",
                 {
                     "user": user,
                     "organizations": organizations,
@@ -107,6 +131,31 @@ class DashboardView(View):
                     "current_stack_id": None,
                 },
             )
+
+    @oauth_required()
+    def organization_select(self, request: HttpRequest) -> HttpResponse:
+        """Organization selection view - shows all organizations user has access to."""
+        user = cast(UserProfile, request.user)
+        logger.info(f"Organization select accessed by user: {user.username}")
+        organizations = Organization.objects.filter(organizationmember__user=user)
+        projects = Project.objects.filter(projectmember__user=user)
+        logger.info(
+            f"Found {organizations.count()} organizations for user"
+        )
+
+        return render(
+            request,
+            "dashboard/organization_select.html",
+            {
+                "user": user,
+                "organizations": organizations,
+                "projects": projects,
+                "user_organizations": organizations,
+                "current_organization_id": None,
+                "current_project_id": None,
+                "current_stack_id": None,
+            },
+        )
 
     @oauth_required()
     def organization_dashboard(self, request: HttpRequest, organization_id: str) -> HttpResponse:
@@ -194,6 +243,9 @@ class DashboardView(View):
         except Exception:
             projected_monthly_usage = 123.45
 
+        # Calculate actual monthly cost (usage minus $10 free tier credit)
+        actual_monthly_cost = max(0, projected_monthly_usage - 10.0)
+
         import datetime
         try:
             # Try to use a real month start attribute; default to first of this month
@@ -227,6 +279,7 @@ class DashboardView(View):
                 "current_daily_usage": f"{daily_usage:.2f}",
                 "current_usage": f"{current_usage:.2f}",
                 "projected_monthly_usage": f"{projected_monthly_usage:.2f}",
+                "actual_monthly_cost": f"{actual_monthly_cost:.2f}",
                 "month_start_formatted": month_start.strftime("%b 1, %Y"),
                 "billing_history_records": billing_history_records,
             },
@@ -249,7 +302,7 @@ class DashboardView(View):
                 # User doesn't have permission to delete
                 pass  # Could add error handling here
 
-        stacks = Stack.objects.filter(project_id=project_id)
+        stacks = Stack.objects.filter(project_id=project_id).exclude(status="DELETED")
 
         # Check if user is admin of the project
         is_admin = ProjectMember.objects.filter(user=user, project=project, role='admin').exists()
@@ -282,6 +335,8 @@ class DashboardView(View):
         except Stack.DoesNotExist:
             # Redirect to project dashboard if stack doesn't exist
             return redirect('main_site:project_dashboard', organization_id=organization_id, project_id=project_id)
+        
+        stack_manager = get_stack_manager(stack)
 
         # Handle stack deletion
         if request.method == 'POST' and request.POST.get('action') == 'delete':
@@ -298,25 +353,6 @@ class DashboardView(View):
             except Project.DoesNotExist:
                 # Redirect to organization dashboard if project doesn't exist
                 return redirect('main_site:organization_dashboard', organization_id=organization_id)
-
-        stack_google_cloud_runs = list()
-
-        for stack_google_cloud_run in stack_google_cloud_runs:
-            if not stack_google_cloud_run.url:
-                pass
-                # gcp_utils = GCPUtils()
-                # stack_google_cloud_run.url = gcp_utils.get_service_url(
-                #     stack_google_cloud_run.id
-                # )
-                # stack_google_cloud_run.save()
-
-            if stack_google_cloud_run.state == "STARTING":
-                pass
-                # gcp_utils = GCPUtils()
-                # stack_google_cloud_run.state = gcp_utils.get_build_status(
-                #     stack_google_cloud_run.build_status_url
-                # )
-                # stack_google_cloud_run.save()
 
         # Get repository information if webhook exists
         try:
@@ -347,8 +383,113 @@ class DashboardView(View):
         elif stack_type == "django":
             template_name = "dashboard/django_stack_dashboard.html"
             frontend_url = stack.django_url
+        elif stack_type == "redis":
+            template_name = "dashboard/redis_stack_dashboard.html"
+            frontend_url = stack.redis_url
+        elif stack_type == "pong":
+            template_name = "dashboard/pong_stack_dashboard.html"
+            frontend_url = stack.redis_url
         else:
             template_name = "dashboard/stack_dashboard.html"
+            frontend_url = "#"
+
+        qr = qrcode.QRCode(
+            version = 4,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border = 4,
+        )
+        qr.add_data(frontend_url)
+        qr.make(fit=True)
+
+        img = qr.make_image(back_color="white", fill_color=(18, 185, 129))
+
+        buffer = BytesIO()
+        img.save(buffer, format="PNG")
+        img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        qr_code = f"data:image/png;base64,{img_str}"
+
+        # Prepare infrastructure data for Pong stack
+        infrastructure_wrappers, infrastructure_nodes, infrastructure_connections = stack_manager.get_infrastructure_diagram_data()
+            
+        if stack_type == "pong":
+            import json
+            pong_infrastructure_wrappers = json.dumps([
+                {
+                    "id": "vm",
+                    "label": "Virtual Machine",
+                    "x": 280,
+                    "y": 150,
+                    "width": 500,
+                    "height": 200,
+                    "color": "rgba(139, 92, 246, 0.1)",
+                    "borderColor": "#8b5cf6",
+                    "nodeIds": ["frontend", "backend"]
+                }
+            ])
+            pong_infrastructure_nodes = json.dumps([
+                {
+                    "id": "public_ip",
+                    "label": "Public IP",
+                    "sublabel": "Network",
+                    "x": 50,
+                    "y": 225,
+                    "width": 150,
+                    "height": 80,
+                    "color": "#f59e0b",
+                    "icon": "🌍"
+                },
+                {
+                    "id": "proxy",
+                    "label": "Deploy Box Proxy",
+                    "sublabel": "Load Balancer",
+                    "x": 260,
+                    "y": 210,
+                    "width": 140,
+                    "height": 110,
+                    "color": "#ec4899",
+                    "icon": "🔀"
+                },
+                {
+                    "id": "frontend",
+                    "label": "Pong Web App",
+                    "sublabel": "Frontend",
+                    "x": 330,
+                    "y": 200,
+                    "width": 150,
+                    "height": 100,
+                    "color": "#10b981",
+                    "icon": "🌐"
+                },
+                {
+                    "id": "backend",
+                    "label": "PostgreSQL",
+                    "sublabel": "Database",
+                    "x": 580,
+                    "y": 200,
+                    "width": 150,
+                    "height": 100,
+                    "color": "#3b82f6",
+                    "icon": "🗄️"
+                },
+                {
+                    "id": "disk",
+                    "label": "Persistent Disk",
+                    "sublabel": "Storage",
+                    "x": 600,
+                    "y": 500,
+                    "width": 180,
+                    "height": 100,
+                    "color": "#64748b",
+                    "icon": "💾"
+                }
+            ])
+            pong_infrastructure_connections = json.dumps([
+                {"from": "public_ip", "to": "proxy", "label": "Internet"},
+                {"from": "proxy", "to": "vm", "label": "Forwarded"},
+                {"from": "frontend", "to": "backend", "label": "Data Connection"},
+                {"from": "vm", "to": "disk", "label": "Mounted"}
+            ])
 
         qr = qrcode.QRCode(
             version = 4,
@@ -382,9 +523,11 @@ class DashboardView(View):
                 "current_project_id": project_id,
                 "current_stack_id": stack_id,
                 "repository_name": repository_name,
-                "stack_google_cloud_runs": stack_google_cloud_runs,
                 "frontend_url": frontend_url,
-                "qr_code": qr_code
+                "qr_code": qr_code,
+                "infrastructure_wrappers": infrastructure_wrappers,
+                "infrastructure_nodes": infrastructure_nodes,
+                "infrastructure_connections": infrastructure_connections,
             },
         )
 
@@ -776,315 +919,42 @@ class DashboardView(View):
         except (Organization.DoesNotExist, Project.DoesNotExist):
             messages.error(request, "Organization or project not found.")
             return redirect('main_site:dashboard')
-
-        # Get actual purchasable stacks from database
-        from stacks.models import PurchasableStack
-        from django.conf import settings
-        
-        stripe.api_key = settings.STRIPE.get("SECRET_KEY")
-        
+                
         # Fetch all purchasable stacks and their pricing
         purchasable_stacks = []
         try:
             db_stacks = PurchasableStack.objects.all()
             
             for stack in db_stacks:
-                try:
-                    # Get price information from Stripe
-                    price = stripe.Price.retrieve(stack.price_id)
-                    price_amount = price.unit_amount / 100 if price.unit_amount else 0  # Convert cents to dollars
-                    
-                    # Map stack type to icon and color
-                    icon_map = {
-                        'MERN': '⚛️',
-                        'DJANGO': '🐍',
-                        'MEAN': '🅰️',
-                        'LAMP': '🐘'
-                    }
-                    
-                    color_map = {
-                        'BASIC': 'emerald',
-                        'PREMIUM': 'amber',
-                        'PRO': 'purple'
-                    }
-                    
-                    # Generate features based on stack type and variant
-                    features = self._generate_stack_features(stack.type, stack.variant)
-                    
-                    purchasable_stacks.append({
-                        'id': str(stack.id),
-                        'name': stack.name,
-                        'type': stack.type,
-                        'variant': stack.variant,
-                        'description': stack.description,
-                        'price': price_amount,
-                        'features': features,
-                        'icon': icon_map.get(stack.type, '📦'),
-                        'color': color_map.get(stack.variant, 'emerald'),
-                        'popular': False,  # Could be determined by sales volume or admin setting
-                        'is_from_database': True  # Flag to identify database entries
-                    })
-                except stripe.error.StripeError as e: # type: ignore[attr-defined]
-                    # Log error but continue with other stacks
-                    logger.error(f"Error fetching price for stack {stack.id}: {e}")
-                    continue
+                # Map stack type to icon and color
+                icon_map = {
+                    'MERN': '⚛️',
+                    'DJANGO': '🐍',
+                    'MEAN': '🅰️',
+                    'LAMP': '🐘'
+                }
+                
+                color_map = {
+                    'BASIC': 'emerald',
+                    'PREMIUM': 'amber',
+                    'PRO': 'purple'
+                }
+                
+                purchasable_stacks.append({
+                    'id': str(stack.id),
+                    'name': stack.name,
+                    'type': stack.type,
+                    'variant': stack.variant,
+                    'description': stack.description,
+                    'features': stack.features,
+                    'icon': icon_map.get(stack.type, '📦'),
+                    'color': color_map.get(stack.variant, 'emerald'),
+                    'popular': False,  # Could be determined by sales volume or admin setting
+                    'is_from_database': True  # Flag to identify database entries
+                })
+                
         except Exception as e:
             logger.error(f"Error fetching purchasable stacks: {e}")
-
-        # Hardcoded stack examples for the marketplace (existing mock data)
-        mock_stacks = [
-            {
-                'id': 'mern-basic',
-                'name': 'MERN Stack - Basic',
-                'type': 'MERN',
-                'variant': 'Basic',
-                'description': 'Full-stack JavaScript solution with MongoDB, Express.js, React, and Node.js',
-                'price': 29.99,
-                'features': [
-                    'MongoDB Database',
-                    'Express.js Backend API',
-                    'React Frontend',
-                    'Node.js Runtime',
-                    'Docker Containerization',
-                    'Auto-deployment'
-                ],
-                'icon': '⚛️',
-                'color': 'emerald',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'mern-premium',
-                'name': 'MERN Stack - Premium',
-                'type': 'MERN',
-                'variant': 'Premium',
-                'description': 'Advanced MERN stack with additional features and optimizations',
-                'price': 49.99,
-                'features': [
-                    'Everything in Basic',
-                    'Redis Caching',
-                    'Advanced Security',
-                    'Performance Monitoring',
-                    'CI/CD Pipeline',
-                    'Priority Support'
-                ],
-                'icon': '⚛️',
-                'color': 'amber',
-                'popular': True,
-                'is_from_database': False
-            },
-            {
-                'id': 'django-basic',
-                'name': 'Django Stack - Basic',
-                'type': 'Django',
-                'variant': 'Basic',
-                'description': 'Python web framework with PostgreSQL and modern frontend',
-                'price': 34.99,
-                'features': [
-                    'Django Backend',
-                    'PostgreSQL Database',
-                    'React Frontend',
-                    'Docker Containerization',
-                    'Admin Interface',
-                    'Auto-deployment'
-                ],
-                'icon': '🐍',
-                'color': 'emerald',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'django-premium',
-                'name': 'Django Stack - Premium',
-                'type': 'Django',
-                'variant': 'Premium',
-                'description': 'Enterprise-grade Django stack with advanced features',
-                'price': 59.99,
-                'features': [
-                    'Everything in Basic',
-                    'Redis Caching',
-                    'Celery Task Queue',
-                    'Advanced Security',
-                    'Performance Monitoring',
-                    'Priority Support'
-                ],
-                'icon': '🐍',
-                'color': 'amber',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'mean-basic',
-                'name': 'MEAN Stack - Basic',
-                'type': 'MEAN',
-                'variant': 'Basic',
-                'description': 'JavaScript full-stack with MongoDB, Express.js, Angular, and Node.js',
-                'price': 39.99,
-                'features': [
-                    'MongoDB Database',
-                    'Express.js Backend API',
-                    'Angular Frontend',
-                    'Node.js Runtime',
-                    'Docker Containerization',
-                    'Auto-deployment'
-                ],
-                'icon': '🅰️',
-                'color': 'emerald',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'mean-premium',
-                'name': 'MEAN Stack - Premium',
-                'type': 'MEAN',
-                'variant': 'Premium',
-                'description': 'Advanced MEAN stack with enterprise features',
-                'price': 69.99,
-                'features': [
-                    'Everything in Basic',
-                    'Redis Caching',
-                    'Advanced Security',
-                    'Performance Monitoring',
-                    'CI/CD Pipeline',
-                    'Priority Support'
-                ],
-                'icon': '🅰️',
-                'color': 'amber',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'lamp-basic',
-                'name': 'LAMP Stack - Basic',
-                'type': 'LAMP',
-                'variant': 'Basic',
-                'description': 'Classic web stack with Linux, Apache, MySQL, and PHP',
-                'price': 24.99,
-                'features': [
-                    'Apache Web Server',
-                    'MySQL Database',
-                    'PHP Backend',
-                    'Docker Containerization',
-                    'Basic Security',
-                    'Auto-deployment'
-                ],
-                'icon': '🐘',
-                'color': 'emerald',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'lamp-premium',
-                'name': 'LAMP Stack - Premium',
-                'type': 'LAMP',
-                'variant': 'Premium',
-                'description': 'Enhanced LAMP stack with modern features',
-                'price': 44.99,
-                'features': [
-                    'Everything in Basic',
-                    'Redis Caching',
-                    'Advanced Security',
-                    'Performance Monitoring',
-                    'SSL Certificate',
-                    'Priority Support'
-                ],
-                'icon': '🐘',
-                'color': 'amber',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'mern-pro',
-                'name': 'MERN Stack - Pro',
-                'type': 'MERN',
-                'variant': 'Pro',
-                'description': 'Enterprise-grade MERN stack with advanced features and scalability',
-                'price': 79.99,
-                'features': [
-                    'Everything in Premium',
-                    'Microservices Architecture',
-                    'Advanced Caching (Redis + Memcached)',
-                    'Load Balancing',
-                    'Auto-scaling Infrastructure',
-                    '24/7 Priority Support',
-                    'Custom Domain Setup',
-                    'Advanced Analytics'
-                ],
-                'icon': '⚛️',
-                'color': 'purple',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'django-pro',
-                'name': 'Django Stack - Pro',
-                'type': 'Django',
-                'variant': 'Pro',
-                'description': 'Enterprise Django stack with microservices and advanced features',
-                'price': 89.99,
-                'features': [
-                    'Everything in Premium',
-                    'Microservices Architecture',
-                    'Advanced Caching (Redis + Memcached)',
-                    'Load Balancing',
-                    'Auto-scaling Infrastructure',
-                    '24/7 Priority Support',
-                    'Custom Domain Setup',
-                    'Advanced Analytics'
-                ],
-                'icon': '🐍',
-                'color': 'purple',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'mean-pro',
-                'name': 'MEAN Stack - Pro',
-                'type': 'MEAN',
-                'variant': 'Pro',
-                'description': 'Enterprise MEAN stack with advanced features and scalability',
-                'price': 99.99,
-                'features': [
-                    'Everything in Premium',
-                    'Microservices Architecture',
-                    'Advanced Caching (Redis + Memcached)',
-                    'Load Balancing',
-                    'Auto-scaling Infrastructure',
-                    '24/7 Priority Support',
-                    'Custom Domain Setup',
-                    'Advanced Analytics'
-                ],
-                'icon': '🅰️',
-                'color': 'purple',
-                'popular': False,
-                'is_from_database': False
-            },
-            {
-                'id': 'lamp-pro',
-                'name': 'LAMP Stack - Pro',
-                'type': 'LAMP',
-                'variant': 'Pro',
-                'description': 'Enterprise LAMP stack with advanced features and scalability',
-                'price': 69.99,
-                'features': [
-                    'Everything in Premium',
-                    'Microservices Architecture',
-                    'Advanced Caching (Redis + Memcached)',
-                    'Load Balancing',
-                    'Auto-scaling Infrastructure',
-                    '24/7 Priority Support',
-                    'Custom Domain Setup',
-                    'Advanced Analytics'
-                ],
-                'icon': '🐘',
-                'color': 'purple',
-                'popular': False,
-                'is_from_database': False
-            }
-        ]
-
-        # Combine database stacks and mock stacks
-        available_stacks = purchasable_stacks
 
         # Get all organizations and projects for the user for dropdowns
         user_organizations = Organization.objects.filter(organizationmember__user=user)
@@ -1097,7 +967,7 @@ class DashboardView(View):
             {
                 "organization": organization,
                 "project": project,
-                "available_stacks": available_stacks,
+                "purchasable_stacks": purchasable_stacks,
                 "user": user,
                 "user_organizations": user_organizations,
                 "user_projects": user_projects,
@@ -1107,130 +977,6 @@ class DashboardView(View):
                 "current_stack_id": "",
             },
         )
-
-    def _generate_stack_features(self, stack_type: str, variant: str) -> list:
-        """Generate features list based on stack type and variant."""
-        base_features = {
-            'MERN': [
-                'MongoDB Database',
-                'Express.js Backend API',
-                'React Frontend',
-                'Node.js Runtime',
-                'Docker Containerization',
-                'Auto-deployment'
-            ],
-            'DJANGO': [
-                'Django Backend',
-                'PostgreSQL Database',
-                'React Frontend',
-                'Docker Containerization',
-                'Admin Interface',
-                'Auto-deployment'
-            ],
-            'MEAN': [
-                'MongoDB Database',
-                'Express.js Backend API',
-                'Angular Frontend',
-                'Node.js Runtime',
-                'Docker Containerization',
-                'Auto-deployment'
-            ],
-            'LAMP': [
-                'Apache Web Server',
-                'MySQL Database',
-                'PHP Backend',
-                'Docker Containerization',
-                'Basic Security',
-                'Auto-deployment'
-            ]
-        }
-        
-        premium_features = {
-            'MERN': [
-                'Everything in Basic',
-                'Redis Caching',
-                'Advanced Security',
-                'Performance Monitoring',
-                'CI/CD Pipeline',
-                'Priority Support'
-            ],
-            'DJANGO': [
-                'Everything in Basic',
-                'Redis Caching',
-                'Celery Task Queue',
-                'Advanced Security',
-                'Performance Monitoring',
-                'Priority Support'
-            ],
-            'MEAN': [
-                'Everything in Basic',
-                'Redis Caching',
-                'Advanced Security',
-                'Performance Monitoring',
-                'CI/CD Pipeline',
-                'Priority Support'
-            ],
-            'LAMP': [
-                'Everything in Basic',
-                'Redis Caching',
-                'Advanced Security',
-                'Performance Monitoring',
-                'SSL Certificate',
-                'Priority Support'
-            ]
-        }
-        
-        pro_features = {
-            'MERN': [
-                'Everything in Premium',
-                'Microservices Architecture',
-                'Advanced Caching (Redis + Memcached)',
-                'Load Balancing',
-                'Auto-scaling Infrastructure',
-                '24/7 Priority Support',
-                'Custom Domain Setup',
-                'Advanced Analytics'
-            ],
-            'DJANGO': [
-                'Everything in Premium',
-                'Microservices Architecture',
-                'Advanced Caching (Redis + Memcached)',
-                'Load Balancing',
-                'Auto-scaling Infrastructure',
-                '24/7 Priority Support',
-                'Custom Domain Setup',
-                'Advanced Analytics'
-            ],
-            'MEAN': [
-                'Everything in Premium',
-                'Microservices Architecture',
-                'Advanced Caching (Redis + Memcached)',
-                'Load Balancing',
-                'Auto-scaling Infrastructure',
-                '24/7 Priority Support',
-                'Custom Domain Setup',
-                'Advanced Analytics'
-            ],
-            'LAMP': [
-                'Everything in Premium',
-                'Microservices Architecture',
-                'Advanced Caching (Redis + Memcached)',
-                'Load Balancing',
-                'Auto-scaling Infrastructure',
-                '24/7 Priority Support',
-                'Custom Domain Setup',
-                'Advanced Analytics'
-            ]
-        }
-        
-        if variant.upper() == 'BASIC':
-            return base_features.get(stack_type, ['Basic features'])
-        elif variant.upper() == 'PREMIUM':
-            return premium_features.get(stack_type, ['Premium features'])
-        elif variant.upper() == 'PRO':
-            return pro_features.get(stack_type, ['Pro features'])
-        else:
-            return base_features.get(stack_type, ['Basic features'])
 
     @oauth_required()
     def api_marketplace(self, request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
@@ -1514,10 +1260,6 @@ class PaymentView(View):
         
         for stack in db_stacks:
             try:
-                # Get price information from Stripe
-                price = stripe.Price.retrieve(stack.price_id)
-                price_amount = price.unit_amount / 100 if price.unit_amount else 0  # Convert cents to dollars
-                
                 # Map stack type to icon and color
                 icon_map = {
                     'MERN': '⚛️',
@@ -1532,18 +1274,14 @@ class PaymentView(View):
                     'PRO': 'purple',
                     'FREE': 'emerald'
                 }
-                
-                # Generate features based on stack type and variant
-                features = self._generate_stack_features(stack.type, stack.variant)
-                
+   
                 stack_options.append({
                     'id': str(stack.id),
                     'name': stack.name,
                     'type': stack.type,
                     'variant': stack.variant,
                     'description': stack.description,
-                    'price': price_amount,
-                    'features': features,
+                    'features': stack.features,
                     'icon': icon_map.get(stack.type, '📦'),
                     'color': color_map.get(stack.variant, 'emerald'),
                     'popular': False,

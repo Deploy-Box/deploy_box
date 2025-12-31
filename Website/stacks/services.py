@@ -1,62 +1,37 @@
 import logging
 import json
+import re
+import random
 import requests
 from django.http import JsonResponse
 from django.db import transaction
 from stacks.models import (
     Stack,
     PurchasableStack,
+    StackIACAttribute,
 )
 from django.conf import settings
 from projects.models import Project
 from accounts.models import UserProfile
 import os
-from django.views.decorators.csrf import csrf_exempt
-from .service_helpers import ServiceHelper
 
-logger = logging.getLogger(__name__)
+import json
+from django.http import JsonResponse, HttpRequest
+from django.conf import settings
+import uuid
+import datetime
 
-def send_to_azure_function(message_data: dict, function_url: str | None = None) -> bool:
-    """
-    Sends a message to Azure Function via HTTP trigger.
-    
-    Args:
-        message_data (dict): The data to send as a message
-        function_url (str): The URL of the Azure Function HTTP trigger
-        
-    Returns:
-        bool: True if message was sent successfully, False otherwise
-    """
-    function_url = function_url or os.environ.get('AZURE_FUNCTION_URL')
+try:
+    # azure-storage-blob is in requirements.txt; import here so module import error surfaces at runtime
+    from azure.storage.blob import BlobServiceClient
+except Exception:
+    BlobServiceClient = None
 
-    if not function_url:
-        logger.error("Azure Function URL is not configured.")
-        return False
+from stacks.models import Stack, PurchasableStack
+from projects.models import Project
+from stacks.stack_managers import get_stack_manager
 
-    try:
-        # Send HTTP POST request to Azure Function
-        response = requests.post(
-            function_url,
-            json=message_data,
-            headers={'Content-Type': 'application/json'},
-            timeout=30  # 30 second timeout
-        )
-        
-        # Check if the request was successful
-        if response.status_code in [200, 202]:
-            logger.info(f"Successfully sent message to Azure Function: {function_url}")
-            return True
-        else:
-            logger.error(f"Azure Function returned status code {response.status_code}: {response.text}")
-            return False
-        
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Failed to send message to Azure Function: {str(e)}")
-        return False
-    except Exception as e:
-        logger.error(f"Unexpected error sending message to Azure Function: {str(e)}")
-        return False
-    
+logger = logging.getLogger(__name__)    
 
 def add_stack(**kwargs) -> Stack:
     name = kwargs.get("name")
@@ -66,6 +41,18 @@ def add_stack(**kwargs) -> Stack:
     project = Project.objects.get(pk=project_id)
     purchasable_stack = PurchasableStack.objects.get(pk=purchasable_stack_id)
 
+    if not name:
+        # Generate default name
+        first_word_options = [
+            "Awesome", "Incredible", "Fantastic", "Superb", "Brilliant", "Majestic", "Dynamic", "Vibrant", "Radiant", "Stellar", "Epic", "Legendary", "Spectacular", "Magnificent", "Glorious", "Splendid", "Fabulous", "Marvelous", "Phenomenal", "Remarkable"
+        ]
+
+        second_word_options = [
+            "Falcon", "Tiger", "Eagle", "Lion", "Panther", "Wolf", "Dragon", "Phoenix", "Leopard", "Cheetah", "Hawk", "Shark", "Bear", "Raven", "Stallion", "Cougar", "Viper", "Jaguar", "Griffin", "Hydra"
+        ]
+
+        name = f"{random.choice(first_word_options)} {random.choice(second_word_options)} {purchasable_stack.type.capitalize()} Stack"
+
     with transaction.atomic():
 
         print(f"Variant: {purchasable_stack.variant}")
@@ -74,62 +61,42 @@ def add_stack(**kwargs) -> Stack:
             name=name, project=project, purchased_stack=purchasable_stack, status="PROVISIONING"
         )
 
-        
+        stack_manager = get_stack_manager(stack)
 
-        # Put request on Azure Service Bus
-        message_data = {
-            "request_type": "iac.create",
-            "source": os.environ.get("HOST"),          
-            "data": {
-                "stack_id": str(stack.id),
-                "project_id": str(project.id),
-                "org_id": str(project.organization.id),
-                "purchasable_stack_type": purchasable_stack.type.upper(),
-                "purchasable_stack_variant": purchasable_stack.variant.upper(),
-                "purchasable_stack_version": purchasable_stack.version,
-            }
-        }
+        for key, value in stack_manager.get_starter_stack_iac_attributes().items():
+            StackIACAttribute.objects.create(
+                stack_id=stack.id,
+                attribute_name=key,
+                attribute_value=value,
+            )
 
-        # Send message to Azure Function (non-blocking)
-        try:
-            send_to_azure_function(message_data)
-        except Exception as e:
-            logger.warning(f"Failed to send message to Azure Function: {str(e)}")
+        # try:
+        send_to_azure_function("iac.create", {
+            "stack_id": str(stack.id),
+            "project_id": str(project.id),
+            "org_id": str(project.organization.id),
+            "iac": get_iac_attribute_dict_as_json(stack),
+        })
+        # except Exception as e:
+        #     logger.warning(f"Failed to send message to Azure Function: {str(e)}")
 
     return stack
 
-# project = Project.objects.all()[0]
-# purchasable_stack = PurchasableStack.objects.all()[0]
-# add_stack(name="test", project_id=project.id, purchasable_stack_id=purchasable_stack.id)
-
-
 def update_stack(**kwargs) -> Stack:
     stack_id = kwargs.get("stack_id")
-    stack_iac = kwargs.get("stack_iac", {})
     source_code_path = kwargs.get("source_code_path", "")
-
 
     with transaction.atomic():
 
         stack = Stack.objects.get(pk=stack_id)
+        stack_iac = get_iac_attribute_dict_as_json(stack)
 
-        if not stack_iac:
-            stack_iac = stack.iac
-
-        # Put request on Azure Service Bus
-        message_data = {
-            "request_type": "iac.update",
-            "source": os.environ.get("HOST"),
-            "data": {
+        try:
+            send_to_azure_function("iac.update", {
                 "stack_id": str(stack.id),
                 "source_code_path": str(source_code_path),
                 "iac": stack_iac,
-            }
-        }
-
-        # Send message to Azure Function (non-blocking)
-        try:
-            send_to_azure_function(message_data)
+            })
         except Exception as e:
             logger.warning(f"Failed to send message to Azure Function: {str(e)}")
 
@@ -159,328 +126,271 @@ def post_purchasable_stack(
             {"error": f"Failed to create purchasable stack: {str(e)}"}, status=500
         )
 
-
-def update_stack_iac_state_only(stack: Stack, new_iac_state: dict) -> bool:
-    """
-    Updates only the IAC state field in the database without triggering cloud deployment.
-
-    Args:
-        stack (Stack): The stack object to update.
-        new_iac_state (dict): The complete new IAC state configuration to replace the existing one.
-
-    Returns:
-        bool: True if the IAC state was updated successfully, False otherwise.
-    """
-    try:
-        logger.info(f"Updating IAC state field only for stack {stack.id}")
-        
-        # Store the old IAC state for logging purposes
-        old_iac_state = stack.iac_state
-        logger.info(f"Old IAC state configuration: {old_iac_state}")
-        logger.info(f"New IAC state configuration: {new_iac_state}")
-        
-        # Validate that the new IAC state is a valid dictionary
-        if not isinstance(new_iac_state, dict):
-            logger.error(f"Invalid IAC state configuration type for stack {stack.id}: {type(new_iac_state)}")
-            return False
-        
-        # Overwrite the IAC state configuration in the database only
-        stack.iac_state = new_iac_state
-        stack.save()
-        
-        logger.info(f"Successfully updated IAC state field for stack {stack.id} (no deployment)")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Failed to update IAC state field for stack {stack.id}: {str(e)}")
-        return False
-
-
-# TODO: show loading indicator
-def post_stack_env(
-    stack_id: str, selected_frameworks, selected_locations, env_dict
-):
-    """
-    Sets environment variables as secrets and environment variables
-    in the corresponding Azure Container App using AzureDeployBoxIAC.
-    """
-    # Determine resource group and app name
-    if selected_locations == "none":
-        app_name = f"{selected_frameworks}-{stack_id}"
-    else:
-        app_name = f"{selected_frameworks}-{selected_locations}-{stack_id}"
-
-    resource_group_name = stack_id + "-rg"  # Or derive dynamically if needed
-
-    stack = Stack.objects.get(id=stack_id)
-    if not stack:
-        return JsonResponse(
-            {"status": "error", "message": "Stack not found."}, status=404
-        )
-
-    iac = stack.iac
-    # Add secrets and environment variables to the Azure Container App
-    cloud = AzureDeployBoxIAC()
-    result = cloud.add_container_app_envs_as_secrets(
-        iac, app_name, env_dict, "testing-mern"
-    )
-
-    if result is None:
-        return JsonResponse(
-            {"status": "error", "message": "Failed to update secrets."}, status=500
-        )
-
-    # Update the stack with the new IAC
-    stack.iac = iac
-
-    main(resource_group_name, iac)
-
-    stack.save()
-
-    return JsonResponse({"status": "success"})
-
-@csrf_exempt
-def update_stack_databases_usages(data) -> bool:
-    """
-    Updates the usage of multiple stack databases.
-
-    Args:
-        data (dict): Dictionary containing the data with stack database updates
-
-    Returns:
-        bool: True if all updates were successful
-    """
-
-    try:
-        data = json.loads(data)
-        print("Data: ", data)
-        for stack_id, usage in data.items():
-            stack_id = stack_id.strip('-rg')  # Remove '-rg' suffix if present
-            try:
-                stack_database = Stack.objects.get(pk=stack_id)
-                stack_database.instance_usage = usage
-                stack_database.save()
-            except Stack.DoesNotExist:
-                logger.error(f"Stack with ID {stack_id} does not exist.")
-                continue
-        return True
-    except Exception as e:
-        logger.error(f"Failed to update stack databases usages: {str(e)}")
-        return False
-    
-def update_stack_information(stack_id: str, stack_information: dict) -> JsonResponse:
-    """
-    Updates the stack information for a given stack.
-    """
-    try:
-        print(f"Updating stack information for stack: {stack_id}")
-        print(f"Stack information: {stack_information}")
-        stack = Stack.objects.get(pk=stack_id)
-        stack.stack_information = stack_information
-        stack.save()
-        return JsonResponse({
-            "success": True,
-            "message": "Stack information updated successfully.",
-            "stack_id": stack_id
-        }, status=200)
-    except Stack.DoesNotExist:
-        logger.error(f"Stack with ID {stack_id} does not exist.")
-        return JsonResponse({"error": "Stack not found."}, status=404)
-    except Exception as e:
-        logger.error(f"Failed to update stack information: {str(e)}")
-        return JsonResponse({"error": f"Failed to update stack information. {str(e)}"}, status=500)
-
-def update_iac(stack_id: str, new_iac: dict) -> JsonResponse:
-    """
-    Completely overwrites the IAC configuration for a given stack.
-
-    Args:
-        stack_id (str): The ID of the stack to update.
-        new_iac (dict): The complete new IAC configuration to replace the existing one.
-
-    Returns:
-        JsonResponse: Success or error response.
-    """
-    try:
-        stack = Stack.objects.get(pk=stack_id)
-        logger.info(f"Overwriting IAC for stack: {stack_id}")
-        
-        # Store the old IAC for logging purposes
-        old_iac = stack.iac
-        logger.info(f"Old IAC configuration: {old_iac}")
-        logger.info(f"New IAC configuration: {new_iac}")
-        
-        # Validate that the new IAC is a valid dictionary
-        if not isinstance(new_iac, dict):
-            return JsonResponse({"error": "IAC configuration must be a valid JSON object."}, status=400)
-        
-        # Overwrite the IAC configuration
-        stack.iac = new_iac
-        stack.save()
-        
-        # Deploy the new IAC configuration
-        resource_group_name = f"{stack_id}-rg"
-        cloud = DeployBoxIAC()
-        cloud.deploy(resource_group_name, new_iac)
-        
-        logger.info(f"Successfully overwrote IAC for stack: {stack_id}")
-        return JsonResponse({
-            "success": True, 
-            "message": "IAC configuration overwritten successfully.",
-            "stack_id": stack_id,
-            "old_iac": old_iac,
-            "new_iac": new_iac
-        }, status=200)
-
-    except Stack.DoesNotExist:
-        logger.error(f"Stack with ID {stack_id} does not exist.")
-        return JsonResponse({"error": "Stack not found."}, status=404)
-    except Exception as e:
-        logger.error(f"Failed to overwrite IAC for stack {stack_id}: {str(e)}")
-        return JsonResponse({"error": f"Failed to overwrite IAC configuration. {str(e)}"}, status=500)
-
-
-def update_stack_status(stack: Stack, new_status: str) -> bool:
-    """
-    Updates the status of a given stack.
-
-    Args:
-        stack (Stack): The stack object to update.
-        new_status (str): The new status to set.
-
-    Returns:
-        bool: True if the status was updated successfully, False otherwise.
-    """
-    try:
-        logger.info(f"Updating status for stack {stack.id} from '{stack.status}' to '{new_status}'")
-        
-        # Update the stack status
-        stack.status = new_status
-
-        if new_status == "DELETED":
-            stack.delete()
-
-        else:
-            stack.save()
-        
-        logger.info(f"Successfully updated status for stack {stack.id} to '{new_status}'")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Failed to update status for stack {stack.id}: {str(e)}")
-        return False
-
-
-def update_stack_iac(stack: Stack, data: dict, section: list[str]) -> bool:
-    """
-    Updates the IAC for a given stack based on the provided data.
-
-    Args:
-        stack (Stack): The stack object to update.
-        data (dict): The new IAC data to apply.
-        section (list[str]): The top-level sections of the IAC to target.
-
-    Returns:
-        bool: True if the IAC was updated successfully, False otherwise.
-    """
-    try:
-        logger.info(f"Updating IAC for stack {stack.id}")
-        logger.info(f"Stack info: {stack.stack_information}")
-        
-        old_iac = stack.iac
-        logger.info(f"Old IAC: {old_iac}")
-
-        for item in section:
-            iac_section = ServiceHelper().find_nested_value(old_iac, item)
-            logger.info(f"Processing section: {item}")
-            logger.info(f"Section content: {iac_section}")
-            
-            for key, value in data.items():
-                try:
-                    ServiceHelper().update_nested_value(iac_section, key, value)
-                    if key in stack.stack_information:
-                        stack.stack_information[key] = value
-                    else:
-                        continue
-                except Exception as e:
-                    logger.warning(f"Failed to update nested value {key}: {str(e)}")
-                    continue
-
-            # Reassign back just in case it's not by reference
-            ServiceHelper().update_nested_value(old_iac, item, iac_section)
-
-        stack.iac = old_iac
-        stack.save()
-
-        # Deploy the updated IAC
-        resource_group_name = f"{stack.id}-rg"
-        cloud = DeployBoxIAC()
-        cloud.deploy(resource_group_name, old_iac)
-        
-        logger.info(f"Successfully updated IAC for stack {stack.id}")
-        return True
-
-    except Exception as e:
-        logger.error(f"Failed to update IAC for stack {stack.id}: {str(e)}")
-        return False
-
-
-def update_stack_iac_only(stack: Stack, new_iac: dict) -> bool:
-    """
-    Updates only the IAC field in the database without triggering cloud deployment.
-
-    Args:
-        stack (Stack): The stack object to update.
-        new_iac (dict): The complete new IAC configuration to replace the existing one.
-
-    Returns:
-        bool: True if the IAC was updated successfully, False otherwise.
-    """
-    try:
-        logger.info(f"Updating IAC field only for stack {stack.id}")
-        
-        # Store the old IAC for logging purposes
-        old_iac = stack.iac
-        logger.info(f"Old IAC configuration: {old_iac}")
-        logger.info(f"New IAC configuration: {new_iac}")
-        
-        # Validate that the new IAC is a valid dictionary
-        if not isinstance(new_iac, dict):
-            logger.error(f"Invalid IAC configuration type for stack {stack.id}: {type(new_iac)}")
-            return False
-        
-        # Overwrite the IAC configuration in the database only
-        stack.iac = new_iac
-        stack.save()
-        
-        logger.info(f"Successfully updated IAC field for stack {stack.id} (no deployment)")
-        return True
-        
-    except Exception as e:
-        logger.error(f"Failed to update IAC field for stack {stack.id}: {str(e)}")
-        return False
-
-
-
 def delete_stack(stack: Stack) -> bool:
-    """
-    Deletes a given stack.
-    """
-    print(f"Deleting stack {stack.id}")
     try:
         stack.status = "DELETING"
         stack.save()
-        send_to_azure_function(
+
+        stack_iac = get_iac_attribute_dict_as_json(stack)
+
+        send_to_azure_function("iac.delete",
             {
-                "request_type": "iac.delete",
-                "source": os.environ.get("HOST"),
-                "data": {
-                    "stack_id": stack.id,
-                    "iac": stack.iac
-                }
+                "stack_id": str(stack.id),
+                "iac": stack_iac,
             }
         )
+
         return True
     except Exception as e:
         logger.error(f"Failed to delete stack {stack.id}: {str(e)}")
+        return False
+    
+def set_is_persistent_stack(stack: Stack, is_persistent: bool) -> bool:
+    try:
+        stack_manager = get_stack_manager(stack)
+        stack_manager.set_is_persistent(is_persistent)
+
+        send_to_azure_function("iac.update", {
+            "stack_id": str(stack.id),
+            "iac": get_iac_attribute_dict_as_json(stack),
+        })
+
+        return True
+    except Exception as e:
+        logger.error(f"Failed to set persistent for stack {stack.id}: {str(e)}")
+        return False
+    
+def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
+    """Accept a multipart/form-data POST with a file field named 'source_zip' and upload it to Azure Blob Storage.
+
+    Expects Azure configuration in Django settings under `AZURE.STORAGE_CONNECTION_STRING` and
+    `AZURE.CONTAINER_NAME` (or environment variables `AZURE_STORAGE_CONNECTION_STRING` and `CONTAINER_NAME`).
+    Returns JSON with the uploaded blob URL on success.
+    """
+    # Only allow POST
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed."}, status=405)
+
+    # Ensure file present
+    if "source_zip" not in request.FILES:
+        return JsonResponse({"error": "No file uploaded under 'source_zip'."}, status=400)
+
+    uploaded_file = request.FILES["source_zip"]
+
+    # Verify Azure Blob client available
+    if BlobServiceClient is None:
+        return JsonResponse({"error": "Azure Blob Storage client not available (missing package)."}, status=500)
+
+    # Read Azure configuration from settings
+    azure_cfg = getattr(settings, 'AZURE', {}) if hasattr(settings, 'AZURE') else {}
+    print(azure_cfg)
+    conn_str = azure_cfg.get('STORAGE_CONNECTION_STRING') or getattr(settings, 'AZURE_STORAGE_CONNECTION_STRING', None)
+    container = azure_cfg.get('CONTAINER_NAME') or getattr(settings, 'CONTAINER_NAME', None)
+
+    if not conn_str or not container:
+        return JsonResponse({"error": "Azure storage configuration missing. Set AZURE_STORAGE_CONNECTION_STRING and CONTAINER_NAME."}, status=500)
+
+    try:
+        # Create client and upload
+        blob_service_client = BlobServiceClient.from_connection_string(conn_str)
+        container_client = blob_service_client.get_container_client(container)
+
+        # Build a unique blob name preserving stack context
+        ts = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        unique = uuid.uuid4().hex
+        blob_name = f"{stack_id}/source-{ts}-{unique}.zip"
+
+        blob_client = container_client.get_blob_client(blob_name)
+
+        # streamed upload from the uploaded file file-like object
+        file_stream = uploaded_file.file if hasattr(uploaded_file, 'file') else uploaded_file
+
+        # upload_blob accepts a file-like object or bytes
+        blob_client.upload_blob(file_stream, overwrite=True)
+
+        stack = Stack.objects.get(id=stack_id)
+
+        stack_manager = get_stack_manager(stack)
+        stack_manager.set_source_code_upload()
+
+        update_stack(stack_id=stack_id, source_code_path=blob_name)
+
+        return JsonResponse({"success": True, "blob_name": blob_name, "blob_url": blob_client.url}, status=200)
+
+    except Exception as e:
+        # Log server-side for diagnostics and return minimal error to client
+        print(f"Failed uploading source zip to Azure: {str(e)}")
+        return JsonResponse({"error": f"Failed to upload file: {str(e)}"}, status=500)
+
+def get_iac_attribute_dict_as_json(stack: Stack) -> dict:
+    """Convert StackIACAttribute entries for the given stack into nested JSON structure."""
+    attribute_dict = {}
+    for attr in StackIACAttribute.objects.filter(stack=stack).all():
+        attribute_dict[attr.attribute_name] = attr.attribute_value
+
+    logger.warning(f"IAC Attribute Dict for Stack {stack.id}: {json.dumps(attribute_dict, indent=2)}")
+
+    def parse_value(value):
+        """Convert string representations to their actual types."""
+        if not isinstance(value, str):
+            return value
+        
+        # Strip whitespace
+        value = value.strip()
+        
+        # Empty dictionary
+        if value == "{}":
+            return {}
+        
+        # Empty list
+        if value == "[]":
+            return []
+        
+        # Try to parse as JSON (handles lists, dicts, etc.)
+        if value.startswith(('[', '{')) or value.startswith(("'[", '"[')):
+            try:
+                # Handle Python-style lists with single quotes
+                # Convert Python representation to JSON
+                python_list_value = value.replace("'", '"')
+                parsed = json.loads(python_list_value)
+                return parsed
+            except json.JSONDecodeError:
+                pass
+        
+        # Try to parse as decimal number (int or float)
+        try:
+            # Check if it's a number (including decimals)
+            if re.match(r'^-?\d+(\.\d+)?$', value):
+                if '.' in value:
+                    return float(value)
+                else:
+                    return int(value)
+        except ValueError:
+            pass
+        
+        # Return original string if no conversion applies
+        return value
+
+    def ensure_list(container, key):
+        if key not in container or not isinstance(container[key], list):
+            container[key] = []
+        return container[key]
+
+    def ensure_dict(container, key):
+        if key not in container or not isinstance(container[key], dict):
+            container[key] = {}
+        return container[key]
+
+    index_re = re.compile(r"^(?P<name>[^\[\]]+)(?:\[(?P<idx>\d+)\])?$")
+
+    def parse_segment(segment):
+        # ("container[0]") -> ("container", 0, None, None)
+        # ("value?name=FOO") -> ("value", None, "name", "FOO")
+        # ("env") -> ("env", None, None, None)
+        if "?" in segment:
+            base, query = segment.split("?", 1)
+            if "=" in query:
+                qk, qv = query.split("=", 1)
+            else:
+                qk, qv = query, None
+        else:
+            base, qk, qv = segment, None, None
+
+        m = index_re.match(base)
+        if not m:
+            return base, None, qk, qv
+        name = m.group("name")
+        idx = m.group("idx")
+        return name, (int(idx) if idx is not None else None), qk, qv
+
+    iac_json = {}
+
+    for full_key, value in attribute_dict.items():
+        parts = full_key.split(".")
+        current = iac_json
+        parent = None
+        parent_key = None
+
+        # Traverse all but last segment
+        for i, seg in enumerate(parts[:-1]):
+            name, idx, _, _ = parse_segment(seg)
+            next_is_query_leaf = "?" in parts[i+1] and (i+1) == len(parts) - 1
+
+            if idx is None:
+                if next_is_query_leaf:
+                    # parent[name] should be a list; we’ll append at the leaf
+                    current_list = ensure_list(current, name)
+                    parent = current
+                    parent_key = name
+                    current = current_list
+                else:
+                    current = ensure_dict(current, name)
+            else:
+                arr = ensure_list(current, name)
+                while len(arr) <= idx:
+                    arr.append({})
+                current = arr[idx]
+
+        # Handle the final segment
+        last_seg = parts[-1]
+        name, idx, qk, qv = parse_segment(last_seg)
+
+        if qk is not None:
+            # e.g. "...env.value?name=FOO": append {"name": qv, "value": value} to parent[parent_key]
+            target_list = current if (parent is None or parent_key is None) else ensure_list(parent, parent_key)
+            target_list.append({qk: qv, name: parse_value(value)})
+        else:
+            if idx is None:
+                if isinstance(current, list):
+                    current.append({name: parse_value(value)})
+                else:
+                    current[name] = parse_value(value)
+            else:
+                arr = ensure_list(current, name)
+                while len(arr) <= idx:
+                    arr.append(None)
+                arr[idx] = parse_value(value)
+
+    return iac_json
+
+
+def send_to_azure_function(request_type: str, message_data: dict) -> bool:
+    """
+    Sends a message to Azure Function via HTTP trigger.
+    """
+    
+    function_url = os.environ.get('AZURE_FUNCTION_URL')
+
+    if not function_url:
+        logger.error("Azure Function URL is not configured.")
+        return False
+    
+    data = {
+        "request_type": request_type,
+        "data": message_data
+    }
+
+    try:
+        # Send HTTP POST request to Azure Function
+        print("Sending data to Azure Function:", function_url, data)
+        response = requests.post(
+            function_url,
+            json=data,
+            headers={'Content-Type': 'application/json'},
+            timeout=3000  # 30 second timeout
+        )
+        
+        # Check if the request was successful
+        if response.status_code in [200, 202]:
+            logger.info(f"Successfully sent message to Azure Function: {function_url}")
+            return True
+        else:
+            logger.error(f"Azure Function returned status code {response.status_code}: {response.text}")
+            return False
+        
+    except requests.exceptions.RequestException as e:
+        logger.error(f"Failed to send message to Azure Function: {str(e)}")
+        return False
+    except Exception as e:
+        logger.error(f"Unexpected error sending message to Azure Function: {str(e)}")
         return False

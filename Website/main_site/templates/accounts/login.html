@@ -8,34 +8,46 @@
   {% tailwind_css %}
 </head>
 
-<body class="min-h-screen bg-gray-100 flex flex-col justify-center sm:py-12">
+<body class="min-h-screen bg-zinc-950 flex flex-col justify-center sm:py-12 relative overflow-hidden font-sans">
+    <!-- Background Texture -->
+    <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
 
-  <div class="p-10 xs:p-0 mx-auto md:w-full md:max-w-md">
-    <h1 class="font-bold text-center text-2xl mb-5">Deploy Box</h1>
-
-    <div id="error-banner" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-      <span class="block sm:inline" id="error-message"></span>
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-teal-500/10 rounded-full blur-3xl"></div>
     </div>
 
-    <div class="bg-white ring-2 ring-gray-200 shadow-2xl w-full rounded-lg divide-y divide-gray-200">
-      <form id="login-form" class="p-6">
+  <div class="p-10 xs:p-0 mx-auto md:w-full md:max-w-md relative z-10">
+    {% include 'accounts/components/auth_header.html' %}
+
+    {% include 'accounts/components/error_banner.html' %}
+
+    <div class="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/50 shadow-2xl w-full rounded-2xl overflow-hidden">
+      <form id="login-form" class="p-8">
         <input type="hidden" name="next" value="{{ next }}" />
 
-        <div class="mb-5">
-          <label for="username" class="font-semibold text-sm text-gray-600 pb-1 block">Username</label>
-          <input type="text" name="username" id="username" class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full"
+        <div class="mb-6">
+          <label for="username" class="font-semibold text-sm text-zinc-300 pb-2 block">Username</label>
+          <input type="text" name="username" id="username" 
+            class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
             value="{{ request.POST.username }}" placeholder="Enter your username" required />
         </div>
 
-        <div class="mb-5">
-          <label for="password" class="font-semibold text-sm text-gray-600 pb-1 block">Password</label>
+        <div class="mb-6">
+          <label for="password" class="font-semibold text-sm text-zinc-300 pb-2 block">Password</label>
           <input type="password" name="password" id="password"
-            class="border rounded-lg px-3 py-2 mt-1 mb-5 text-sm w-full" placeholder="Enter your password" required />
+            class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300" 
+            placeholder="Enter your password" required />
+          <div class="text-right mt-2">
+            <a href="{% url 'main_site:password_reset' %}"
+              class="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium">Forgot password?</a>
+          </div>
         </div>
 
         <button type="submit" id="login-submit"
-          class="transition duration-200 bg-emerald-400 hover:bg-emerald-500 focus:bg-emerald-600 focus:ring-4 focus:ring-emerald-400 focus:ring-opacity-50 text-white w-full py-2.5 rounded-lg text-sm shadow-sm font-semibold inline-flex items-center justify-center">
-          <svg id="spinner" class="hidden animate-spin h-4 w-4 mr-2 text-white" xmlns="http://www.w3.org/2000/svg"
+          class="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-transparent flex items-center justify-center">
+          <svg id="spinner" class="hidden animate-spin h-4 w-4 mr-2 text-zinc-950" xmlns="http://www.w3.org/2000/svg"
             fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
@@ -44,56 +56,86 @@
         </button>
       </form>
 
-      <div class="py-3 text-center">
-        <a href="{% url 'main_site:password_reset' %}"
-          class="transition duration-200 text-sm text-gray-500 hover:text-gray-700">Forgot your password?</a>
-      </div>
+      <div class="pb-6 px-8">
+        {% include 'accounts/components/form_divider.html' %}
 
-      <div class="py-5">
-        <div class="grid grid-cols-2 gap-1">
-          <div class="text-center sm:text-right flex items-center justify-end">
-            <a href="{% url 'main_site:signup' %}"
-              class="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-sm rounded-lg text-gray-500 hover:bg-gray-100">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                class="w-4 h-4 inline-block align-text-bottom">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-              </svg>
-              <span class="inline-block ml-1">Sign Up</span>
-            </a>
-          </div>
-          <div class="text-center sm:text-right flex items-center justify-end">
-            <button
-              class="transition duration-200 mx-5 px-5 py-4 cursor-pointer font-normal text-sm rounded-lg text-gray-500 hover:bg-gray-100">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                class="w-4 h-4 inline-block align-text-bottom">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z" />
-              </svg>
-              <span class="inline-block ml-1">Help</span>
-            </button>
-          </div>
+        <div class="oauth-buttons-disabled mt-4" title="OAuth login coming soon">
+          {% include 'accounts/components/oauth_buttons.html' with google_button_id='google-login' github_button_id='github-login' %}
         </div>
       </div>
 
     </div>
+
+    <div class="pt-6 flex justify-center">
+      <a href="{% url 'main_site:signup' %}"
+        class="transition duration-200 inline-flex items-center px-5 py-2 cursor-pointer font-normal text-sm rounded-lg text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900/50">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+          class="w-4 h-4 inline-block align-text-bottom mr-1">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+        </svg>
+        <span>Sign Up</span>
+      </a>
+    </div>
   </div>
 
+  <style>
+    .oauth-buttons-disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      position: relative;
+    }
+    .oauth-buttons-disabled button, .oauth-buttons-disabled a {
+      pointer-events: none;
+    }
+    /* Simple override for included components if they rely on text-gray-xxx that is invisible */
+    /* Assuming standard tailwind use, the parent text color might not cascade if they have 'text-gray-900' classes. 
+       We rely on component classes. */
+  </style>
+
   <script>
+    function showError(message) {
+      const errorEl = document.getElementById('error-message');
+      if(errorEl) errorEl.textContent = message;
+      const bannerEl = document.getElementById('error-banner');
+      if(bannerEl) bannerEl.classList.remove('hidden');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function hideError() {
+      const bannerEl = document.getElementById('error-banner');
+      if(bannerEl) bannerEl.classList.add('hidden');
+    }
+
     document.getElementById("login-form").addEventListener("submit", async (e) => {
       e.preventDefault();
 
       const form = e.target;
       const formData = new FormData(form);
+      const username = formData.get("username");
+      const password = formData.get("password");
+
+      // Validate fields
+      if (!username || !password) {
+        showError('Please fill in all fields.');
+        return;
+      }
+
+      hideError();
+
       const body = {
-        username: formData.get("username"),
-        password: formData.get("password"),
+        username: username,
+        password: password,
       };
 
       // UI: Show spinner, disable button
-      document.getElementById("spinner").classList.remove("hidden");
-      document.getElementById("login-button-text").textContent = "Logging in...";
-      document.getElementById("login-submit").disabled = true;
+      const spinner = document.getElementById("spinner");
+      const btnText = document.getElementById("login-button-text");
+      const submitBtn = document.getElementById("login-submit");
+
+      if(spinner) spinner.classList.remove("hidden");
+      if(btnText) btnText.textContent = "Logging in...";
+      if(submitBtn) submitBtn.disabled = true;
 
       try {
         const response = await fetch("/api/v1/accounts/login/", {
@@ -124,17 +166,21 @@
           }
         } else {
           // ❌ Show error banner
-          document.getElementById("error-message").textContent = data.detail || "Login failed. Please try again.";
-          document.getElementById("error-banner").classList.remove("hidden");
+          const errorEl = document.getElementById("error-message");
+           if(errorEl) errorEl.textContent = data.detail || "Login failed. Please try again.";
+           const bannerEl = document.getElementById("error-banner");
+           if(bannerEl) bannerEl.classList.remove("hidden");
         }
       } catch (error) {
-        document.getElementById("error-message").textContent = "Something went wrong. Please try again.";
-        document.getElementById("error-banner").classList.remove("hidden");
+        const errorEl = document.getElementById("error-message");
+        if(errorEl) errorEl.textContent = "Something went wrong. Please try again.";
+        const bannerEl = document.getElementById("error-banner");
+        if(bannerEl) bannerEl.classList.remove("hidden");
       } finally {
         // UI: Restore button state
-        document.getElementById("spinner").classList.add("hidden");
-        document.getElementById("login-button-text").textContent = "Login";
-        document.getElementById("login-submit").disabled = false;
+        if(spinner) spinner.classList.add("hidden");
+        if(btnText) btnText.textContent = "Login";
+        if(submitBtn) submitBtn.disabled = false;
       }
     });
   </script>

@@ -292,8 +292,33 @@
     </div>
 </div>
 
+<!-- Error Modal -->
+{% include 'dashboard/components/_modal.html' with modal_id='errorModal' modal_title='Error' modal_message='' icon_color='red' confirm_text='OK' confirm_color='red' cancel_text='' %}
+
 <script>
 let selectedAPI = null;
+
+// Helper function to show error modal
+function showError(message) {
+    document.getElementById('errorModal_message').textContent = message;
+    document.getElementById('errorModal').classList.remove('hidden');
+}
+
+// Close error modal when clicking confirm or cancel
+document.getElementById('errorModal_confirm')?.addEventListener('click', function() {
+    document.getElementById('errorModal').classList.add('hidden');
+});
+
+document.getElementById('errorModal_cancel')?.addEventListener('click', function() {
+    document.getElementById('errorModal').classList.add('hidden');
+});
+
+// Close error modal when clicking outside
+document.getElementById('errorModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.add('hidden');
+    }
+});
 
 function purchaseAPI(apiId, apiName, apiPrice, apiIcon, apiCategory) {
     selectedAPI = { id: apiId, name: apiName, price: apiPrice, icon: apiIcon, category: apiCategory };
@@ -442,7 +467,7 @@ document.getElementById('copyClientIdBtn')?.addEventListener('click', function()
             }, 1500);
         })
         .catch(() => {
-            alert('Failed to copy Client ID');
+            showError('Failed to copy Client ID');
         });
 });
 // Modal clipboard copy buttons
@@ -460,7 +485,7 @@ document.getElementById('copyModalClientIdBtn')?.addEventListener('click', funct
             }, 1500);
         })
         .catch(() => {
-            alert('Failed to copy Client ID');
+            showError('Failed to copy Client ID');
         });
 });
 
@@ -478,7 +503,7 @@ document.getElementById('copyModalClientSecretBtn')?.addEventListener('click', f
             }, 1500);
         })
         .catch(() => {
-            alert('Failed to copy Client Secret');
+            showError('Failed to copy Client Secret');
         });
 });
 document.getElementById('generateTokenBtn')?.addEventListener('click', function() {
@@ -510,7 +535,7 @@ document.getElementById('generateTokenBtn')?.addEventListener('click', function(
     .catch(err => {
         btn.disabled = false;
         btn.textContent = 'Generate Token';
-        alert('Error generating API key.');
+        showError('Error generating API key.');
     });
 });
 
@@ -542,7 +567,7 @@ document.getElementById('revokeBtn')?.addEventListener('click', function() {
     .catch(err => {
         btn.disabled = false;
         btn.textContent = 'Revoke';
-        alert('Error revoking API key.');
+        showError('Error revoking API key.');
     });
 });
 // Rotate API key
@@ -562,7 +587,7 @@ document.getElementById('rotateBtn')?.addEventListener('click', function() {
     if (!csrfToken || !projectId) {
         btn.disabled = false;
         btn.textContent = 'Rotate';
-        alert('Missing CSRF token or Project ID.');
+        showError('Missing CSRF token or Project ID.');
         return;
     }
 
@@ -589,7 +614,7 @@ document.getElementById('rotateBtn')?.addEventListener('click', function() {
     .catch(err => {
         btn.disabled = false;
         btn.textContent = 'Rotate';
-        alert('Error rotating API key.');
+        showError('Error rotating API key.');
     });
 });
 
@@ -649,7 +674,7 @@ document.getElementById('copyBearerTokenBtn')?.addEventListener('click', functio
             }, 1500);
         })
         .catch(() => {
-            alert('Failed to copy Bearer Token');
+            showError('Failed to copy Bearer Token');
         });
 });
 </script>

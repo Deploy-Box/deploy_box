@@ -1,8 +1,7 @@
-from django.urls import path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.contrib.auth import views as auth_views
-from accounts.views import OAuthPasswordLoginView
 from . import views
 
 urlpatterns = [
@@ -14,13 +13,21 @@ urlpatterns = [
     path("stacks/mean/", views.mean_stack, name="mean_stack"),
     path("stacks/lamp/", views.lamp_stack, name="lamp_stack"),
     path("stacks/mevn/", views.mevn_stack, name="mevn_stack"),
+    path("stacks/mobile/", views.mobile_stack, name="mobile_stack"),
+    path("stacks/llm/", views.llm_stack, name="llm_stack"),
+    path("stacks/ai-data/", views.ai_data_stack, name="ai_data_stack"),
+    path("stacks/computer-vision/", views.computer_vision_stack, name="computer_vision_stack"),
+    path("stacks/image-generation/", views.image_generation_stack, name="image_generation_stack"),
+    path("stacks/ai-agents/", views.ai_agents_stack, name="ai_agents_stack"),
     path("pricing/", views.pricing, name="pricing"),
     path("contact/", views.maintenance, name="contact"),
+    path("marketplace/", include(("marketplace.urls", "marketplace"), namespace="marketplace")),
     # User profile
     path("profile/", views.profile, name="profile"),
     # Dashboard
     path("dashboard/", views.dashboard_view.get, name="dashboard"),
     path("dashboard/welcome/", views.dashboard_view.get, name="welcome"),
+    path("dashboard/organizations/", views.dashboard_view.organization_select, name="organization_select"),
     path(
         "dashboard/organizations/<str:organization_id>/",
         views.dashboard_view.organization_dashboard,

@@ -4,7 +4,7 @@ from django.db.models import UniqueConstraint
 from projects.models import Project
 
 from core.fields import ShortUUIDField
-
+from stacks.resources import *
 
 class PurchasableStack(models.Model):
     id = ShortUUIDField(primary_key=True)
@@ -12,6 +12,7 @@ class PurchasableStack(models.Model):
     variant = models.CharField(max_length=10)
     version = models.CharField(max_length=10)
     price_id = models.CharField(max_length=50)
+    features = models.JSONField(default=list, blank=True)
     description = models.CharField(default="check out this stack", max_length=512)
     name = models.CharField(default="this is a stack", max_length=128)
     prebuilt_quantity = models.PositiveIntegerField(default=0, help_text="Number of prebuilt stacks available for immediate use")
@@ -27,32 +28,38 @@ class Stack(models.Model):
     name = models.CharField(max_length=100)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
     purchased_stack = models.ForeignKey(PurchasableStack, on_delete=models.DO_NOTHING)
-    root_directory = models.CharField(max_length=100, default="")
+    root_directory = models.CharField(max_length=100, default="", blank=True)
     instance_usage = models.FloatField(default=0)
     instance_usage_bill_amount = models.FloatField(default=0)
     status = models.CharField(max_length=100, default="STARTING")
-    iac = models.JSONField(default=dict)
+    error_message = models.TextField(default="", blank=True)
     iac_state = models.JSONField(default=dict)
-    stack_information = models.JSONField(default=dict)
     parent_stack = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='child_stacks')
     environment_type = models.CharField(max_length=50, default="DEV")
     environment_name = models.CharField(max_length=50, default="Development")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def is_persistent(self):
+        from stacks.stack_managers.get_manager import get_stack_manager
+        stack_manager = get_stack_manager(self)
+        return stack_manager.get_is_persistent()
+
     # MERN
     @property
     def mern_frontend_url(self):
-        return "https://" + self.stack_information.get("azurerm_container_app-1-endpoint", {}).get("value", "")
+        return f'https://{self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("fqdn", "")}'
 
     @property
     def mern_backend_url(self):
-        return "https://" + self.stack_information.get("azurerm_container_app-0-endpoint", {}).get("value", "")
+        return f'https://{self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("fqdn", "")}'
     
     @property
     def mern_mongodb_uri(self):
-        user = self.iac.get("mongodbatlas_database_user", {}).get("user-1", {})
-        return user.get("username", "") + ":" + user.get("password", "") + "@cluster0.yjaoi.mongodb.net/" + user.get("roles", [{}])[0].get("database_name", "")
+        return "Getting there"
+        # user = self.iac.get("mongodbatlas_database_user", {}).get("user-1", {})
+        # return user.get("username", "") + ":" + user.get("password", "") + "@cluster0.yjaoi.mongodb.net/" + user.get("roles", [{}])[0].get("database_name", "")
     
 
     # Django
@@ -71,6 +78,12 @@ class Stack(models.Model):
     @property
     def django_postgres_database(self):
         return self.get_attributes_from_resource("neon_project-1").get("database_name", "")
+    
+    # Redis
+    @property
+    def redis_url(self):
+        ip_address = self.get_attributes_from_resource("azurerm_public_ip-1").get("ip_address", "Not Assigned")
+        return f"http://{ip_address}"
 
     def get_attributes_from_resource(self, value) -> dict: 
         key = "name"
@@ -94,6 +107,21 @@ class Stack(models.Model):
     def __str__(self):
         return self.project.name + " - " + self.name
 
+class StackIACAttribute(models.Model):
+    id = ShortUUIDField(primary_key=True)
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE, related_name="iac_attributes")
+    attribute_name = models.CharField(max_length=200)
+    attribute_value = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            UniqueConstraint(fields=['stack', 'attribute_name'], name='unique_stack_attribute')
+        ]
+
+    def __str__(self):
+        return f"IAC Attribute {self.attribute_name} in Stack {self.stack.id}"
 
 class PrebuiltStack(models.Model):
     id = ShortUUIDField(primary_key=True)
@@ -104,52 +132,4 @@ class PrebuiltStack(models.Model):
 
     def __str__(self):
         return f"PrebuiltStack {self.id} for PurchasableStack {self.purchasable_stack.id}"
-
-class StackFrontend(models.Model):
-    id = ShortUUIDField(primary_key=True)
-    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
-    url = models.URLField()
-    root_directory = models.CharField(max_length=100, default="")
-    image_url = models.URLField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.url
-
-
-class StackBackend(models.Model):
-    id = ShortUUIDField(primary_key=True)
-    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
-    url = models.URLField()
-    root_directory = models.CharField(max_length=100, default="")
-    image_url = models.URLField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def __str__(self):
-        return self.url
-
-
-class StackDatabase(models.Model):
-    id = ShortUUIDField(primary_key=True)
-    stack = models.ForeignKey(Stack, on_delete=models.CASCADE)
-    uri = models.URLField()
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    current_usage = models.IntegerField(default=0)
-    pending_billed = models.IntegerField(default=0)
-
-    def __str__(self):
-        return self.uri
-
-
-class StackState(models.TextChoices):
-    STOPPED = "STOPPED"
-    RUNNING = "RUNNING"
-    STARTING = "STARTING"
-    STOPPING = "STOPPING"
-    DELETING = "DELETING"
-    UPDATING = "UPDATING"
-    ERROR = "ERROR"
 

@@ -1,0 +1,150 @@
+{% extends 'base.html' %} {% load static %} {% block content %}
+
+<div class="bg-zinc-950 text-white min-h-screen font-sans selection:bg-emerald-500 selection:text-black">
+
+<!-- Hero Section with Container Pattern -->
+<section class="relative min-h-[50vh] flex flex-col justify-center overflow-hidden py-24">
+    <!-- Background -->
+    <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2310b981\' fill-opacity=\'0.15\'%3E%3Cpath d=\'M30 0L0 15v30l30 15 30-15V15L30 0zm0 30L0 15 30 0l30 15-30 15zm0 0v30L0 45V15l30 15zm0 0v30l30-15V15L30 30z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+    <div class="absolute inset-0 z-0 bg-gradient-to-b from-zinc-950/0 via-zinc-950/80 to-zinc-950 pointer-events-none"></div>
+
+    <div class="container mx-auto px-4 relative z-10 text-center">
+        <h1 class="text-6xl md:text-8xl font-bold tracking-tighter mb-6 text-white">
+            Mobile <span class="text-cyan-500">Stack</span>
+        </h1>
+        <p class="text-xl md:text-2xl text-zinc-400 max-w-2xl mx-auto mb-8 font-light">
+            <span class="text-cyan-400 font-bold">React Native</span> • 
+            <span class="text-cyan-400 font-bold">Expo</span> • 
+            <span class="text-cyan-400 font-bold">Supabase</span> • 
+            <span class="text-cyan-400 font-bold">TypeScript</span>
+        </p>
+        <p class="text-zinc-500 max-w-xl mx-auto text-lg">
+            Ship cross-platform mobile apps for iOS and Android with a single codebase.
+        </p>
+    </div>
+</section>
+
+<!-- Content Grid -->
+<section class="pb-24">
+    <div class="container mx-auto px-4 max-w-7xl">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center mb-24">
+            
+            <!-- Context Card -->
+            <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 hover:border-cyan-500/30 transition-all">
+                <h2 class="text-3xl font-bold text-white mb-6">Why Mobile Stack?</h2>
+                <p class="text-zinc-400 text-lg leading-relaxed mb-6">
+                    Our Mobile Stack leverages the power of React Native and Expo to deliver native-quality apps without the headache of managing separate codebases. Includes pre-configured Social Media templates.
+                </p>
+                <ul class="space-y-3">
+                    <li class="flex items-center gap-3 text-zinc-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                        Unified iOS & Android Dev
+                    </li>
+                    <li class="flex items-center gap-3 text-zinc-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                        Over-the-air Updates
+                    </li>
+                    <li class="flex items-center gap-3 text-zinc-300">
+                        <span class="w-1.5 h-1.5 rounded-full bg-cyan-500"></span>
+                        Built-in Offline Support
+                    </li>
+                </ul>
+            </div>
+
+            <!-- ASCII Art Terminal -->
+            <div class="w-full relative group">
+                <div class="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-cyan-900 rounded-xl blur opacity-20 group-hover:opacity-40 transition duration-1000"></div>
+                <div class="relative bg-black border border-zinc-800 rounded-xl p-8 font-mono text-sm md:text-base overflow-hidden shadow-2xl">
+                    <div class="flex items-center gap-2 mb-4 border-b border-zinc-800 pb-4">
+                        <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                        <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        <span class="ml-4 text-zinc-500 text-xs">term --mobile</span>
+                    </div>
+                    <pre class="text-cyan-400 select-none overflow-x-auto p-4" style="line-height: 1.1;">
+    .-------.
+  .'         '.
+ /   O      /  \
+|          |    |
+|   APP    |    |
+|  STORE   |    |
+|          |    |
+ \         \  /
+  '._______.'<span class="animate-pulse">_</span></pre>
+                    <div class="mt-4 text-zinc-500 text-xs">
+                        > Initializing simulator...<br>
+                        > Bundling JavaScript... Done.<br>
+                        > Social Stack Template Loaded.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Plans Section -->
+        <h2 class="text-4xl md:text-5xl font-bold text-center text-white mb-12">Choose Your Plan</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+             <!-- Basic Plan -->
+             <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col hover:border-cyan-500/30 transition-all">
+                <div class="mb-6">
+                    <p class="text-cyan-400 font-bold uppercase text-xs tracking-wider mb-2">Starter</p>
+                    <h3 class="text-3xl font-bold text-white">Basic</h3>
+                </div>
+                <ul class="space-y-4 mb-8 flex-grow text-sm text-zinc-400">
+                    <li class="flex items-center gap-2 text-white"><span class="text-cyan-500">✔</span> 1 Mobile App</li>
+                    <li class="flex items-center gap-2 text-white"><span class="text-cyan-500">✔</span> Community Support</li>
+                    <li class="flex items-center gap-2 text-white"><span class="text-cyan-500">✔</span> Expo Go Testing</li>
+                </ul>
+                <button
+                    class="w-full py-3 rounded-lg border border-cyan-500/30 bg-cyan-500/10 text-cyan-400 font-bold hover:bg-cyan-500 hover:text-black transition-all"
+                    type="button"
+                >
+                    Get Started
+                </button>
+             </div>
+
+             <!-- Premium Plan -->
+             <div class="bg-zinc-900 border border-cyan-500 rounded-xl p-8 flex flex-col relative transform md:-translate-y-4 shadow-[0_0_50px_rgba(34,211,238,0.1)]">
+                <div class="absolute top-0 right-0 bg-cyan-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg">POPULAR</div>
+                <div class="mb-6">
+                    <p class="text-white font-bold uppercase text-xs tracking-wider mb-2">Growth</p>
+                    <h3 class="text-3xl font-bold text-white">Premium</h3>
+                </div>
+                <ul class="space-y-4 mb-8 flex-grow text-sm text-zinc-400">
+                    <li class="flex items-center gap-2 text-white"><span class="text-cyan-400">✔</span> All Basic Features</li>
+                    <li class="flex items-center gap-2 text-white"><span class="text-cyan-400">✔</span> Social Media Template</li>
+                    <li class="flex items-center gap-2 text-white"><span class="text-cyan-400">✔</span> App Store Deployment CI/CD</li>
+                </ul>
+                <button
+                    class="w-full py-3 rounded-lg bg-cyan-500 text-black font-bold hover:bg-cyan-400 transition-all shadow-lg shadow-cyan-500/20"
+                    type="button"
+                >
+                    Get Premium
+                </button>
+             </div>
+
+             <!-- Pro Plan -->
+             <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col hover:border-purple-500/50 transition-all">
+                <div class="mb-6">
+                    <p class="text-purple-400 font-bold uppercase text-xs tracking-wider mb-2">Enterprise</p>
+                    <h3 class="text-3xl font-bold text-white">Pro</h3>
+                </div>
+                <ul class="space-y-4 mb-8 flex-grow text-sm text-zinc-400">
+                    <li class="flex items-center gap-2 text-white"><span class="text-purple-400">✔</span> All Premium Features</li>
+                    <li class="flex items-center gap-2 text-white"><span class="text-purple-400">✔</span> Custom Native Modules</li>
+                    <li class="flex items-center gap-2 text-white"><span class="text-purple-400">✔</span> Dedicated Manager</li>
+                </ul>
+                <button
+                    class="w-full py-3 rounded-lg border border-purple-500/30 bg-purple-500/10 text-purple-400 font-bold hover:bg-purple-500 hover:text-white transition-all"
+                    type="button"
+                >
+                    Get Pro
+                </button>
+             </div>
+        </div>
+    </div>
+</section>
+
+{% include 'footer.html' %}
+</div>
+{% endblock %}

@@ -1,19 +1,5 @@
 from rest_framework import serializers
-from .models import StackDatabase, Stack, PurchasableStack
-
-
-class StackDatabaseSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = StackDatabase
-        fields = [
-            "id",
-            "stack",
-            "uri",
-            "created_at",
-            "updated_at",
-            "current_usage",
-            "pending_billed",
-        ]
+from .models import Stack, PurchasableStack
 
 
 class StackSerializer(serializers.ModelSerializer):
@@ -27,8 +13,8 @@ class StackSerializer(serializers.ModelSerializer):
             "root_directory",
             "instance_usage",
             "instance_usage_bill_amount",
+            "iac_state",
             "status",
-            "iac",
             "created_at",
             "updated_at",
         ]
@@ -52,43 +38,8 @@ class PurchasableStackSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "created_at", "updated_at"]
 
 
-class StackCreateSerializer(serializers.Serializer):
-    project_id = serializers.CharField(max_length=100)
-    purchasable_stack_id = serializers.CharField(max_length=100)
-    name = serializers.CharField(max_length=100)
-
-
-class StackUpdateSerializer(serializers.Serializer):
-    root_directory = serializers.CharField(max_length=100, required=False)
-
-
 class PurchasableStackCreateSerializer(serializers.Serializer):
     type = serializers.CharField(max_length=10)
     variant = serializers.CharField(max_length=10)
     version = serializers.CharField(max_length=10)
     price_id = serializers.CharField(max_length=50)
-
-
-class StackDatabaseUpdateSerializer(serializers.Serializer):
-    data = serializers.JSONField()
-
-
-class StackIACOverwriteSerializer(serializers.Serializer):
-    iac = serializers.JSONField(help_text="Complete IAC configuration to overwrite the existing one")
-
-
-class StackStatusUpdateSerializer(serializers.Serializer):
-    status = serializers.CharField(max_length=100, help_text="New status for the stack")
-
-
-class StackIACUpdateSerializer(serializers.Serializer):
-    data = serializers.JSONField(help_text="IAC data to update")
-    section = serializers.ListField(
-        child=serializers.CharField(),
-        help_text="Top-level sections of the IAC to target",
-        required=False,
-        default=[]
-    )
-
-class StackIACStateUpdateSerializer(serializers.Serializer):
-    data = serializers.JSONField(help_text="IAC state data to update")

@@ -1,5 +1,11 @@
 from django.urls import path
-from .views import SignupAPIView, OAuthPasswordLoginView, OAuthClientCredentialsView, M2MProtectedView, LogoutAPIView, ProfileAPIView, PasswordResetAPIView, PasswordResetConfirmAPIView, DeleteAccountAPIView
+from .views import (
+    SignupAPIView, OAuthPasswordLoginView, OAuthClientCredentialsView, 
+    M2MProtectedView, LogoutAPIView, ProfileAPIView, PasswordResetAPIView, 
+    PasswordResetConfirmAPIView, DeleteAccountAPIView,
+    GoogleOAuthInitiateView, GoogleOAuthCallbackView,
+    GitHubOAuthInitiateView, GitHubOAuthCallbackView
+)
 
 urlpatterns = [
     path("signup/", SignupAPIView.as_view(), name="api-signup"),
@@ -11,4 +17,10 @@ urlpatterns = [
     path("password-reset/", PasswordResetAPIView.as_view(), name="api-password-reset"),
     path("password-reset/<str:uidb64>/<str:token>/", PasswordResetConfirmAPIView.as_view(), name="api-password-reset-confirm"),
     path("delete-account/", DeleteAccountAPIView.as_view(), name="api-delete-account"),
+    
+    # OAuth Social Login
+    path("oauth/google/", GoogleOAuthInitiateView.as_view(), name="google-oauth-initiate"),
+    path("oauth/google/callback/", GoogleOAuthCallbackView.as_view(), name="google-oauth-callback"),
+    path("oauth/github/", GitHubOAuthInitiateView.as_view(), name="github-oauth-initiate"),
+    path("oauth/github/callback/", GitHubOAuthCallbackView.as_view(), name="github-oauth-callback"),
 ]

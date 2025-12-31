@@ -50,6 +50,14 @@
         </li>
         <li>
           <a
+            id="marketplace"
+            href="/marketplace"
+            class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/marketplace/' %} text-emerald-400 {% else %} text-white {% endif %}"
+            >Marketplace</a
+          >
+        </li>
+        <li>
+          <a
             id="contact"
             href="/contact"
             class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/contact/' %} text-emerald-400 {% else %} text-white {% endif %}"

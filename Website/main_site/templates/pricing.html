@@ -1,544 +1,457 @@
 {% extends 'base.html' %} {% load static %} {% block content %}
-<div
-  class="w-full min-h-screen py-16 px-4 bg-gradient-to-r from-emerald-900 via-emerald-800 to-gray-950"
->
-  <div
-    class="max-w-7xl mx-auto text-center bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 mb-12"
-  >
-    <h1
-      class="text-5xl md:text-6xl font-extrabold text-emerald-300 mb-4 tracking-tight drop-shadow-lg"
-    >
-      Pricing Plans
-    </h1>
-    <h4 class="text-2xl text-gray-100 mt-6 mb-2">
-      Choose the right plan for you
-    </h4>
-    <p class="text-md text-gray-100 mb-4">
-      Each of our stacks has a version based on the below 3 pricing models.
-      Simply select the Stack you want and make a one time payment to access
-      your prebuilt stack ready for you to develop!
-    </p>
+<div class="bg-zinc-950 text-white min-h-screen font-sans selection:bg-emerald-500 selection:text-black relative overflow-hidden">
+    
+   <!-- Isometric Container Pattern Background -->
+   <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2310b981\' fill-opacity=\'0.15\'%3E%3Cpath d=\'M30 0L0 15v30l30 15 30-15V15L30 0zm0 30L0 15 30 0l30 15-30 15zm0 0v30L0 45V15l30 15zm0 0v30l30-15V15L30 30z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+   
+   <!-- Dark Gradient Overlay -->
+   <div class="absolute inset-0 z-0 bg-gradient-to-b from-zinc-950 via-zinc-950/90 to-zinc-950/80 pointer-events-none"></div>
+
+  <div class="relative z-10 w-full min-h-screen pt-48 pb-32 px-4">
+    <!-- Header -->
+    <div class="max-w-4xl mx-auto text-center mb-32">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs font-mono mb-6">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        SIMPLE PRICING
+      </div>
+      <h1 class="text-5xl md:text-7xl font-bold tracking-tighter text-white mb-6">
+        Pay once. <span class="text-emerald-400">Own it forever.</span>
+      </h1>
+      <p class="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+        No monthly subscriptions. Choose your stack, pay a one-time fee, and get full access to your containerized environment.
+      </p>
+    </div>
+
+    <!-- Pricing Grid (Uniform Height) -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch px-4 mb-48">
+      
+      <!-- Free Plan Card -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col hover:border-emerald-500/30 transition-all duration-300 group relative overflow-hidden h-full">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+        <p class="text-emerald-400 font-bold mb-2 uppercase text-xs tracking-wider">Starter</p>
+        <h3 class="text-3xl font-bold text-white mb-4">Free</h3>
+        <p class="text-zinc-500 text-sm mb-8">Perfect for hobbyists and students.</p>
+        
+        <div class="mb-8">
+            <span class="text-5xl font-bold text-white">$<span x-text="basicPrice">0</span></span>
+            <span class="text-zinc-500 text-sm">/ container</span>
+        </div>
+
+        <div class="space-y-4 mb-8 flex-grow">
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Frontend Setup
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Backend Setup
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Pre-Integrated Database
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Setup Instructions
+             </div>
+             <!-- Disabled Items -->
+             <div class="flex items-center gap-3 text-sm text-zinc-600">
+                <svg class="w-5 h-5 text-zinc-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                Built-in Auth Support
+             </div>
+              <div class="flex items-center gap-3 text-sm text-zinc-600">
+                <svg class="w-5 h-5 text-zinc-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                Payment Processing
+             </div>
+        </div>
+        
+        <a href="{% url 'main_site:payments_home' variant='FREE' %}" class="mt-auto w-full block text-center py-3 rounded-lg border border-zinc-700 text-white font-semibold hover:border-emerald-500 hover:text-emerald-400 transition-colors">
+            Get Starter
+        </a>
+      </div>
+
+      <!-- Premium Plan Card -->
+      <div class="bg-zinc-900 border border-emerald-500/50 rounded-xl p-8 flex flex-col shadow-[0_0_40px_rgba(16,185,129,0.1)] relative overflow-hidden h-full">
+        <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
+        <div class="absolute top-0 right-4 bg-emerald-500 text-black text-[10px] font-bold px-3 py-1 rounded-b-lg uppercase tracking-wider">Most Popular</div>
+        
+        <p class="text-amber-400 font-bold mb-2 uppercase text-xs tracking-wider mt-4">Growth</p>
+        <h3 class="text-3xl font-bold text-white mb-4">Premium</h3>
+        <p class="text-zinc-500 text-sm mb-8">Everything you need to ship a production app.</p>
+        
+        <div class="mb-8">
+            <span class="text-5xl font-bold text-white">$<span x-text="premiumPrice">2.50</span></span>
+            <span class="text-zinc-500 text-sm">/ container</span>
+        </div>
+
+         <div class="space-y-4 mb-8 flex-grow">
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span class="font-bold text-white">All Free Features</span>
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Premium Stacks Access
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Built-in Authentication
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Payment Processing Integration
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Priority Support
+             </div>
+        </div>
+
+        <a href="{% url 'main_site:payments_home' variant='PREMIUM' %}" class="mt-auto w-full block text-center py-4 rounded-lg bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]">
+            Get Premium
+        </a>
+      </div>
+
+      <!-- Pro Plan Card -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col hover:border-purple-500/50 transition-all duration-300 group relative overflow-hidden h-full">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+        <p class="text-purple-400 font-bold mb-2 uppercase text-xs tracking-wider">Enterprise</p>
+        <h3 class="text-3xl font-bold text-white mb-4">Pro</h3>
+        <p class="text-zinc-500 text-sm mb-8">For agencies and heavy scalers.</p>
+        
+        <div class="mb-8">
+            <span class="text-5xl font-bold text-white">$<span x-text="proPrice">5.00</span></span>
+            <span class="text-zinc-500 text-sm">/ container</span>
+        </div>
+
+         <div class="space-y-4 mb-8 flex-grow">
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span class="font-bold text-white">All Premium Features</span>
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Dedicated Account Manager
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Custom Integrations
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                Early Access Updates
+             </div>
+        </div>
+        
+        <a href="{% url 'main_site:payments_home' variant='PRO' %}" class="mt-auto w-full block text-center py-3 rounded-lg border border-zinc-700 text-white font-semibold hover:border-purple-500 hover:text-purple-400 transition-colors">
+            Get Pro
+        </a>
+      </div>
+
+    </div>
+
+    <!-- NEW SECTION: Features Breakdown -->
+    <div class="max-w-6xl mx-auto mb-48">
+        <h2 class="text-3xl font-bold text-center mb-16"><span class="text-emerald-400">Everything</span> you need to scale</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-emerald-500/10 rounded-lg flex items-center justify-center text-emerald-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">High Performance</h3>
+                <p class="text-zinc-500 text-sm">Deploy on high-speed servers optimized for container workloads.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center text-purple-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">Secure by Default</h3>
+                <p class="text-zinc-500 text-sm">Automated SSL certificates and isolated container environments.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-amber-500/10 rounded-lg flex items-center justify-center text-amber-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">Auto-Scaling</h3>
+                <p class="text-zinc-500 text-sm">Resources adapt to your traffic needs automatically.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center text-blue-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">Developer First</h3>
+                <p class="text-zinc-500 text-sm">CLI tools, API access, and git-push deployment workflow.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-red-500/10 rounded-lg flex items-center justify-center text-red-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">24/7 Monitoring</h3>
+                <p class="text-zinc-500 text-sm">Real-time metrics and alerts for your application health.</p>
+            </div>
+             <div class="bg-zinc-900 border border-zinc-800 p-6 rounded-lg">
+                <div class="w-10 h-10 bg-teal-500/10 rounded-lg flex items-center justify-center text-teal-500 mb-4">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <h3 class="text-white font-bold mb-2">Database Backups</h3>
+                <p class="text-zinc-500 text-sm">Daily automated backups of your data for peace of mind.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW SECTION: FAQ -->
+    <div class="max-w-3xl mx-auto mb-40">
+        <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
+        <div class="space-y-6">
+            <div class="group">
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">What happens after I pay?</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">
+                    You instantly get access to your container dashboard where you can launch your pre-configured stack. The entire environment is provisioned in seconds.
+                </p>
+            </div>
+            <div class="border-t border-zinc-800 pt-6 group">
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">Can I upgrade later?</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">
+                    Yes! You can upgrade from Basic to Premium or Pro at any time from your dashboard. You'll only pay the difference.
+                </p>
+            </div>
+            <div class="border-t border-zinc-800 pt-6 group">
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">Do I own the code?</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">
+                    Absolutely. The stack is deployed for you to use, but the code is yours to modify, export, and deploy elsewhere if you choose.
+                </p>
+            </div>
+             <div class="border-t border-zinc-800 pt-6 group">
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">What if I need help?</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">
+                    We offer community support for all plans. Premium and Pro plans get priority email support and direct access to our engineering team.
+                </p>
+            </div>
+        </div>
+    </div>
+
   </div>
-  <div
-    class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 justify-center items-stretch px-4"
-  >
-    <!-- Free Plan Card -->
-    <div
-      class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col aspect-square transition duration-300 hover:-translate-y-2 hover:scale-105"
-    >
-      <p
-        class="text-xl text-center font-bold text-emerald-400 mb-2 uppercase tracking-wider"
-      >
-        Free
+
+  <!-- Pricing Details Table -->
+  <div class="max-w-6xl mx-auto mt-16 px-4">
+    <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8">
+      <h2 class="text-4xl font-bold text-emerald-300 text-center mb-4">
+        Consumption Pricing Details
+      </h2>
+      <p class="text-center text-gray-100 mb-8">
+        Transparent, usage-based pricing for your infrastructure needs
       </p>
-      <p class="text-center py-8">
-        <span class="text-4xl font-bold text-zinc-100">
-          $<span x-text="basicPrice">0</span>
-        </span>
-        <span class="text-xs uppercase text-zinc-400">
-          / <span x-text="billingType">container</span>
-        </span>
-      </p>
-      <ul class="border-t border-gray-300 py-8 space-y-6">
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-emerald-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">Frontend Setup</span>
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-emerald-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">Backend Setup</span>
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-emerald-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">Pre Integrated Database</span>
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-emerald-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize"
-            >Setup Instructions and Guidance</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-gray-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-gray-400 capitalize"
-            >Built in Authentication Support</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-gray-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-gray-400 capitalize"
-            >Persistantly Available Hosting</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-gray-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-gray-400 capitalize"
-            >Payment Processing Integration</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-gray-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-gray-400 capitalize">API Access</span>
-        </li>
-      </ul>
-      <div class="flex items-center justify-center mt-6">
-        <a
-          href="{% url 'main_site:payments_home' variant='FREE' %}"
-          class="bg-emerald-400 hover:bg-emerald-500 px-8 py-2 text-sm text-white uppercase rounded font-bold transition duration-150"
-          title="Purchase"
-          >Choose A Container</a
-        >
+      
+      <div class="overflow-x-auto">
+        <table class="w-full text-left">
+          <thead>
+            <tr class="border-b-2 border-emerald-400">
+              <th class="px-6 py-4 text-emerald-300 font-bold text-lg">Resource Type</th>
+              <th class="px-6 py-4 text-emerald-300 font-bold text-lg">Unit</th>
+              <th class="px-6 py-4 text-emerald-300 font-bold text-lg text-right">Price</th>
+            </tr>
+          </thead>
+          <tbody class="text-zinc-100">
+            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+              <td class="px-6 py-4">
+                <div class="font-semibold text-amber-300">vCPU Time</div>
+                <div class="text-sm text-gray-300">Virtual CPU compute time</div>
+              </td>
+              <td class="px-6 py-4">per vCPU-hour</td>
+              <td class="px-6 py-4 text-right font-mono text-lg">$0.04</td>
+            </tr>
+            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+              <td class="px-6 py-4">
+                <div class="font-semibold text-amber-300">RAM Time</div>
+                <div class="text-sm text-gray-300">Memory allocation time</div>
+              </td>
+              <td class="px-6 py-4">per GB-hour</td>
+              <td class="px-6 py-4 text-right font-mono text-lg">$0.005</td>
+            </tr>
+            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+              <td class="px-6 py-4">
+                <div class="font-semibold text-amber-300">Storage</div>
+                <div class="text-sm text-gray-300">Persistent disk storage</div>
+              </td>
+              <td class="px-6 py-4">per GB-month</td>
+              <td class="px-6 py-4 text-right font-mono text-lg">$0.10</td>
+            </tr>
+            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+              <td class="px-6 py-4">
+                <div class="font-semibold text-amber-300">Network Egress</div>
+                <div class="text-sm text-gray-300">Outbound data transfer</div>
+              </td>
+              <td class="px-6 py-4">per GB</td>
+              <td class="px-6 py-4 text-right font-mono text-lg">$0.12</td>
+            </tr>
+            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+              <td class="px-6 py-4">
+                <div class="font-semibold text-amber-300">Network Ingress</div>
+                <div class="text-sm text-gray-300">Inbound data transfer</div>
+              </td>
+              <td class="px-6 py-4">per GB</td>
+              <td class="px-6 py-4 text-right font-mono text-lg">Free</td>
+            </tr>
+            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+              <td class="px-6 py-4">
+                <div class="font-semibold text-amber-300">Database Storage</div>
+                <div class="text-sm text-gray-300">Managed database storage</div>
+              </td>
+              <td class="px-6 py-4">per GB-month</td>
+              <td class="px-6 py-4 text-right font-mono text-lg">$0.15</td>
+            </tr>
+            <tr class="hover:bg-white/5 transition">
+              <td class="px-6 py-4">
+                <div class="font-semibold text-amber-300">Build Minutes</div>
+                <div class="text-sm text-gray-300">Container build time</div>
+              </td>
+              <td class="px-6 py-4">per minute</td>
+              <td class="px-6 py-4 text-right font-mono text-lg">$0.01</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
-    <!-- Premium Plan Card -->
-    <div
-      class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col aspect-square border-4 border-amber-400 transition duration-300 hover:-translate-y-2 hover:scale-105"
-    >
-      <p
-        class="text-xl text-center font-bold text-amber-400 mb-2 uppercase tracking-wider"
-      >
-        Premium
-      </p>
-      <p class="text-center py-8">
-        <span class="text-4xl font-bold text-zinc-100">
-          $<span x-text="premiumPrice">2.50</span>
-        </span>
-        <span class="text-xs uppercase text-zinc-400">
-          / <span x-text="billingType">container</span>
-        </span>
-      </p>
-      <ul class="border-t border-gray-300 py-8 space-y-6">
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-amber-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">Frontend Setup</span>
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-amber-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">Backend Setup</span>
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-amber-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">Pre Integrated Database</span>
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-amber-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize"
-            >Setup Instructions And Guidance</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-amber-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize"
-            >Built in Authentication Support</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-amber-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize"
-            >Persistantly Available Hosting</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-amber-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize"
-            >Payment Processing Integration</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-amber-400 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">API Access</span>
-        </li>
-      </ul>
-      <div class="flex items-center justify-center mt-6">
-        <a
-          href="{% url 'main_site:payments_home' variant='PREMIUM' %}"
-          class="bg-amber-400 hover:bg-amber-500 px-8 py-2 text-sm text-zinc-950 uppercase rounded font-bold transition duration-150"
-          title="Purchase"
-          >Choose A Container</a
-        >
+
+      <div class="mt-8 bg-emerald-400/10 rounded-xl p-6 border border-emerald-400/30">
+        <h3 class="text-xl font-bold text-emerald-300 mb-3">General Usage Examples</h3>
+        <div class="grid md:grid-cols-2 gap-6 text-zinc-100">
+          <div>
+            <p class="font-semibold text-amber-300 mb-2">Small Application</p>
+            <ul class="space-y-1 text-sm">
+              <li>• 1 vCPU × 730 hours = <span class="font-mono">$29.20</span></li>
+              <li>• 2 GB RAM × 730 hours = <span class="font-mono">$7.30</span></li>
+              <li>• 10 GB Storage = <span class="font-mono">$1.00</span></li>
+              <li>• 50 GB Egress = <span class="font-mono">$6.00</span></li>
+              <li class="pt-2 font-bold text-emerald-300">Total: ~$43.50/month</li>
+            </ul>
+          </div>
+          <div>
+            <p class="font-semibold text-amber-300 mb-2">Medium Application</p>
+            <ul class="space-y-1 text-sm">
+              <li>• 2 vCPU × 730 hours = <span class="font-mono">$58.40</span></li>
+              <li>• 4 GB RAM × 730 hours = <span class="font-mono">$14.60</span></li>
+              <li>• 50 GB Storage = <span class="font-mono">$5.00</span></li>
+              <li>• 200 GB Egress = <span class="font-mono">$24.00</span></li>
+              <li class="pt-2 font-bold text-emerald-300">Total: ~$102.00/month</li>
+            </ul>
+          </div>
+        </div>
       </div>
-    </div>
-    <!-- Pro Plan Card -->
-    <div
-      class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8 flex flex-col aspect-square border-4 border-purple-400 transition duration-300 hover:-translate-y-2 hover:scale-105"
-    >
-      <p
-        class="text-xl text-center font-bold text-purple-300 mb-2 uppercase tracking-wider"
-      >
-        Pro
-      </p>
-      <p class="text-center py-8">
-        <span class="text-4xl font-bold text-zinc-100">
-          $<span x-text="proPrice">5.00</span>
-        </span>
-        <span class="text-xs uppercase text-zinc-400">
-          / <span x-text="billingType">container</span>
-        </span>
-      </p>
-      <ul class="border-t border-gray-300 py-8 space-y-6">
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-purple-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">Frontend Setup</span>
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-purple-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">Backend Setup</span>
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-purple-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">Pre Integrated Database</span>
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-purple-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize"
-            >Setup Instructions And Guidance</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-purple-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize"
-            >Built in Authentication Support</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-purple-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize"
-            >Persistantly Available Hosting</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-purple-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize"
-            >Payment Processing Integration</span
-          >
-        </li>
-        <li class="flex items-center space-x-2 px-8">
-          <span class="bg-purple-300 rounded-full p-1">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-3 w-3 text-white"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              ></path>
-            </svg>
-          </span>
-          <span class="text-zinc-100 capitalize">API Access</span>
-        </li>
-      </ul>
-      <div class="flex items-center justify-center mt-6">
-        <a
-          href="{% url 'main_site:payments_home' variant='PRO' %}"
-          class="bg-purple-300 hover:bg-purple-400 px-8 py-2 text-sm text-zinc-950 uppercase rounded font-bold transition duration-150"
-          title="Purchase"
-          >Choose A Container</a
-        >
+
+      <div class="mt-8 bg-amber-400/10 rounded-xl p-6 border border-amber-400/30">
+        <h3 class="text-xl font-bold text-amber-300 mb-3">Stack-Specific Examples</h3>
+        <p class="text-sm text-gray-300 mb-6">Estimated monthly costs for popular stacks with typical usage patterns</p>
+        
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 text-zinc-100">
+          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
+            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
+              <span class="mr-2">🟢</span> MERN Stack
+            </p>
+            <p class="text-xs text-gray-400 mb-3">MongoDB + Express + React + Node.js</p>
+            <ul class="space-y-1 text-sm">
+              <li>• React Frontend: 0.5 vCPU = <span class="font-mono">$14.60</span></li>
+              <li>• Node.js API: 1 vCPU = <span class="font-mono">$29.20</span></li>
+              <li>• 3 GB RAM total = <span class="font-mono">$10.95</span></li>
+              <li>• MongoDB: 20 GB DB storage = <span class="font-mono">$3.00</span></li>
+              <li>• Storage: 15 GB = <span class="font-mono">$1.50</span></li>
+              <li>• Egress: 100 GB = <span class="font-mono">$12.00</span></li>
+              <li>• Build time: 30 min = <span class="font-mono">$0.30</span></li>
+              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$71.55/month</li>
+            </ul>
+          </div>
+
+          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
+            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
+              <span class="mr-2">🔵</span> MEAN Stack
+            </p>
+            <p class="text-xs text-gray-400 mb-3">MongoDB + Express + Angular + Node.js</p>
+            <ul class="space-y-1 text-sm">
+              <li>• Angular Frontend: 0.5 vCPU = <span class="font-mono">$14.60</span></li>
+              <li>• Node.js API: 1 vCPU = <span class="font-mono">$29.20</span></li>
+              <li>• 3 GB RAM total = <span class="font-mono">$10.95</span></li>
+              <li>• MongoDB: 20 GB DB storage = <span class="font-mono">$3.00</span></li>
+              <li>• Storage: 15 GB = <span class="font-mono">$1.50</span></li>
+              <li>• Egress: 100 GB = <span class="font-mono">$12.00</span></li>
+              <li>• Build time: 35 min = <span class="font-mono">$0.35</span></li>
+              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$71.60/month</li>
+            </ul>
+          </div>
+
+          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
+            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
+              <span class="mr-2">🟣</span> LAMP Stack
+            </p>
+            <p class="text-xs text-gray-400 mb-3">Linux + Apache + MySQL + PHP</p>
+            <ul class="space-y-1 text-sm">
+              <li>• Apache + PHP: 1 vCPU = <span class="font-mono">$29.20</span></li>
+              <li>• 2 GB RAM = <span class="font-mono">$7.30</span></li>
+              <li>• MySQL: 15 GB DB storage = <span class="font-mono">$2.25</span></li>
+              <li>• Storage: 10 GB = <span class="font-mono">$1.00</span></li>
+              <li>• Egress: 75 GB = <span class="font-mono">$9.00</span></li>
+              <li>• Build time: 15 min = <span class="font-mono">$0.15</span></li>
+              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$48.90/month</li>
+            </ul>
+          </div>
+
+          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
+            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
+              <span class="mr-2">⚛️</span> Django Stack
+            </p>
+            <p class="text-xs text-gray-400 mb-3">Django + PostgreSQL + React</p>
+            <ul class="space-y-1 text-sm">
+              <li>• React Frontend: 0.5 vCPU = <span class="font-mono">$14.60</span></li>
+              <li>• Django API: 1.5 vCPU = <span class="font-mono">$43.80</span></li>
+              <li>• 4 GB RAM total = <span class="font-mono">$14.60</span></li>
+              <li>• PostgreSQL: 25 GB DB storage = <span class="font-mono">$3.75</span></li>
+              <li>• Storage: 20 GB = <span class="font-mono">$2.00</span></li>
+              <li>• Egress: 120 GB = <span class="font-mono">$14.40</span></li>
+              <li>• Build time: 25 min = <span class="font-mono">$0.25</span></li>
+              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$93.40/month</li>
+            </ul>
+          </div>
+
+          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
+            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
+              <span class="mr-2">⚡</span> JAMstack
+            </p>
+            <p class="text-xs text-gray-400 mb-3">JavaScript + APIs + Markup (Next.js)</p>
+            <ul class="space-y-1 text-sm">
+              <li>• Next.js SSR: 1 vCPU = <span class="font-mono">$29.20</span></li>
+              <li>• 2 GB RAM = <span class="font-mono">$7.30</span></li>
+              <li>• API Functions: 0.5 vCPU = <span class="font-mono">$14.60</span></li>
+              <li>• Storage: 10 GB = <span class="font-mono">$1.00</span></li>
+              <li>• Egress: 150 GB = <span class="font-mono">$18.00</span></li>
+              <li>• Build time: 20 min = <span class="font-mono">$0.20</span></li>
+              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$70.30/month</li>
+            </ul>
+          </div>
+
+          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
+            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
+              <span class="mr-2">🔷</span> Ruby on Rails
+            </p>
+            <p class="text-xs text-gray-400 mb-3">Rails + PostgreSQL + Redis</p>
+            <ul class="space-y-1 text-sm">
+              <li>• Rails App: 2 vCPU = <span class="font-mono">$58.40</span></li>
+              <li>• 4 GB RAM = <span class="font-mono">$14.60</span></li>
+              <li>• PostgreSQL: 30 GB DB storage = <span class="font-mono">$4.50</span></li>
+              <li>• Redis: 5 GB storage = <span class="font-mono">$0.75</span></li>
+              <li>• Storage: 15 GB = <span class="font-mono">$1.50</span></li>
+              <li>• Egress: 90 GB = <span class="font-mono">$10.80</span></li>
+              <li>• Build time: 40 min = <span class="font-mono">$0.40</span></li>
+              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$90.95/month</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="mt-6 text-center text-sm text-gray-300">
+        <p>* Prices shown in USD. Actual costs may vary based on usage patterns.</p>
+        <p class="mt-2">Free tier credits can be applied to any of these resources.</p>
       </div>
     </div>
   </div>
+
   {% include 'footer.html' %}
 </div>
 {% endblock %}
