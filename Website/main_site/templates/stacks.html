@@ -1,17 +1,22 @@
-{% extends 'base.html' %} {% load static %} {% block content %}
+{% extends 'base.html' %} {% load static %} {% block content %} {% load pending_stacks %}
 <div class="bg-zinc-950 text-white min-h-screen font-sans selection:bg-emerald-500 selection:text-black">
-  
-  <!-- Hero Section -->
-  <section class="relative min-h-[60vh] flex flex-col justify-center overflow-hidden pb-12 pt-16">
+
+    <!-- Hero Section -->
+    <section class="relative min-h-[60vh] flex flex-col justify-center overflow-hidden pb-12 pt-16">
         <!-- Isometric Container Pattern Background -->
-        <div class="absolute inset-0 z-0 opacity-20 pointer-events-none" style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2310b981\' fill-opacity=\'0.15\'%3E%3Cpath d=\'M30 0L0 15v30l30 15 30-15V15L30 0zm0 30L0 15 30 0l30 15-30 15zm0 0v30L0 45V15l30 15zm0 0v30l30-15V15L30 30z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
-        
+        <div class="absolute inset-0 z-0 opacity-20 pointer-events-none"
+            style="background-image: url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%2310b981\' fill-opacity=\'0.15\'%3E%3Cpath d=\'M30 0L0 15v30l30 15 30-15V15L30 0zm0 30L0 15 30 0l30 15-30 15zm0 0v30L0 45V15l30 15zm0 0v30l30-15V15L30 30z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');">
+        </div>
+
         <!-- Gradient Orb -->
-        <div class="absolute top-0 right-0 -mr-64 -mt-32 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div
+            class="absolute top-0 right-0 -mr-64 -mt-32 w-[600px] h-[600px] bg-emerald-500/10 rounded-full blur-3xl pointer-events-none">
+        </div>
 
         <div class="container mx-auto px-4 relative z-10 text-center">
-             <div class="max-w-4xl mx-auto">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs font-mono mb-8">
+            <div class="max-w-4xl mx-auto">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs font-mono mb-8">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     READY-TO-SHIP
                 </div>
@@ -19,226 +24,358 @@
                 <h1 class="text-5xl md:text-7xl font-bold tracking-tighter leading-none mb-8 text-white">
                     Our <span class="text-emerald-400">Stacks</span>
                 </h1>
-                
+
                 <p class="text-xl text-zinc-400 max-w-2xl mb-12 leading-relaxed mx-auto">
-                   Pre-configured, containerized environments. Select your stack, launch in seconds, and start building immediately.
+                    Pre-configured, containerized environments. Select your stack, launch in seconds, and start building
+                    immediately.
                 </p>
 
                 <div class="flex flex-wrap gap-8 justify-center items-center text-sm font-mono text-zinc-500">
                     <div class="flex items-center gap-2">
-                         <span class="w-2 h-2 rounded bg-emerald-500"></span> BUILD
+                        <span class="w-2 h-2 rounded bg-emerald-500"></span> BUILD
                     </div>
                     <div class="flex items-center gap-2">
-                         <span class="w-2 h-2 rounded bg-amber-500"></span> SHIP
+                        <span class="w-2 h-2 rounded bg-amber-500"></span> SHIP
                     </div>
                     <div class="flex items-center gap-2">
-                         <span class="w-2 h-2 rounded bg-purple-500"></span> SCALE
+                        <span class="w-2 h-2 rounded bg-purple-500"></span> SCALE
                     </div>
                 </div>
             </div>
         </div>
-  </section>
+    </section>
 
-  <!-- Stacks Grid -->
-  <section class="py-24 bg-zinc-900/50 border-t border-zinc-800">
-    <div class="container mx-auto px-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
-        
-        <!-- MERN Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-emerald-400 transition-colors">MERN</h3>
-                    <p class="text-zinc-500 text-sm mt-1">MongoDB, Express, React, Node.js</p>
+    <!-- Stacks Grid -->
+    <section class="py-24 bg-zinc-900/50 border-t border-zinc-800">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-8 max-w-5xl mx-auto">
+
+                <!-- MERN Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-emerald-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+                    {% pending_stacks "mern" as mern_pending %}
+                    {% if mern_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-emerald-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-emerald-400 transition-colors">
+                                MERN</h3>
+                            <p class="text-zinc-500 text-sm mt-1">MongoDB, Express, React, Node.js</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-emerald-400">
+                            <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
+                                <path
+                                    d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5 9.5 9.75 12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z" />
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        The most popular full-stack choice. Perfect for dynamic web apps requiring a flexible,
+                        document-based database.
+                    </p>
+                    <a href="{% url 'main_site:mern_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-emerald-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-emerald-500">
+                        View MERN
+                    </a>
                 </div>
-                <div class="bg-zinc-800 p-2 rounded-lg text-emerald-400">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zm0 9l2.5-1.25L12 8.5 9.5 9.75 12 11zm0 2.5l-5-2.5-5 2.5L12 22l10-8.5-5-2.5-5 2.5z"/></svg>
+
+                <!-- MEAN Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(59,130,246,0.1)]">
+                    {% pending_stacks "mean" as mean_pending %}
+                    {% if mean_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-blue-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">MEAN
+                            </h3>
+                            <p class="text-zinc-500 text-sm mt-1">MongoDB, Express, Angular, Node.js</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-blue-400">
+                            <span class="font-bold text-xl px-1">A</span>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        A robust framework for building scalable web applications. Ideal for large-scale enterprise
+                        solutions.
+                    </p>
+                    <a href="{% url 'main_site:mean_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-blue-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-blue-500">
+                        View MEAN
+                    </a>
                 </div>
+
+                <!-- MEVN Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-purple-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]">
+                    {% pending_stacks "mevn" as mevn_pending %}
+                    {% if mevn_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-purple-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-purple-400 transition-colors">MEVN
+                            </h3>
+                            <p class="text-zinc-500 text-sm mt-1">MongoDB, Express, Vue.js, Node.js</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-purple-400">
+                            <span class="font-bold text-xl px-1">V</span>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        Lightweight and flexible. Vue.js offers a progressive adoption curve for modern interfaces.
+                    </p>
+                    <a href="{% url 'main_site:mevn_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-purple-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-purple-500">
+                        View MEVN
+                    </a>
+                </div>
+
+                <!-- Mobile Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(6,182,212,0.1)]">
+                    {% pending_stacks "mobile" as mobile_pending %}
+                    {% if mobile_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-cyan-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors">Mobile
+                            </h3>
+                            <p class="text-zinc-500 text-sm mt-1">React Native, Expo, Supabase</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-cyan-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        Cross-platform mobile apps for iOS and Android. Includes Social Media templates.
+                    </p>
+                    <a href="{% url 'main_site:mobile_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-cyan-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-cyan-500">
+                        View Mobile
+                    </a>
+                </div>
+
+                <!-- LLM Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-indigo-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(99,102,241,0.1)]">
+                    {% pending_stacks "llm" as llm_pending %}
+                    {% if llm_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-indigo-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-indigo-400 transition-colors">LLM
+                            </h3>
+                            <p class="text-zinc-500 text-sm mt-1">LangChain, Vector DB, Llama/OpenAI</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-indigo-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        Deploy private Large Language Models with RAG support instantly.
+                    </p>
+                    <a href="{% url 'main_site:llm_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-indigo-500 hover:text-white text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-indigo-500">
+                        View LLM
+                    </a>
+                </div>
+
+                <!-- AI Data Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-rose-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(244,63,94,0.1)]">
+                    {% pending_stacks "ai_data" as ai_data_pending %}
+                    {% if ai_data_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-rose-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-rose-400 transition-colors">AI
+                                Data</h3>
+                            <p class="text-zinc-500 text-sm mt-1">Pandas, PyTorch, Jupyter</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-rose-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 2.21 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        Complete data science environment for ML pipelines and analytics.
+                    </p>
+                    <a href="{% url 'main_site:ai_data_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-rose-500 hover:text-white text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-rose-500">
+                        View Data
+                    </a>
+                </div>
+
+                <!-- Computer Vision Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-orange-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(249,115,22,0.1)]">
+                    {% pending_stacks "computer_vision" as computer_vision_pending %}
+                    {% if computer_vision_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-orange-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-orange-400 transition-colors">
+                                Computer Vision</h3>
+                            <p class="text-zinc-500 text-sm mt-1">OpenCV, YOLO, TensorFlow</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-orange-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        Real-time image and video processing stack with pre-trained models.
+                    </p>
+                    <a href="{% url 'main_site:computer_vision_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-orange-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-orange-500">
+                        View Vision
+                    </a>
+                </div>
+
+                <!-- Image Generation Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-pink-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(236,72,153,0.1)]">
+                    {% pending_stacks "image_gen" as image_gen_pending %}
+                    {% if image_gen_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-pink-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-pink-400 transition-colors">Image
+                                Gen</h3>
+                            <p class="text-zinc-500 text-sm mt-1">Stable Diffusion, ComfyUI</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-pink-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        Generative AI studio for creating art and assets with one-click ComfyUI.
+                    </p>
+                    <a href="{% url 'main_site:image_generation_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-pink-500 hover:text-white text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-pink-500">
+                        View Gen AI
+                    </a>
+                </div>
+
+                <!-- AI Agents Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-lime-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(132,204,22,0.1)]">
+                    {% pending_stacks "ai_agents" as ai_agents_pending %}
+                    {% if ai_agents_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-lime-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-lime-400 transition-colors">AI
+                                Agents</h3>
+                            <p class="text-zinc-500 text-sm mt-1">AutoGPT, BabyAGI, Flowise</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-lime-400">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z">
+                                </path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        Autonomous agent swarms for complex task execution and automation.
+                    </p>
+                    <a href="{% url 'main_site:ai_agents_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-lime-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-lime-500">
+                        View Agents
+                    </a>
+                </div>
+
+                <!-- LAMP Stack Card -->
+                <div
+                    class="relative overflow-hidden bg-zinc-900 border border-zinc-800 hover:border-yellow-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(234,179,8,0.1)]">
+                    {% pending_stacks "lamp" as lamp_pending %}
+                    {% if lamp_pending %}
+                    <div
+                        class="absolute top-0 right-0 bg-yellow-500 text-black text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-lg">
+                        COMING SOON
+                    </div>
+                    {% endif %}
+                    <div class="flex justify-between items-start mb-6">
+                        <div>
+                            <h3 class="text-2xl font-bold text-white group-hover:text-yellow-400 transition-colors">LAMP
+                            </h3>
+                            <p class="text-zinc-500 text-sm mt-1">Linux, Apache, MySQL, PHP</p>
+                        </div>
+                        <div class="bg-zinc-800 p-2 rounded-lg text-yellow-500">
+                            <span class="font-bold text-xl px-1">PHP</span>
+                        </div>
+                    </div>
+                    <p class="text-zinc-400 mb-8 flex-grow">
+                        The classic reliable stack. Powers a significant portion of the web with proven stability.
+                    </p>
+                    <a href="{% url 'main_site:lamp_stack' %}"
+                        class="w-full py-3 bg-zinc-800 hover:bg-yellow-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-yellow-500">
+                        View LAMP
+                    </a>
+                </div>
+
             </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                The most popular full-stack choice. Perfect for dynamic web apps requiring a flexible, document-based database.
-            </p>
-            <a href="{% url 'main_site:mern_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-emerald-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-emerald-500">
-                View MERN
-            </a>
         </div>
+    </section>
 
-        <!-- MEAN Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-blue-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(59,130,246,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-blue-400 transition-colors">MEAN</h3>
-                    <p class="text-zinc-500 text-sm mt-1">MongoDB, Express, Angular, Node.js</p>
-                </div>
-                 <div class="bg-zinc-800 p-2 rounded-lg text-blue-400">
-                    <span class="font-bold text-xl px-1">A</span>
-                </div>
-            </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                A robust framework for building scalable web applications. Ideal for large-scale enterprise solutions.
-            </p>
-            <a href="{% url 'main_site:mean_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-blue-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-blue-500">
-                View MEAN
-            </a>
-        </div>
-
-        <!-- MEVN Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-purple-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(168,85,247,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-purple-400 transition-colors">MEVN</h3>
-                    <p class="text-zinc-500 text-sm mt-1">MongoDB, Express, Vue.js, Node.js</p>
-                </div>
-                 <div class="bg-zinc-800 p-2 rounded-lg text-purple-400">
-                   <span class="font-bold text-xl px-1">V</span>
-                </div>
-            </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                Lightweight and flexible. Vue.js offers a progressive adoption curve for modern interfaces.
-            </p>
-            <a href="{% url 'main_site:mevn_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-purple-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-purple-500">
-                View MEVN
-            </a>
-        </div>
-
-        <!-- Mobile Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-cyan-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(6,182,212,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-cyan-400 transition-colors">Mobile</h3>
-                    <p class="text-zinc-500 text-sm mt-1">React Native, Expo, Supabase</p>
-                </div>
-                 <div class="bg-zinc-800 p-2 rounded-lg text-cyan-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                </div>
-            </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                Cross-platform mobile apps for iOS and Android. Includes Social Media templates.
-            </p>
-            <a href="{% url 'main_site:mobile_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-cyan-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-cyan-500">
-                View Mobile
-            </a>
-        </div>
-
-        <!-- LLM Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-indigo-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(99,102,241,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-indigo-400 transition-colors">LLM</h3>
-                    <p class="text-zinc-500 text-sm mt-1">LangChain, Vector DB, Llama/OpenAI</p>
-                </div>
-                 <div class="bg-zinc-800 p-2 rounded-lg text-indigo-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path></svg>
-                </div>
-            </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                Deploy private Large Language Models with RAG support instantly.
-            </p>
-            <a href="{% url 'main_site:llm_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-indigo-500 hover:text-white text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-indigo-500">
-                View LLM
-            </a>
-        </div>
-
-         <!-- AI Data Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-rose-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(244,63,94,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-rose-400 transition-colors">AI Data</h3>
-                    <p class="text-zinc-500 text-sm mt-1">Pandas, PyTorch, Jupyter</p>
-                </div>
-                 <div class="bg-zinc-800 p-2 rounded-lg text-rose-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 2.21 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path></svg>
-                </div>
-            </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                Complete data science environment for ML pipelines and analytics.
-            </p>
-            <a href="{% url 'main_site:ai_data_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-rose-500 hover:text-white text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-rose-500">
-                View Data
-            </a>
-        </div>
-
-         <!-- Computer Vision Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-orange-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(249,115,22,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-orange-400 transition-colors">Computer Vision</h3>
-                    <p class="text-zinc-500 text-sm mt-1">OpenCV, YOLO, TensorFlow</p>
-                </div>
-                 <div class="bg-zinc-800 p-2 rounded-lg text-orange-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                </div>
-            </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                Real-time image and video processing stack with pre-trained models.
-            </p>
-            <a href="{% url 'main_site:computer_vision_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-orange-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-orange-500">
-                View Vision
-            </a>
-        </div>
-
-         <!-- Image Generation Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-pink-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(236,72,153,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-pink-400 transition-colors">Image Gen</h3>
-                    <p class="text-zinc-500 text-sm mt-1">Stable Diffusion, ComfyUI</p>
-                </div>
-                 <div class="bg-zinc-800 p-2 rounded-lg text-pink-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                </div>
-            </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                Generative AI studio for creating art and assets with one-click ComfyUI.
-            </p>
-            <a href="{% url 'main_site:image_generation_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-pink-500 hover:text-white text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-pink-500">
-                View Gen AI
-            </a>
-        </div>
-
-         <!-- AI Agents Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-lime-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(132,204,22,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-lime-400 transition-colors">AI Agents</h3>
-                    <p class="text-zinc-500 text-sm mt-1">AutoGPT, BabyAGI, Flowise</p>
-                </div>
-                 <div class="bg-zinc-800 p-2 rounded-lg text-lime-400">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                </div>
-            </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                Autonomous agent swarms for complex task execution and automation.
-            </p>
-            <a href="{% url 'main_site:ai_agents_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-lime-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-lime-500">
-                View Agents
-            </a>
-        </div>
-
-        <!-- LAMP Stack Card -->
-        <div class="bg-zinc-900 border border-zinc-800 hover:border-yellow-500/50 p-8 rounded-xl transition-all group flex flex-col h-full hover:shadow-[0_0_30px_rgba(234,179,8,0.1)]">
-             <div class="flex justify-between items-start mb-6">
-                <div>
-                    <h3 class="text-2xl font-bold text-white group-hover:text-yellow-400 transition-colors">LAMP</h3>
-                    <p class="text-zinc-500 text-sm mt-1">Linux, Apache, MySQL, PHP</p>
-                </div>
-                 <div class="bg-zinc-800 p-2 rounded-lg text-yellow-500">
-                    <span class="font-bold text-xl px-1">PHP</span>
-                </div>
-            </div>
-            <p class="text-zinc-400 mb-8 flex-grow">
-                The classic reliable stack. Powers a significant portion of the web with proven stability.
-            </p>
-            <a href="{% url 'main_site:lamp_stack' %}" class="w-full py-3 bg-zinc-800 hover:bg-yellow-500 hover:text-black text-white font-bold text-center rounded-lg transition-all border border-zinc-700 hover:border-yellow-500">
-                View LAMP
-            </a>
-        </div>
-
-      </div>
-    </div>
-  </section>
-
-  {% include 'footer.html' %}
+    {% include 'footer.html' %}
 </div>
 
 <script src="{% static 'script.js' %}"></script>
