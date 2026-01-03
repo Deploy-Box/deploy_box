@@ -137,10 +137,10 @@
                             class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_members' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
                             Members
                         </a>
-                        <a href="{% url 'main_site:transfer_invitations' %}"
+                        {% comment %} <a href="{% url 'main_site:transfer_invitations' %}"
                             class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'transfer_invitations' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
                             Transfer Invitations
-                        </a>
+                        </a> {% endcomment %}
                         <a href="{% url 'main_site:organization_settings' organization_id=current_organization_id %}"
                             class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'organization_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">
                             Settings
@@ -157,8 +157,8 @@
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
                         <a href="{% url 'main_site:stack_marketplace' organization_id=current_organization_id project_id=current_project_id %}"
                             class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'stack_marketplace' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Stack Marketplace</a>
-                        <a href="{% url 'main_site:api_marketplace' organization_id=current_organization_id project_id=current_project_id %}"
-                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'api_marketplace' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">API Marketplace</a>
+                        {% comment %} <a href="{% url 'main_site:api_marketplace' organization_id=current_organization_id project_id=current_project_id %}"
+                            class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'api_marketplace' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">API Marketplace</a> {% endcomment %}
                         <a href="{% url 'main_site:project_settings' organization_id=current_organization_id project_id=current_project_id %}"
                             class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'project_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Settings</a>
                     </div>
@@ -171,14 +171,14 @@
                     <div class="space-y-1">
                         <a href="{% url 'main_site:stack_dashboard' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Dashboard</a>
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Usage</a>
-                        <a href="{% url 'main_site:environments' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
-    class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'environments' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Environments</a>
+                        {% comment %} <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Usage</a> {% endcomment %}
+                        {% comment %} <a href="{% url 'main_site:environments' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
+    class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'environments' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Environments</a> {% endcomment %}
                         <a href="{% url 'main_site:environment_variables' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
                             class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Environment Variables</a>
-                        <a href="#"
-                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Logs</a>
+                        {% comment %} <a href="#"
+                            class="block p-2 hover:text-primary-600 transition-colors duration-200 sidebar-text sidebar-button">Logs</a> {% endcomment %}
                         <a href="{% url 'main_site:stack_settings' organization_id=current_organization_id project_id=current_project_id stack_id=current_stack_id %}"
                             class="block p-2 transition-colors duration-200 sidebar-text sidebar-button {% if request.resolver_match.url_name == 'stack_settings' %}bg-emerald-100 text-emerald-700{% else %}hover:text-primary-600{% endif %}">Settings</a>
                     </div>
@@ -198,7 +198,7 @@
                 </div>
                 <div class="sidebar-text">
                     <p class="font-medium">{{ user.username }}</p>
-                    <p class="text-sm text-gray-500">Administrator</p>
+                    {% comment %} <p class="text-sm text-gray-500">Administrator</p> {% endcomment %}
                 </div>
             </div>
         </a>

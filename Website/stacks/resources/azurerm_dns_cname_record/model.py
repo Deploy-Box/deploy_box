@@ -1,5 +1,6 @@
 from django.db import models
 
+from stacks.resources.resource import Resource
 from core.fields import ShortUUIDField
 
 TYPE_CHOICES = [
@@ -7,15 +8,9 @@ TYPE_CHOICES = [
     ('DATA', 'Data'),
 ]
 
-CONTAINER_ACCESS_TYPE_CHOICES = [
-    ('private', 'Private'),
-    ('blob', 'Blob'),
-    ('container', 'Container'),
-]
+CLASS_PREFIX = "res005"
 
-CLASS_PREFIX = "res003"
-
-class AzurermStorageContainer(models.Model):
+class AzurermDnsCnameRecord(Resource):
     id = ShortUUIDField(primary_key=True, prefix=CLASS_PREFIX)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='RESOURCE')
@@ -26,10 +21,12 @@ class AzurermStorageContainer(models.Model):
     # Resource specific fields
     azurerm_id = models.CharField(max_length=255)
     azurerm_name = models.CharField(max_length=255)
-    storage_account_id = models.CharField(max_length=255)
-    container_access_type = models.CharField(max_length=50, choices=CONTAINER_ACCESS_TYPE_CHOICES, default='private')
-    default_encryption_scope = models.CharField(max_length=255, blank=True, default='')
-    encryption_scope_override_enabled = models.BooleanField(default=True)
+    fqdn = models.CharField(max_length=255)
+    resource_group_name = models.CharField(max_length=255)
+    zone_name = models.CharField(max_length=255)
+    ttl = models.IntegerField(default=3600)
+    record = models.CharField(max_length=255)
+    tags = models.JSONField(default=dict, blank=True)
 
     def __str__(self):
         return self.name
@@ -39,6 +36,10 @@ class AzurermStorageContainer(models.Model):
         assert isinstance(self.stack, models.Model), "Stack must be a valid Stack instance"
 
         if not self.azurerm_name:
-            self.azurerm_name = f'{self.stack.pk}-container'
+            self.azurerm_name = f'{self.stack.pk}-cname'
             
         super().save(*args, **kwargs)
+        
+    @staticmethod
+    def get_resource_prefix() -> str:
+        return CLASS_PREFIX

@@ -1,6 +1,17 @@
 from .azurerm_container_app.model import AzurermContainerApp
-from .azurerm_resource_group.model import AzurermResourceGroup
-from .azurerm_storage_account.model import AzurermStorageAccount
-from .azurerm_storage_container.model import AzurermStorageContainer
+from .azurerm_container_app.manager import AzurermContainerAppManager
+from .azurerm_container_app.serializer import AzurermContainerAppSerializer
 
-from .azurerm_resource_group.manager import AzurermResourceGroupManager
+from .azurerm_resource_group.model import AzurermResourceGroup
+from .azurerm_resource_group.serializer import AzurermResourceGroupSerializer
+
+from .azurerm_storage_account.model import AzurermStorageAccount
+from .azurerm_storage_account.manager import AzurermStorageAccountManager
+from .azurerm_storage_account.serializer import AzurermStorageAccountSerializer
+
+from .azurerm_storage_container.model import AzurermStorageContainer
+from .azurerm_storage_container.manager import AzurermStorageContainerManager
+from .azurerm_storage_container.serializer import AzurermStorageContainerSerializer
+
+from .azurerm_dns_cname_record.model import AzurermDnsCnameRecord
+from .azurerm_dns_cname_record.serializer import AzurermDnsCnameRecordSerializer

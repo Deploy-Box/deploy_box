@@ -1,6 +1,7 @@
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import RedirectView
 from django.contrib.auth import views as auth_views
 from . import views
 
@@ -154,4 +155,5 @@ urlpatterns = [
     path(
         "examples/organization_members/", views.examples_view.example_organization_members, name="example_organization_members"
     ),
+    path('favicon.ico', RedirectView.as_view(url=settings.STATIC_URL + 'favicon.ico')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

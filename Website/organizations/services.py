@@ -56,10 +56,10 @@ def create_organization(user: UserProfile, name: str, email: str) -> Union[dict,
             OrganizationMember.objects.create(user=user, organization=organization, role="admin")
 
             create_project(
-                name="Default Project",
+                name="Welcome Project",
                 organization_id=organization.id,
                 user=user,
-                description="This is the default project created for you.",
+                description="This is a welcome project created to get you started.",
             )
 
     except Exception as e:

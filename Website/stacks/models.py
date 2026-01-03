@@ -5,6 +5,7 @@ from projects.models import Project
 
 from core.fields import ShortUUIDField
 from stacks.resources import *
+from stacks.stack_items import *
 
 class PurchasableStack(models.Model):
     id = ShortUUIDField(primary_key=True)

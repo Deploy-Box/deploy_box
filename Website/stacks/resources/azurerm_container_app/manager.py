@@ -1,8 +1,8 @@
 from .model import AzurermContainerApp, CLASS_PREFIX
 from .serializer import AzurermContainerAppSerializer
-from stacks.resources.resource_manager import ResourceManagerABC, create_filtered_data
+from stacks.resources.resource import Resource, create_filtered_data
 
-class AzurermContainerAppManager(ResourceManagerABC):
+class AzurermContainerAppManager(Resource):
     @staticmethod
     def get_resource_prefix() -> str:
         return CLASS_PREFIX
@@ -23,4 +23,4 @@ class AzurermContainerAppManager(ResourceManagerABC):
     
     @staticmethod
     def serialize(resource: AzurermContainerApp) -> dict:
-        return AzurermContainerAppSerializer(resource).data
+        return dict(AzurermContainerAppSerializer(resource).data)

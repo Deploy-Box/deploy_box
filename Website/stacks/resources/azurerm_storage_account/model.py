@@ -70,5 +70,22 @@ class AzurermStorageAccount(models.Model):
     # Share Properties
     share_retention_policy_days = models.IntegerField(default=7)
 
+    # Static Website Properties
+    static_website_index_document = models.CharField(max_length=255, blank=True, default='')
+    static_website_error_404_document = models.CharField(max_length=255, blank=True, default='')
+
+    # Custom Domain
+    custom_domain_name = models.CharField(max_length=255, blank=True, default='')
+    custom_domain_use_subdomain = models.BooleanField(default=False)
+
     def __str__(self):
         return self.name
+    
+    def save(self, *args, **kwargs):
+        assert self.stack is not None, "Stack must be provided"
+        assert isinstance(self.stack, models.Model), "Stack must be a valid Stack instance"
+
+        if not self.azurerm_name:
+            self.azurerm_name = f'{self.stack.pk}storacct'
+            
+        super().save(*args, **kwargs)

@@ -4,6 +4,8 @@ import uuid
 
 class ShortUUIDField(models.CharField):
     prefix = None
+    def __new__(cls, *args, **kwargs):
+        return super(ShortUUIDField, cls).__new__(cls)
 
     def __init__(self, *args, **kwargs):
         kwargs["max_length"] = 16

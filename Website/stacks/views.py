@@ -30,7 +30,10 @@ from projects.models import Project
 import stacks.services as services
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, filters, viewsets
-from stacks.resources.resource_manager import ResourceManager
+from stacks.resources.resource import ResourceManager
+from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
+from stacks.stack_items.deploy_box_static_website.model import DeployBoxStaticWebsiteItem
+from stacks.stack_items.deploy_box_static_website.manager import DeployBoxStaticWebsiteItemManager
 
 class StackViewSet(viewsets.ModelViewSet):
     queryset = Stack.objects.exclude(status="DELETED")
@@ -50,34 +53,54 @@ class StackViewSet(viewsets.ModelViewSet):
 
 
         stack = Stack.objects.get(pk="cd1fcf5e926345e0")
-        created_resources = ResourceManager.create(stack_infrastructure, stack)
+        deploy_box_static_website_item = DeployBoxStaticWebsiteItem.objects.create(stack=stack, name="Test Static Website Item")
+
+        # created_resources = ResourceManager.create(stack_infrastructure, stack)
 
         data = {
             "stack_id": stack.pk,
-            "resources": ResourceManager.serialize(created_resources)
+            "resources": DeployBoxStaticWebsiteItemManager().serialize(deploy_box_static_website_item)
         }
 
         services.send_to_azure_function('IAC.CREATE', data)
 
-        return Response(data, status=status.HTTP_201_CREATED)
+        return Response(DeployBoxStaticWebsiteItemManager().serialize(deploy_box_static_website_item), status=status.HTTP_201_CREATED)
     
     
     # Delete
     def destroy(self, request, pk=None):
-        """DELETE: Delete a specific stack"""
-        stack = get_object_or_404(Stack, id=pk)
-        delete_success = services.delete_stack(stack=stack)
-
-        if not delete_success:
+        """DELETE: Delete a specific stack by ID"""
+        if not pk:
             return Response(
-                {"error": "Failed to delete stack. Check server logs for details."}, 
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                {"error": "Stack ID is required."}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
+        
+        stack = get_object_or_404(Stack, pk=pk)
 
-        return Response(
-            {"success": True, "message": "Stack deletion initiated successfully."}, 
-            status=status.HTTP_200_OK
-        )
+        data = {
+            "stack_id": stack.pk,
+        }
+
+        services.send_to_azure_function('IAC.DELETE', data)
+
+        return Response({"message": "Stack deletion initiated successfully."}, status=status.HTTP_200_OK)
+    
+
+        # """DELETE: Delete a specific stack"""
+        # stack = get_object_or_404(Stack, id=pk)
+        # delete_success = services.delete_stack(stack=stack)
+
+        # if not delete_success:
+        #     return Response(
+        #         {"error": "Failed to delete stack. Check server logs for details."}, 
+        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        #     )
+
+        # return Response(
+        #     {"success": True, "message": "Stack deletion initiated successfully."}, 
+        #     status=status.HTTP_200_OK
+        # )
 
     @oauth_required()
     @action(detail=True, methods=['post'])

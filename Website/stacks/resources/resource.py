@@ -1,39 +1,36 @@
 from __future__ import annotations
 
 from django.db import models
-from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
+from abc import ABCMeta, abstractmethod
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from stacks.models import Stack
 
 
-class ResourceManagerABC(ABC):
-    @abstractmethod
-    def get_resource_prefix(self) -> str:
-        pass
+class ResourceMeta(ABCMeta, type(models.Model)):
+    pass
 
-    @abstractmethod
-    def read(self, resource_id: str) -> models.Model:
-        pass
 
+class Resource(models.Model, metaclass=ResourceMeta):
+    class Meta:
+        abstract = True
+    
+    @staticmethod
     @abstractmethod
-    def create(self, resource: dict) -> models.Model:
+    def get_resource_prefix() -> str:
         pass
     
-    @abstractmethod
     def serialize(self, resource: models.Model) -> dict:
-        pass
+        return {}
 
-def get_resource_manager_mapping() -> dict[str, type[ResourceManagerABC]]:
+def get_resource_manager_mapping() -> dict[str, type[Resource]]:
     """Lazy import to avoid circular dependencies"""
-    from stacks.resources.azurerm_resource_group.manager import AzurermResourceGroupManager
     from stacks.resources.azurerm_container_app.manager import AzurermContainerAppManager
     from stacks.resources.azurerm_storage_account.manager import AzurermStorageAccountManager
     from stacks.resources.azurerm_storage_container.manager import AzurermStorageContainerManager
 
     return {
-        "AZURERM_RESOURCE_GROUP": AzurermResourceGroupManager,
         "AZURERM_CONTAINER_APP": AzurermContainerAppManager,
         "AZURERM_STORAGE_ACCOUNT": AzurermStorageAccountManager,
         "AZURERM_STORAGE_CONTAINER": AzurermStorageContainerManager,
@@ -44,13 +41,13 @@ class ResourceManager():
     resource_prefix_mapping = None
 
     @staticmethod
-    def get_resource_manager_mapping() -> dict[str, type[ResourceManagerABC]]:
+    def get_resource_manager_mapping() -> dict[str, type[Resource]]:
         if ResourceManager.resource_manager_mapping is None:
             ResourceManager.resource_manager_mapping = get_resource_manager_mapping()
         return ResourceManager.resource_manager_mapping
     
     @staticmethod
-    def get_resource_prefix_mapping() -> dict[str, str]:
+    def get_resource_prefix_mapping() -> dict[str, type[Resource]]:
         if ResourceManager.resource_prefix_mapping is None:
             ResourceManager.resource_prefix_mapping = {
                 manager_class.get_resource_prefix(): manager_class
@@ -76,7 +73,7 @@ class ResourceManager():
             assert isinstance(resource_type, str), f"Expected resource_type to be a str, got {type(resource_type)}"
 
             if resource_type.upper() in resource_manager_mapping:
-                created_resource = resource_manager_mapping[resource_type.upper()]().create(resource)
+                created_resource = resource_manager_mapping[resource_type.upper()]().objects.create(**resource)
                 created_resources.append(created_resource)
         return created_resources
     
@@ -92,7 +89,7 @@ class ResourceManager():
         if prefix in resource_prefix_mapping:
             manager_class = resource_prefix_mapping[prefix]
             try:
-                return manager_class().read(resource_id)
+                return manager_class().objects.get(pk=resource_id)
             except models.Model.DoesNotExist:
                 pass
         return None
@@ -108,7 +105,7 @@ class ResourceManager():
             return manager_class().serialize(resource)
         return None
     
-def create_filtered_data(data: dict, model: type[models.Model]) -> dict[str, any]:
+def create_filtered_data(data: dict, model: type[models.Model]) -> dict[str, Any]:
         # Get writable field names from the model (excludes auto fields, reverse relations)
         model_fields = {
             f.name for f in model._meta.get_fields()
