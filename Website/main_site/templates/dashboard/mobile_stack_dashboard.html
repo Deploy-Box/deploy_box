@@ -1,0 +1,279 @@
+{% extends 'dashboard_base.html' %} {%load static%} {%load get_item%} {% block extra_head %}
+<div id="dashboard" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
+    data-stack-id="{{ stack.id }}" data-service-name="{{ stack_google_cloud_runs.0.id }}" data-stack-type="mobile">
+</div>
+{% endblock %} {% block content %}
+
+<div class="w-full bg-gray-50">
+    {% include 'dashboard/components/_header.html' with stack_type="Mobile" %}
+    <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
+        <div id="metadata" class="hidden" data-organization-id="{{ organization_id }}"
+            data-project-id="{{ project_id }}" data-stack-id="{{ stack.id }}"></div>
+
+        {% include 'dashboard/components/_stack_overview.html' with stack_type="Mobile" %}
+
+        <!-- Mobile Stack Services -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-emerald-400 mb-6 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path
+                            d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" />
+                    </svg>
+                    Mobile Stack Services
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- React Native Frontend -->
+                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-blue-500 p-2 rounded-lg mr-3">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-blue-900">React Native + Expo</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-blue-700">Status:</span>
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                                    Running
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-blue-700">Platform:</span>
+                                <span class="text-sm text-blue-900">iOS & Android</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-blue-700">Framework:</span>
+                                <span class="text-sm text-blue-900">Expo</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Express.js Backend -->
+                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-green-500 p-2 rounded-lg mr-3">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-green-900">Express Backend</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-green-700">Status:</span>
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                                    Running
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-green-700">API URL:</span>
+                                <a href="{{stack.mobile_backend_url}}" target="_blank" rel="noopener noreferrer"
+                                    class="text-green-600 hover:text-green-800 underline text-sm truncate max-w-32">
+                                    {{stack.mobile_backend_url}}
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- PostgreSQL Database -->
+                    <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-lg border border-indigo-200">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-indigo-500 p-2 rounded-lg mr-3">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm-1.1 18.7c-1.2 0-2.2-.4-3-.9l.4-.7c.7.5 1.6.8 2.6.8 1.3 0 2.3-.6 2.3-1.4 0-.7-.5-1.1-1.8-1.5l-.6-.2c-1.7-.6-2.8-1.3-2.8-2.8 0-1.4 1.1-2.5 2.9-2.5 1 0 1.8.3 2.4.7l-.4.7c-.5-.4-1.2-.6-2-.6-1.2 0-2 .6-2 1.3 0 .6.5 1 1.6 1.3l.6.2c2 .7 3 1.4 3 3 0 1.5-1.2 2.6-3.2 2.6z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-indigo-900">PostgreSQL</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-indigo-700">Status:</span>
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                                    Connected
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-indigo-700">Host:</span>
+                                <span class="text-sm text-indigo-900 font-mono truncate max-w-32"
+                                    title="{{stack.mobile_postgres_host}}">
+                                    {{stack.mobile_postgres_host|truncatechars:20}}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-indigo-700">Database:</span>
+                                <span class="text-sm text-indigo-900">{{stack.mobile_postgres_database}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Additional Services -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-emerald-400 mb-6 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                    </svg>
+                    Additional Services
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Redis Cache -->
+                    <div class="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border border-red-200">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-red-500 p-2 rounded-lg mr-3">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-red-900">Redis Cache</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-red-700">Status:</span>
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                                    Connected
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-red-700">Host:</span>
+                                <span class="text-sm text-red-900 font-mono truncate max-w-32"
+                                    title="{{stack.mobile_redis_host}}">
+                                    {{stack.mobile_redis_host|truncatechars:20}}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-red-700">Port:</span>
+                                <span class="text-sm text-red-900">{{stack.mobile_redis_port}}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WebSocket Integration -->
+                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg border border-purple-200">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-purple-500 p-2 rounded-lg mr-3">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 2C6.48 2 2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15h-2v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95 0-5.52-4.48-10-10-10z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-purple-900">WebSocket</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-purple-700">Status:</span>
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                                    Active
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-purple-700">Endpoint:</span>
+                                <span class="text-sm text-purple-900 font-mono truncate max-w-32"
+                                    title="{{stack.mobile_websocket_url}}">
+                                    {{stack.mobile_websocket_url|truncatechars:20}}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-purple-700">Protocol:</span>
+                                <span class="text-sm text-purple-900">WSS</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- WorkOS Authorization -->
+                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-lg border border-amber-200">
+                        <div class="flex items-center mb-4">
+                            <div class="bg-amber-500 p-2 rounded-lg mr-3">
+                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+                                </svg>
+                            </div>
+                            <h3 class="text-lg font-semibold text-amber-900">WorkOS Auth</h3>
+                        </div>
+                        <div class="space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-amber-700">Status:</span>
+                                <span
+                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
+                                    Configured
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-amber-700">Client ID:</span>
+                                <span class="text-sm text-amber-900 font-mono truncate max-w-32"
+                                    title="{{stack.mobile_workos_client_id}}">
+                                    {{stack.mobile_workos_client_id|truncatechars:15}}
+                                </span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-sm text-amber-700">SSO:</span>
+                                <span class="text-sm text-amber-900">Enabled</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mobile App Access -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
+                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
+                    </svg>
+                    Mobile App Access
+                </h2>
+                <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-lg border border-slate-200">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-slate-900 mb-2">Expo Development Build</h3>
+                            <p class="text-sm text-slate-700 mb-4">Scan the QR code below with the Expo Go app to test
+                                your mobile application</p>
+                        </div>
+                    </div>
+                    {% include 'dashboard/components/_qr_viewer.html' with frontend_url=stack.mobile_backend_url %}
+                </div>
+            </div>
+        </section>
+
+
+        {% include 'dashboard/components/_stack_infrastructure.html' %}
+
+
+        {% include 'dashboard/components/_stack_actions.html' %}
+
+    </main>
+</div>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'dashboards/environment_switcher.js' %}"></script>
+<script src="{% static 'dashboards/stack_dashboard.js' %}"></script>
+<script src="{% static 'dashboards/mobile_stack_dashboard.js' %}"></script>
+<!-- JSZip CDN is now included in stack actions component -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+{% endblock %}

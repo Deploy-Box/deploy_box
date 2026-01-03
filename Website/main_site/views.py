@@ -389,6 +389,9 @@ class DashboardView(View):
         elif stack_type == "pong":
             template_name = "dashboard/pong_stack_dashboard.html"
             frontend_url = stack.redis_url
+        elif stack_type == "mobile":
+            template_name = "dashboard/mobile_stack_dashboard.html"
+            frontend_url = stack.redis_url
         else:
             template_name = "dashboard/stack_dashboard.html"
             frontend_url = "#"
@@ -489,6 +492,110 @@ class DashboardView(View):
                 {"from": "proxy", "to": "vm", "label": "Forwarded"},
                 {"from": "frontend", "to": "backend", "label": "Data Connection"},
                 {"from": "vm", "to": "disk", "label": "Mounted"}
+            ])
+        
+        elif stack_type == "mobile":
+            import json
+            infrastructure_wrappers = json.dumps([
+                {
+                    "id": "backend_services",
+                    "label": "Backend Services",
+                    "x": 400,
+                    "y": 140,
+                    "width": 750,
+                    "height": 280,
+                    "color": "rgba(34, 197, 94, 0.1)",
+                    "borderColor": "#22c55e",
+                    "nodeIds": ["express", "postgres", "redis", "websocket"]
+                }
+            ])
+            infrastructure_nodes = json.dumps([
+                {
+                    "id": "mobile_app",
+                    "label": "React Native App",
+                    "sublabel": "iOS & Android",
+                    "x": 50,
+                    "y": 200,
+                    "width": 180,
+                    "height": 100,
+                    "color": "#3b82f6",
+                    "icon": "📱"
+                },
+                {
+                    "id": "expo",
+                    "label": "Expo",
+                    "sublabel": "Framework",
+                    "x": 50,
+                    "y": 350,
+                    "width": 180,
+                    "height": 80,
+                    "color": "#6366f1",
+                    "icon": "⚡"
+                },
+                {
+                    "id": "express",
+                    "label": "Express API",
+                    "sublabel": "Backend",
+                    "x": 420,
+                    "y": 180,
+                    "width": 150,
+                    "height": 100,
+                    "color": "#10b981",
+                    "icon": "🚀"
+                },
+                {
+                    "id": "postgres",
+                    "label": "PostgreSQL",
+                    "sublabel": "Database",
+                    "x": 620,
+                    "y": 180,
+                    "width": 150,
+                    "height": 100,
+                    "color": "#3b82f6",
+                    "icon": "🗄️"
+                },
+                {
+                    "id": "redis",
+                    "label": "Redis",
+                    "sublabel": "Cache",
+                    "x": 820,
+                    "y": 180,
+                    "width": 150,
+                    "height": 100,
+                    "color": "#ef4444",
+                    "icon": "⚡"
+                },
+                {
+                    "id": "websocket",
+                    "label": "WebSocket",
+                    "sublabel": "Real-time",
+                    "x": 1020,
+                    "y": 180,
+                    "width": 150,
+                    "height": 100,
+                    "color": "#a855f7",
+                    "icon": "🔌"
+                },
+                {
+                    "id": "workos",
+                    "label": "WorkOS",
+                    "sublabel": "Authentication",
+                    "x": 620,
+                    "y": 350,
+                    "width": 170,
+                    "height": 100,
+                    "color": "#f59e0b",
+                    "icon": "🔐"
+                }
+            ])
+            infrastructure_connections = json.dumps([
+                {"from": "mobile_app", "to": "express", "label": "HTTP/REST"},
+                {"from": "expo", "to": "mobile_app", "label": "Powers"},
+                {"from": "express", "to": "postgres", "label": "Queries"},
+                {"from": "express", "to": "redis", "label": "Cache"},
+                {"from": "mobile_app", "to": "websocket", "label": "Real-time"},
+                {"from": "mobile_app", "to": "workos", "label": "Auth"},
+                {"from": "express", "to": "workos", "label": "Validate"}
             ])
 
         qr = qrcode.QRCode(
