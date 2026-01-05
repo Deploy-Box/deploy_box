@@ -44,7 +44,7 @@ class StackViewSet(viewsets.ModelViewSet):
     def create(self, request):
 
         stack_infrastructure = {}
-        with open("stacks/stack_infrastructure/testing.json", "r") as f:
+        with open("stacks/stack_infrastructure/mobile_testing.json", "r") as f:
             stack_infrastructure = json.load(f)
 
         
@@ -52,19 +52,25 @@ class StackViewSet(viewsets.ModelViewSet):
             print(resource)
 
 
-        stack = Stack.objects.get(pk="cd1fcf5e926345e0")
-        deploy_box_static_website_item = DeployBoxStaticWebsiteItem.objects.create(stack=stack, name="Test Static Website Item")
+        # stack = Stack.objects.create(
+        #     name="Test Stack from API",
+        #     project=Project.objects.get(pk="d444675afae0429d"),
+        #     purchased_stack=PurchasableStack.objects.get(pk="f058c9c32fe7435b")
+        # )
 
-        # created_resources = ResourceManager.create(stack_infrastructure, stack)
+        stack = Stack.objects.get(pk="31a2cc8ec90e4611")
+        # deploy_box_static_website_item = DeployBoxStaticWebsiteItem.objects.create(stack=stack, name="Test Static Website Item")
+
+        created_resources = ResourceManager.create(stack_infrastructure, stack)
 
         data = {
             "stack_id": stack.pk,
-            "resources": DeployBoxStaticWebsiteItemManager().serialize(deploy_box_static_website_item)
+            "resources": ResourceManager.serialize(created_resources)
         }
 
         services.send_to_azure_function('IAC.CREATE', data)
 
-        return Response(DeployBoxStaticWebsiteItemManager().serialize(deploy_box_static_website_item), status=status.HTTP_201_CREATED)
+        return Response(data, status=status.HTTP_201_CREATED)
     
     
     # Delete

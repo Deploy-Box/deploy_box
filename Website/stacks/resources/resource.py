@@ -26,18 +26,39 @@ class Resource(models.Model, metaclass=ResourceMeta):
 
 def get_resource_manager_mapping() -> dict[str, type[Resource]]:
     """Lazy import to avoid circular dependencies"""
+    from stacks.resources.azurerm_resource_group.manager import AzurermResourceGroupManager
     from stacks.resources.azurerm_container_app.manager import AzurermContainerAppManager
     from stacks.resources.azurerm_storage_account.manager import AzurermStorageAccountManager
     from stacks.resources.azurerm_storage_container.manager import AzurermStorageContainerManager
+    from stacks.resources.azurerm_container_app_environment.manager import AzurermContainerAppEnvironmentManager
 
     return {
+        "AZURERM_RESOURCE_GROUP": AzurermResourceGroupManager,
         "AZURERM_CONTAINER_APP": AzurermContainerAppManager,
         "AZURERM_STORAGE_ACCOUNT": AzurermStorageAccountManager,
         "AZURERM_STORAGE_CONTAINER": AzurermStorageContainerManager,
+        "AZURERM_CONTAINER_APP_ENVIRONMENT": AzurermContainerAppEnvironmentManager,
+    }
+
+def get_resource_model_mapping() -> dict[str, type[models.Model]]:
+    """Lazy import to avoid circular dependencies"""
+    from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
+    from stacks.resources.azurerm_container_app.model import AzurermContainerApp
+    from stacks.resources.azurerm_storage_account.model import AzurermStorageAccount
+    from stacks.resources.azurerm_storage_container.model import AzurermStorageContainer
+    from stacks.resources.azurerm_container_app_environment.model import AzurermContainerAppEnvironment
+
+    return {
+        "AZURERM_RESOURCE_GROUP": AzurermResourceGroup,
+        "AZURERM_CONTAINER_APP": AzurermContainerApp,
+        "AZURERM_STORAGE_ACCOUNT": AzurermStorageAccount,
+        "AZURERM_STORAGE_CONTAINER": AzurermStorageContainer,
+        "AZURERM_CONTAINER_APP_ENVIRONMENT": AzurermContainerAppEnvironment,
     }
 
 class ResourceManager():
     resource_manager_mapping = None
+    resource_model_mapping = None
     resource_prefix_mapping = None
 
     @staticmethod
@@ -45,6 +66,12 @@ class ResourceManager():
         if ResourceManager.resource_manager_mapping is None:
             ResourceManager.resource_manager_mapping = get_resource_manager_mapping()
         return ResourceManager.resource_manager_mapping
+    
+    @staticmethod
+    def get_resource_model_mapping() -> dict[str, type[models.Model]]:
+        if ResourceManager.resource_model_mapping is None:
+            ResourceManager.resource_model_mapping = get_resource_model_mapping()
+        return ResourceManager.resource_model_mapping
     
     @staticmethod
     def get_resource_prefix_mapping() -> dict[str, type[Resource]]:
@@ -61,7 +88,7 @@ class ResourceManager():
 
     @staticmethod
     def create(resources: dict, stack: Stack) -> list[models.Model]:
-        resource_manager_mapping = ResourceManager.get_resource_manager_mapping()
+        resource_model_mapping = ResourceManager.get_resource_model_mapping()
         created_resources = []
         
         for resource in resources:
@@ -72,8 +99,9 @@ class ResourceManager():
 
             assert isinstance(resource_type, str), f"Expected resource_type to be a str, got {type(resource_type)}"
 
-            if resource_type.upper() in resource_manager_mapping:
-                created_resource = resource_manager_mapping[resource_type.upper()]().objects.create(**resource)
+            if resource_type.upper() in resource_model_mapping:
+                model = resource_model_mapping[resource_type.upper()]
+                created_resource = model.objects.create(**create_filtered_data(resource, model))
                 created_resources.append(created_resource)
         return created_resources
     

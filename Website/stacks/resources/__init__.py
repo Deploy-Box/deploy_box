@@ -15,3 +15,7 @@ from .azurerm_storage_container.serializer import AzurermStorageContainerSeriali
 
 from .azurerm_dns_cname_record.model import AzurermDnsCnameRecord
 from .azurerm_dns_cname_record.serializer import AzurermDnsCnameRecordSerializer
+
+from .azurerm_container_app_environment.model import AzurermContainerAppEnvironment
+from .azurerm_container_app_environment.manager import AzurermContainerAppEnvironmentManager
+from .azurerm_container_app_environment.serializer import AzurermContainerAppEnvironmentSerializer

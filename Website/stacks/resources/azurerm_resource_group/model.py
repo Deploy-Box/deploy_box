@@ -1,6 +1,5 @@
 from django.db import models
 
-from stacks.resources.resource import Resource
 from core.fields import ShortUUIDField
 
 TYPE_CHOICES = [
@@ -10,7 +9,7 @@ TYPE_CHOICES = [
 
 CLASS_PREFIX = "res000"
 
-class AzurermResourceGroup(Resource):
+class AzurermResourceGroup(models.Model):
     id = ShortUUIDField(primary_key=True, prefix=CLASS_PREFIX)
     name = models.CharField(max_length=255)
     type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='RESOURCE')
@@ -36,6 +35,3 @@ class AzurermResourceGroup(Resource):
             
         super().save(*args, **kwargs)
         
-    @staticmethod
-    def get_resource_prefix() -> str:
-        return CLASS_PREFIX
