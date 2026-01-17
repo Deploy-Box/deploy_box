@@ -1,30 +1,59 @@
-[    
+[
     {
         "resource_type": "azurerm_resource_group",
-        "name": "azurerm_resource_group_1"
+        "index": 0
     },
     {
         "resource_type": "azurerm_storage_account",
-        "name": "azurerm_storage_account_1",
-        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_1.azurerm_name}"
+        "index": 0,
+        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_0.azurerm_name}"
     },
     {
         "resource_type": "azurerm_storage_container",
-        "name": "azurerm_storage_container_1",
-        "storage_account_id": "${azurerm_storage_account.azurerm_storage_account_1.azurerm_id}",
+        "index": 0,
+        "storage_account_id": "${azurerm_storage_account.azurerm_storage_account_0.azurerm_id}",
         "container_access_type": "private"
     },
     {
         "resource_type": "azurerm_container_app_environment",
-        "name": "azurerm_container_app_environment_1",
-        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_1.azurerm_name}"
+        "index": 0,
+        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_0.azurerm_name}"
     },
     {
         "resource_type": "azurerm_container_app",
-        "name": "azurerm_container_app_1",
-        "container_app_environment_id": "${azurerm_container_app_environment.azurerm_container_app_environment_1.azurerm_id}",
-        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_1.azurerm_name}",
+        "index": 0,
+        "container_app_environment_id": "${azurerm_container_app_environment.azurerm_container_app_environment_0.azurerm_id}",
+        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_0.azurerm_name}",
         "template_container_name": "myapp",
-        "template_container_image": "nginx:latest"
+        "template_container_image": "nginx:latest",
+        "template_container_env": [
+            {
+                "name": "WORKOS_API_KEY",
+                "value": "${deployboxrm_workos_integration.deployboxrm_workos_integration_0.api_key}"
+            },
+            {
+                "name": "WORKOS_CLIENT_ID",
+                "value": "${deployboxrm_workos_integration.deployboxrm_workos_integration_0.client_id}"
+            },
+            {
+                "name": "WORKOS_REDIRECT_URI",
+                "value": "${deployboxrm_workos_integration.deployboxrm_workos_integration_0.redirect_uri}"
+            },
+                        {
+                "name": "POSTGRES_CONNECTION_STRING",
+                "value": "${thenilerm_database.thenilerm_database_0.db_host}"
+            }
+        ]
+    },
+    {
+        "resource_type": "deployboxrm_workos_integration",
+        "index": 0,
+        "api_key": "sk_test_your_actual_api_key_here",
+        "client_id": "client_your_actual_client_id_here",
+        "redirect_uri": "http://localhost:3000/api/v1/auth/callback"
+    },
+    {
+        "resource_type": "thenilerm_database",
+        "index": 0
     }
 ]

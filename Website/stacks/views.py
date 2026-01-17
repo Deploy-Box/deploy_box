@@ -13,6 +13,7 @@ from django.conf import settings
 import uuid
 import datetime
 import json
+from stacks.stack_infrastructure.get_stack_infrastructure import get_stack_infrastructure
 
 try:
     # azure-storage-blob is in requirements.txt; import here so module import error surfaces at runtime
@@ -20,7 +21,7 @@ try:
 except Exception:
     BlobServiceClient = None
 
-from core.decorators import oauth_required, AuthHttpRequest
+from core.decorators import AuthHttpRequest
 from stacks.models import Stack, PurchasableStack
 from stacks.serializers import (
     StackSerializer,
@@ -30,7 +31,7 @@ from projects.models import Project
 import stacks.services as services
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, filters, viewsets
-from stacks.resources.resource import ResourceManager
+from stacks.resources.resources_manager import ResourcesManager
 from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
 from stacks.stack_items.deploy_box_static_website.model import DeployBoxStaticWebsiteItem
 from stacks.stack_items.deploy_box_static_website.manager import DeployBoxStaticWebsiteItemManager
@@ -42,30 +43,23 @@ class StackViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
 
     def create(self, request):
-
-        stack_infrastructure = {}
-        with open("stacks/stack_infrastructure/mobile_testing.json", "r") as f:
-            stack_infrastructure = json.load(f)
-
-        
-        for resource in stack_infrastructure:
-            print(resource)
-
-
         # stack = Stack.objects.create(
         #     name="Test Stack from API",
-        #     project=Project.objects.get(pk="d444675afae0429d"),
-        #     purchased_stack=PurchasableStack.objects.get(pk="f058c9c32fe7435b")
+        #     project=Project.objects.get(pk="77dd29d860fd4f49"),
+        #     purchased_stack=PurchasableStack.objects.get(pk="e126573ecb4c4dae")
         # )
 
-        stack = Stack.objects.get(pk="31a2cc8ec90e4611")
+        stack = Stack.objects.get(pk="8f45f5f1287c49d9")
+        stack_infrastructure = get_stack_infrastructure("MOBILE.")
+
+        # print("Stack infrastructure:", stack_infrastructure)
         # deploy_box_static_website_item = DeployBoxStaticWebsiteItem.objects.create(stack=stack, name="Test Static Website Item")
 
-        created_resources = ResourceManager.create(stack_infrastructure, stack)
+        created_resources = ResourcesManager.create(stack_infrastructure, stack)
 
         data = {
             "stack_id": stack.pk,
-            "resources": ResourceManager.serialize(created_resources)
+            "resources": ResourcesManager.serialize(created_resources)
         }
 
         services.send_to_azure_function('IAC.CREATE', data)
@@ -108,7 +102,12 @@ class StackViewSet(viewsets.ModelViewSet):
         #     status=status.HTTP_200_OK
         # )
 
-    @oauth_required()
+    @action(detail=False, methods=['patch'], url_path='bulk-patch', url_name='bulk_patch')
+    def bulk_patch(self, request):
+        """PATCH: Bulk update stacks"""
+        print(json.dumps(request.data, indent=2))
+        return Response({"error": "Not implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
     @action(detail=True, methods=['post'])
     def refresh(self, request, pk=None):
         """POST: Refresh a specific stack's infrastructure"""
@@ -134,14 +133,13 @@ class StackViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-    @oauth_required()
-    @action(detail=True, methods=['get'])
-    def env(self, request, pk=None):
+    @action(detail=True, methods=['get'], url_path='env', url_name='env')
+    def get_env(self, request, pk=None):
         """GET: Fetch environment variables for a specific stack"""
         return Response({"error": "Not implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
 
-    @action(detail=True, methods=['post'])
-    def env(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='env', url_name='env')
+    def post_env(self, request, pk=None):
         """POST: Update environment variables for a specific stack"""
         from stacks.forms import EnvFileUploadForm
 
@@ -157,8 +155,8 @@ class StackViewSet(viewsets.ModelViewSet):
         else:
             return Response({"message": "you must upload a valid form"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['delete'])
-    def env(self, request, pk=None):
+    @action(detail=True, methods=['delete'], url_path='env', url_name='env')
+    def delete_env(self, request, pk=None):
         """DELETE: Delete environment variables for a specific stack"""
         return Response({"error": "Not implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
 

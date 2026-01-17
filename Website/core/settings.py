@@ -174,16 +174,21 @@ DATABASES = {
     # }
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
-        "PASSWORD": KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD")),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
+        # "NAME": os.environ.get("DB_NAME"),
+        # "USER": os.environ.get("DB_USER"),
+        # "PASSWORD": KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD")),
+        # "HOST": os.environ.get("DB_HOST"),
+        # "PORT": os.environ.get("DB_PORT"),
+        "NAME": "deploybox",
+        "USER": "postgres",
+        "PASSWORD": "School30332319!!!",
+        "HOST": "localhost",
+        "PORT": 5432,
         # "OPTIONS": {
         #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
         # },
         "CONN_MAX_AGE": 600,
-        "OPTIONS": {"sslmode": "require"}
+        "OPTIONS": {"sslmode": "disable"}
     }
 }
 

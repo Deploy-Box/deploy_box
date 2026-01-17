@@ -1,37 +1,27 @@
+import os
 from django.db import models
 
 from core.fields import ShortUUIDField
-
-TYPE_CHOICES = [
-    ('RESOURCE', 'Resource'),
-    ('DATA', 'Data'),
-]
+from stacks.resources.base_resource_model import BaseResourceModel
 
 CLASS_PREFIX = "res000"
+RESOURCE_NAME = "azurerm_resource_group"
 
-class AzurermResourceGroup(models.Model):
-    id = ShortUUIDField(primary_key=True, prefix=CLASS_PREFIX)
-    name = models.CharField(max_length=255)
-    type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='RESOURCE')
-    stack = models.ForeignKey('stacks.Stack', on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+class AzurermResourceGroup(BaseResourceModel):
+	id = ShortUUIDField(primary_key=True, prefix=CLASS_PREFIX)
 
-    # Resource specific fields
-    azurerm_id = models.CharField(max_length=255)
-    azurerm_name = models.CharField(max_length=255)
-    location = models.CharField(max_length=255, default='eastus')
-    tags = models.JSONField(default=dict, blank=True)
+	# Resource specific fields
+	azurerm_id = models.CharField(max_length=255)
+	azurerm_name = models.CharField(max_length=255)
+	location = models.CharField(max_length=255, default='eastus')
+	tags = models.JSONField(default=dict, blank=True)
 
-    def __str__(self):
-        return self.name
-    
-    def save(self, *args, **kwargs):
-        assert self.stack is not None, "Stack must be provided"
-        assert isinstance(self.stack, models.Model), "Stack must be a valid Stack instance"
+	def save(self, *args, **kwargs):
+		environment = os.getenv('ENV', 'DEV').lower()
+		self.name = f"{RESOURCE_NAME}_{self.index}"
+		if environment == 'prod':
+			self.azurerm_name = f"{CLASS_PREFIX}_{self.index}_{self.stack.pk}"
+		else:
+			self.azurerm_name = f"{CLASS_PREFIX}_{self.index}_{self.stack.pk}_{environment}"
 
-        if not self.azurerm_name:
-            self.azurerm_name = f'{self.stack.pk}-rg'
-            
-        super().save(*args, **kwargs)
-        
+		super().save(*args, **kwargs)
