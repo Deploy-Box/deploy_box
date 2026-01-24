@@ -66,6 +66,21 @@ class StackViewSet(viewsets.ModelViewSet):
 
         return Response(data, status=status.HTTP_201_CREATED)
     
+
+    # PATCH: Update a specific stack
+    def partial_update(self, request, pk=None):
+        """PATCH: Update a specific stack by ID"""
+        if not pk:
+            return Response(
+                {"error": "Stack ID is required."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        stack = get_object_or_404(Stack, pk=pk)
+        serializer = StackSerializer(stack, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     # Delete
     def destroy(self, request, pk=None):
@@ -106,7 +121,9 @@ class StackViewSet(viewsets.ModelViewSet):
     def bulk_patch(self, request):
         """PATCH: Bulk update stacks"""
         print(json.dumps(request.data, indent=2))
-        return Response({"error": "Not implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
+
+        for item in request.data.get("stacks", []):
+            self.partial_update(self, request)
 
     @action(detail=True, methods=['post'])
     def refresh(self, request, pk=None):
