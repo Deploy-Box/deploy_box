@@ -97,21 +97,21 @@ class ResourcesManager():
         return created_resources
     
     @staticmethod
-    def read(resource_id: str | list[str]):
+    def read(resource_id: str | list[str]) -> models.Model | list[models.Model] | None:
         if isinstance(resource_id, list):
             return [ResourcesManager.read(rid) for rid in resource_id]
         
         resource_prefix_mapping = ResourcesManager.get_resource_prefix_mapping()
-        # Extract prefix from resource_id (assuming format: "prefix-identifier")
-        prefix = resource_id.split('-')[0]
+        prefix = resource_id.split('_')[0]
         
         if prefix in resource_prefix_mapping:
             manager_class = resource_prefix_mapping[prefix]
+            managed_model_class = manager_class.get_model()
             try:
-                return
-                # return manager_class().objects.get(pk=resource_id)
-            except models.Model.DoesNotExist:
-                pass
+                return managed_model_class.objects.get(pk=resource_id)
+            except Exception as e:
+                print(f"Error retrieving resource {resource_id}: {e}")
+                
         return None
     
     @staticmethod

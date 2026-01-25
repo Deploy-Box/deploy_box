@@ -31,7 +31,7 @@ from projects.models import Project
 import stacks.services as services
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, filters, viewsets
-from stacks.resources.resources_manager import ResourcesManager
+from stacks.resources.resources_manager import ResourcesManager, create_filtered_data
 from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
 from stacks.stack_items.deploy_box_static_website.model import DeployBoxStaticWebsiteItem
 from stacks.stack_items.deploy_box_static_website.manager import DeployBoxStaticWebsiteItemManager
@@ -45,11 +45,11 @@ class StackViewSet(viewsets.ModelViewSet):
     def create(self, request):
         # stack = Stack.objects.create(
         #     name="Test Stack from API",
-        #     project=Project.objects.get(pk="77dd29d860fd4f49"),
-        #     purchased_stack=PurchasableStack.objects.get(pk="e126573ecb4c4dae")
+        #     project=Project.objects.get(pk="101459a8e9c14d23"),
+        #     purchased_stack=PurchasableStack.objects.get(pk="9903451ec6da4997")
         # )
 
-        stack = Stack.objects.get(pk="8f45f5f1287c49d9")
+        stack = Stack.objects.get(pk="d28f2c3241da4f86")
         stack_infrastructure = get_stack_infrastructure("MOBILE.")
 
         # print("Stack infrastructure:", stack_infrastructure)
@@ -117,13 +117,33 @@ class StackViewSet(viewsets.ModelViewSet):
         #     status=status.HTTP_200_OK
         # )
 
-    @action(detail=False, methods=['patch'], url_path='bulk-patch', url_name='bulk_patch')
-    def bulk_patch(self, request):
+    @action(detail=False, methods=['patch'], url_path='bulk-update-resources', url_name='bulk_update_resources')
+    def bulk_update_resources(self, request):
         """PATCH: Bulk update stacks"""
         print(json.dumps(request.data, indent=2))
 
-        for item in request.data.get("stacks", []):
-            self.partial_update(self, request)
+
+        for resource in request.data.get("resources", []):
+            resource_id = resource.get("id")
+            resource.pop("stack", None)
+
+            existing_resource = ResourcesManager.read(resource_id)
+            if not existing_resource:
+                print(f"Resource with ID {resource_id} not found.")
+                continue
+
+            if isinstance(existing_resource, list):
+                print(f"Resource ID {resource_id} refers to multiple resources; expected a single resource.")
+                continue
+
+            existing_resource.__dict__.update(create_filtered_data(resource, type(existing_resource)))
+            existing_resource.save()
+            print(f"Resource {resource_id} updated successfully.")
+
+        return Response(
+            {"success": True, "message": "Resources updated successfully."}, 
+            status=status.HTTP_200_OK
+        )
 
     @action(detail=True, methods=['post'])
     def refresh(self, request, pk=None):
