@@ -55,5 +55,12 @@
     {
         "resource_type": "thenilerm_database",
         "index": 0
+    },
+    {
+        "resource_type": "azurerm_storage_account_static_website",
+        "index": 0,
+        "storage_account_id": "${azurerm_storage_account.azurerm_storage_account_0.azurerm_id}",
+        "static_file_directory": "frontend",
+        "static_file_build_command": "npm install && npm run build"
     }
 ]

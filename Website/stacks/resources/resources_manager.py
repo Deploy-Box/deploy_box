@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from django.db import models
 from typing import TYPE_CHECKING, Any
+
 from .resource_manager import ResourceManager
 
 from stacks.resources.azurerm_resource_group.manager import AzurermResourceGroupManager
@@ -11,13 +12,12 @@ from stacks.resources.azurerm_storage_container.manager import AzurermStorageCon
 from stacks.resources.azurerm_container_app_environment.manager import AzurermContainerAppEnvironmentManager
 from stacks.resources.deployboxrm_workos_integration.manager import DeployBoxrmWorkOSIntegrationManager
 from stacks.resources.thenilerm_database.manager import TheNilermDatabaseManager
+from stacks.resources.azurerm_storage_account_static_website.manager import AzurermStorageAccountStaticWebsiteManager
 
 if TYPE_CHECKING:
     from stacks.models import Stack
 
-
-def get_resource_manager_mapping() -> dict[str, type[ResourceManager]]:
-    return {
+RESOURCE_MANAGER_MAPPING: dict[str, type[ResourceManager]] = {
         "AZURERM_RESOURCE_GROUP": AzurermResourceGroupManager,
         "AZURERM_CONTAINER_APP": AzurermContainerAppManager,
         "AZURERM_STORAGE_ACCOUNT": AzurermStorageAccountManager,
@@ -25,59 +25,27 @@ def get_resource_manager_mapping() -> dict[str, type[ResourceManager]]:
         "AZURERM_CONTAINER_APP_ENVIRONMENT": AzurermContainerAppEnvironmentManager,
         "THENILERM_DATABASE": TheNilermDatabaseManager,
         "DEPLOYBOXRM_WORKOS_INTEGRATION": DeployBoxrmWorkOSIntegrationManager,
-    }
-
-def get_resource_model_mapping() -> dict[str, type[models.Model]]:
-    from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
-    from stacks.resources.azurerm_container_app.model import AzurermContainerApp
-    from stacks.resources.azurerm_storage_account.model import AzurermStorageAccount
-    from stacks.resources.azurerm_storage_container.model import AzurermStorageContainer
-    from stacks.resources.azurerm_container_app_environment.model import AzurermContainerAppEnvironment
-    from stacks.resources.deployboxrm_workos_integration.model import DeployBoxrmWorkOSIntegration
-
-    return {
-        "AZURERM_RESOURCE_GROUP": AzurermResourceGroup,
-        "AZURERM_CONTAINER_APP": AzurermContainerApp,
-        "AZURERM_STORAGE_ACCOUNT": AzurermStorageAccount,
-        "AZURERM_STORAGE_CONTAINER": AzurermStorageContainer,
-        "AZURERM_CONTAINER_APP_ENVIRONMENT": AzurermContainerAppEnvironment,
-        "DEPLOYBOXRM_WORKOS_INTEGRATION": DeployBoxrmWorkOSIntegration,
-        "THENILERM_DATABASE": TheNilermDatabaseManager.get_model(),
+        "AZURERM_STORAGE_ACCOUNT_STATIC_WEBSITE": AzurermStorageAccountStaticWebsiteManager,
     }
 
 class ResourcesManager():
-    resource_manager_mapping = None
-    resource_model_mapping = None
     resource_prefix_mapping = None
 
-    @staticmethod
-    def get_resource_manager_mapping() -> dict[str, type[ResourceManager]]:
-        if ResourcesManager.resource_manager_mapping is None:
-            ResourcesManager.resource_manager_mapping = get_resource_manager_mapping()
-        return ResourcesManager.resource_manager_mapping
-    
-    @staticmethod
-    def get_resource_model_mapping() -> dict[str, type[models.Model]]:
-        if ResourcesManager.resource_model_mapping is None:
-            ResourcesManager.resource_model_mapping = get_resource_model_mapping()
-        return ResourcesManager.resource_model_mapping
-    
     @staticmethod
     def get_resource_prefix_mapping() -> dict[str, type[ResourceManager]]:
         if ResourcesManager.resource_prefix_mapping is None:
             ResourcesManager.resource_prefix_mapping = {
                 manager_class.get_resource_prefix(): manager_class
-                for manager_class in ResourcesManager.get_resource_manager_mapping().values()
+                for manager_class in RESOURCE_MANAGER_MAPPING.values()
             }
 
-            if len(ResourcesManager.resource_prefix_mapping) != len(ResourcesManager.get_resource_manager_mapping()):
+            if len(ResourcesManager.resource_prefix_mapping) != len(RESOURCE_MANAGER_MAPPING):
                 raise ValueError("Duplicate resource prefixes found in resource managers.")
             
         return ResourcesManager.resource_prefix_mapping
 
     @staticmethod
     def create(resources: dict, stack: Stack) -> list[models.Model]:
-        resource_model_mapping = ResourcesManager.get_resource_manager_mapping()
         created_resources = []
         
         for resource in resources:
@@ -88,8 +56,8 @@ class ResourcesManager():
 
             assert isinstance(resource_type, str), f"Expected resource_type to be a str, got {type(resource_type)}"
 
-            if resource_type.upper() in resource_model_mapping:
-                model = resource_model_mapping[resource_type.upper()]().get_model()
+            if resource_type.upper() in RESOURCE_MANAGER_MAPPING:
+                model = RESOURCE_MANAGER_MAPPING[resource_type.upper()].get_model()
                 created_resource = model.objects.create(**create_filtered_data(resource, model))
                 created_resources.append(created_resource)
             else:
