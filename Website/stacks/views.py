@@ -49,7 +49,7 @@ class StackViewSet(viewsets.ModelViewSet):
         #     purchased_stack=PurchasableStack.objects.get(pk="9903451ec6da4997")
         # )
 
-        stack = Stack.objects.get(pk="d28f2c3241da4f86")
+        stack = Stack.objects.get(pk="8f45f5f1287c49d9")
         stack_infrastructure = get_stack_infrastructure("MOBILE.")
 
         # print("Stack infrastructure:", stack_infrastructure)

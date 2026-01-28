@@ -181,7 +181,7 @@ DATABASES = {
         # "PORT": os.environ.get("DB_PORT"),
         "NAME": "deploybox",
         "USER": "postgres",
-        "PASSWORD": "School30332319!",
+        "PASSWORD": "School30332319!!!",
         "HOST": "localhost",
         "PORT": 5432,
         # "OPTIONS": {
