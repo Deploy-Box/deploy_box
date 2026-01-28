@@ -10,6 +10,7 @@ STACK_MANAGER_MAPPING: dict[str, type[StackManager]] = {
     "MERN": MERNStackManager,
     "REDIS": RedisStackManager,
     "PONG": PongStackManager,
+    "MOBILE": DjangoStackManager,
 }
 
 def get_stack_manager(stack: Stack) -> StackManager:
