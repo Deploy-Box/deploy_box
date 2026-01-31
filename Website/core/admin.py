@@ -3,8 +3,9 @@ from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.models import Application
 from blogs.admin import BlogPostAdmin
 from blogs.models import BlogPost
-from stacks.admin import PurchasableStackAdmin, StackAdmin
+from stacks.admin import PurchasableStackAdmin, StackAdmin, MetricDefinitionAdmin
 from stacks.models import PurchasableStack, Stack
+from stacks.metrics.models import MetricDefinition
 from accounts.admin import UserProfileAdmin
 from accounts.models import UserProfile
 from deploy_box_apis.admin import APIAdmin
@@ -29,6 +30,7 @@ admin_site = NoCSRFAdminSite()
 admin_site.register(Application)
 admin_site.register(PurchasableStack, PurchasableStackAdmin)
 admin_site.register(Stack, StackAdmin)
+admin_site.register(MetricDefinition, MetricDefinitionAdmin)
 admin_site.register(UserProfile, UserProfileAdmin)
 # admin_site.register(usage_information, UsageInformationAdmin)
 # admin_site.register(billing_history, BillingHistoryAdmin)
