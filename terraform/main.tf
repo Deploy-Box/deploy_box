@@ -63,6 +63,62 @@ resource "azurerm_container_app" "container_app" {
         name  = "AZURE_SUBSCRIPTION_ID"
         value = data.azurerm_client_config.current.subscription_id
       }
+      env {
+        name  = "HOST"
+        value = var.host
+      }
+      env {
+        name  = "OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID"
+        value = var.oauth2_password_credentials_client_id
+      }
+      env {
+        name  = "OAUTH2_AUTH_CODE_CLIENT_ID"
+        value = var.oauth2_auth_code_client_id
+      }
+      env {
+        name  = "DB_NAME"
+        value = var.db_name
+      }
+      env {
+        name  = "DB_USER"
+        value = var.db_user
+      }
+      env {
+        name  = "DB_HOST"
+        value = var.db_host
+      }
+      env {
+        name  = "DB_PORT"
+        value = var.db_port
+      }
+      env {
+        name  = "DEPLOY_BOX_STACK_ENDPOINT"
+        value = var.deploy_box_stack_endpoint
+      }
+      env {
+        name  = "EMAIL_HOST_USER"
+        value = var.email_host_user
+      }
+      env {
+        name  = "DEPLOY_BOX_GITHUB_CLIENT_ID"
+        value = var.deploy_box_github_client_id
+      }
+      env {
+        name  = "NPM_BIN_PATH"
+        value = var.npm_bin_path
+      }
+      env {
+        name  = "KEY_VAULT_NAME"
+        value = var.key_vault_name
+      }
+      env {
+        name  = "AZURE_FUNCTION_URL"
+        value = var.azure_function_url
+      }
+      env {
+        name  = "DEPLOY_BOX_API_BASE_URL"
+        value = var.deploy_box_api_base_url
+      }
     }
 
     min_replicas = 0
