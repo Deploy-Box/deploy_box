@@ -372,7 +372,7 @@ def send_to_azure_function(request_type: str, message_data: dict) -> bool:
 
     try:
         # Send HTTP POST request to Azure Function
-        print("Sending data to Azure Function:", function_url, data)
+        # print("Sending data to Azure Function:", function_url, data)
         response = requests.post(
             function_url,
             json=data,

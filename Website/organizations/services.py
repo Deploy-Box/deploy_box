@@ -48,7 +48,8 @@ def create_organization(user: UserProfile, name: str, email: str) -> Union[dict,
 
     try:
         with transaction.atomic():
-            stripe_customer_id = create_stripe_user(name=name, email=email)
+            # stripe_customer_id = create_stripe_user(name=name, email=email)
+            stripe_customer_id = '123454'
 
             organization = Organization.objects.create(
                             name=name, email=email, stripe_customer_id=stripe_customer_id

@@ -1,0 +1,74 @@
+[
+    {
+        "resource_type": "azurerm_resource_group",
+        "index": 0
+    },
+    {
+        "resource_type": "azurerm_storage_account",
+        "index": 0,
+        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_0.azurerm_name}"
+    },
+    {
+        "resource_type": "azurerm_storage_container",
+        "index": 0,
+        "storage_account_id": "${azurerm_storage_account.azurerm_storage_account_0.azurerm_id}",
+        "container_access_type": "private"
+    },
+    {
+        "resource_type": "azurerm_container_app_environment",
+        "index": 0,
+        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_0.azurerm_name}"
+    },
+    {
+        "resource_type": "azurerm_container_app",
+        "index": 0,
+        "container_app_environment_id": "${azurerm_container_app_environment.azurerm_container_app_environment_0.azurerm_id}",
+        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_0.azurerm_name}",
+        "template_container_name": "myapp",
+        "template_container_image": "nginx:latest",
+        "template_container_env": [
+            {
+                "name": "WORKOS_API_KEY",
+                "value": "${deployboxrm_workos_integration.deployboxrm_workos_integration_0.api_key}"
+            },
+            {
+                "name": "WORKOS_CLIENT_ID",
+                "value": "${deployboxrm_workos_integration.deployboxrm_workos_integration_0.client_id}"
+            },
+            {
+                "name": "WORKOS_REDIRECT_URI",
+                "value": "${deployboxrm_workos_integration.deployboxrm_workos_integration_0.redirect_uri}"
+            },
+                        {
+                "name": "POSTGRES_CONNECTION_STRING",
+                "value": "${thenilerm_database.thenilerm_database_0.db_host}"
+            }
+        ]
+    },
+    {
+        "resource_type": "deployboxrm_workos_integration",
+        "index": 0,
+        "api_key": "sk_test_your_actual_api_key_here",
+        "client_id": "client_your_actual_client_id_here",
+        "redirect_uri": "http://localhost:3000/api/v1/auth/callback"
+    },
+    {
+        "resource_type": "thenilerm_database",
+        "index": 0
+    },
+    {
+        "resource_type": "azurerm_storage_account_static_website",
+        "index": 0,
+        "storage_account_id": "${azurerm_storage_account.azurerm_storage_account_0.azurerm_id}",
+        "static_file_directory": "frontend",
+        "static_file_build_command": "npm install && npm run build",
+        "static_file_build_output_directory": "frontend/dist"
+    },
+    {
+        "resource_type": "deployboxrm_edge",
+        "subdomain": "testing",
+        "root_base_url": "${azurerm_storage_account.azurerm_storage_account_0.primary_web_endpoint}",
+        "api_base_url": "https://${azurerm_container_app.azurerm_container_app_0.ingress_fqdn}/",
+        "index": 0
+    }
+]

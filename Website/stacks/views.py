@@ -13,6 +13,7 @@ from django.conf import settings
 import uuid
 import datetime
 import json
+from stacks.stack_infrastructure.get_stack_infrastructure import get_stack_infrastructure
 
 try:
     # azure-storage-blob is in requirements.txt; import here so module import error surfaces at runtime
@@ -20,7 +21,7 @@ try:
 except Exception:
     BlobServiceClient = None
 
-from core.decorators import oauth_required, AuthHttpRequest
+from core.decorators import AuthHttpRequest
 from stacks.models import Stack, PurchasableStack
 from stacks.serializers import (
     StackSerializer,
@@ -30,7 +31,7 @@ from projects.models import Project
 import stacks.services as services
 from django.shortcuts import get_object_or_404
 from rest_framework import permissions, filters, viewsets
-from stacks.resources.resource import ResourceManager
+from stacks.resources.resources_manager import ResourcesManager, create_filtered_data
 from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
 from stacks.stack_items.deploy_box_static_website.model import DeployBoxStaticWebsiteItem
 from stacks.stack_items.deploy_box_static_website.manager import DeployBoxStaticWebsiteItemManager
@@ -42,30 +43,44 @@ class StackViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
 
     def create(self, request):
+        # stack = Stack.objects.create(
+        #     name="Test Stack from API",
+        #     project=Project.objects.get(pk="101459a8e9c14d23"),
+        #     purchased_stack=PurchasableStack.objects.get(pk="9903451ec6da4997")
+        # )
 
-        stack_infrastructure = {}
-        with open("stacks/stack_infrastructure/testing.json", "r") as f:
-            stack_infrastructure = json.load(f)
+        stack = Stack.objects.get(pk="8f45f5f1287c49d9")
+        stack_infrastructure = stack.purchased_stack.stack_infrastructure
 
-        
-        for resource in stack_infrastructure:
-            print(resource)
+        # Delete existing resources
+        ResourcesManager.delete(stack)
 
-
-        stack = Stack.objects.get(pk="cd1fcf5e926345e0")
-        deploy_box_static_website_item = DeployBoxStaticWebsiteItem.objects.create(stack=stack, name="Test Static Website Item")
-
-        # created_resources = ResourceManager.create(stack_infrastructure, stack)
+        created_resources = ResourcesManager.create(stack_infrastructure, stack)
 
         data = {
             "stack_id": stack.pk,
-            "resources": DeployBoxStaticWebsiteItemManager().serialize(deploy_box_static_website_item)
+            "resources": ResourcesManager.serialize(created_resources)
         }
 
         services.send_to_azure_function('IAC.CREATE', data)
 
-        return Response(DeployBoxStaticWebsiteItemManager().serialize(deploy_box_static_website_item), status=status.HTTP_201_CREATED)
+        return Response(data, status=status.HTTP_201_CREATED)
     
+
+    # PATCH: Update a specific stack
+    def partial_update(self, request, pk=None):
+        """PATCH: Update a specific stack by ID"""
+        if not pk:
+            return Response(
+                {"error": "Stack ID is required."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        stack = get_object_or_404(Stack, pk=pk)
+        serializer = StackSerializer(stack, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     # Delete
     def destroy(self, request, pk=None):
@@ -102,7 +117,85 @@ class StackViewSet(viewsets.ModelViewSet):
         #     status=status.HTTP_200_OK
         # )
 
-    @oauth_required()
+    @action(detail=False, methods=['get'], url_path='traefik-config', url_name='traefik_config')
+    def get_traefik_config(self, request):
+        """GET: Fetch Traefik configuration for all tenant edges."""
+        from stacks.resources.deployboxrm_edge.model import DeployBoxrmEdge
+
+        base_domain = getattr(settings, 'BASE_DOMAIN', 'dev.deploy-box.com')
+        edges = DeployBoxrmEdge.objects.all()
+
+        routers = {}
+        services = {}
+        middlewares = {}
+
+        for edge in edges:
+            subdomain = edge.subdomain
+
+            # Root route: all non-/api traffic for this tenant
+            if edge.resolved_root_base_url:
+                routers[f"{subdomain}-root"] = {
+                    "rule": f"Host(`{subdomain}.{base_domain}`)",
+                    "service": f"{subdomain}-root",
+                    "entryPoints": ["web"],
+                    "priority": 100,
+                }
+                services[f"{subdomain}-root"] = {
+                    "loadBalancer": {
+                        "servers": [{"url": edge.root_base_url}],
+                        "passHostHeader": False,
+                    }
+                }
+
+            # API route: /api/* traffic for this tenant
+            if edge.resolved_api_base_url:
+                routers[f"{subdomain}-api"] = {
+                    "rule": f"Host(`{subdomain}.{base_domain}`) && PathPrefix(`/api`)",
+                    "service": f"{subdomain}-api",
+                    "middlewares": [f"{subdomain}-strip-api"],
+                    "entryPoints": ["web"],
+                    "priority": 200,
+                }
+                services[f"{subdomain}-api"] = {
+                    "loadBalancer": {
+                        "servers": [{"url": edge.api_base_url}],
+                        "passHostHeader": False,
+                    }
+                }
+                middlewares[f"{subdomain}-strip-api"] = {
+                    "stripPrefix": {"prefixes": ["/api"]}
+                }
+
+        return JsonResponse({"http": {"routers": routers, "services": services, "middlewares": middlewares}})
+
+    @action(detail=False, methods=['patch'], url_path='bulk-update-resources', url_name='bulk_update_resources')
+    def bulk_update_resources(self, request):
+        """PATCH: Bulk update stacks"""
+        print(json.dumps(request.data, indent=2))
+
+
+        for resource in request.data.get("resources", []):
+            resource_id = resource.get("id")
+            resource.pop("stack", None)
+
+            existing_resource = ResourcesManager.read(resource_id)
+            if not existing_resource:
+                print(f"Resource with ID {resource_id} not found.")
+                continue
+
+            if isinstance(existing_resource, list):
+                print(f"Resource ID {resource_id} refers to multiple resources; expected a single resource.")
+                continue
+
+            existing_resource.__dict__.update(create_filtered_data(resource, type(existing_resource)))
+            existing_resource.save()
+            print(f"Resource {resource_id} updated successfully.")
+
+        return Response(
+            {"success": True, "message": "Resources updated successfully."}, 
+            status=status.HTTP_200_OK
+        )
+
     @action(detail=True, methods=['post'])
     def refresh(self, request, pk=None):
         """POST: Refresh a specific stack's infrastructure"""
@@ -128,14 +221,13 @@ class StackViewSet(viewsets.ModelViewSet):
             status=status.HTTP_200_OK
         )
 
-    @oauth_required()
-    @action(detail=True, methods=['get'])
-    def env(self, request, pk=None):
+    @action(detail=True, methods=['get'], url_path='env', url_name='env')
+    def get_env(self, request, pk=None):
         """GET: Fetch environment variables for a specific stack"""
         return Response({"error": "Not implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
 
-    @action(detail=True, methods=['post'])
-    def env(self, request, pk=None):
+    @action(detail=True, methods=['post'], url_path='env', url_name='env')
+    def post_env(self, request, pk=None):
         """POST: Update environment variables for a specific stack"""
         from stacks.forms import EnvFileUploadForm
 
@@ -151,8 +243,8 @@ class StackViewSet(viewsets.ModelViewSet):
         else:
             return Response({"message": "you must upload a valid form"}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=True, methods=['delete'])
-    def env(self, request, pk=None):
+    @action(detail=True, methods=['delete'], url_path='env', url_name='env')
+    def delete_env(self, request, pk=None):
         """DELETE: Delete environment variables for a specific stack"""
         return Response({"error": "Not implemented"}, status=status.HTTP_501_NOT_IMPLEMENTED)
 

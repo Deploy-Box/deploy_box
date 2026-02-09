@@ -1,32 +1,50 @@
+from typing import Iterable
 from django.db import models
 from organizations.models import Organization
 from stacks.models import Stack
+from stacks.metrics.models import MetricDefinition
 
 
-# Defines a pricing plan that determines cost per usage unit.
-class SKU(models.Model):
-    name = models.CharField(max_length=255)
-    currency = models.CharField(max_length=10, default="USD")
-    unit_name = models.CharField(max_length=50)  # e.g., "stack-day", "vCPU-hour"
-    price_per_unit = models.DecimalField(max_digits=12, decimal_places=6)
-    billing_cycle = models.CharField(max_length=50, default="monthly")
+class RateCard(models.Model):
+    metric_definition = models.ForeignKey(MetricDefinition, on_delete=models.CASCADE, related_name="rate_cards")
+    pricing_model = models.CharField(max_length=50, choices=[('flat_rate', 'Flat Rate'), ('per_unit', 'Per Unit'), ('tiered', 'Tiered')])
+    flat_rate_price = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    price_per_unit = models.DecimalField(max_digits=12, decimal_places=6, blank=True, null=True)
+    tiered_pricing_json = models.JSONField(blank=True, null=True)  # e.g., [{"up_to": 1000, "price_per_unit": 0.10}, {"up_to": null, "price_per_unit": 0.08}]
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.name} ({self.currency})"
+        if self.pricing_model == 'flat_rate':
+            return f"{self.metric_definition} @ Flat Rate ${self.flat_rate_price}"
+        elif self.pricing_model == 'per_unit':
+            return f"{self.metric_definition} @ ${self.price_per_unit} per unit"
+        elif self.pricing_model == 'tiered':
+            return f"{self.metric_definition} @ Tiered Pricing"
+        
+        return f"{self.metric_definition} @ Unknown Pricing Model"
+    
+    def save(self, *args, **kwargs):
+        # Validate fields based on pricing model
+        if self.pricing_model == 'flat_rate':
+            assert self.flat_rate_price is not None, "Flat rate price must be set for flat_rate pricing model"
+            self.price_per_unit = None
+            self.tiered_pricing_json = None
+        elif self.pricing_model == 'per_unit':
+            assert self.price_per_unit is not None, "Price per unit must be set for per_unit pricing model"
+            self.flat_rate_price = None
+            self.tiered_pricing_json = None
+        elif self.pricing_model == 'tiered':
+            assert self.tiered_pricing_json is not None, "Tiered pricing JSON must be set for tiered pricing model"
 
+            # Ensure tiered_pricing_json is a list of dicts with 'up_to' and 'price_per_unit'
+            assert isinstance(self.tiered_pricing_json, Iterable), "Tiered pricing JSON must be an iterable"
+            for tier in list(self.tiered_pricing_json or []):
+                assert 'up_to' in tier and 'price_per_unit' in tier, "Each tier must have 'up_to' and 'price_per_unit'"
 
-class DailyUsage(models.Model):
-    stack = models.ForeignKey(Stack, on_delete=models.CASCADE, related_name="daily_usage")
-    usage_date = models.DateField()
-    units_used = models.DecimalField(max_digits=18, decimal_places=6)
-    created_at = models.DateTimeField(auto_now_add=True)
+            self.flat_rate_price = None
+            self.price_per_unit = None
 
-    class Meta:
-        unique_together = ("stack", "usage_date")
-
-    def __str__(self):
-        return f"{self.stack} - {self.usage_date}: {self.units_used}"
+        return super().save(*args, **kwargs)
 
 
 class Invoice(models.Model):
@@ -42,13 +60,16 @@ class Invoice(models.Model):
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default="draft")
     currency = models.CharField(max_length=10, default="USD")
 
-    subtotal_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
-    tax_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
-    total_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    subtotal_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    tax_amount = models.DecimalField(max_digits=18, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=18, decimal_places=2)
 
     issued_at = models.DateTimeField(blank=True, null=True)
     due_at = models.DateTimeField(blank=True, null=True)
     paid_at = models.DateTimeField(blank=True, null=True)
+
+    stripe_invoice_id = models.CharField(max_length=255, blank=True, null=True)
+    stripe_last_sync_date = models.DateTimeField(blank=True, null=True)
 
     class Meta:
         unique_together = ("organization", "invoice_month")
@@ -60,10 +81,35 @@ class InvoiceLineItem(models.Model):
     invoice = models.ForeignKey(Invoice, on_delete=models.CASCADE, related_name="line_items")
     stack = models.ForeignKey(Stack, on_delete=models.SET_NULL, null=True, blank=True)
     description = models.TextField()
-
+    rate_card = models.ForeignKey(RateCard, on_delete=models.SET_NULL, null=True, blank=True)
     units_used = models.DecimalField(max_digits=18, decimal_places=6)
-    unit_price = models.DecimalField(max_digits=12, decimal_places=6)
     line_amount = models.DecimalField(max_digits=18, decimal_places=2)
 
     def __str__(self):
         return f"Line Item for {self.invoice} (${self.line_amount})"
+    
+    def save(self, *args, **kwargs):
+        if self.rate_card:
+            if self.rate_card.pricing_model == 'flat_rate':
+                self.line_amount = self.rate_card.flat_rate_price
+
+            elif self.rate_card.pricing_model == 'per_unit':
+                assert self.rate_card.price_per_unit is not None, "Price per unit must be set for per_unit pricing model"
+                self.line_amount = self.units_used * self.rate_card.price_per_unit
+                
+            elif self.rate_card.pricing_model == 'tiered':
+                assert self.rate_card.tiered_pricing_json is not None, "Tiered pricing JSON must be set for tiered pricing model"
+                total_units = self.units_used
+                amount = 0
+                for tier in sorted(self.rate_card.tiered_pricing_json, key=lambda x: (x['up_to'] is None, x['up_to'] or float('inf'))):
+                    tier_limit = tier['up_to']
+                    tier_price = tier['price_per_unit']
+                    if tier_limit is None or total_units <= tier_limit:
+                        amount += total_units * tier_price
+                        break
+                    else:
+                        amount += tier_limit * tier_price
+                        total_units -= tier_limit
+                self.line_amount = amount
+
+        return super().save(*args, **kwargs)

@@ -22,6 +22,7 @@ urlpatterns = [
     path("stacks/ai-agents/", views.ai_agents_stack, name="ai_agents_stack"),
     path("pricing/", views.pricing, name="pricing"),
     path("contact/", views.maintenance, name="contact"),
+    path("still-configuring/", views.still_configuring, name="still_configuring"),
     path("marketplace/", include(("marketplace.urls", "marketplace"), namespace="marketplace")),
     # User profile
     path("profile/", views.profile, name="profile"),

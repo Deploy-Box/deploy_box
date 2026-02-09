@@ -20,18 +20,15 @@ ENV = os.environ.get("ENV", "LOCAL").upper()
 DEBUG = True # TODO: remove eventually
 
 ALLOWED_HOSTS = [
-    "deploy-box.onrender.com",
-    "deploy-box.kalebwbishop.com",
     "deploy-box.com",
     "dev.deploy-box.com",
-    "https://b93437058b73.ngrok-free.app"
+    "host.docker.internal"
 ]
 if DEBUG:
     ALLOWED_HOSTS.extend(
         [
             "127.0.0.1",
             "localhost",
-            "c361-152-117-84-230.ngrok-free.app",
             HOST.replace("https://", "").replace("http://", ""),
         ]
     )
@@ -176,14 +173,15 @@ DATABASES = {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("DB_NAME"),
         "USER": os.environ.get("DB_USER"),
-        "PASSWORD": KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD")),
+        "PASSWORD": "School30332319!!!",
+        # "PASSWORD": KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD")),
         "HOST": os.environ.get("DB_HOST"),
         "PORT": os.environ.get("DB_PORT"),
         # "OPTIONS": {
         #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
         # },
         "CONN_MAX_AGE": 600,
-        "OPTIONS": {"sslmode": "require"}
+        # "OPTIONS": {"sslmode": "disable"}
     }
 }
 

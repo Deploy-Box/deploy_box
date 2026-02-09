@@ -7,6 +7,7 @@ from django.utils.html import format_html
 from django.core.serializers.json import DjangoJSONEncoder
 import json
 from stacks.models import PurchasableStack, Stack
+from stacks.metrics.models import MetricDefinition
 
 # Register your models here.
 class PurchasableStackAdmin(admin.ModelAdmin):
@@ -80,8 +81,15 @@ class StackAdmin(admin.ModelAdmin):
         return render(request, 'admin/stacks/stack/iac_editor.html', context)
 
 
+class MetricDefinitionAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "unit_name", "record_frequency_cron", "created_at")
+    search_fields = ("name", "unit_name")
+    list_filter = ("unit_name", "created_at")
+
+
 # Register the models
 admin.site.register(PurchasableStack, PurchasableStackAdmin)
 admin.site.register(Stack, StackAdmin)
+admin.site.register(MetricDefinition, MetricDefinitionAdmin)
 
 
