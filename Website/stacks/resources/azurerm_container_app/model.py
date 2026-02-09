@@ -37,6 +37,7 @@ class AzurermContainerApp(BaseResourceModel):
 	template_container_cpu = models.CharField(max_length=50, default='0.25')
 	template_container_memory = models.CharField(max_length=50, default='0.5Gi')
 	template_container_env = models.JSONField(default=list, blank=True)
+	template_template_container_build_context = models.CharField(max_length=255, blank=True, default='')
 	configuration_active_revision_mode = models.CharField(max_length=50, default='Single')
 	configuration_ingress_external = models.BooleanField(default=True)
 	configuration_ingress_target_port = models.IntegerField(default=80)

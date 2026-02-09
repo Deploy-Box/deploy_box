@@ -20,18 +20,15 @@ ENV = os.environ.get("ENV", "LOCAL").upper()
 DEBUG = True # TODO: remove eventually
 
 ALLOWED_HOSTS = [
-    "deploy-box.onrender.com",
-    "deploy-box.kalebwbishop.com",
     "deploy-box.com",
     "dev.deploy-box.com",
-    "https://b93437058b73.ngrok-free.app"
+    "host.docker.internal"
 ]
 if DEBUG:
     ALLOWED_HOSTS.extend(
         [
             "127.0.0.1",
             "localhost",
-            "c361-152-117-84-230.ngrok-free.app",
             HOST.replace("https://", "").replace("http://", ""),
         ]
     )

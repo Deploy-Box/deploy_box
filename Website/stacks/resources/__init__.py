@@ -27,3 +27,7 @@ from .deployboxrm_workos_integration.serializer import DeployBoxrmWorkosIntegrat
 from .azurerm_storage_account_static_website.model import AzurermStorageAccountStaticWebsite
 from .azurerm_storage_account_static_website.manager import AzurermStorageAccountStaticWebsite
 from .azurerm_storage_account_static_website.serializer import AzurermStorageAccountStaticWebsiteSerializer
+
+from .deployboxrm_edge.model import DeployBoxrmEdge
+from .deployboxrm_edge.manager import DeployBoxrmEdgeManager
+from .deployboxrm_edge.serializer import DeployBoxrmEdgeSerializer

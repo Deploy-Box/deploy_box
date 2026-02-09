@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from .resource_manager import ResourceManager
 
+from stacks.models import Stack
 from stacks.resources.azurerm_resource_group.manager import AzurermResourceGroupManager
 from stacks.resources.azurerm_container_app.manager import AzurermContainerAppManager
 from stacks.resources.azurerm_storage_account.manager import AzurermStorageAccountManager
@@ -13,6 +14,7 @@ from stacks.resources.azurerm_container_app_environment.manager import AzurermCo
 from stacks.resources.deployboxrm_workos_integration.manager import DeployBoxrmWorkOSIntegrationManager
 from stacks.resources.thenilerm_database.manager import TheNilermDatabaseManager
 from stacks.resources.azurerm_storage_account_static_website.manager import AzurermStorageAccountStaticWebsiteManager
+from stacks.resources.deployboxrm_edge.manager import DeployBoxrmEdgeManager
 
 if TYPE_CHECKING:
     from stacks.models import Stack
@@ -26,6 +28,7 @@ RESOURCE_MANAGER_MAPPING: dict[str, type[ResourceManager]] = {
         "THENILERM_DATABASE": TheNilermDatabaseManager,
         "DEPLOYBOXRM_WORKOS_INTEGRATION": DeployBoxrmWorkOSIntegrationManager,
         "AZURERM_STORAGE_ACCOUNT_STATIC_WEBSITE": AzurermStorageAccountStaticWebsiteManager,
+        "DEPLOYBOXRM_EDGE": DeployBoxrmEdgeManager,
     }
 
 class ResourcesManager():
@@ -65,6 +68,14 @@ class ResourcesManager():
         return created_resources
     
     @staticmethod
+    def get_from_stack(stack: Stack) -> list[models.Model]:
+        resources = []
+        for resource_manager in RESOURCE_MANAGER_MAPPING.values():
+            managed_model_class = resource_manager.get_model()
+            resources.extend(managed_model_class.objects.filter(stack=stack))
+        return resources
+    
+    @staticmethod
     def read(resource_id: str | list[str]) -> models.Model | list[models.Model] | None:
         if isinstance(resource_id, list):
             return [ResourcesManager.read(rid) for rid in resource_id]
@@ -82,6 +93,12 @@ class ResourcesManager():
                 
         return None
     
+    @staticmethod
+    def delete(stack: Stack):
+        for resource_manager in RESOURCE_MANAGER_MAPPING.values():
+            managed_model_class = resource_manager.get_model()
+            managed_model_class.objects.filter(stack=stack).delete()
+
     @staticmethod
     def serialize(resource: models.Model | list[models.Model]):
         if isinstance(resource, list):

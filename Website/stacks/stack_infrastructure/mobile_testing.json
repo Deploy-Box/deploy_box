@@ -63,5 +63,12 @@
         "static_file_directory": "frontend",
         "static_file_build_command": "npm install && npm run build",
         "static_file_build_output_directory": "frontend/dist"
+    },
+    {
+        "resource_type": "deployboxrm_edge",
+        "subdomain": "testing",
+        "root_base_url": "${azurerm_storage_account.azurerm_storage_account_0.primary_web_endpoint}",
+        "api_base_url": "https://${azurerm_container_app.azurerm_container_app_0.ingress_fqdn}/",
+        "index": 0
     }
 ]

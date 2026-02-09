@@ -14,5 +14,7 @@ class ResourceManager(ABC):
     def get_model() -> type[models.Model]:
         pass
     
-    def serialize(self, resource: models.Model) -> dict:
+    @staticmethod
+    @abstractmethod
+    def serialize(resource: models.Model) -> dict:
         raise NotImplementedError("serialize method must be implemented by subclasses")

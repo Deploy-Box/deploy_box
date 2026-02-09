@@ -1,17 +1,35 @@
 [    
     {
-        "resource_type": "azurerm_resource_group",
-        "name": "azurerm_resource_group_1"
+        "resource_type": "deployboxrm_edge",
+        "subdomain": "testing",
+        "root_base_url": "${azurerm_container_app.azurerm_container_app_0.ingress.fqdn}",
+        "api_base_url": "https://www.example.com/",
+        "index": 0
     },
     {
-        "resource_type": "azurerm_storage_account",
-        "name": "azurerm_storage_account_1",
-        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_1.azurerm_name}"
+        "resource_type": "azurerm_container_app",
+        "index": 0,
+        "container_app_environment_id": "${azurerm_container_app_environment.azurerm_container_app_environment_0.azurerm_id}",
+        "resource_group_name": "${azurerm_resource_group.azurerm_resource_group_0.azurerm_name}",
+        "template_container_name": "myapp",
+        "template_container_image": "nginx:latest",
+        "template_container_env": [
+            {
+                "name": "WORKOS_API_KEY",
+                "value": "${deployboxrm_workos_integration.deployboxrm_workos_integration_0.api_key}"
+            },
+            {
+                "name": "WORKOS_CLIENT_ID",
+                "value": "${deployboxrm_workos_integration.deployboxrm_workos_integration_0.client_id}"
+            },
+            {
+                "name": "WORKOS_REDIRECT_URI",
+                "value": "${deployboxrm_workos_integration.deployboxrm_workos_integration_0.redirect_uri}"
+            },
+                        {
+                "name": "POSTGRES_CONNECTION_STRING",
+                "value": "${thenilerm_database.thenilerm_database_0.db_host}"
+            }
+        ]
     },
-    {
-        "resource_type": "azurerm_storage_container",
-        "name": "azurerm_storage_container_1",
-        "storage_account_id": "${azurerm_storage_account.azurerm_storage_account_1.azurerm_id}",
-        "container_access_type": "private"
-    }
 ]

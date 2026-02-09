@@ -45,8 +45,8 @@ resource "azurerm_container_app" "container_app" {
     container {
       name   = "deploy-box-container"
       image  = var.image_name
-      cpu    = 0.5
-      memory = "1Gi"
+      cpu    = 0.25
+      memory = "0.5Gi"
       env {
         name  = "ENV"
         value = upper(var.environment)

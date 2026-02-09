@@ -4,6 +4,7 @@ import os
 def get_stack_infrastructure(purchaseable_stack: str) -> dict:
     stack_infrastructure_mapping = {
         "MOBILE.": "mobile_testing.json",
+        "TESTING": "testing.json"
     }
 
     try:

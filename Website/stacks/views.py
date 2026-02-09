@@ -50,10 +50,10 @@ class StackViewSet(viewsets.ModelViewSet):
         # )
 
         stack = Stack.objects.get(pk="8f45f5f1287c49d9")
-        stack_infrastructure = get_stack_infrastructure("MOBILE.")
+        stack_infrastructure = stack.purchased_stack.stack_infrastructure
 
-        # print("Stack infrastructure:", stack_infrastructure)
-        # deploy_box_static_website_item = DeployBoxStaticWebsiteItem.objects.create(stack=stack, name="Test Static Website Item")
+        # Delete existing resources
+        ResourcesManager.delete(stack)
 
         created_resources = ResourcesManager.create(stack_infrastructure, stack)
 
@@ -116,6 +116,57 @@ class StackViewSet(viewsets.ModelViewSet):
         #     {"success": True, "message": "Stack deletion initiated successfully."}, 
         #     status=status.HTTP_200_OK
         # )
+
+    @action(detail=False, methods=['get'], url_path='traefik-config', url_name='traefik_config')
+    def get_traefik_config(self, request):
+        """GET: Fetch Traefik configuration for all tenant edges."""
+        from stacks.resources.deployboxrm_edge.model import DeployBoxrmEdge
+
+        base_domain = getattr(settings, 'BASE_DOMAIN', 'dev.deploy-box.com')
+        edges = DeployBoxrmEdge.objects.all()
+
+        routers = {}
+        services = {}
+        middlewares = {}
+
+        for edge in edges:
+            subdomain = edge.subdomain
+
+            # Root route: all non-/api traffic for this tenant
+            if edge.resolved_root_base_url:
+                routers[f"{subdomain}-root"] = {
+                    "rule": f"Host(`{subdomain}.{base_domain}`)",
+                    "service": f"{subdomain}-root",
+                    "entryPoints": ["web"],
+                    "priority": 100,
+                }
+                services[f"{subdomain}-root"] = {
+                    "loadBalancer": {
+                        "servers": [{"url": edge.root_base_url}],
+                        "passHostHeader": False,
+                    }
+                }
+
+            # API route: /api/* traffic for this tenant
+            if edge.resolved_api_base_url:
+                routers[f"{subdomain}-api"] = {
+                    "rule": f"Host(`{subdomain}.{base_domain}`) && PathPrefix(`/api`)",
+                    "service": f"{subdomain}-api",
+                    "middlewares": [f"{subdomain}-strip-api"],
+                    "entryPoints": ["web"],
+                    "priority": 200,
+                }
+                services[f"{subdomain}-api"] = {
+                    "loadBalancer": {
+                        "servers": [{"url": edge.api_base_url}],
+                        "passHostHeader": False,
+                    }
+                }
+                middlewares[f"{subdomain}-strip-api"] = {
+                    "stripPrefix": {"prefixes": ["/api"]}
+                }
+
+        return JsonResponse({"http": {"routers": routers, "services": services, "middlewares": middlewares}})
 
     @action(detail=False, methods=['patch'], url_path='bulk-update-resources', url_name='bulk_update_resources')
     def bulk_update_resources(self, request):

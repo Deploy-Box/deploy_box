@@ -95,6 +95,10 @@ def maintenance(request: HttpRequest) -> HttpResponse:
     return render(request, "maintenance.html", {})
 
 
+def still_configuring(request: HttpRequest) -> HttpResponse:
+    return render(request, "still_configuring.html", {"show_footer": False})
+
+
 class DashboardView(View):
     """Class-based view for all dashboard-related functionality."""
 
