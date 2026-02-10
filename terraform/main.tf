@@ -27,7 +27,6 @@ locals {
     acr            = "${local.prefix_compact}cr${local.env}"
     cae            = "${local.prefix}-cae-${local.env}"
     key_vault      = "${local.prefix}-kv-${local.env}"
-    shared_rg      = "${local.prefix}-shared-resources-rg-${local.env}"
   }
 
   common_tags = merge(
@@ -52,12 +51,12 @@ data "azurerm_container_registry" "acr" {
 
 data "azurerm_container_app_environment" "shared_container_env" {
   name                = local.names.cae
-  resource_group_name = local.names.shared_rg
+  resource_group_name = local.names.resource_group
 }
 
 data "azurerm_key_vault" "shared_key_vault" {
   name                = local.names.key_vault
-  resource_group_name = local.names.shared_rg
+  resource_group_name = local.names.resource_group
 }
 
 # =============================================================================
