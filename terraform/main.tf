@@ -9,48 +9,97 @@ provider "azurerm" {
   use_oidc = true
 }
 
+# =============================================================================
+# Locals — derived names, tags, and shortcuts
+# =============================================================================
+
+locals {
+  env = var.app.environment
+
+  # Naming conventions
+  prefix         = "deploy-box"
+  prefix_compact = "deploybox" # resources that forbid hyphens (ACR, etc.)
+
+  names = {
+    resource_group = "${local.prefix}-rg-${local.env}"
+    container_app  = "${local.prefix}-website-contapp-${local.env}"
+    identity       = "${local.prefix}-website-contapp-identity-${local.env}"
+    acr            = "${local.prefix_compact}cr${local.env}"
+    cae            = "${local.prefix}-cae-${local.env}"
+    key_vault      = "${local.prefix}-kv-${local.env}"
+    shared_rg      = "${local.prefix}-shared-resources-rg-${local.env}"
+  }
+
+  common_tags = merge(
+    {
+      ManagedBy   = "Terraform"
+      Environment = local.env
+    },
+    var.extra_tags,
+  )
+}
+
+# =============================================================================
+# Data sources
+# =============================================================================
+
 data "azurerm_client_config" "current" {}
 
 data "azurerm_container_registry" "acr" {
-  name                = "deployboxcr${var.environment}"
-  resource_group_name = "deploy-box-rg-${var.environment}"
+  name                = local.names.acr
+  resource_group_name = local.names.resource_group
 }
 
 data "azurerm_container_app_environment" "shared_container_env" {
-  name                = "deploy-box-cae-${var.environment}"
-  resource_group_name = "deploy-box-shared-resources-rg-${var.environment}"
+  name                = local.names.cae
+  resource_group_name = local.names.shared_rg
 }
 
 data "azurerm_key_vault" "shared_key_vault" {
-  name                = "deploy-box-kv-${var.environment}"
-  resource_group_name = "deploy-box-shared-resources-rg-${var.environment}"
+  name                = local.names.key_vault
+  resource_group_name = local.names.shared_rg
 }
+
+# =============================================================================
+# Resource Group
+# =============================================================================
 
 resource "azurerm_resource_group" "main_rg" {
-  location = var.azure_location
-  name     = "deploy-box-rg-${var.environment}"
-
-  tags = {
-    ManagedBy = "Terraform"
-  }
+  name     = local.names.resource_group
+  location = var.app.location
+  tags     = local.common_tags
 }
 
+# =============================================================================
+# Container App
+# =============================================================================
+
 resource "azurerm_container_app" "container_app" {
-  name                         = "deploy-box-contapp-${var.environment}"
+  name                         = local.names.container_app
   resource_group_name          = azurerm_resource_group.main_rg.name
   revision_mode                = "Single"
   container_app_environment_id = data.azurerm_container_app_environment.shared_container_env.id
 
+  tags = local.common_tags
+
   template {
     container {
-      name   = "deploy-box-container"
-      image  = var.image_name
+      name   = "${local.prefix}-container"
+      image  = var.app.image_name
       cpu    = 0.25
       memory = "0.5Gi"
+
+      # --- Core ---
       env {
         name  = "ENV"
-        value = upper(var.environment)
+        value = upper(local.env)
       }
+      env {
+        name  = "HOST"
+        value = var.app.host
+      }
+
+      # --- Azure identity ---
       env {
         name  = "AZURE_CLIENT_ID"
         value = azurerm_user_assigned_identity.container_app_identity.client_id
@@ -63,67 +112,70 @@ resource "azurerm_container_app" "container_app" {
         name  = "AZURE_SUBSCRIPTION_ID"
         value = data.azurerm_client_config.current.subscription_id
       }
-      env {
-        name  = "HOST"
-        value = var.host
-      }
+
+      # --- Auth / OAuth2 ---
       env {
         name  = "OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID"
-        value = var.oauth2_password_credentials_client_id
+        value = var.auth.oauth2_password_credentials_client_id
       }
       env {
         name  = "OAUTH2_AUTH_CODE_CLIENT_ID"
-        value = var.oauth2_auth_code_client_id
-      }
-      env {
-        name  = "DB_NAME"
-        value = var.db_name
-      }
-      env {
-        name  = "DB_USER"
-        value = var.db_user
-      }
-      env {
-        name  = "DB_HOST"
-        value = var.db_host
-      }
-      env {
-        name  = "DB_PORT"
-        value = var.db_port
-      }
-      env {
-        name  = "DEPLOY_BOX_STACK_ENDPOINT"
-        value = var.deploy_box_stack_endpoint
-      }
-      env {
-        name  = "EMAIL_HOST_USER"
-        value = var.email_host_user
+        value = var.auth.oauth2_auth_code_client_id
       }
       env {
         name  = "DEPLOY_BOX_GITHUB_CLIENT_ID"
-        value = var.deploy_box_github_client_id
+        value = var.auth.github_client_id
+      }
+
+      # --- Database ---
+      env {
+        name  = "DB_NAME"
+        value = var.database.name
       }
       env {
-        name  = "NPM_BIN_PATH"
-        value = var.npm_bin_path
+        name  = "DB_USER"
+        value = var.database.user
       }
       env {
-        name  = "KEY_VAULT_NAME"
-        value = var.key_vault_name
+        name  = "DB_HOST"
+        value = var.database.host
       }
       env {
-        name  = "AZURE_FUNCTION_URL"
-        value = var.azure_function_url
+        name  = "DB_PORT"
+        value = var.database.port
+      }
+
+      # --- External services ---
+      env {
+        name  = "DEPLOY_BOX_STACK_ENDPOINT"
+        value = var.services.stack_endpoint
+      }
+      env {
+        name  = "EMAIL_HOST_USER"
+        value = var.services.email_host_user
       }
       env {
         name  = "DEPLOY_BOX_API_BASE_URL"
-        value = var.deploy_box_api_base_url
+        value = var.services.api_base_url
+      }
+      env {
+        name  = "AZURE_FUNCTION_URL"
+        value = var.services.azure_function_url
+      }
+      env {
+        name  = "NPM_BIN_PATH"
+        value = var.services.npm_bin_path
+      }
+      env {
+        name  = "KEY_VAULT_NAME"
+        value = local.names.key_vault
       }
     }
 
     min_replicas = 0
     max_replicas = 1
   }
+
   ingress {
     external_enabled = true
     target_port      = 8000
@@ -146,21 +198,21 @@ resource "azurerm_container_app" "container_app" {
 
   depends_on = [
     azurerm_role_assignment.container_app_acr_pull,
-    azurerm_role_assignment.container_app_key_vault_secrets_user
+    azurerm_role_assignment.container_app_key_vault_secrets_user,
   ]
 }
 
-resource "azurerm_user_assigned_identity" "container_app_identity" {
-  location            = azurerm_resource_group.main_rg.location
-  name                = "deploy-box-container-app-identity-${var.environment}"
-  resource_group_name = azurerm_resource_group.main_rg.name
-  depends_on = [
-    azurerm_resource_group.main_rg
-  ]
+# =============================================================================
+# Managed Identity & Role Assignments
+# =============================================================================
 
-  tags = {
-    ManagedBy = "Terraform"
-  }
+resource "azurerm_user_assigned_identity" "container_app_identity" {
+  name                = local.names.identity
+  location            = azurerm_resource_group.main_rg.location
+  resource_group_name = azurerm_resource_group.main_rg.name
+  tags                = local.common_tags
+
+  depends_on = [azurerm_resource_group.main_rg]
 }
 
 resource "azurerm_role_assignment" "container_app_acr_pull" {
@@ -170,7 +222,7 @@ resource "azurerm_role_assignment" "container_app_acr_pull" {
 
   depends_on = [
     azurerm_user_assigned_identity.container_app_identity,
-    data.azurerm_container_registry.acr
+    data.azurerm_container_registry.acr,
   ]
 }
 
@@ -181,6 +233,6 @@ resource "azurerm_role_assignment" "container_app_key_vault_secrets_user" {
 
   depends_on = [
     azurerm_user_assigned_identity.container_app_identity,
-    data.azurerm_key_vault.shared_key_vault
+    data.azurerm_key_vault.shared_key_vault,
   ]
 }

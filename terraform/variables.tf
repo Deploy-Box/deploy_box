@@ -1,95 +1,76 @@
-variable "acr_name" {
-  description = "Name of the Azure Container Registry"
-  type        = string
+# =============================================================================
+# Core application configuration
+# =============================================================================
+
+variable "app" {
+  description = "Core application settings: environment, region, container image, and public hostname."
+  type = object({
+    environment = string
+    location    = string
+    image_name  = string
+    host        = string
+  })
+
+  validation {
+    condition     = contains(["dev", "test", "prod"], var.app.environment)
+    error_message = "app.environment must be one of: dev, test, prod."
+  }
 }
 
-variable "resource_group_name" {
-  description = "Name of the resource group for deployed resources"
-  type        = string
+# =============================================================================
+# Authentication / OAuth2
+# =============================================================================
+
+variable "auth" {
+  description = "OAuth2 and GitHub OAuth client IDs."
+  sensitive   = true
+  type = object({
+    oauth2_password_credentials_client_id = string
+    oauth2_auth_code_client_id            = string
+    github_client_id                      = string
+  })
 }
 
-variable "azure_location" {
-  description = "Azure region for resource deployment"
-  type        = string
+# =============================================================================
+# Database connection
+# =============================================================================
+
+variable "database" {
+  description = "PostgreSQL connection parameters."
+  type = object({
+    name = string
+    user = string
+    host = string
+    port = optional(string, "5432")
+  })
+
+  validation {
+    condition     = can(regex("^[0-9]+$", var.database.port))
+    error_message = "database.port must be a numeric string."
+  }
 }
 
-variable "image_name" {
-  description = "Name of the image to be deployed"
-  type        = string
+# =============================================================================
+# External service endpoints & integrations
+# =============================================================================
+
+variable "services" {
+  description = "Endpoints and config for external services consumed by the app."
+  type = object({
+    stack_endpoint     = string
+    email_host_user    = string
+    azure_function_url = string
+    api_base_url       = string
+    npm_bin_path       = string
+  })
 }
 
-variable "environment" {
-  description = "Deployment environment suffix used in resource names (e.g., dev, test, prod)"
-  type        = string
-}
+# =============================================================================
+# Tags (optional overrides merged with computed defaults)
+# =============================================================================
 
-variable "host" {
-  description = "HOST environment variable for the container app."
-  type        = string
-}
-
-variable "oauth2_password_credentials_client_id" {
-  description = "OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID for the app."
-  type        = string
-}
-
-variable "oauth2_auth_code_client_id" {
-  description = "OAUTH2_AUTH_CODE_CLIENT_ID for the app."
-  type        = string
-}
-
-variable "db_name" {
-  description = "DB_NAME for the app."
-  type        = string
-}
-
-variable "db_user" {
-  description = "DB_USER for the app."
-  type        = string
-}
-
-variable "db_host" {
-  description = "DB_HOST for the app."
-  type        = string
-}
-
-variable "db_port" {
-  description = "DB_PORT for the app."
-  type        = string
-  default     = "5432"
-}
-
-variable "deploy_box_stack_endpoint" {
-  description = "DEPLOY_BOX_STACK_ENDPOINT for the app."
-  type        = string
-}
-
-variable "email_host_user" {
-  description = "EMAIL_HOST_USER for the app."
-  type        = string
-}
-
-variable "deploy_box_github_client_id" {
-  description = "DEPLOY_BOX_GITHUB_CLIENT_ID for the app."
-  type        = string
-}
-
-variable "npm_bin_path" {
-  description = "NPM_BIN_PATH for the app."
-  type        = string
-}
-
-variable "key_vault_name" {
-  description = "KEY_VAULT_NAME for the app."
-  type        = string
-}
-
-variable "azure_function_url" {
-  description = "AZURE_FUNCTION_URL for the app."
-  type        = string
-}
-
-variable "deploy_box_api_base_url" {
-  description = "DEPLOY_BOX_API_BASE_URL for the app."
-  type        = string
+variable "extra_tags" {
+  description = "Additional tags to merge onto every resource."
+  type        = map(string)
+  default     = {}
 }

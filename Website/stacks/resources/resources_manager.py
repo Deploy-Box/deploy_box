@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from django.db import models
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, overload
 
 from .resource_manager import ResourceManager
 
@@ -76,10 +76,7 @@ class ResourcesManager():
         return resources
     
     @staticmethod
-    def read(resource_id: str | list[str]) -> models.Model | list[models.Model] | None:
-        if isinstance(resource_id, list):
-            return [ResourcesManager.read(rid) for rid in resource_id]
-        
+    def _read_one(resource_id: str) -> models.Model | None:
         resource_prefix_mapping = ResourcesManager.get_resource_prefix_mapping()
         prefix = resource_id.split('_')[0]
         
@@ -92,6 +89,21 @@ class ResourcesManager():
                 print(f"Error retrieving resource {resource_id}: {e}")
                 
         return None
+
+    @overload
+    @staticmethod
+    def read(resource_id: str) -> models.Model | None: ...
+    
+    @overload
+    @staticmethod
+    def read(resource_id: list[str]) -> list[models.Model | None]: ...
+
+    @staticmethod
+    def read(resource_id: str | list[str]) -> models.Model | list[models.Model | None] | None:
+        if isinstance(resource_id, list):
+            return [ResourcesManager._read_one(rid) for rid in resource_id]
+        
+        return ResourcesManager._read_one(resource_id)
     
     @staticmethod
     def delete(stack: Stack):
