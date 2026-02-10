@@ -5,7 +5,6 @@
 app = {
   environment = "dev"
   location    = "eastus"
-  image_name  = ""          # set by CI at apply-time via -var
   host        = "https://dev.deploy-box.com"
 }
 

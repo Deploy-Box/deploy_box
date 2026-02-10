@@ -5,7 +5,6 @@
 app = {
   environment = "prod"
   location    = "eastus"
-  image_name  = ""          # set by CI at apply-time via -var
   host        = ""          # set by CI or Terraform Cloud variable set
 }
 

@@ -107,8 +107,7 @@ jobs:
         run: |
           terraform plan \
             -var-file="tfvars/${{ github.ref_name == 'main' && 'prod' || github.ref_name }}.tfvars" \
-            -var="image_name=${{ needs.build-container-app.outputs.image_name }}" \
-            -var="environment=${{ github.ref_name == 'main' && 'prod' || github.ref_name }}"
+            -var="image_name=${{ needs.build-container-app.outputs.image_name }}"
 
       - id: terraform_apply
         name: Terraform Apply
@@ -117,8 +116,7 @@ jobs:
           terraform apply \
             -auto-approve \
             -var-file="tfvars/${{ github.ref_name == 'main' && 'prod' || github.ref_name }}.tfvars" \
-            -var="image_name=${{ needs.build-container-app.outputs.image_name }}" \
-            -var="environment=${{ github.ref_name == 'main' && 'prod' || github.ref_name }}"
+            -var="image_name=${{ needs.build-container-app.outputs.image_name }}"
 
   migrations:
     runs-on: ubuntu-latest

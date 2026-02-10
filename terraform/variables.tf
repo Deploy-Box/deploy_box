@@ -3,11 +3,10 @@
 # =============================================================================
 
 variable "app" {
-  description = "Core application settings: environment, region, container image, and public hostname."
+  description = "Core application settings: environment, region, and public hostname."
   type = object({
     environment = string
     location    = string
-    image_name  = string
     host        = string
   })
 
@@ -15,6 +14,11 @@ variable "app" {
     condition     = contains(["dev", "test", "prod"], var.app.environment)
     error_message = "app.environment must be one of: dev, test, prod."
   }
+}
+
+variable "image_name" {
+  description = "Fully-qualified container image (injected by CI at apply-time)."
+  type        = string
 }
 
 # =============================================================================

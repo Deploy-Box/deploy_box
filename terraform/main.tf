@@ -85,7 +85,7 @@ resource "azurerm_container_app" "container_app" {
   template {
     container {
       name   = "${local.prefix}-container"
-      image  = var.app.image_name
+      image  = var.image_name
       cpu    = 0.25
       memory = "0.5Gi"
 
