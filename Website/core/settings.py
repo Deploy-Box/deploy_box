@@ -2,11 +2,9 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 
-from core.utils.config_loader import load_config
 from core.utils.key_vault_client import KeyVaultClient
 
 load_dotenv()
-load_config()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
