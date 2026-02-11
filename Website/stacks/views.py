@@ -13,7 +13,6 @@ from django.conf import settings
 import uuid
 import datetime
 import json
-from stacks.stack_infrastructure.get_stack_infrastructure import get_stack_infrastructure
 
 try:
     # azure-storage-blob is in requirements.txt; import here so module import error surfaces at runtime
