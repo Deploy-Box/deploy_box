@@ -72,6 +72,10 @@ jobs:
       id-token: write
       contents: read
 
+    outputs:
+      app_host: ${{ steps.tf_outputs.outputs.app_host }}
+      key_vault_name: ${{ steps.tf_outputs.outputs.key_vault_name }}
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -118,6 +122,13 @@ jobs:
             -var-file="tfvars/${{ github.ref_name == 'main' && 'prod' || github.ref_name }}.tfvars" \
             -var="image_name=${{ needs.build-container-app.outputs.image_name }}"
 
+      - id: tf_outputs
+        name: Get Terraform Outputs
+        working-directory: ${{ env.TF_DIR }}
+        run: |
+          echo "app_host=$(terraform output -raw app_host)" >> $GITHUB_OUTPUT
+          echo "key_vault_name=$(terraform output -raw key_vault_name)" >> $GITHUB_OUTPUT
+
   migrations:
     runs-on: ubuntu-latest
     environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
@@ -158,6 +169,8 @@ jobs:
         working-directory: Website
         env:
           ENV: ${{ vars.ENV }}
+          HOST: ${{ needs.deploy-infrastructure.outputs.app_host }}
+          KEY_VAULT_NAME: ${{ needs.deploy-infrastructure.outputs.key_vault_name }}
           DB_NAME: ${{ secrets.DB_NAME }}
           DB_USER: ${{ secrets.DB_USER }}
           DB_HOST: ${{ secrets.DB_HOST }}
