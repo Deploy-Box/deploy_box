@@ -1,3 +1,4 @@
+import random
 from inspect import stack
 import json
 from django.http import JsonResponse, HttpRequest, HttpResponse
@@ -10,8 +11,6 @@ from rest_framework.permissions import IsAuthenticated
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.conf import settings
-import uuid
-import datetime
 import json
 
 try:
@@ -32,8 +31,6 @@ from django.shortcuts import get_object_or_404
 from rest_framework import permissions, filters, viewsets
 from stacks.resources.resources_manager import ResourcesManager, create_filtered_data
 from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
-from stacks.stack_items.deploy_box_static_website.model import DeployBoxStaticWebsiteItem
-from stacks.stack_items.deploy_box_static_website.manager import DeployBoxStaticWebsiteItemManager
 
 class StackViewSet(viewsets.ModelViewSet):
     queryset = Stack.objects.exclude(status="DELETED")
@@ -42,17 +39,53 @@ class StackViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
 
     def create(self, request):
-        # stack = Stack.objects.create(
-        #     name="Test Stack from API",
-        #     project=Project.objects.get(pk="101459a8e9c14d23"),
-        #     purchased_stack=PurchasableStack.objects.get(pk="9903451ec6da4997")
-        # )
+        print(request.data)
+        project_id = request.data.get('project_id')
 
-        stack = Stack.objects.get(pk="8f45f5f1287c49d9")
+        if not project_id:
+            return Response(
+                {"error": "Project ID is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        purchasable_stack_id = request.data.get('purchasable_stack_id')
+
+        if not purchasable_stack_id:
+            return Response(
+                {"error": "Purchasable Stack ID is required."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        purchasable_stack = PurchasableStack.objects.get(pk=purchasable_stack_id)
+
+        list_of_adjectives = [
+            "Superb",
+            "Incredible",
+            "Fantastic",
+            "Amazing",
+            "Awesome",
+            "Brilliant",
+            "Exceptional",
+            "Outstanding",
+            "Remarkable",
+            "Extraordinary",
+            "Magnificent",
+            "Spectacular",
+            "Stunning",
+            "Impressive",
+        ]
+
+        # Generate a random name for the stack
+        random_adjective = random.choice(list_of_adjectives)
+        stack_name = f'{random_adjective} {purchasable_stack.type} Stack'
+
+        stack = Stack.objects.create(
+            name=stack_name,
+            project=Project.objects.get(pk=project_id),
+            purchased_stack=purchasable_stack
+        )
+
         stack_infrastructure = stack.purchased_stack.stack_infrastructure
-
-        # Delete existing resources
-        ResourcesManager.delete(stack)
 
         created_resources = ResourcesManager.create(stack_infrastructure, stack)
 
@@ -64,7 +97,7 @@ class StackViewSet(viewsets.ModelViewSet):
         services.send_to_azure_function('IAC.CREATE', data)
 
         return Response(data, status=status.HTTP_201_CREATED)
-    
+ 
 
     # PATCH: Update a specific stack
     def partial_update(self, request, pk=None):
@@ -101,20 +134,27 @@ class StackViewSet(viewsets.ModelViewSet):
         return Response({"message": "Stack deletion initiated successfully."}, status=status.HTTP_200_OK)
     
 
-        # """DELETE: Delete a specific stack"""
-        # stack = get_object_or_404(Stack, id=pk)
-        # delete_success = services.delete_stack(stack=stack)
+    @action(detail=True, methods=['post'], url_path='trigger-iac-update', url_name='trigger_iac_update')
+    def trigger_iac_update(self, request, pk=None):
+        if not pk:
+            return Response(
+                {"error": "Stack ID is required."}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        stack = get_object_or_404(Stack, pk=pk)
 
-        # if not delete_success:
-        #     return Response(
-        #         {"error": "Failed to delete stack. Check server logs for details."}, 
-        #         status=status.HTTP_500_INTERNAL_SERVER_ERROR
-        #     )
+        resources = ResourcesManager.get_from_stack(stack)
 
-        # return Response(
-        #     {"success": True, "message": "Stack deletion initiated successfully."}, 
-        #     status=status.HTTP_200_OK
-        # )
+        data = {
+            "stack_id": stack.pk,
+            "resources": ResourcesManager.serialize(resources)
+        }
+
+        print(json.dumps(data, indent=2))
+        services.send_to_azure_function('IAC.UPDATE', data)
+
+        return Response({"message": "Stack update initiated successfully."}, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['get'], url_path='traefik-config', url_name='traefik_config')
     def get_traefik_config(self, request):
@@ -170,8 +210,6 @@ class StackViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=['patch'], url_path='bulk-update-resources', url_name='bulk_update_resources')
     def bulk_update_resources(self, request):
         """PATCH: Bulk update stacks"""
-        print(json.dumps(request.data, indent=2))
-
 
         for resource in request.data.get("resources", []):
             resource_id = resource.get("id")

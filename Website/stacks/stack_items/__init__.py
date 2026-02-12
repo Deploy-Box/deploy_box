@@ -1,1 +1,0 @@
-from .deploy_box_static_website.model import DeployBoxStaticWebsiteItem, CLASS_PREFIX

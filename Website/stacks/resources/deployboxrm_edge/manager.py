@@ -11,5 +11,6 @@ class DeployBoxrmEdgeManager(ResourceManager):
     def get_model() -> type[DeployBoxrmEdge]:
         return DeployBoxrmEdge
     
-    def serialize(self, resource: DeployBoxrmEdge) -> dict:
+    @staticmethod
+    def serialize(resource: DeployBoxrmEdge) -> dict:
         return dict(DeployBoxrmEdgeSerializer(resource).data)

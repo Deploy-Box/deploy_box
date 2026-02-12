@@ -31,7 +31,10 @@ class DeployBoxrmEdge(BaseResourceModel):
 	def save(self, *args, **kwargs):
 		assert self.stack is not None, "Stack must be provided"
 		assert isinstance(self.stack, models.Model), "Stack must be a valid Stack instance"
-		self.subdomain = f"{self.stack.pk}{self.index}"
+		self.name = f"{RESOURCE_NAME}_{self.index}"
+
+		if not self.subdomain:
+			self.subdomain = f"{self.stack.pk}{self.index}"
 
 		if not self.resolved_root_base_url:
 			self.resolved_root_base_url = f"{settings.HOST}/still-configuring/"

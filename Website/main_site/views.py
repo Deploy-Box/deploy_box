@@ -13,6 +13,7 @@ import base64
 
 
 from stacks.stack_managers.get_manager import get_stack_manager
+from stacks.resources.resources_manager import ResourcesManager
 from accounts.forms import CustomUserCreationForm
 from accounts.models import UserProfile
 from organizations.models import Organization, OrganizationMember, PendingInvites, ProjectTransferInvitation
@@ -395,7 +396,7 @@ class DashboardView(View):
             frontend_url = stack.redis_url
         elif stack_type == "mobile":
             template_name = "dashboard/mobile_stack_dashboard.html"
-            frontend_url = stack.redis_url
+            frontend_url = "#"
         else:
             template_name = "dashboard/stack_dashboard.html"
             frontend_url = "#"
@@ -617,6 +618,8 @@ class DashboardView(View):
         img.save(buffer, format="PNG")
         img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
         qr_code = f"data:image/png;base64,{img_str}"
+        fqdn = settings.HOST.lstrip('https://').rstrip('/')
+        print(f"FQDN: {fqdn}")
 
         return render(
             request,
@@ -639,8 +642,20 @@ class DashboardView(View):
                 "infrastructure_wrappers": infrastructure_wrappers,
                 "infrastructure_nodes": infrastructure_nodes,
                 "infrastructure_connections": infrastructure_connections,
+                "stack_resources_json": DashboardView._get_stack_resources_json(stack) if stack_type == "mobile" else "[]",
+                "fqdn": fqdn
             },
         )
+
+    @staticmethod
+    def _get_stack_resources_json(stack) -> str:
+        """Serialize all resources for a stack to JSON for the frontend."""
+        import json
+        resources = ResourcesManager.get_from_stack(stack)
+        serialized = ResourcesManager.serialize(resources)
+        # Filter out None values from serialization failures
+        serialized = [r for r in serialized if r is not None]
+        return json.dumps(serialized)
 
     @oauth_required()
     def add_org_members(self, request: HttpRequest, organization_id: str) -> HttpResponse:

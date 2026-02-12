@@ -1,235 +1,445 @@
 {% extends 'dashboard_base.html' %} {%load static%} {%load get_item%} {% block extra_head %}
 <div id="dashboard" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
-    data-stack-id="{{ stack.id }}" data-service-name="{{ stack_google_cloud_runs.0.id }}" data-stack-type="mobile">
+    data-stack-id="{{ stack.id }}" data-service-name="" data-stack-type="mobile" data-fqdn="{{ fqdn }}">
 </div>
 {% endblock %} {% block content %}
 
 <div class="w-full bg-gray-50">
     {% include 'dashboard/components/_header.html' with stack_type="Mobile" %}
     <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
-        <div id="metadata" class="hidden" data-organization-id="{{ organization_id }}"
-            data-project-id="{{ project_id }}" data-stack-id="{{ stack.id }}"></div>
+        <div id="metadata" class="hidden"
+            data-organization-id="{{ organization_id }}"
+            data-project-id="{{ project_id }}"
+            data-stack-id="{{ stack.id }}">
+        </div>
+
+        <!-- Resources data for JS -->
+        <script id="stack-resources-data" type="application/json">{{ stack_resources_json|safe }}</script>
 
         {% include 'dashboard/components/_stack_overview.html' with stack_type="Mobile" %}
 
-        <!-- Mobile Stack Services -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  Stack Actions                                              -->
+        <!-- ═══════════════════════════════════════════════════════ -->
         <section class="mb-8">
-            <div
-                class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
-                <h2 class="text-xl font-bold text-emerald-400 mb-6 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path
-                            d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" />
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <h2 class="text-xl font-bold text-gray-800 mb-6 flex items-center">
+                    <svg class="w-5 h-5 mr-2 text-emerald-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
                     </svg>
-                    Mobile Stack Services
+                    Stack Actions
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- React Native Frontend -->
-                    <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg border border-blue-200">
-                        <div class="flex items-center mb-4">
-                            <div class="bg-blue-500 p-2 rounded-lg mr-3">
-                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z" />
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-semibold text-blue-900">React Native + Expo</h3>
+
+                <!-- GitHub Integration -->
+                {% if show_github_integration|default:true %}
+                <div class="mb-5 p-4 bg-zinc-50 rounded-lg border border-zinc-200">
+                    <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                        <svg class="w-4 h-4 mr-2" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                        GitHub Integration
+                    </h3>
+                    <div class="flex items-center flex-wrap gap-2">
+                        <div id="github-connect" class="hidden">
+                            <a href="{% url 'github:login' %}?next={% url 'main_site:stack_dashboard' organization_id project_id stack.id %}"
+                                class="inline-flex items-center bg-zinc-900 hover:bg-zinc-800 text-white text-sm py-2 px-4 rounded-lg transition shadow-md hover:shadow-lg">
+                                <svg class="h-4 w-4 mr-2" viewBox="0 0 16 16" fill="currentColor"><path fill-rule="evenodd" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+                                Connect GitHub
+                            </a>
                         </div>
+                        <div id="github-repos" class="hidden">
+                            <div class="relative">
+                                <button id="repo-dropdown-btn" class="inline-flex items-center bg-zinc-900 hover:bg-zinc-800 text-white text-sm py-2 px-4 rounded-lg transition shadow-md hover:shadow-lg">
+                                    <svg class="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                                    Select Repository
+                                    <svg class="w-3 h-3 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                                </button>
+                                <div id="repo-dropdown" class="hidden absolute z-10 w-64 mt-2 bg-white rounded-lg shadow-lg border border-gray-200">
+                                    <div class="py-2 max-h-60 overflow-y-auto"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="github-remove" class="hidden">
+                            <button id="remove-repo-btn" class="inline-flex items-center bg-red-500 hover:bg-red-600 text-white text-sm py-2 px-4 rounded-lg transition shadow-md hover:shadow-lg">
+                                <svg class="h-4 w-4 mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                Remove Repo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Action Buttons -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Download -->
+                    <button data-download-url="{% url 'stacks:stack-download' stack.id %}"
+                        class="group relative bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded-lg flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg">
+                        <svg class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M7.707 10.293a1 1 0 10-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 11.586V6h5a2 2 0 012 2v7a2 2 0 01-2 2H4a2 2 0 01-2-2V8a2 2 0 012-2h5v5.586l-1.293-1.293zM9 4a1 1 0 012 0v2H9V4z"/>
+                        </svg>
+                        <span class="button-text text-sm font-medium">Download Files</span>
+                        <svg class="loading-spinner hidden h-5 w-5 ml-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                    </button>
+
+                    <!-- Upload -->
+                    <input id="folder-input" type="file" webkitdirectory directory multiple class="hidden" />
+                    <button id="upload-folder-btn" data-upload-url="{% url 'stacks:stack-upload' stack.id %}"
+                        class="group relative bg-amber-500 hover:bg-amber-600 text-white py-3 px-4 rounded-lg flex items-center justify-center transition-all duration-200 shadow-md hover:shadow-lg">
+                        <svg class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 10.5V6.75A2.25 2.25 0 015.25 4.5h13.5A2.25 2.25 0 0121 6.75V10.5M7.5 13.5l4.5-4.5 4.5 4.5M12 9v9"/>
+                        </svg>
+                        <span class="button-text text-sm font-medium">Upload Source</span>
+                        <svg class="loading-spinner hidden h-5 w-5 ml-2 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  Container App (Backend)                                -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section class="mb-8" data-resource-section="azurerm_container_app">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <div class="flex items-center justify-between mb-6">
+                    <h2 class="text-xl font-bold text-emerald-400 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M21 3H3c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h18c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H3V5h18v14zM5 15h14v3H5z"/>
+                        </svg>
+                        Container App
+                    </h2>
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span class="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>Running
+                    </span>
+                </div>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Container Config -->
+                    <div class="bg-gradient-to-br from-emerald-50 to-emerald-100 p-5 rounded-lg border border-emerald-200">
+                        <h3 class="text-sm font-semibold text-emerald-800 uppercase tracking-wide mb-4 flex items-center">
+                            <span class="mr-2">🐳</span> Container Configuration
+                        </h3>
                         <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-blue-700">Status:</span>
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
-                                    Running
-                                </span>
+                            <div class="resource-field" data-resource-type="azurerm_container_app" data-field="template_container_image">
+                                <label class="block text-xs font-medium text-emerald-700 mb-1">Container Image</label>
+                                <div class="flex items-center group">
+                                    <input type="text" class="resource-input flex-1 bg-white border border-emerald-300 rounded-md px-3 py-1.5 text-sm font-mono text-emerald-900 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition" readonly />
+                                    <button class="edit-field-btn ml-2 p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-blue-700">Platform:</span>
-                                <span class="text-sm text-blue-900">iOS & Android</span>
+                            <div class="resource-field" data-resource-type="azurerm_container_app" data-field="template_container_name">
+                                <label class="block text-xs font-medium text-emerald-700 mb-1">Container Name</label>
+                                <div class="flex items-center group">
+                                    <input type="text" class="resource-input flex-1 bg-white border border-emerald-300 rounded-md px-3 py-1.5 text-sm font-mono text-emerald-900 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition" readonly />
+                                    <button class="edit-field-btn ml-2 p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-blue-700">Framework:</span>
-                                <span class="text-sm text-blue-900">Expo</span>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="resource-field" data-resource-type="azurerm_container_app" data-field="template_container_cpu">
+                                    <label class="block text-xs font-medium text-emerald-700 mb-1">CPU</label>
+                                    <div class="flex items-center group">
+                                        <input type="text" class="resource-input flex-1 bg-white border border-emerald-300 rounded-md px-3 py-1.5 text-sm text-emerald-900 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition" readonly />
+                                        <button class="edit-field-btn ml-1 p-1 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="resource-field" data-resource-type="azurerm_container_app" data-field="template_container_memory">
+                                    <label class="block text-xs font-medium text-emerald-700 mb-1">Memory</label>
+                                    <div class="flex items-center group">
+                                        <input type="text" class="resource-input flex-1 bg-white border border-emerald-300 rounded-md px-3 py-1.5 text-sm text-emerald-900 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition" readonly />
+                                        <button class="edit-field-btn ml-1 p-1 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div class="resource-field" data-resource-type="azurerm_container_app" data-field="template_min_replicas">
+                                    <label class="block text-xs font-medium text-emerald-700 mb-1">Min Replicas</label>
+                                    <div class="flex items-center group">
+                                        <input type="number" min="0" class="resource-input flex-1 bg-white border border-emerald-300 rounded-md px-3 py-1.5 text-sm text-emerald-900 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition" readonly />
+                                        <button class="edit-field-btn ml-1 p-1 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="resource-field" data-resource-type="azurerm_container_app" data-field="template_max_replicas">
+                                    <label class="block text-xs font-medium text-emerald-700 mb-1">Max Replicas</label>
+                                    <div class="flex items-center group">
+                                        <input type="number" min="0" class="resource-input flex-1 bg-white border border-emerald-300 rounded-md px-3 py-1.5 text-sm text-emerald-900 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition" readonly />
+                                        <button class="edit-field-btn ml-1 p-1 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="resource-field" data-resource-type="azurerm_container_app" data-field="ingress_target_port">
+                                <label class="block text-xs font-medium text-emerald-700 mb-1">Target Port</label>
+                                <div class="flex items-center group">
+                                    <input type="number" min="1" max="65535" class="resource-input flex-1 bg-white border border-emerald-300 rounded-md px-3 py-1.5 text-sm text-emerald-900 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition" readonly />
+                                    <button class="edit-field-btn ml-2 p-1.5 text-emerald-500 hover:text-emerald-700 hover:bg-emerald-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Express.js Backend -->
-                    <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg border border-green-200">
-                        <div class="flex items-center mb-4">
-                            <div class="bg-green-500 p-2 rounded-lg mr-3">
-                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-semibold text-green-900">Express Backend</h3>
+                    <!-- Environment Variables -->
+                    <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-5 rounded-lg border border-slate-200">
+                        <h3 class="text-sm font-semibold text-slate-800 uppercase tracking-wide mb-4 flex items-center">
+                            <span class="mr-2">🔑</span> Environment Variables
+                        </h3>
+                        <div id="container-app-env-vars" class="space-y-2">
+                            <!-- Populated by JS from template_container_env -->
                         </div>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-green-700">Status:</span>
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
-                                    Running
-                                </span>
+                        <button id="add-env-var-btn" class="mt-4 inline-flex items-center px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50 hover:border-slate-400 transition">
+                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            Add Variable
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  WorkOS Integration & Database (2-col)                  -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section class="mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- WorkOS Integration -->
+                <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl" data-resource-section="deployboxrm_workos_integration">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="text-lg font-bold text-amber-500 flex items-center">
+                            <span class="mr-2">🔐</span> WorkOS Authentication
+                        </h2>
+                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span class="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>Configured
+                        </span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="resource-field" data-resource-type="deployboxrm_workos_integration" data-field="api_key">
+                            <label class="block text-xs font-medium text-amber-700 mb-1">API Key</label>
+                            <div class="flex items-center group">
+                                <input type="password" class="resource-input flex-1 bg-amber-50 border border-amber-200 rounded-md px-3 py-1.5 text-sm font-mono text-amber-900 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition" readonly />
+                                <button class="toggle-visibility-btn ml-1 p-1.5 text-amber-500 hover:text-amber-700 rounded transition" title="Show/Hide">
+                                    <svg class="w-4 h-4 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    <svg class="w-4 h-4 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+                                </button>
+                                <button class="edit-field-btn ml-1 p-1.5 text-amber-500 hover:text-amber-700 hover:bg-amber-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
                             </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-green-700">API URL:</span>
-                                <a href="{{stack.mobile_backend_url}}" target="_blank" rel="noopener noreferrer"
-                                    class="text-green-600 hover:text-green-800 underline text-sm truncate max-w-32">
-                                    {{stack.mobile_backend_url}}
+                        </div>
+                        <div class="resource-field" data-resource-type="deployboxrm_workos_integration" data-field="client_id">
+                            <label class="block text-xs font-medium text-amber-700 mb-1">Client ID</label>
+                            <div class="flex items-center group">
+                                <input type="text" class="resource-input flex-1 bg-amber-50 border border-amber-200 rounded-md px-3 py-1.5 text-sm font-mono text-amber-900 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition" readonly />
+                                <button class="edit-field-btn ml-2 p-1.5 text-amber-500 hover:text-amber-700 hover:bg-amber-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="resource-field" data-resource-type="deployboxrm_workos_integration" data-field="redirect_uri">
+                            <label class="block text-xs font-medium text-amber-700 mb-1">Redirect URI</label>
+                            <div class="flex items-center group">
+                                <input type="text" class="resource-input flex-1 bg-amber-50 border border-amber-200 rounded-md px-3 py-1.5 text-sm font-mono text-amber-900 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 transition" readonly />
+                                <button class="edit-field-btn ml-2 p-1.5 text-amber-500 hover:text-amber-700 hover:bg-amber-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Database -->
+                <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl" data-resource-section="thenilerm_database">
+                    <div class="flex items-center justify-between mb-5">
+                        <h2 class="text-lg font-bold text-blue-500 flex items-center">
+                            <span class="mr-2">🗄️</span> Database
+                        </h2>
+                        <span id="db-status-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span class="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
+                            <span class="db-status-text">Connected</span>
+                        </span>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="resource-field" data-resource-type="thenilerm_database" data-field="db_host">
+                            <label class="block text-xs font-medium text-blue-700 mb-1">Host</label>
+                            <input type="text" class="resource-input w-full bg-blue-50 border border-blue-200 rounded-md px-3 py-1.5 text-sm font-mono text-blue-900" readonly disabled />
+                        </div>
+                        <div class="resource-field" data-resource-type="thenilerm_database" data-field="region">
+                            <label class="block text-xs font-medium text-blue-700 mb-1">Region</label>
+                            <input type="text" class="resource-input w-full bg-blue-50 border border-blue-200 rounded-md px-3 py-1.5 text-sm text-blue-900" readonly disabled />
+                        </div>
+                        <div class="resource-field" data-resource-type="thenilerm_database" data-field="status">
+                            <label class="block text-xs font-medium text-blue-700 mb-1">Status</label>
+                            <input type="text" class="resource-input w-full bg-blue-50 border border-blue-200 rounded-md px-3 py-1.5 text-sm text-blue-900" readonly disabled />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  Static Website & Edge Router (2-col)                   -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <section class="mb-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Static Website -->
+                <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl" data-resource-section="azurerm_storage_account_static_website">
+                    <h2 class="text-lg font-bold text-violet-500 mb-5 flex items-center">
+                        <span class="mr-2">🌐</span> Static Website (Frontend)
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="resource-field" data-resource-type="azurerm_storage_account_static_website" data-field="static_file_directory">
+                            <label class="block text-xs font-medium text-violet-700 mb-1">Source Directory</label>
+                            <div class="flex items-center group">
+                                <input type="text" class="resource-input flex-1 bg-violet-50 border border-violet-200 rounded-md px-3 py-1.5 text-sm font-mono text-violet-900 focus:ring-2 focus:ring-violet-400 focus:border-violet-400 transition" readonly />
+                                <button class="edit-field-btn ml-2 p-1.5 text-violet-500 hover:text-violet-700 hover:bg-violet-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="resource-field" data-resource-type="azurerm_storage_account_static_website" data-field="static_file_build_command">
+                            <label class="block text-xs font-medium text-violet-700 mb-1">Build Command</label>
+                            <div class="flex items-center group">
+                                <input type="text" class="resource-input flex-1 bg-violet-50 border border-violet-200 rounded-md px-3 py-1.5 text-sm font-mono text-violet-900 focus:ring-2 focus:ring-violet-400 focus:border-violet-400 transition" readonly />
+                                <button class="edit-field-btn ml-2 p-1.5 text-violet-500 hover:text-violet-700 hover:bg-violet-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="resource-field" data-resource-type="azurerm_storage_account_static_website" data-field="static_file_build_output_directory">
+                            <label class="block text-xs font-medium text-violet-700 mb-1">Build Output Directory</label>
+                            <div class="flex items-center group">
+                                <input type="text" class="resource-input flex-1 bg-violet-50 border border-violet-200 rounded-md px-3 py-1.5 text-sm font-mono text-violet-900 focus:ring-2 focus:ring-violet-400 focus:border-violet-400 transition" readonly />
+                                <button class="edit-field-btn ml-2 p-1.5 text-violet-500 hover:text-violet-700 hover:bg-violet-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="resource-field" data-resource-type="azurerm_storage_account_static_website" data-field="index_document">
+                            <label class="block text-xs font-medium text-violet-700 mb-1">Index Document</label>
+                            <div class="flex items-center group">
+                                <input type="text" class="resource-input flex-1 bg-violet-50 border border-violet-200 rounded-md px-3 py-1.5 text-sm font-mono text-violet-900 focus:ring-2 focus:ring-violet-400 focus:border-violet-400 transition" readonly />
+                                <button class="edit-field-btn ml-2 p-1.5 text-violet-500 hover:text-violet-700 hover:bg-violet-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="resource-field" data-resource-type="azurerm_storage_account_static_website" data-field="error_404_document">
+                            <label class="block text-xs font-medium text-violet-700 mb-1">404 Error Page</label>
+                            <div class="flex items-center group">
+                                <input type="text" class="resource-input flex-1 bg-violet-50 border border-violet-200 rounded-md px-3 py-1.5 text-sm font-mono text-violet-900 focus:ring-2 focus:ring-violet-400 focus:border-violet-400 transition" readonly />
+                                <button class="edit-field-btn ml-2 p-1.5 text-violet-500 hover:text-violet-700 hover:bg-violet-200 rounded transition opacity-0 group-hover:opacity-100" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Edge Router -->
+                <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl" data-resource-section="deployboxrm_edge">
+                    <h2 class="text-lg font-bold text-pink-500 mb-5 flex items-center">
+                        <span class="mr-2">🔀</span> Edge Router
+                    </h2>
+                    <div class="space-y-3">
+                        <div class="resource-field" data-resource-type="deployboxrm_edge" data-field="subdomain">
+                            <label class="block text-xs font-medium text-pink-700 mb-1">Subdomain</label>
+                            <input type="text" class="resource-input w-full bg-pink-50 border border-pink-200 rounded-md px-3 py-1.5 text-sm font-mono text-pink-900" readonly disabled />
+                        </div>
+                        <div class="resource-field" data-resource-type="deployboxrm_edge" data-field="resolved_root_base_url">
+                            <label class="block text-xs font-medium text-pink-700 mb-1">Frontend URL</label>
+                            <div class="flex items-center">
+                                <input type="text" id="edge-frontend-text" class="resource-input flex-1 bg-pink-50 border border-pink-200 rounded-md px-3 py-1.5 text-sm font-mono text-pink-900" readonly disabled />
+                                <a id="edge-frontend-link" href="#" target="_blank" rel="noopener noreferrer" class="ml-2 p-1.5 text-pink-500 hover:text-pink-700 rounded transition" title="Open">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                        <div class="resource-field" data-resource-type="deployboxrm_edge" data-field="resolved_api_base_url">
+                            <label class="block text-xs font-medium text-pink-700 mb-1">API URL</label>
+                            <div class="flex items-center">
+                                <input type="text" id="edge-api-text" class="resource-input flex-1 bg-pink-50 border border-pink-200 rounded-md px-3 py-1.5 text-sm font-mono text-pink-900" readonly disabled />
+                                <a id="edge-api-link" href="#" target="_blank" rel="noopener noreferrer" class="ml-2 p-1.5 text-pink-500 hover:text-pink-700 rounded transition" title="Open">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
                                 </a>
                             </div>
                         </div>
                     </div>
-
-                    <!-- PostgreSQL Database -->
-                    <div class="bg-gradient-to-br from-indigo-50 to-indigo-100 p-6 rounded-lg border border-indigo-200">
-                        <div class="flex items-center mb-4">
-                            <div class="bg-indigo-500 p-2 rounded-lg mr-3">
-                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.6 0 12 0zm-1.1 18.7c-1.2 0-2.2-.4-3-.9l.4-.7c.7.5 1.6.8 2.6.8 1.3 0 2.3-.6 2.3-1.4 0-.7-.5-1.1-1.8-1.5l-.6-.2c-1.7-.6-2.8-1.3-2.8-2.8 0-1.4 1.1-2.5 2.9-2.5 1 0 1.8.3 2.4.7l-.4.7c-.5-.4-1.2-.6-2-.6-1.2 0-2 .6-2 1.3 0 .6.5 1 1.6 1.3l.6.2c2 .7 3 1.4 3 3 0 1.5-1.2 2.6-3.2 2.6z" />
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-semibold text-indigo-900">PostgreSQL</h3>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-indigo-700">Status:</span>
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
-                                    Connected
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-indigo-700">Host:</span>
-                                <span class="text-sm text-indigo-900 font-mono truncate max-w-32"
-                                    title="{{stack.mobile_postgres_host}}">
-                                    {{stack.mobile_postgres_host|truncatechars:20}}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-indigo-700">Database:</span>
-                                <span class="text-sm text-indigo-900">{{stack.mobile_postgres_database}}</span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Additional Services -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  Infrastructure (Resource Group, Storage, Environment)  -->
+        <!-- ═══════════════════════════════════════════════════════ -->
         <section class="mb-8">
-            <div
-                class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
-                <h2 class="text-xl font-bold text-emerald-400 mb-6 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                    Additional Services
-                </h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- Redis Cache -->
-                    <div class="bg-gradient-to-br from-red-50 to-red-100 p-6 rounded-lg border border-red-200">
-                        <div class="flex items-center mb-4">
-                            <div class="bg-red-500 p-2 rounded-lg mr-3">
-                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-semibold text-red-900">Redis Cache</h3>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-red-700">Status:</span>
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
-                                    Connected
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-red-700">Host:</span>
-                                <span class="text-sm text-red-900 font-mono truncate max-w-32"
-                                    title="{{stack.mobile_redis_host}}">
-                                    {{stack.mobile_redis_host|truncatechars:20}}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-red-700">Port:</span>
-                                <span class="text-sm text-red-900">{{stack.mobile_redis_port}}</span>
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <div class="flex items-center justify-between mb-5 cursor-pointer" id="infra-details-toggle">
+                    <h2 class="text-lg font-bold text-gray-500 flex items-center">
+                        <span class="mr-2">☁️</span> Azure Infrastructure
+                    </h2>
+                    <svg id="infra-chevron" class="w-5 h-5 text-gray-400 transform transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+                <div id="infra-details-content" class="hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <!-- Resource Group -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <span class="mr-2">📦</span> Resource Group
+                            </h3>
+                            <div class="space-y-2">
+                                <div class="resource-field" data-resource-type="azurerm_resource_group" data-field="azurerm_name">
+                                    <label class="block text-xs text-gray-500">Name</label>
+                                    <input type="text" class="resource-input w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-mono text-gray-800" readonly disabled />
+                                </div>
+                                <div class="resource-field" data-resource-type="azurerm_resource_group" data-field="location">
+                                    <label class="block text-xs text-gray-500">Location</label>
+                                    <input type="text" class="resource-input w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-800" readonly disabled />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- WebSocket Integration -->
-                    <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg border border-purple-200">
-                        <div class="flex items-center mb-4">
-                            <div class="bg-purple-500 p-2 rounded-lg mr-3">
-                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 2C6.48 2 2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15h-2v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3v3h-3v6.95c5.05-.5 9-4.76 9-9.95 0-5.52-4.48-10-10-10z" />
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-semibold text-purple-900">WebSocket</h3>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-purple-700">Status:</span>
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
-                                    Active
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-purple-700">Endpoint:</span>
-                                <span class="text-sm text-purple-900 font-mono truncate max-w-32"
-                                    title="{{stack.mobile_websocket_url}}">
-                                    {{stack.mobile_websocket_url|truncatechars:20}}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-purple-700">Protocol:</span>
-                                <span class="text-sm text-purple-900">WSS</span>
+                        <!-- Storage Account -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <span class="mr-2">💾</span> Storage Account
+                            </h3>
+                            <div class="space-y-2">
+                                <div class="resource-field" data-resource-type="azurerm_storage_account" data-field="azurerm_name">
+                                    <label class="block text-xs text-gray-500">Name</label>
+                                    <input type="text" class="resource-input w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-mono text-gray-800" readonly disabled />
+                                </div>
+                                <div class="resource-field" data-resource-type="azurerm_storage_account" data-field="account_tier">
+                                    <label class="block text-xs text-gray-500">Tier</label>
+                                    <input type="text" class="resource-input w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-800" readonly disabled />
+                                </div>
+                                <div class="resource-field" data-resource-type="azurerm_storage_account" data-field="account_replication_type">
+                                    <label class="block text-xs text-gray-500">Replication</label>
+                                    <input type="text" class="resource-input w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-800" readonly disabled />
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- WorkOS Authorization -->
-                    <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-lg border border-amber-200">
-                        <div class="flex items-center mb-4">
-                            <div class="bg-amber-500 p-2 rounded-lg mr-3">
-                                <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24">
-                                    <path
-                                        d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
-                                </svg>
-                            </div>
-                            <h3 class="text-lg font-semibold text-amber-900">WorkOS Auth</h3>
-                        </div>
-                        <div class="space-y-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-amber-700">Status:</span>
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                    <span class="h-2 w-2 rounded-full bg-green-500 mr-1"></span>
-                                    Configured
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-amber-700">Client ID:</span>
-                                <span class="text-sm text-amber-900 font-mono truncate max-w-32"
-                                    title="{{stack.mobile_workos_client_id}}">
-                                    {{stack.mobile_workos_client_id|truncatechars:15}}
-                                </span>
-                            </div>
-                            <div class="flex items-center justify-between">
-                                <span class="text-sm text-amber-700">SSO:</span>
-                                <span class="text-sm text-amber-900">Enabled</span>
+                        <!-- Container App Environment -->
+                        <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                <span class="mr-2">🏗️</span> App Environment
+                            </h3>
+                            <div class="space-y-2">
+                                <div class="resource-field" data-resource-type="azurerm_container_app_environment" data-field="azurerm_name">
+                                    <label class="block text-xs text-gray-500">Name</label>
+                                    <input type="text" class="resource-input w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-mono text-gray-800" readonly disabled />
+                                </div>
+                                <div class="resource-field" data-resource-type="azurerm_container_app_environment" data-field="location">
+                                    <label class="block text-xs text-gray-500">Location</label>
+                                    <input type="text" class="resource-input w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-800" readonly disabled />
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -237,34 +447,164 @@
             </div>
         </section>
 
-        <!-- Mobile App Access -->
-        <section class="mb-8">
-            <div
-                class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
-                <h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center">
-                    <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h16v2H4z" />
-                    </svg>
-                    Mobile App Access
-                </h2>
-                <div class="bg-gradient-to-br from-slate-50 to-slate-100 p-6 rounded-lg border border-slate-200">
-                    <div class="flex items-center justify-between mb-4">
-                        <div>
-                            <h3 class="text-lg font-semibold text-slate-900 mb-2">Expo Development Build</h3>
-                            <p class="text-sm text-slate-700 mb-4">Scan the QR code below with the Expo Go app to test
-                                your mobile application</p>
-                        </div>
-                    </div>
-                    {% include 'dashboard/components/_qr_viewer.html' with frontend_url=stack.mobile_backend_url %}
-                </div>
-            </div>
+        <section id='devSection'>
         </section>
 
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <!--  Save Changes Bar                                       -->
+        <!-- ═══════════════════════════════════════════════════════ -->
+        <div id="save-bar" class="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-700 px-6 py-3 flex items-center justify-between z-50 transform translate-y-full transition-transform duration-300">
+            <div class="flex items-center">
+                <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-900 text-amber-200 mr-3">
+                    <span id="changes-count">0</span>&nbsp;unsaved changes
+                </span>
+                <span class="text-sm text-zinc-400">Review and save your configuration changes</span>
+            </div>
+            <div class="flex items-center space-x-3">
+                <button id="discard-changes-btn" class="px-4 py-2 text-sm font-medium text-zinc-300 bg-zinc-700 hover:bg-zinc-600 rounded-md transition">
+                    Discard
+                </button>
+                <button id="save-changes-btn" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500 rounded-md transition flex items-center">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    Save Changes
+                </button>
+            </div>
+        </div>
 
-        {% include 'dashboard/components/_stack_infrastructure.html' %}
+        <!-- Stack Actions JavaScript -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
+        <script>
+        (function() {
+            const folderInput = document.getElementById('folder-input');
+            const uploadBtn = document.getElementById('upload-folder-btn');
+            const setPersistentBtn = document.getElementById('set-persistent-btn');
 
+            function getCookie(name) {
+                const value = `; ${document.cookie}`;
+                const parts = value.split(`; ${name}=`);
+                if (parts.length === 2) return parts.pop().split(';').shift();
+            }
 
-        {% include 'dashboard/components/_stack_actions.html' %}
+            // ── Upload ──
+            if (uploadBtn && folderInput) {
+                uploadBtn.addEventListener('click', (e) => { e.preventDefault(); folderInput.click(); });
+
+                folderInput.addEventListener('change', async (e) => {
+                    const files = Array.from(e.target.files || []);
+                    if (!files.length) return;
+
+                    const uploadUrl = uploadBtn.getAttribute('data-upload-url');
+                    const spinner  = uploadBtn.querySelector('.loading-spinner');
+                    spinner.classList.remove('hidden');
+                    uploadBtn.disabled = true;
+
+                    try {
+                        const zip = new JSZip();
+                        for (const file of files) {
+                            let path = file.webkitRelativePath || file.name;
+                            if (file.webkitRelativePath) {
+                                const parts = path.split('/');
+                                if (parts.length > 1) path = parts.slice(1).join('/');
+                            }
+                            zip.file(path, await file.arrayBuffer());
+                        }
+
+                        const blob = await zip.generateAsync({ type: 'blob' });
+                        const formData = new FormData();
+                        formData.append('source_zip', blob, 'source.zip');
+
+                        const csrftoken = getCookie('csrftoken');
+                        const resp = await fetch(uploadUrl, {
+                            method: 'POST',
+                            body: formData,
+                            headers: csrftoken ? { 'X-CSRFToken': csrftoken } : {}
+                        });
+
+                        if (!resp.ok) {
+                            const text = await resp.text().catch(() => resp.statusText);
+                            alert('Upload failed: ' + (text || resp.status));
+                        } else {
+                            alert('Upload successful');
+                            location.reload();
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Upload error: ' + err.message);
+                    } finally {
+                        spinner.classList.add('hidden');
+                        uploadBtn.disabled = false;
+                        folderInput.value = null;
+                    }
+                });
+            }
+
+            // ── Set Persistent ──
+            if (setPersistentBtn) {
+                setPersistentBtn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const url     = setPersistentBtn.getAttribute('data-persistent-url');
+                    const spinner = setPersistentBtn.querySelector('.loading-spinner');
+                    const btnText = setPersistentBtn.querySelector('.button-text');
+                    spinner.classList.remove('hidden');
+                    setPersistentBtn.disabled = true;
+
+                    try {
+                        const csrftoken = getCookie('csrftoken');
+                        const resp = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                ...(csrftoken ? { 'X-CSRFToken': csrftoken } : {})
+                            }
+                        });
+
+                        if (resp.ok) {
+                            const wasPersistent = btnText.textContent.trim() === 'Persistent';
+                            if (wasPersistent) {
+                                btnText.textContent = 'Set Persistent';
+                                setPersistentBtn.classList.replace('bg-purple-700', 'bg-purple-500');
+                                setPersistentBtn.classList.replace('hover:bg-purple-800', 'hover:bg-purple-600');
+                            } else {
+                                btnText.textContent = 'Persistent';
+                                setPersistentBtn.classList.replace('bg-purple-500', 'bg-purple-700');
+                                setPersistentBtn.classList.replace('hover:bg-purple-600', 'hover:bg-purple-800');
+                            }
+                            alert('Stack persistence updated successfully');
+                        } else {
+                            const text = await resp.text().catch(() => resp.statusText);
+                            alert('Failed to update persistence: ' + (text || resp.status));
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Error updating persistence: ' + err.message);
+                    } finally {
+                        spinner.classList.add('hidden');
+                        setPersistentBtn.disabled = false;
+                    }
+                });
+            }
+
+            // ── Download ──
+            document.querySelectorAll('[data-download-url]').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.preventDefault();
+                    const url     = btn.getAttribute('data-download-url');
+                    const spinner = btn.querySelector('.loading-spinner');
+                    spinner.classList.remove('hidden');
+                    btn.disabled = true;
+
+                    try {
+                        window.location.href = url;
+                    } finally {
+                        setTimeout(() => {
+                            spinner.classList.add('hidden');
+                            btn.disabled = false;
+                        }, 2000);
+                    }
+                });
+            });
+        })();
+        </script>
 
     </main>
 </div>
@@ -274,6 +614,5 @@
 <script src="{% static 'dashboards/environment_switcher.js' %}"></script>
 <script src="{% static 'dashboards/stack_dashboard.js' %}"></script>
 <script src="{% static 'dashboards/mobile_stack_dashboard.js' %}"></script>
-<!-- JSZip CDN is now included in stack actions component -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
 {% endblock %}

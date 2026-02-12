@@ -9,7 +9,9 @@ load_dotenv()
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 HOST = os.environ.get("HOST")
-assert HOST is not None, "HOST env must be set"
+if not HOST:
+    HOST = "http://localhost"
+    print("WARTNING: ", HOST)
 
 # SECURITY
 SECRET_KEY = KeyVaultClient().get_secret('deploy-box-django-secret-key', os.getenv("DJANGO_SECRET_KEY"))
