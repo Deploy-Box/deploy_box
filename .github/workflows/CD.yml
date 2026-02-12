@@ -75,6 +75,10 @@ jobs:
     outputs:
       app_host: ${{ steps.tf_outputs.outputs.app_host }}
       key_vault_name: ${{ steps.tf_outputs.outputs.key_vault_name }}
+      database_name: ${{ steps.tf_outputs.outputs.database_name }}
+      database_port: ${{ steps.tf_outputs.outputs.database_port }}
+      database_host: ${{ steps.tf_outputs.outputs.database_host }}
+      database_user: ${{ steps.tf_outputs.outputs.database_user }}
 
     steps:
       - name: Checkout
@@ -128,6 +132,10 @@ jobs:
         run: |
           echo "app_host=$(terraform output -raw app_host)" >> $GITHUB_OUTPUT
           echo "key_vault_name=$(terraform output -raw key_vault_name)" >> $GITHUB_OUTPUT
+          echo "database_name=$(terraform output -raw database_name)" >> $GITHUB_OUTPUT
+          echo "database_port=$(terraform output -raw database_port)" >> $GITHUB_OUTPUT
+          echo "database_host=$(terraform output -raw database_host)" >> $GITHUB_OUTPUT
+          echo "database_user=$(terraform output -raw database_user)" >> $GITHUB_OUTPUT
 
   migrations:
     runs-on: ubuntu-latest
@@ -171,10 +179,10 @@ jobs:
           ENV: ${{ vars.ENV }}
           HOST: ${{ needs.deploy-infrastructure.outputs.app_host }}
           KEY_VAULT_NAME: ${{ needs.deploy-infrastructure.outputs.key_vault_name }}
-          DB_NAME: ${{ secrets.DB_NAME }}
-          DB_USER: ${{ secrets.DB_USER }}
-          DB_HOST: ${{ secrets.DB_HOST }}
-          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ needs.deploy-infrastructure.outputs.database_name }}
+          DB_USER: ${{ needs.deploy-infrastructure.outputs.database_user }}
+          DB_HOST: ${{ needs.deploy-infrastructure.outputs.database_host }}
+          DB_PORT: ${{ needs.deploy-infrastructure.outputs.database_port }}
           DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{ secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY }}
         run: |
