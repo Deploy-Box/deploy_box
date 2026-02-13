@@ -63,10 +63,8 @@ data "azurerm_key_vault" "shared_key_vault" {
 # Resource Group
 # =============================================================================
 
-resource "azurerm_resource_group" "main_rg" {
+data "azurerm_resource_group" "main_rg" {
   name     = local.names.resource_group
-  location = var.app.location
-  tags     = local.common_tags
 }
 
 # =============================================================================
@@ -75,7 +73,7 @@ resource "azurerm_resource_group" "main_rg" {
 
 resource "azurerm_container_app" "container_app" {
   name                         = local.names.container_app
-  resource_group_name          = azurerm_resource_group.main_rg.name
+  resource_group_name          = data.azurerm_resource_group.main_rg.name
   revision_mode                = "Single"
   container_app_environment_id = data.azurerm_container_app_environment.shared_container_env.id
 
@@ -207,11 +205,11 @@ resource "azurerm_container_app" "container_app" {
 
 resource "azurerm_user_assigned_identity" "container_app_identity" {
   name                = local.names.identity
-  location            = azurerm_resource_group.main_rg.location
-  resource_group_name = azurerm_resource_group.main_rg.name
+  location            = data.azurerm_resource_group.main_rg.location
+  resource_group_name = data.azurerm_resource_group.main_rg.name
   tags                = local.common_tags
 
-  depends_on = [azurerm_resource_group.main_rg]
+  depends_on = [data.azurerm_resource_group.main_rg]
 }
 
 resource "azurerm_role_assignment" "container_app_acr_pull" {

@@ -105,9 +105,6 @@
                         </svg>
                         Container App
                     </h2>
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        <span class="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>Running
-                    </span>
                 </div>
 
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -215,9 +212,6 @@
                         <h2 class="text-lg font-bold text-amber-500 flex items-center">
                             <span class="mr-2">🔐</span> WorkOS Authentication
                         </h2>
-                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <span class="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>Configured
-                        </span>
                     </div>
                     <div class="space-y-3">
                         <div class="resource-field" data-resource-type="deployboxrm_workos_integration" data-field="api_key">
@@ -260,10 +254,6 @@
                         <h2 class="text-lg font-bold text-blue-500 flex items-center">
                             <span class="mr-2">🗄️</span> Database
                         </h2>
-                        <span id="db-status-badge" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            <span class="h-2 w-2 rounded-full bg-green-500 mr-1.5"></span>
-                            <span class="db-status-text">Connected</span>
-                        </span>
                     </div>
                     <div class="space-y-3">
                         <div class="resource-field" data-resource-type="thenilerm_database" data-field="db_host">
@@ -438,7 +428,7 @@
                                 </div>
                                 <div class="resource-field" data-resource-type="azurerm_container_app_environment" data-field="location">
                                     <label class="block text-xs text-gray-500">Location</label>
-                                    <input type="text" class="resource-input w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs text-gray-800" readonly disabled />
+                                    <input type="text" class="resource-input w-full bg-white border border-gray-200 rounded px-2 py-1 text-xs font-mono text-gray-800" readonly disabled />
                                 </div>
                             </div>
                         </div>
