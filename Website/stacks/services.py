@@ -33,7 +33,8 @@ from stacks.stack_managers import get_stack_manager
 
 from azure.servicebus import ServiceBusClient, ServiceBusMessage
 
-logger = logging.getLogger(__name__)    
+logger = logging.getLogger(__name__)
+
 
 def add_stack(**kwargs) -> Stack:
     name = kwargs.get("name")
@@ -46,11 +47,49 @@ def add_stack(**kwargs) -> Stack:
     if not name:
         # Generate default name
         first_word_options = [
-            "Awesome", "Incredible", "Fantastic", "Superb", "Brilliant", "Majestic", "Dynamic", "Vibrant", "Radiant", "Stellar", "Epic", "Legendary", "Spectacular", "Magnificent", "Glorious", "Splendid", "Fabulous", "Marvelous", "Phenomenal", "Remarkable"
+            "Awesome",
+            "Incredible",
+            "Fantastic",
+            "Superb",
+            "Brilliant",
+            "Majestic",
+            "Dynamic",
+            "Vibrant",
+            "Radiant",
+            "Stellar",
+            "Epic",
+            "Legendary",
+            "Spectacular",
+            "Magnificent",
+            "Glorious",
+            "Splendid",
+            "Fabulous",
+            "Marvelous",
+            "Phenomenal",
+            "Remarkable",
         ]
 
         second_word_options = [
-            "Falcon", "Tiger", "Eagle", "Lion", "Panther", "Wolf", "Dragon", "Phoenix", "Leopard", "Cheetah", "Hawk", "Shark", "Bear", "Raven", "Stallion", "Cougar", "Viper", "Jaguar", "Griffin", "Hydra"
+            "Falcon",
+            "Tiger",
+            "Eagle",
+            "Lion",
+            "Panther",
+            "Wolf",
+            "Dragon",
+            "Phoenix",
+            "Leopard",
+            "Cheetah",
+            "Hawk",
+            "Shark",
+            "Bear",
+            "Raven",
+            "Stallion",
+            "Cougar",
+            "Viper",
+            "Jaguar",
+            "Griffin",
+            "Hydra",
         ]
 
         name = f"{random.choice(first_word_options)} {random.choice(second_word_options)} {purchasable_stack.type.capitalize()} Stack"
@@ -60,7 +99,10 @@ def add_stack(**kwargs) -> Stack:
         print(f"Variant: {purchasable_stack.variant}")
 
         stack = Stack.objects.create(
-            name=name, project=project, purchased_stack=purchasable_stack, status="PROVISIONING"
+            name=name,
+            project=project,
+            purchased_stack=purchasable_stack,
+            status="PROVISIONING",
         )
 
         stack_manager = get_stack_manager(stack)
@@ -73,16 +115,20 @@ def add_stack(**kwargs) -> Stack:
             )
 
         # try:
-        send_to_queue("iac.create", {
-            "stack_id": str(stack.id),
-            "project_id": str(project.id),
-            "org_id": str(project.organization.id),
-            "iac": get_iac_attribute_dict_as_json(stack),
-        })
+        send_to_queue(
+            "iac.create",
+            {
+                "stack_id": str(stack.id),
+                "project_id": str(project.id),
+                "org_id": str(project.organization.id),
+                "iac": get_iac_attribute_dict_as_json(stack),
+            },
+        )
         # except Exception as e:
         #     logger.warning(f"Failed to send message to Azure Function: {str(e)}")
 
     return stack
+
 
 def update_stack(**kwargs) -> Stack:
     stack_id = kwargs.get("stack_id")
@@ -94,11 +140,14 @@ def update_stack(**kwargs) -> Stack:
         stack_iac = get_iac_attribute_dict_as_json(stack)
 
         try:
-            send_to_queue("iac.update", {
-                "stack_id": str(stack.id),
-                "source_code_path": str(source_code_path),
-                "iac": stack_iac,
-            })
+            send_to_queue(
+                "iac.update",
+                {
+                    "stack_id": str(stack.id),
+                    "source_code_path": str(source_code_path),
+                    "iac": stack_iac,
+                },
+            )
         except Exception as e:
             logger.warning(f"Failed to send message to Azure Function: {str(e)}")
 
@@ -128,6 +177,7 @@ def post_purchasable_stack(
             {"error": f"Failed to create purchasable stack: {str(e)}"}, status=500
         )
 
+
 def delete_stack(stack: Stack) -> bool:
     try:
         stack.status = "DELETING"
@@ -135,33 +185,39 @@ def delete_stack(stack: Stack) -> bool:
 
         stack_iac = get_iac_attribute_dict_as_json(stack)
 
-        send_to_queue("iac.delete",
+        send_to_queue(
+            "iac.delete",
             {
                 "stack_id": str(stack.id),
                 "iac": stack_iac,
-            }
+            },
         )
 
         return True
     except Exception as e:
         logger.error(f"Failed to delete stack {stack.id}: {str(e)}")
         return False
-    
+
+
 def set_is_persistent_stack(stack: Stack, is_persistent: bool) -> bool:
     try:
         stack_manager = get_stack_manager(stack)
         stack_manager.set_is_persistent(is_persistent)
 
-        send_to_queue("iac.update", {
-            "stack_id": str(stack.id),
-            "iac": get_iac_attribute_dict_as_json(stack),
-        })
+        send_to_queue(
+            "iac.update",
+            {
+                "stack_id": str(stack.id),
+                "iac": get_iac_attribute_dict_as_json(stack),
+            },
+        )
 
         return True
     except Exception as e:
         logger.error(f"Failed to set persistent for stack {stack.id}: {str(e)}")
         return False
-    
+
+
 def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
     """Accept a multipart/form-data POST with a file field named 'source_zip' and upload it to Azure Blob Storage.
 
@@ -175,22 +231,36 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
 
     # Ensure file present
     if "source_zip" not in request.FILES:
-        return JsonResponse({"error": "No file uploaded under 'source_zip'."}, status=400)
+        return JsonResponse(
+            {"error": "No file uploaded under 'source_zip'."}, status=400
+        )
 
     uploaded_file = request.FILES["source_zip"]
 
     # Verify Azure Blob client available
     if BlobServiceClient is None:
-        return JsonResponse({"error": "Azure Blob Storage client not available (missing package)."}, status=500)
+        return JsonResponse(
+            {"error": "Azure Blob Storage client not available (missing package)."},
+            status=500,
+        )
 
     # Read Azure configuration from settings
-    azure_cfg = getattr(settings, 'AZURE', {}) if hasattr(settings, 'AZURE') else {}
+    azure_cfg = getattr(settings, "AZURE", {}) if hasattr(settings, "AZURE") else {}
     print(azure_cfg)
-    conn_str = azure_cfg.get('STORAGE_CONNECTION_STRING') or getattr(settings, 'AZURE_STORAGE_CONNECTION_STRING', None)
-    container = azure_cfg.get('CONTAINER_NAME') or getattr(settings, 'CONTAINER_NAME', None)
+    conn_str = azure_cfg.get("STORAGE_CONNECTION_STRING") or getattr(
+        settings, "AZURE_STORAGE_CONNECTION_STRING", None
+    )
+    container = azure_cfg.get("CONTAINER_NAME") or getattr(
+        settings, "CONTAINER_NAME", None
+    )
 
     if not conn_str or not container:
-        return JsonResponse({"error": "Azure storage configuration missing. Set AZURE_STORAGE_CONNECTION_STRING and CONTAINER_NAME."}, status=500)
+        return JsonResponse(
+            {
+                "error": "Azure storage configuration missing. Set AZURE_STORAGE_CONNECTION_STRING and CONTAINER_NAME."
+            },
+            status=500,
+        )
 
     try:
         # Create client and upload
@@ -198,14 +268,16 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
         container_client = blob_service_client.get_container_client(container)
 
         # Build a unique blob name preserving stack context
-        ts = datetime.datetime.utcnow().strftime('%Y%m%d%H%M%S')
+        ts = datetime.datetime.utcnow().strftime("%Y%m%d%H%M%S")
         unique = uuid.uuid4().hex
         blob_name = f"{stack_id}/source-{ts}-{unique}.zip"
 
         blob_client = container_client.get_blob_client(blob_name)
 
         # streamed upload from the uploaded file file-like object
-        file_stream = uploaded_file.file if hasattr(uploaded_file, 'file') else uploaded_file
+        file_stream = (
+            uploaded_file.file if hasattr(uploaded_file, "file") else uploaded_file
+        )
 
         # upload_blob accepts a file-like object or bytes
         blob_client.upload_blob(file_stream, overwrite=True)
@@ -217,12 +289,16 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
 
         update_stack(stack_id=stack_id, source_code_path=blob_name)
 
-        return JsonResponse({"success": True, "blob_name": blob_name, "blob_url": blob_client.url}, status=200)
+        return JsonResponse(
+            {"success": True, "blob_name": blob_name, "blob_url": blob_client.url},
+            status=200,
+        )
 
     except Exception as e:
         # Log server-side for diagnostics and return minimal error to client
         print(f"Failed uploading source zip to Azure: {str(e)}")
         return JsonResponse({"error": f"Failed to upload file: {str(e)}"}, status=500)
+
 
 def get_iac_attribute_dict_as_json(stack: Stack) -> dict:
     """Convert StackIACAttribute entries for the given stack into nested JSON structure."""
@@ -230,26 +306,28 @@ def get_iac_attribute_dict_as_json(stack: Stack) -> dict:
     for attr in StackIACAttribute.objects.filter(stack=stack).all():
         attribute_dict[attr.attribute_name] = attr.attribute_value
 
-    logger.warning(f"IAC Attribute Dict for Stack {stack.id}: {json.dumps(attribute_dict, indent=2)}")
+    logger.warning(
+        f"IAC Attribute Dict for Stack {stack.id}: {json.dumps(attribute_dict, indent=2)}"
+    )
 
     def parse_value(value):
         """Convert string representations to their actual types."""
         if not isinstance(value, str):
             return value
-        
+
         # Strip whitespace
         value = value.strip()
-        
+
         # Empty dictionary
         if value == "{}":
             return {}
-        
+
         # Empty list
         if value == "[]":
             return []
-        
+
         # Try to parse as JSON (handles lists, dicts, etc.)
-        if value.startswith(('[', '{')) or value.startswith(("'[", '"[')):
+        if value.startswith(("[", "{")) or value.startswith(("'[", '"[')):
             try:
                 # Handle Python-style lists with single quotes
                 # Convert Python representation to JSON
@@ -258,18 +336,18 @@ def get_iac_attribute_dict_as_json(stack: Stack) -> dict:
                 return parsed
             except json.JSONDecodeError:
                 pass
-        
+
         # Try to parse as decimal number (int or float)
         try:
             # Check if it's a number (including decimals)
-            if re.match(r'^-?\d+(\.\d+)?$', value):
-                if '.' in value:
+            if re.match(r"^-?\d+(\.\d+)?$", value):
+                if "." in value:
                     return float(value)
                 else:
                     return int(value)
         except ValueError:
             pass
-        
+
         # Return original string if no conversion applies
         return value
 
@@ -316,7 +394,7 @@ def get_iac_attribute_dict_as_json(stack: Stack) -> dict:
         # Traverse all but last segment
         for i, seg in enumerate(parts[:-1]):
             name, idx, _, _ = parse_segment(seg)
-            next_is_query_leaf = "?" in parts[i+1] and (i+1) == len(parts) - 1
+            next_is_query_leaf = "?" in parts[i + 1] and (i + 1) == len(parts) - 1
 
             if idx is None:
                 if next_is_query_leaf:
@@ -339,7 +417,11 @@ def get_iac_attribute_dict_as_json(stack: Stack) -> dict:
 
         if qk is not None:
             # e.g. "...env.value?name=FOO": append {"name": qv, "value": value} to parent[parent_key]
-            target_list = current if (parent is None or parent_key is None) else ensure_list(parent, parent_key)
+            target_list = (
+                current
+                if (parent is None or parent_key is None)
+                else ensure_list(parent, parent_key)
+            )
             target_list.append({qk: qv, name: parse_value(value)})
         else:
             if idx is None:
@@ -367,14 +449,13 @@ def send_to_queue(request_type: str, message_data: dict) -> bool:
         logger.error("Azure Service Bus configuration is missing.")
         return False
 
-    data = {
-        "request_type": request_type,
-        "data": message_data
-    }
+    data = {"request_type": request_type, "data": message_data}
 
     try:
         # Create a Service Bus client
-        with ServiceBusClient.from_connection_string(service_bus_connection_str) as client:
+        with ServiceBusClient.from_connection_string(
+            service_bus_connection_str
+        ) as client:
             # Get a sender for the queue
             with client.get_queue_sender(queue_name) as sender:
                 # Create a Service Bus message
@@ -382,7 +463,9 @@ def send_to_queue(request_type: str, message_data: dict) -> bool:
 
                 # Send the message
                 sender.send_messages(message)
-                logger.info(f"Successfully sent message to Azure Service Bus queue: {queue_name}")
+                logger.info(
+                    f"Successfully sent message to Azure Service Bus queue: {queue_name}"
+                )
                 return True
 
     except Exception as e:
