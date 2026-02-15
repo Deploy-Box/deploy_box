@@ -31,6 +31,8 @@ from stacks.models import Stack, PurchasableStack
 from projects.models import Project
 from stacks.stack_managers import get_stack_manager
 
+from azure.servicebus import ServiceBusClient, ServiceBusMessage
+
 logger = logging.getLogger(__name__)    
 
 def add_stack(**kwargs) -> Stack:
@@ -71,7 +73,7 @@ def add_stack(**kwargs) -> Stack:
             )
 
         # try:
-        send_to_azure_function("iac.create", {
+        send_to_queue("iac.create", {
             "stack_id": str(stack.id),
             "project_id": str(project.id),
             "org_id": str(project.organization.id),
@@ -92,7 +94,7 @@ def update_stack(**kwargs) -> Stack:
         stack_iac = get_iac_attribute_dict_as_json(stack)
 
         try:
-            send_to_azure_function("iac.update", {
+            send_to_queue("iac.update", {
                 "stack_id": str(stack.id),
                 "source_code_path": str(source_code_path),
                 "iac": stack_iac,
@@ -133,7 +135,7 @@ def delete_stack(stack: Stack) -> bool:
 
         stack_iac = get_iac_attribute_dict_as_json(stack)
 
-        send_to_azure_function("iac.delete",
+        send_to_queue("iac.delete",
             {
                 "stack_id": str(stack.id),
                 "iac": stack_iac,
@@ -150,7 +152,7 @@ def set_is_persistent_stack(stack: Stack, is_persistent: bool) -> bool:
         stack_manager = get_stack_manager(stack)
         stack_manager.set_is_persistent(is_persistent)
 
-        send_to_azure_function("iac.update", {
+        send_to_queue("iac.update", {
             "stack_id": str(stack.id),
             "iac": get_iac_attribute_dict_as_json(stack),
         })
@@ -354,43 +356,35 @@ def get_iac_attribute_dict_as_json(stack: Stack) -> dict:
     return iac_json
 
 
-def send_to_azure_function(request_type: str, message_data: dict) -> bool:
+def send_to_queue(request_type: str, message_data: dict) -> bool:
     """
-    Sends a message to Azure Function via HTTP trigger.
+    Sends a message to Azure Service Bus.
     """
-    
-    function_url = os.environ.get('AZURE_FUNCTION_URL')
+    service_bus_connection_str = settings.AZURE_SERVICE_BUS.get("CONNECTION_STRING")
+    queue_name = settings.AZURE_SERVICE_BUS.get("QUEUE_NAME")
 
-    if not function_url:
-        logger.error("Azure Function URL is not configured.")
+    if not service_bus_connection_str or not queue_name:
+        logger.error("Azure Service Bus configuration is missing.")
         return False
-    
+
     data = {
         "request_type": request_type,
         "data": message_data
     }
 
     try:
-        # Send HTTP POST request to Azure Function
-        # print("Sending data to Azure Function:", function_url, data)
-        response = requests.post(
-            function_url,
-            json=data,
-            headers={'Content-Type': 'application/json'},
-            timeout=3000  # 30 second timeout
-        )
-        
-        # Check if the request was successful
-        if response.status_code in [200, 202]:
-            logger.info(f"Successfully sent message to Azure Function: {function_url}")
-            return True
-        else:
-            logger.error(f"Azure Function returned status code {response.status_code}: {response.text}")
-            return False
-        
-    except requests.exceptions.RequestException as e:
-        logger.error(f"Failed to send message to Azure Function: {str(e)}")
-        return False
+        # Create a Service Bus client
+        with ServiceBusClient.from_connection_string(service_bus_connection_str) as client:
+            # Get a sender for the queue
+            with client.get_queue_sender(queue_name) as sender:
+                # Create a Service Bus message
+                message = ServiceBusMessage(json.dumps(data))
+
+                # Send the message
+                sender.send_messages(message)
+                logger.info(f"Successfully sent message to Azure Service Bus queue: {queue_name}")
+                return True
+
     except Exception as e:
-        logger.error(f"Unexpected error sending message to Azure Function: {str(e)}")
+        logger.error(f"Failed to send message to Azure Service Bus: {str(e)}")
         return False

@@ -1,6 +1,6 @@
 import stripe
 
-def create_stripe_user(name: str, email: str) -> str:
+def create_stripe_customer(name: str, email: str) -> str:
     """
     Create a new customer in Stripe
     """

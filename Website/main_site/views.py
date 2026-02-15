@@ -100,6 +100,10 @@ def still_configuring(request: HttpRequest) -> HttpResponse:
     return render(request, "still_configuring.html", {"show_footer": False})
 
 
+def subdomain_not_found(request: HttpRequest) -> HttpResponse:
+    return render(request, "subdomain_not_found.html")
+
+
 class DashboardView(View):
     """Class-based view for all dashboard-related functionality."""
 

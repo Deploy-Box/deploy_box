@@ -27,6 +27,7 @@ locals {
     acr            = "${local.prefix_compact}cr${local.env}"
     cae            = "${local.prefix}-cae-${local.env}"
     key_vault      = "${local.prefix}-kv-${local.env}"
+    sbns           = "${local.prefix}-sbns-${local.env}"
   }
 
   common_tags = merge(
@@ -65,6 +66,11 @@ data "azurerm_key_vault" "shared_key_vault" {
 
 data "azurerm_resource_group" "main_rg" {
   name     = local.names.resource_group
+}
+
+data "azurerm_service_bus_namespace" "service_bus" {
+  name                = local.names.sbns
+  resource_group_name = data.azurerm_resource_group.main_rg.name
 }
 
 # =============================================================================
@@ -166,6 +172,10 @@ resource "azurerm_container_app" "container_app" {
       env {
         name  = "KEY_VAULT_NAME"
         value = local.names.key_vault
+      }
+      env {
+        name  = "SERVICE_BUS_CONNECTION_STRING"
+        value = data.azurerm_service_bus_namespace.service_bus.default_primary_connection_string
       }
     }
 

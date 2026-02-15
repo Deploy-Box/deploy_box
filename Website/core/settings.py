@@ -245,6 +245,11 @@ AZURE = {
 # Example: DEPLOY_BOX_STACK_ENDPOINT=https://api.deploybox.com/stacks
 DEPLOY_BOX_STACK_ENDPOINT = os.environ.get("DEPLOY_BOX_STACK_ENDPOINT")
 
+AZURE_SERVICE_BUS = {
+    "CONNECTION_STRING": os.getenv("AZURE_SERVICE_BUS_CONNECTION_STRING"),
+    "QUEUE_NAME": "iac",
+}
+
 # Templates Configuration
 TEMPLATES = [
     {

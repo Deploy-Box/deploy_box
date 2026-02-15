@@ -23,6 +23,7 @@ urlpatterns = [
     path("pricing/", views.pricing, name="pricing"),
     path("contact/", views.maintenance, name="contact"),
     path("still-configuring/", views.still_configuring, name="still_configuring"),
+    path("subdomain-not-found/", views.subdomain_not_found, name="subdomain_not_found"),
     path("marketplace/", include(("marketplace.urls", "marketplace"), namespace="marketplace")),
     # User profile
     path("profile/", views.profile, name="profile"),

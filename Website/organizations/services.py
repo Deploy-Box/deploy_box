@@ -10,7 +10,7 @@ from projects.services import create_project
 from accounts.models import UserProfile
 from organizations.models import Organization, OrganizationMember, PendingInvites, ProjectTransferInvitation, ProjectTransferAudit
 from projects.models import Project, ProjectMember
-from payments.services import create_stripe_user
+from payments.services import create_stripe_customer
 from .helpers.email_helpers import invite_org_member
 from .helpers import check_permission
 
@@ -44,12 +44,11 @@ def get_organization(user: UserProfile, organization_id: str) -> Union[Organizat
 
 
 def create_organization(user: UserProfile, name: str, email: str) -> Union[dict, dict]:
-    from payments.services import create_stripe_user
+    from payments.services import create_stripe_customer
 
     try:
         with transaction.atomic():
-            # stripe_customer_id = create_stripe_user(name=name, email=email)
-            stripe_customer_id = '123454'
+            stripe_customer_id = create_stripe_customer(name=name, email=email)
 
             organization = Organization.objects.create(
                             name=name, email=email, stripe_customer_id=stripe_customer_id
@@ -348,8 +347,8 @@ def accept_project_transfer(transfer_id: str, client_user: UserProfile) -> JsonR
             client_organization = client_user.organization
         else:
             # Create new organization for client
-            from payments.services import create_stripe_user
-            stripe_customer_id = create_stripe_user(name=client_user.username, email=client_user.email)
+            from payments.services import create_stripe_customer
+            stripe_customer_id = create_stripe_customer(name=client_user.username, email=client_user.email)
             client_organization = Organization.objects.create(
                 name=f"{client_user.username}'s Organization",
                 email=client_user.email,

@@ -7,6 +7,7 @@ output "key_vault_name" {
   value = local.names.key_vault
   description = "The name of the Key Vault for the app environment."
 }
+
 output "database_name" {
     value = var.database["name"]
     description = "The name of the database."

@@ -1,3 +1,4 @@
+from typing import Iterable
 from django.db import models
 from django.conf import settings
 
@@ -16,7 +17,7 @@ class Organization(models.Model):
             ("consumption", "Consumption"),
         ],
     )
-    stripe_customer_id = models.CharField(max_length=255, blank=True)
+    stripe_customer_id = models.CharField(max_length=255)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -27,6 +28,7 @@ class Organization(models.Model):
         from projects.models import Project
 
         return list(Project.objects.filter(organization=self))
+
 
 class OrganizationMember(models.Model):
     id = ShortUUIDField(primary_key=True)

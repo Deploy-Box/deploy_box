@@ -94,7 +94,7 @@ class StackViewSet(viewsets.ModelViewSet):
             "resources": ResourcesManager.serialize(created_resources)
         }
 
-        services.send_to_azure_function('IAC.CREATE', data)
+        services.send_to_queue('IAC.CREATE', data)
 
         return Response(data, status=status.HTTP_201_CREATED)
  
@@ -129,7 +129,7 @@ class StackViewSet(viewsets.ModelViewSet):
             "stack_id": stack.pk,
         }
 
-        services.send_to_azure_function('IAC.DELETE', data)
+        services.send_to_queue('IAC.DELETE', data)
 
         return Response({"message": "Stack deletion initiated successfully."}, status=status.HTTP_200_OK)
     
@@ -152,7 +152,7 @@ class StackViewSet(viewsets.ModelViewSet):
         }
 
         print(json.dumps(data, indent=2))
-        services.send_to_azure_function('IAC.UPDATE', data)
+        services.send_to_queue('IAC.UPDATE', data)
 
         return Response({"message": "Stack update initiated successfully."}, status=status.HTTP_200_OK)
 
