@@ -14,16 +14,14 @@ if not HOST:
     print("WARTNING: ", HOST)
 
 # SECURITY
-SECRET_KEY = KeyVaultClient().get_secret('deploy-box-django-secret-key', os.getenv("DJANGO_SECRET_KEY"))
+SECRET_KEY = KeyVaultClient().get_secret(
+    "deploy-box-django-secret-key", os.getenv("DJANGO_SECRET_KEY")
+)
 ENV = os.environ.get("ENV", "LOCAL").upper()
 # DEBUG = ENV == "DEV" or ENV == "LOCAL"
-DEBUG = True # TODO: remove eventually
+DEBUG = True  # TODO: remove eventually
 
-ALLOWED_HOSTS = [
-    "deploy-box.com",
-    "dev.deploy-box.com",
-    "host.docker.internal"
-]
+ALLOWED_HOSTS = ["deploy-box.com", "dev.deploy-box.com", "host.docker.internal"]
 if DEBUG:
     ALLOWED_HOSTS.extend(
         [
@@ -59,7 +57,7 @@ INSTALLED_APPS = [
     "payments",
     "blogs",
     "deploy_box_apis",
-    "taggit", # for tagging in blogs
+    "taggit",  # for tagging in blogs
     "django_ckeditor_5",  # for rich text editor in blogs to handle content like images, links, etc.
 ]
 
@@ -217,24 +215,36 @@ LOGOUT_REDIRECT_URL = "/accounts/login/"
 
 #  External Services
 STRIPE = {
-    "PUBLISHABLE_KEY": KeyVaultClient().get_secret("stripe-publishable-key", os.getenv("STRIPE_PUBLISHABLE_KEY")),
-    "SECRET_KEY": KeyVaultClient().get_secret("stripe-secret-key", os.getenv("STRIPE_SECRET_KEY")),
+    "PUBLISHABLE_KEY": KeyVaultClient().get_secret(
+        "stripe-publishable-key", os.getenv("STRIPE_PUBLISHABLE_KEY")
+    ),
+    "SECRET_KEY": KeyVaultClient().get_secret(
+        "stripe-secret-key", os.getenv("STRIPE_SECRET_KEY")
+    ),
     # Prefer Key Vault, fall back to STRIPE_WEBHOOK_SECRET env var if Key Vault unavailable
-    "WEBHOOK_SECRET": KeyVaultClient().get_secret("stripe-webhook-secret", os.environ.get("STRIPE_WEBHOOK_SECRET")),
+    "WEBHOOK_SECRET": KeyVaultClient().get_secret(
+        "stripe-webhook-secret", os.environ.get("STRIPE_WEBHOOK_SECRET")
+    ),
 }
 
 GITHUB = {
     # "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
     # "CLIENT_SECRET": KeyVaultClient().get_secret('deploy-box-github-client-secret', os.getenv("DEPLOY_BOX_GITHUB_CLIENT_SECRET")),
-    "TOKEN_KEY": KeyVaultClient().get_secret("deploy-box-github-token-key", os.getenv("DEPLOY_BOX_GITHUB_TOKEN_KEY")),
+    "TOKEN_KEY": KeyVaultClient().get_secret(
+        "deploy-box-github-token-key", os.getenv("DEPLOY_BOX_GITHUB_TOKEN_KEY")
+    ),
 }
 
 AZURE = {
     # "CLIENT_ID": KeyVaultClient().get_secret("arm-client-id", os.getenv("ARM_CLIENT_ID")),
-    # "CLIENT_SECRET": KeyVaultClient().get_secret("arm-client-secret", os.getenv("ARM_CLIENT_SECRET")), 
+    # "CLIENT_SECRET": KeyVaultClient().get_secret("arm-client-secret", os.getenv("ARM_CLIENT_SECRET")),
     # "TENANT_ID": KeyVaultClient().get_secret("arm-tenant-id", os.getenv("ARM_TENANT_ID")),
-    # "STORAGE_CONNECTION_STRING": KeyVaultClient().get_secret("azure-storage-connection-string", os.getenv("AZURE_STORAGE_CONNECTION_STRING")),
-    # "CONTAINER_NAME": KeyVaultClient().get_secret("container-name", os.getenv("CONTAINER_NAME")),
+    "STORAGE_CONNECTION_STRING": KeyVaultClient().get_secret(
+        "azure-storage-connection-string", os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    ),
+    "CONTAINER_NAME": KeyVaultClient().get_secret(
+        "container-name", os.getenv("CONTAINER_NAME")
+    ),
     # "RESOURCE_GROUP_NAME": KeyVaultClient().get_secret("resource-group-name"),
     # "ACR_PASSWORD": KeyVaultClient().get_secret("acr-password", os.getenv("ACR_PASSWORD")),
 }
@@ -292,55 +302,121 @@ USE_I18N = True
 USE_TZ = True
 
 CKEDITOR_5_CONFIGS = {
-    'default': {
-        'toolbar': {
-            'items': ['heading', '|', 'bold', 'italic', 'link',
-                      'bulletedList', 'numberedList', 'blockQuote', 'imageUpload', ],
-                    },
+    "default": {
+        "toolbar": {
+            "items": [
+                "heading",
+                "|",
+                "bold",
+                "italic",
+                "link",
+                "bulletedList",
+                "numberedList",
+                "blockQuote",
+                "imageUpload",
+            ],
+        },
     },
-    'extends': {
-        'blockToolbar': [
-            'paragraph', 'heading1', 'heading2', 'heading3',
-            '|',
-            'bulletedList', 'numberedList',
-            '|',
-            'blockQuote',
+    "extends": {
+        "blockToolbar": [
+            "paragraph",
+            "heading1",
+            "heading2",
+            "heading3",
+            "|",
+            "bulletedList",
+            "numberedList",
+            "|",
+            "blockQuote",
         ],
-        'toolbar': {
-            'items': ['heading', '|', 'outdent', 'indent', '|', 'bold', 'italic', 'link', 'underline', 'strikethrough',
-                      'code','subscript', 'superscript', 'highlight', '|', 'codeBlock', 'sourceEditing', 'insertImage',
-                    'bulletedList', 'numberedList', 'todoList', '|',  'blockQuote', 'imageUpload', '|',
-                    'fontSize', 'fontFamily', 'fontColor', 'fontBackgroundColor', 'mediaEmbed', 'removeFormat',
-                    'insertTable',
-                    ],
-            'shouldNotGroupWhenFull': 'true'
+        "toolbar": {
+            "items": [
+                "heading",
+                "|",
+                "outdent",
+                "indent",
+                "|",
+                "bold",
+                "italic",
+                "link",
+                "underline",
+                "strikethrough",
+                "code",
+                "subscript",
+                "superscript",
+                "highlight",
+                "|",
+                "codeBlock",
+                "sourceEditing",
+                "insertImage",
+                "bulletedList",
+                "numberedList",
+                "todoList",
+                "|",
+                "blockQuote",
+                "imageUpload",
+                "|",
+                "fontSize",
+                "fontFamily",
+                "fontColor",
+                "fontBackgroundColor",
+                "mediaEmbed",
+                "removeFormat",
+                "insertTable",
+            ],
+            "shouldNotGroupWhenFull": "true",
         },
-        'image': {
-            'toolbar': ['imageTextAlternative', '|', 'imageStyle:alignLeft',
-                        'imageStyle:alignRight', 'imageStyle:alignCenter', 'imageStyle:side',  '|'],
-            'styles': [
-                'full',
-                'side',
-                'alignLeft',
-                'alignRight',
-                'alignCenter',
-            ]
-
+        "image": {
+            "toolbar": [
+                "imageTextAlternative",
+                "|",
+                "imageStyle:alignLeft",
+                "imageStyle:alignRight",
+                "imageStyle:alignCenter",
+                "imageStyle:side",
+                "|",
+            ],
+            "styles": [
+                "full",
+                "side",
+                "alignLeft",
+                "alignRight",
+                "alignCenter",
+            ],
         },
-        'heading' : {
-            'options': [
-                { 'model': 'paragraph', 'title': 'Paragraph', 'class': 'ck-heading_paragraph' },
-                { 'model': 'heading1', 'view': 'h1', 'title': 'Heading 1', 'class': 'ck-heading_heading1' },
-                { 'model': 'heading2', 'view': 'h2', 'title': 'Heading 2', 'class': 'ck-heading_heading2' },
-                { 'model': 'heading3', 'view': 'h3', 'title': 'Heading 3', 'class': 'ck-heading_heading3' }
+        "heading": {
+            "options": [
+                {
+                    "model": "paragraph",
+                    "title": "Paragraph",
+                    "class": "ck-heading_paragraph",
+                },
+                {
+                    "model": "heading1",
+                    "view": "h1",
+                    "title": "Heading 1",
+                    "class": "ck-heading_heading1",
+                },
+                {
+                    "model": "heading2",
+                    "view": "h2",
+                    "title": "Heading 2",
+                    "class": "ck-heading_heading2",
+                },
+                {
+                    "model": "heading3",
+                    "view": "h3",
+                    "title": "Heading 3",
+                    "class": "ck-heading_heading3",
+                },
             ]
+        },
+    },
+    "list": {
+        "properties": {
+            "styles": "true",
+            "startIndex": "true",
+            "reversed": "true",
         }
     },
-    'list': {
-        'properties': {
-            'styles': 'true',
-            'startIndex': 'true',
-            'reversed': 'true',
-        }
-    }
 }

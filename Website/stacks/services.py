@@ -282,12 +282,9 @@ def upload_source_code(request: HttpRequest, stack_id: str) -> JsonResponse:
         # upload_blob accepts a file-like object or bytes
         blob_client.upload_blob(file_stream, overwrite=True)
 
-        stack = Stack.objects.get(id=stack_id)
+        # stack = Stack.objects.get(id=stack_id)
 
-        stack_manager = get_stack_manager(stack)
-        stack_manager.set_source_code_upload()
-
-        update_stack(stack_id=stack_id, source_code_path=blob_name)
+        # update_stack(stack_id=stack_id, source_code_path=blob_name)
 
         return JsonResponse(
             {"success": True, "blob_name": blob_name, "blob_url": blob_client.url},
