@@ -33,7 +33,7 @@ from stacks.resources.resources_manager import ResourcesManager, create_filtered
 from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
 
 class StackViewSet(viewsets.ModelViewSet):
-    queryset = Stack.objects.exclude(status="DELETED")
+    queryset = Stack.objects.exclude(status="Deleted")
     serializer_class = StackSerializer
     # permission_classes = [permissions.IsAuthenticated]
     filter_backends = [filters.SearchFilter]
@@ -91,6 +91,8 @@ class StackViewSet(viewsets.ModelViewSet):
 
         data = {
             "stack_id": stack.pk,
+            "initial_source_code_zip_blob_name": "mobile.zip",
+            # "source_code_location": stack.purchased_stack.source_code_location,
             "resources": ResourcesManager.serialize(created_resources)
         }
 
@@ -181,7 +183,7 @@ class StackViewSet(viewsets.ModelViewSet):
                 }
                 services[f"{subdomain}-root"] = {
                     "loadBalancer": {
-                        "servers": [{"url": edge.root_base_url}],
+                        "servers": [{"url": edge.resolved_root_base_url}],
                         "passHostHeader": False,
                     }
                 }
@@ -197,7 +199,7 @@ class StackViewSet(viewsets.ModelViewSet):
                 }
                 services[f"{subdomain}-api"] = {
                     "loadBalancer": {
-                        "servers": [{"url": edge.api_base_url}],
+                        "servers": [{"url": edge.resolved_api_base_url}],
                         "passHostHeader": False,
                     }
                 }

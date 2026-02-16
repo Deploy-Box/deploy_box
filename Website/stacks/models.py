@@ -17,6 +17,7 @@ class PurchasableStack(models.Model):
     name = models.CharField(default="this is a stack", max_length=128)
     prebuilt_quantity = models.PositiveIntegerField(default=0, help_text="Number of prebuilt stacks available for immediate use")
     stack_infrastructure = models.JSONField(default=dict, blank=True)
+    source_code_location = models.CharField(max_length=255, default="", blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
