@@ -126,6 +126,24 @@
   </div>
 </section>
 
+<!-- Upload status toast (hidden by default) -->
+<div id="upload-toast" class="hidden fixed bottom-6 right-6 z-50 max-w-sm w-full bg-white border border-gray-200 rounded-lg shadow-xl p-4 transition-all duration-300">
+  <div class="flex items-start">
+    <div id="upload-toast-icon" class="flex-shrink-0 mr-3">
+      <!-- icon injected by JS -->
+    </div>
+    <div class="flex-1">
+      <p id="upload-toast-title" class="text-sm font-semibold text-gray-900"></p>
+      <p id="upload-toast-message" class="text-sm text-gray-500 mt-1"></p>
+      <!-- progress bar (visible only while uploading) -->
+      <div id="upload-progress-wrapper" class="hidden mt-2 w-full bg-gray-200 rounded-full h-2">
+        <div id="upload-progress-bar" class="bg-emerald-500 h-2 rounded-full transition-all duration-200" style="width:0%"></div>
+      </div>
+    </div>
+    <button id="upload-toast-close" class="ml-3 text-gray-400 hover:text-gray-600">&times;</button>
+  </div>
+</div>
+
 <!-- Stack Actions JavaScript -->
 <!-- JSZip CDN (load without SRI to avoid integrity mismatch preventing load) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.0/jszip.min.js"></script>
@@ -134,38 +152,161 @@
   (function() {
     const folderInput = document.getElementById('folder-input');
     const uploadBtn = document.getElementById('upload-folder-btn');
+    const buttonText = uploadBtn.querySelector('.button-text');
     const loadingSpinner = uploadBtn.querySelector('.loading-spinner');
 
+    // Maximum total raw size before zipping (100 MB, must match backend MAX_UPLOAD_SIZE_BYTES)
+    const MAX_RAW_SIZE_BYTES = 100 * 1024 * 1024;
+
+    // ---- Toast helpers ----
+    const toast        = document.getElementById('upload-toast');
+    const toastIcon    = document.getElementById('upload-toast-icon');
+    const toastTitle   = document.getElementById('upload-toast-title');
+    const toastMessage = document.getElementById('upload-toast-message');
+    const toastClose   = document.getElementById('upload-toast-close');
+    const progressWrap = document.getElementById('upload-progress-wrapper');
+    const progressBar  = document.getElementById('upload-progress-bar');
+    let toastTimer = null;
+
+    const ICONS = {
+      success: '<svg class="w-6 h-6 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>',
+      error:   '<svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>',
+      info:    '<svg class="w-6 h-6 text-blue-500 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>',
+    };
+
+    function showToast(type, title, message, autoDismiss = 0) {
+      clearTimeout(toastTimer);
+      toastIcon.innerHTML = ICONS[type] || '';
+      toastTitle.textContent = title;
+      toastMessage.textContent = message || '';
+      progressWrap.classList.add('hidden');
+      toast.classList.remove('hidden');
+      if (autoDismiss > 0) {
+        toastTimer = setTimeout(() => toast.classList.add('hidden'), autoDismiss);
+      }
+    }
+
+    function showProgress(pct) {
+      progressWrap.classList.remove('hidden');
+      progressBar.style.width = `${Math.min(100, Math.round(pct))}%`;
+    }
+
+    toastClose.addEventListener('click', () => toast.classList.add('hidden'));
+
+    // ---- Utilities ----
     function getCookie(name) {
       const value = `; ${document.cookie}`;
       const parts = value.split(`; ${name}=`);
       if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
+    function formatBytes(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+    }
+
+    // Directories and files to exclude from uploads
+    const IGNORED_DIRS = new Set([
+      'node_modules', 'venv', '.venv', 'env', '.env',
+      '__pycache__', '.git', '.hg', '.svn',
+      '.tox', '.nox', '.mypy_cache', '.pytest_cache',
+      '.ruff_cache', 'dist', 'build', '.eggs',
+      '*.egg-info', '.next', '.nuxt', '.output',
+      'vendor', 'bower_components', '.terraform',
+      '.gradle', 'target', 'bin', 'obj',
+    ]);
+
+    const IGNORED_FILES = new Set([
+      '.DS_Store', 'Thumbs.db', 'desktop.ini',
+      '.env', '.env.local', '.env.production',
+    ]);
+
+    function shouldIgnore(pathParts) {
+      for (const part of pathParts) {
+        if (IGNORED_DIRS.has(part) || part.endsWith('.egg-info')) return true;
+      }
+      const fileName = pathParts[pathParts.length - 1];
+      if (IGNORED_FILES.has(fileName)) return true;
+      if (fileName.endsWith('.pyc') || fileName.endsWith('.pyo')) return true;
+      return false;
+    }
+
+    // ---- Core upload logic ----
+    function setUploading(active) {
+      if (active) {
+        loadingSpinner.classList.remove('hidden');
+        buttonText.textContent = 'Uploading…';
+        uploadBtn.disabled = true;
+        uploadBtn.classList.add('opacity-60', 'cursor-not-allowed');
+      } else {
+        loadingSpinner.classList.add('hidden');
+        buttonText.textContent = 'Upload Source Code';
+        uploadBtn.disabled = false;
+        uploadBtn.classList.remove('opacity-60', 'cursor-not-allowed');
+        // Reset input so the same folder can be re-selected
+        folderInput.value = '';
+      }
+    }
+
     async function zipAndUpload(files, uploadUrl) {
       const zip = new JSZip();
+      let skipped = 0;
+      let totalRawSize = 0;
+      let processed = 0;
+
+      showToast('info', 'Preparing upload…', `Processing ${files.length} file(s)…`);
+      showProgress(0);
 
       for (const file of files) {
-        // file.webkitRelativePath preserves folder structure in Chrome/Edge
-        // Remove the parent folder from the path to zip only the contents
         let path = file.webkitRelativePath || file.name;
         if (file.webkitRelativePath) {
-          // Split the path and remove the first component (parent folder)
           const pathParts = path.split('/');
           if (pathParts.length > 1) {
             path = pathParts.slice(1).join('/');
           }
         }
+
+        if (shouldIgnore(path.split('/'))) {
+          skipped++;
+          processed++;
+          continue;
+        }
+
+        totalRawSize += file.size;
+        if (totalRawSize > MAX_RAW_SIZE_BYTES) {
+          throw new Error(`Total file size exceeds ${formatBytes(MAX_RAW_SIZE_BYTES)}. Please reduce the folder size and try again.`);
+        }
+
         const arrayBuffer = await file.arrayBuffer();
         zip.file(path, arrayBuffer);
+
+        processed++;
+        showProgress((processed / files.length) * 50);  // first 50% = reading files
       }
 
-      const content = await zip.generateAsync({ type: 'blob' });
+      if (skipped > 0) {
+        console.log(`Skipped ${skipped} ignored file(s) during upload.`);
+      }
+
+      if (processed - skipped === 0) {
+        throw new Error('No files to upload after filtering. Check that the folder is not empty or entirely excluded.');
+      }
+
+      showToast('info', 'Compressing…', `Zipping ${processed - skipped} file(s) (${formatBytes(totalRawSize)})…`);
+      showProgress(55);
+
+      const content = await zip.generateAsync(
+        { type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } },
+        (meta) => showProgress(55 + (meta.percent / 100) * 30)  // 55-85% = zip generation
+      );
+
+      showToast('info', 'Uploading…', `Sending ${formatBytes(content.size)} to server…`);
+      showProgress(90);
 
       const formData = new FormData();
       formData.append('source_zip', content, 'source.zip');
 
-      // include CSRF token if available as cookie
       const csrftoken = getCookie('csrftoken');
 
       const resp = await fetch(uploadUrl, {
@@ -174,6 +315,7 @@
         headers: csrftoken ? { 'X-CSRFToken': csrftoken } : {}
       });
 
+      showProgress(100);
       return resp;
     }
 
@@ -187,16 +329,30 @@
       if (!files.length) return;
 
       const uploadUrl = uploadBtn.getAttribute('data-upload-url');
-
-      // show spinner
-      loadingSpinner.classList.remove('hidden');
-      uploadBtn.disabled = true;
+      setUploading(true);
 
       try {
         const resp = await zipAndUpload(files, uploadUrl);
+
         if (!resp.ok) {
-          const text = await resp.text().catch(() => resp.statusText);
-          alert('Upload failed: ' + (text || resp.status));
+          let errorMsg = `Server returned ${resp.status}`;
+          try {
+            const body = await resp.json();
+            errorMsg = body.error || errorMsg;
+          } catch {
+            const text = await resp.text().catch(() => '');
+            if (text) errorMsg = text;
+          }
+          showToast('error', 'Upload failed', errorMsg, 8000);
         } else {
-          alert('Upload successful');
-          // optionally refresh or handle UI
+          showToast('success', 'Upload successful', 'Your source code has been uploaded and a deployment has been triggered.', 5000);
+        }
+      } catch (err) {
+        console.error('Upload error:', err);
+        showToast('error', 'Upload failed', err.message || 'An unexpected error occurred.', 8000);
+      } finally {
+        setUploading(false);
+      }
+    });
+  })();
+</script>

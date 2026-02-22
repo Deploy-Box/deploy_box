@@ -239,9 +239,10 @@ AZURE = {
     # "CLIENT_ID": KeyVaultClient().get_secret("arm-client-id", os.getenv("ARM_CLIENT_ID")),
     # "CLIENT_SECRET": KeyVaultClient().get_secret("arm-client-secret", os.getenv("ARM_CLIENT_SECRET")),
     # "TENANT_ID": KeyVaultClient().get_secret("arm-tenant-id", os.getenv("ARM_TENANT_ID")),
-    "STORAGE_CONNECTION_STRING": KeyVaultClient().get_secret(
-        "azure-storage-connection-string", os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    ),
+    "STORAGE_CONNECTION_STRING": os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
+    # KeyVaultClient().get_secret(
+    #     "azure-storage-connection-string", os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+    # ),
     "CONTAINER_NAME": KeyVaultClient().get_secret(
         "container-name", os.getenv("CONTAINER_NAME")
     ),

@@ -311,7 +311,7 @@ class DashboardView(View):
                 # User doesn't have permission to delete
                 pass  # Could add error handling here
 
-        stacks = Stack.objects.filter(project_id=project_id).exclude(status="DELETED")
+        stacks = Stack.objects.filter(project_id=project_id).exclude(status="Deleted")
 
         # Check if user is admin of the project
         is_admin = ProjectMember.objects.filter(user=user, project=project, role='admin').exists()
