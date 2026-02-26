@@ -14,7 +14,6 @@ import base64
 
 from stacks.stack_managers.get_manager import get_stack_manager
 from stacks.resources.resources_manager import ResourcesManager
-from accounts.forms import CustomUserCreationForm
 from accounts.models import UserProfile
 from organizations.models import Organization, OrganizationMember, PendingInvites, ProjectTransferInvitation
 from organizations.forms import (
@@ -1454,70 +1453,20 @@ class PaymentView(View):
 
 
 class AuthView(View):
-    """Class-based view for all authentication-related functionality."""
+    """Class-based view for all authentication-related functionality.
+    All auth flows go through WorkOS AuthKit."""
 
     def login(self, request: HttpRequest) -> HttpResponse:
-        """Login view."""
-        return render(request, "accounts/login.html", {})
-
-    def password_reset(self, request: HttpRequest) -> HttpResponse:
-        """Password reset view."""
-        return render(request, "accounts/password_reset.html", {})
-
-    def password_reset_confirm(self, request: HttpRequest, uidb64: str, token: str) -> HttpResponse:
-        """Password reset confirm view."""
-        return render(
-            request,
-            "accounts/password_reset_confirm.html",
-            {"uidb64": uidb64, "token": token},
-        )
+        """Redirect to WorkOS AuthKit for login."""
+        next_url = request.GET.get('next', '')
+        workos_url = '/api/v1/accounts/oauth/workos/'
+        if next_url:
+            workos_url += f'?state={next_url}'
+        return redirect(workos_url)
 
     def signup(self, request: HttpRequest) -> HttpResponse:
-        """Signup view."""
-        # Handle both 'invite' and 'invite_id' parameters for backward compatibility
-        invite_id = request.GET.get('invite_id') or request.GET.get('invite')
-        transfer_id = request.GET.get('transfer_id')
-        invite_data = None
-        transfer_data = None
-
-        if invite_id:
-            try:
-                pending_invite = PendingInvites.objects.get(id=invite_id)
-                invite_data = {
-                    'invite_id': invite_id,
-                    'organization_name': pending_invite.organization.name,
-                    'organization_email': pending_invite.organization.email,
-                    'invite_email': pending_invite.email
-                }
-                
-                # If there's also a transfer_id, get transfer data
-                if transfer_id:
-                    try:
-                        transfer_invitation = ProjectTransferInvitation.objects.get(id=transfer_id, status="pending")
-                        transfer_data = {
-                            'transfer_id': transfer_id,
-                            'project_name': transfer_invitation.project.name,
-                            'developer_name': transfer_invitation.from_organization.name,
-                            'keep_developer': transfer_invitation.keep_developer,
-                            'expires_at': transfer_invitation.expires_at.strftime('%B %d, %Y')
-                        }
-                    except ProjectTransferInvitation.DoesNotExist:
-                        # Invalid transfer ID - will be handled in template
-                        pass
-                        
-            except PendingInvites.DoesNotExist:
-                # Invalid invite ID - will be handled in template
-                pass
-
-        return render(request, "accounts/signup.html", {
-            "form": CustomUserCreationForm,
-            "invite_data": invite_data,
-            "transfer_data": transfer_data
-        })
-
-    def logout(self, request: HttpRequest) -> HttpResponse:
-        """Logout view."""
-        return render(request, "accounts/logout.html", {})
+        """Redirect to WorkOS AuthKit for signup."""
+        return redirect('/api/v1/accounts/oauth/workos/')
     
 class ExamplesView(View):
     def example_organization_members(self, request: HttpRequest) -> HttpResponse:

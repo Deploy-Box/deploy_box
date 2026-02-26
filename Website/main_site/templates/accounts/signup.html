@@ -220,8 +220,8 @@
             <div class="pb-6 px-8">
                 {% include 'accounts/components/form_divider.html' with divider_text='Or sign up with' %}
 
-                <div class="oauth-buttons-disabled mt-4" title="OAuth signup coming soon">
-                    {% include 'accounts/components/oauth_buttons.html' with google_button_id='google-signup' github_button_id='github-signup' %}
+                <div class="mt-4">
+                    {% include 'accounts/components/oauth_buttons.html' %}
                 </div>
             </div>
         </div>
@@ -240,14 +240,7 @@
     </div>
 
   <style>
-    .oauth-buttons-disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      position: relative;
-    }
-    .oauth-buttons-disabled button, .oauth-buttons-disabled a {
-      pointer-events: none;
-    }
+    /* Styles for auth page */
   </style>
 
 <script>

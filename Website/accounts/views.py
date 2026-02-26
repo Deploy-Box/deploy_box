@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from accounts.models import UserProfile
 from accounts.serializers.UserCreationSerializer import UserCreationSerializer
 from organizations.models import PendingInvites, OrganizationMember, Organization
@@ -11,6 +11,7 @@ from core.decorators.oauth_required import oauth_required
 import requests
 import logging
 from django.utils import timezone
+from workos import WorkOSClient
 
 logger = logging.getLogger(__name__)
 
@@ -255,67 +256,46 @@ class SignupAPIView(APIView):
 
 
 class LogoutAPIView(APIView):
-    def post(self, request):
-        logout(request)
-        return Response({"detail": "Logged out successfully"}, status=status.HTTP_200_OK)
-
-
-class OAuthPasswordLoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        username = request.data.get("username")
-        password = request.data.get("password")
+        # Capture WorkOS session ID before clearing the Django session
+        workos_session_id = request.session.get("workos_session_id")
 
-        logger.info(f"Login attempt for user: {username}")
+        # Revoke the OAuth AccessToken stored in the session
+        access_token = request.session.get("access_token")
+        if access_token:
+            try:
+                from oauth2_provider.models import AccessToken
+                AccessToken.objects.filter(token=access_token).delete()
+                logger.info("OAuth AccessToken revoked during logout")
+            except Exception as e:
+                logger.warning(f"Failed to revoke AccessToken on logout: {e}")
 
-        user = authenticate(request, username=username, password=password)
-        if user is None:
-            logger.warning(f"Authentication failed for user: {username}")
-            return Response({"detail": "Invalid credentials"}, status=400)
+        logout(request)
 
-        logger.info(f"User authenticated successfully: {username}")
-        login(request, user)
+        # Build a WorkOS logout URL so the frontend can clear the AuthKit session
+        workos_logout_url = None
+        if workos_session_id:
+            try:
+                workos_client = WorkOSClient(
+                    api_key=settings.WORKOS["API_KEY"],
+                    client_id=settings.WORKOS["CLIENT_ID"],
+                )
+                workos_logout_url = workos_client.user_management.get_logout_url(
+                    session_id=workos_session_id,
+                    return_to=settings.HOST,
+                )
+            except Exception as e:
+                logger.warning(f"Failed to build WorkOS logout URL: {e}")
 
-        token_url = settings.OAUTH2_PASSWORD_CREDENTIALS["token_url"]
-        client_id = settings.OAUTH2_PASSWORD_CREDENTIALS["client_id"]
-        client_secret = settings.OAUTH2_PASSWORD_CREDENTIALS["client_secret"]
-
-        payload = {
-            "grant_type": "password",
-            "username": username,
-            "password": password,
-            "client_id": client_id,
-            "client_secret": client_secret,
-        }
-
-        logger.info(f"Requesting OAuth token from: {token_url}")
-        token_response = requests.post(token_url, data=payload)
-        if token_response.status_code != 200:
-            logger.error(
-                f"Token request failed: {token_response.status_code} - {token_response.text}"
-            )
-            print("Token request failed:")
-            print("Status Code:", token_response.status_code)
-            print("Response Body:", token_response.text)
-            return Response({"detail": "Token request failed"}, status=400)
-
-        # Store token in session for web views
-        token_data = token_response.json()
-        logger.info(f"Token received successfully for user: {username}")
-        logger.info(f"Token data keys: {list(token_data.keys())}")
-
-        request.session["access_token"] = token_data.get("access_token")
-        request.session["refresh_token"] = token_data.get("refresh_token")
-        request.session.modified = True
-
-        logger.info(f"Session access_token stored: {'access_token' in request.session}")
-        logger.info(
-            f"Session refresh_token stored: {'refresh_token' in request.session}"
+        return Response(
+            {"detail": "Logged out successfully", "logout_url": workos_logout_url},
+            status=status.HTTP_200_OK,
         )
-        logger.info(f"Session modified flag: {request.session.modified}")
 
-        return Response(token_data)
+
+
 
 
 class OAuthClientCredentialsView(APIView):
@@ -471,156 +451,6 @@ class ProfileAPIView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class PasswordResetAPIView(APIView):
-    """API view for password reset functionality."""
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        """Send password reset email."""
-        email = request.data.get('email')
-
-        if not email:
-            return Response({
-                "success": False,
-                "error": "Email is required"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            # Check if user exists
-            user = UserProfile.objects.filter(email=email).first()
-            if not user:
-                # Don't reveal if email exists or not for security
-                return Response({
-                    "success": True,
-                    "message": "If an account with that email exists, a password reset link has been sent."
-                })
-
-            # Use Django's built-in password reset functionality
-            from django.contrib.auth.forms import PasswordResetForm
-            from django.contrib.auth.tokens import default_token_generator
-            from django.core.mail import send_mail
-            from django.template.loader import render_to_string
-            from django.utils.http import urlsafe_base64_encode
-            from django.utils.encoding import force_bytes
-
-            # Generate password reset token
-            token = default_token_generator.make_token(user)
-            uid = urlsafe_base64_encode(force_bytes(user.pk))
-
-            # Create reset URL
-            reset_url = request.build_absolute_uri(
-                f'/password_reset/confirm/{uid}/{token}/'
-            )
-
-            # Send email
-            subject = "Password Reset Request"
-            message = f"""
-            Hello {user.username},
-
-            You requested a password reset for your account. Please click the link below to reset your password:
-
-            {reset_url}
-
-            If you didn't request this, please ignore this email.
-
-            Best regards,
-            DeployBox Team
-            """
-
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,  # Use configured email
-                [email],
-                fail_silently=False,
-            )
-
-            return Response({
-                "success": True,
-                "message": "Password reset email sent successfully"
-            })
-
-        except Exception as e:
-            logger.error(f"Password reset error: {e}")
-            return Response({
-                "success": False,
-                "error": "Failed to send password reset email"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-
-class PasswordResetConfirmAPIView(APIView):
-    """API view for password reset confirmation with token."""
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request, uidb64, token):
-        """Process password reset with token."""
-        new_password1 = request.data.get('new_password1')
-        new_password2 = request.data.get('new_password2')
-
-        if not new_password1 or not new_password2:
-            return Response({
-                "success": False,
-                "error": "Both password fields are required"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        if new_password1 != new_password2:
-            return Response({
-                "success": False,
-                "error": "Passwords do not match"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            from django.contrib.auth.tokens import default_token_generator
-            from django.utils.http import urlsafe_base64_decode
-            from django.utils.encoding import force_str
-            from django.contrib.auth.password_validation import validate_password
-            from django.core.exceptions import ValidationError
-
-            # Decode the user ID
-            try:
-                uid = force_str(urlsafe_base64_decode(uidb64))
-                user = UserProfile.objects.get(pk=uid)
-            except (TypeError, ValueError, OverflowError, UserProfile.DoesNotExist):
-                user = None
-
-            if user is None:
-                return Response({
-                    "success": False,
-                    "error": "Invalid reset link"
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Check if the token is valid
-            if not default_token_generator.check_token(user, token):
-                return Response({
-                    "success": False,
-                    "error": "Invalid or expired reset link"
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Validate the new password
-            try:
-                validate_password(new_password1, user)
-            except ValidationError as e:
-                return Response({
-                    "success": False,
-                    "error": "Password validation failed",
-                    "details": list(e.messages)
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Set the new password
-            user.set_password(new_password1)
-            user.save()
-
-            return Response({
-                "success": True,
-                "message": "Password has been reset successfully"
-            })
-
-        except Exception as e:
-            logger.error(f"Password reset confirmation error: {e}")
-            return Response({
-                "success": False,
-                "error": "Failed to reset password"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DeleteAccountAPIView(APIView):
@@ -655,236 +485,204 @@ class DeleteAccountAPIView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class GoogleOAuthInitiateView(APIView):
-    """Initiate Google OAuth flow."""
-    
+class WorkOSAuthInitiateView(APIView):
+    """Initiate WorkOS AuthKit SSO flow."""
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
-        """Redirect user to Google OAuth consent screen."""
+        """Redirect user to WorkOS AuthKit hosted login."""
         try:
-            google_client_id = settings.GOOGLE_OAUTH_CLIENT_ID
-            redirect_uri = request.GET.get('redirect_uri', settings.GOOGLE_OAUTH_REDIRECT_URI)
-            state = request.GET.get('state', '')
-            
-            auth_url = (
-                f"https://accounts.google.com/o/oauth2/v2/auth?"
-                f"client_id={google_client_id}&"
-                f"redirect_uri={redirect_uri}&"
-                f"response_type=code&"
-                f"scope=openid%20email%20profile&"
-                f"state={state}"
+            workos_client = WorkOSClient(
+                api_key=settings.WORKOS["API_KEY"],
+                client_id=settings.WORKOS["CLIENT_ID"],
             )
-            
+
+            redirect_uri = settings.WORKOS["REDIRECT_URI"]
+            state = request.GET.get("state", "")
+
+            authorization_url = workos_client.user_management.get_authorization_url(
+                provider="authkit",
+                redirect_uri=redirect_uri,
+                state=state or None,
+            )
+
             from django.shortcuts import redirect
-            return redirect(auth_url)
-            
+            return redirect(authorization_url)
+
         except Exception as e:
-            logger.error(f"Google OAuth initiation error: {e}")
-            return Response({
-                "error": "Failed to initiate Google OAuth"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"WorkOS auth initiation error: {e}")
+            return Response(
+                {"error": "Failed to initiate WorkOS authentication"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
-class GoogleOAuthCallbackView(APIView):
-    """Handle Google OAuth callback."""
-    
+class WorkOSAuthCallbackView(APIView):
+    """Handle WorkOS AuthKit callback."""
+    permission_classes = [permissions.AllowAny]
+
     def get(self, request):
-        """Exchange authorization code for access token and authenticate user."""
+        """Exchange authorization code for user profile, get-or-create local user, mint DOT token, redirect."""
         try:
-            code = request.GET.get('code')
-            state = request.GET.get('state', '')
-            
+            code = request.GET.get("code")
+            state = request.GET.get("state", "")
+
             if not code:
-                return Response({
-                    "error": "Authorization code not provided"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Exchange code for access token
-            token_url = "https://oauth2.googleapis.com/token"
-            token_data = {
-                'code': code,
-                'client_id': settings.GOOGLE_OAUTH_CLIENT_ID,
-                'client_secret': settings.GOOGLE_OAUTH_CLIENT_SECRET,
-                'redirect_uri': settings.GOOGLE_OAUTH_REDIRECT_URI,
-                'grant_type': 'authorization_code'
-            }
-            
-            token_response = requests.post(token_url, data=token_data)
-            token_json = token_response.json()
-            
-            if not token_response.ok:
-                logger.error(f"Google token exchange failed: {token_json}")
-                return Response({
-                    "error": "Failed to exchange authorization code"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            access_token = token_json.get('access_token')
-            
-            # Get user info from Google
-            user_info_url = "https://www.googleapis.com/oauth2/v2/userinfo"
-            headers = {'Authorization': f'Bearer {access_token}'}
-            user_info_response = requests.get(user_info_url, headers=headers)
-            user_info = user_info_response.json()
-            
-            if not user_info_response.ok:
-                logger.error(f"Failed to get Google user info: {user_info}")
-                return Response({
-                    "error": "Failed to get user information"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Get or create user
-            email = user_info.get('email')
-            given_name = user_info.get('given_name', '')
-            family_name = user_info.get('family_name', '')
-            
-            user, created = UserProfile.objects.get_or_create(
-                email=email,
-                defaults={
-                    'username': email.split('@')[0],
-                    'first_name': given_name,
-                    'last_name': family_name,
-                }
+                logger.warning("WorkOS callback missing authorization code")
+                return Response(
+                    {"error": "Authorization code not provided"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # ── Exchange code for user info via WorkOS SDK ──
+            workos_client = WorkOSClient(
+                api_key=settings.WORKOS["API_KEY"],
+                client_id=settings.WORKOS["CLIENT_ID"],
             )
-            
-            # Log the user in
-            login(request, user)
-            
-            # Generate OAuth token for the user
-            token_url = settings.OAUTH2_PASSWORD_CREDENTIALS["token_url"]
-            client_id = settings.OAUTH2_PASSWORD_CREDENTIALS["client_id"]
-            client_secret = settings.OAUTH2_PASSWORD_CREDENTIALS["client_secret"]
-            
-            # For OAuth social login, we'll create a session-based token
-            # Redirect to dashboard or state URL
-            from django.shortcuts import redirect
-            redirect_url = state if state else '/dashboard/'
-            return redirect(redirect_url)
-            
-        except Exception as e:
-            logger.error(f"Google OAuth callback error: {e}")
-            return Response({
-                "error": "Failed to complete Google OAuth"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-
-class GitHubOAuthInitiateView(APIView):
-    """Initiate GitHub OAuth flow."""
-    
-    def get(self, request):
-        """Redirect user to GitHub OAuth authorization."""
-        try:
-            github_client_id = settings.GITHUB_OAUTH_CLIENT_ID
-            redirect_uri = request.GET.get('redirect_uri', settings.GITHUB_OAUTH_REDIRECT_URI)
-            state = request.GET.get('state', '')
-            
-            auth_url = (
-                f"https://github.com/login/oauth/authorize?"
-                f"client_id={github_client_id}&"
-                f"redirect_uri={redirect_uri}&"
-                f"scope=user:email&"
-                f"state={state}"
+            auth_response = workos_client.user_management.authenticate_with_code(
+                code=code,
+                session=None,
             )
-            
-            from django.shortcuts import redirect
-            return redirect(auth_url)
-            
-        except Exception as e:
-            logger.error(f"GitHub OAuth initiation error: {e}")
-            return Response({
-                "error": "Failed to initiate GitHub OAuth"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
+            workos_user = auth_response.user
+            workos_user_id = workos_user.id
+            email = workos_user.email
+            first_name = workos_user.first_name or ""
+            last_name = workos_user.last_name or ""
 
-class GitHubOAuthCallbackView(APIView):
-    """Handle GitHub OAuth callback."""
-    
-    def get(self, request):
-        """Exchange authorization code for access token and authenticate user."""
-        try:
-            code = request.GET.get('code')
-            state = request.GET.get('state', '')
-            
-            if not code:
-                return Response({
-                    "error": "Authorization code not provided"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Exchange code for access token
-            token_url = "https://github.com/login/oauth/access_token"
-            token_data = {
-                'client_id': settings.GITHUB_OAUTH_CLIENT_ID,
-                'client_secret': settings.GITHUB_OAUTH_CLIENT_SECRET,
-                'code': code,
-                'redirect_uri': settings.GITHUB_OAUTH_REDIRECT_URI,
-            }
-            
-            headers = {'Accept': 'application/json'}
-            token_response = requests.post(token_url, data=token_data, headers=headers)
-            token_json = token_response.json()
-            
-            if not token_response.ok or 'access_token' not in token_json:
-                logger.error(f"GitHub token exchange failed: {token_json}")
-                return Response({
-                    "error": "Failed to exchange authorization code"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            access_token = token_json.get('access_token')
-            
-            # Get user info from GitHub
-            user_info_url = "https://api.github.com/user"
-            headers = {
-                'Authorization': f'Bearer {access_token}',
-                'Accept': 'application/json'
-            }
-            user_info_response = requests.get(user_info_url, headers=headers)
-            user_info = user_info_response.json()
-            
-            if not user_info_response.ok:
-                logger.error(f"Failed to get GitHub user info: {user_info}")
-                return Response({
-                    "error": "Failed to get user information"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Get user email from GitHub (may require separate call)
-            email = user_info.get('email')
             if not email:
-                email_url = "https://api.github.com/user/emails"
-                email_response = requests.get(email_url, headers=headers)
-                emails = email_response.json()
-                
-                if email_response.ok and isinstance(emails, list) and len(emails) > 0:
-                    # Get primary email
-                    primary_email = next((e for e in emails if e.get('primary')), emails[0])
-                    email = primary_email.get('email')
-            
-            if not email:
-                return Response({
-                    "error": "Email not available from GitHub"
-                }, status=status.HTTP_400_BAD_REQUEST)
-            
-            # Get or create user
-            username = user_info.get('login', email.split('@')[0])
-            name = user_info.get('name', '')
-            name_parts = name.split(' ', 1) if name else ['', '']
-            
-            user, created = UserProfile.objects.get_or_create(
-                email=email,
-                defaults={
-                    'username': username,
-                    'first_name': name_parts[0] if len(name_parts) > 0 else '',
-                    'last_name': name_parts[1] if len(name_parts) > 1 else '',
-                }
-            )
-            
-            # Log the user in
+                logger.error("WorkOS user has no email address")
+                return Response(
+                    {"error": "Email not available from WorkOS"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            # ── Get-or-create local UserProfile ──
+            # First try matching by workos_user_id, then by email
+            user = UserProfile.objects.filter(workos_user_id=workos_user_id).first()
+
+            if not user:
+                user = UserProfile.objects.filter(email=email).first()
+                if user:
+                    # Link existing account to WorkOS
+                    user.workos_user_id = workos_user_id
+                    user.auth_provider = "workos"
+                    user.save(update_fields=["workos_user_id", "auth_provider"])
+                    logger.info(f"Linked existing user {user.username} to WorkOS ID {workos_user_id}")
+
+            if not user:
+                # Create a brand-new user
+                base_username = email.split("@")[0]
+                username = base_username
+                counter = 1
+                while UserProfile.objects.filter(username=username).exists():
+                    username = f"{base_username}{counter}"
+                    counter += 1
+
+                user = UserProfile.objects.create_user(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    workos_user_id=workos_user_id,
+                    auth_provider="workos",
+                )
+                # Set an unusable password — this user authenticates via WorkOS
+                user.set_unusable_password()
+                user.save()
+                logger.info(f"Created new user {username} via WorkOS")
+
+                # Check for pending org invites for this email
+                try:
+                    invite = PendingInvites.objects.filter(email=email).first()
+                    if invite:
+                        OrganizationMember.objects.create(
+                            user=user,
+                            organization=invite.organization,
+                            role="member",
+                        )
+                        invite.delete()
+                        logger.info(f"Auto-joined user {username} to org via pending invite")
+                except Exception as inv_err:
+                    logger.error(f"Error processing pending invite for WorkOS user: {inv_err}")
+
+            # ── Extract WorkOS session ID from the access token JWT ──
+            try:
+                import jwt as pyjwt
+                decoded = pyjwt.decode(
+                    auth_response.access_token,
+                    options={"verify_signature": False},
+                )
+                workos_session_id = decoded.get("sid")
+            except Exception as jwt_err:
+                logger.warning(f"Could not decode WorkOS access_token JWT: {jwt_err}")
+                workos_session_id = None
+
+            # ── Django login ──
             login(request, user)
-            
-            # Redirect to dashboard or state URL
+
+            # ── Store WorkOS session ID so we can build a logout URL later ──
+            if workos_session_id:
+                request.session["workos_session_id"] = workos_session_id
+
+            # ── Mint a django-oauth-toolkit AccessToken so oauth_required works ──
+            self._store_dot_token(request, user)
+
+            # ── Redirect ──
             from django.shortcuts import redirect
-            redirect_url = state if state else '/dashboard/'
+            redirect_url = state if state else "/dashboard/"
             return redirect(redirect_url)
-            
+
         except Exception as e:
-            logger.error(f"GitHub OAuth callback error: {e}")
-            return Response({
-                "error": "Failed to complete GitHub OAuth"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            logger.error(f"WorkOS callback error: {e}", exc_info=True)
+            from django.shortcuts import redirect
+            return redirect("/accounts/login/?error=workos_auth_failed")
+
+    @staticmethod
+    def _store_dot_token(request, user):
+        """
+        Create a django-oauth-toolkit AccessToken + RefreshToken for the user
+        and store them in the session so the existing oauth_required decorator
+        continues to work seamlessly.
+        """
+        from oauth2_provider.models import AccessToken, RefreshToken, Application
+        from oauthlib.common import generate_token
+        from datetime import timedelta
+
+        try:
+            # Use the password-credentials application for consistency
+            client_id = settings.OAUTH2_PASSWORD_CREDENTIALS.get("client_id")
+            application = Application.objects.filter(client_id=client_id).first()
+
+            if not application:
+                logger.warning("No OAuth2 Application found — skipping DOT token creation")
+                return
+
+            expires = timezone.now() + timedelta(
+                seconds=settings.OAUTH2_PROVIDER.get("ACCESS_TOKEN_EXPIRE_SECONDS", 3600)
+            )
+
+            access_token = AccessToken.objects.create(
+                user=user,
+                application=application,
+                token=generate_token(),
+                expires=expires,
+                scope="read write",
+            )
+
+            RefreshToken.objects.create(
+                user=user,
+                application=application,
+                token=generate_token(),
+                access_token=access_token,
+            )
+
+            request.session["access_token"] = access_token.token
+            request.session["refresh_token"] = access_token.refresh_token.token
+            request.session.modified = True
+
+            logger.info(f"DOT token minted and stored in session for user {user.username}")
+
+        except Exception as e:
+            logger.error(f"Failed to mint DOT token for WorkOS user: {e}", exc_info=True)

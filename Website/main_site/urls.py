@@ -2,7 +2,6 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.generic import RedirectView
-from django.contrib.auth import views as auth_views
 from . import views
 
 urlpatterns = [
@@ -106,19 +105,13 @@ urlpatterns = [
         views.dashboard_view.add_nonexistant_org_members,
         name="add_nonexistant_org_members",
     ),
-    # Authentication
+    # Authentication - all auth flows go through WorkOS
     path(
         "login/",
-        auth_views.LoginView.as_view(template_name="accounts/login.html"),
+        views.auth_view.login,
         name="login",
     ),
     path("signup/", views.auth_view.signup, name="signup"),
-    path("password_reset/", views.auth_view.password_reset, name="password_reset"),
-    path(
-        "password_reset/confirm/<str:uidb64>/<str:token>/",
-        views.auth_view.password_reset_confirm,
-        name="password_reset_confirm",
-    ),
     # Payment pages
     path("payments/<str:variant>", views.payment_view.home_page_view, name="payments_home"),
     path("stacks-marketplace/", views.payment_view.stacks_marketplace_view, name="stacks_marketplace"),

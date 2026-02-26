@@ -24,46 +24,18 @@
     {% include 'accounts/components/error_banner.html' %}
 
     <div class="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/50 shadow-2xl w-full rounded-2xl overflow-hidden">
-      <form id="login-form" class="p-8">
-        <input type="hidden" name="next" value="{{ next }}" />
+      <div class="p-8">
+        <p class="text-zinc-400 text-sm text-center mb-6">Sign in with your organization's single sign-on provider.</p>
 
-        <div class="mb-6">
-          <label for="username" class="font-semibold text-sm text-zinc-300 pb-2 block">Username</label>
-          <input type="text" name="username" id="username" 
-            class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
-            value="{{ request.POST.username }}" placeholder="Enter your username" required />
-        </div>
-
-        <div class="mb-6">
-          <label for="password" class="font-semibold text-sm text-zinc-300 pb-2 block">Password</label>
-          <input type="password" name="password" id="password"
-            class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300" 
-            placeholder="Enter your password" required />
-          <div class="text-right mt-2">
-            <a href="{% url 'main_site:password_reset' %}"
-              class="text-xs text-emerald-400 hover:text-emerald-300 transition-colors font-medium">Forgot password?</a>
-          </div>
-        </div>
-
-        <button type="submit" id="login-submit"
-          class="w-full px-4 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-transparent flex items-center justify-center">
-          <svg id="spinner" class="hidden animate-spin h-4 w-4 mr-2 text-zinc-950" xmlns="http://www.w3.org/2000/svg"
-            fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+        <a href="{% url 'accounts:workos-auth-initiate' %}{% if next %}?next={{ next }}{% endif %}"
+          class="w-full inline-flex justify-center items-center py-3 px-4 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-transparent">
+          <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
-          <span id="login-button-text">Login</span>
-        </button>
-      </form>
-
-      <div class="pb-6 px-8">
-        {% include 'accounts/components/form_divider.html' %}
-
-        <div class="oauth-buttons-disabled mt-4" title="OAuth login coming soon">
-          {% include 'accounts/components/oauth_buttons.html' with google_button_id='google-login' github_button_id='github-login' %}
-        </div>
+          <span>Continue with SSO</span>
+        </a>
       </div>
-
     </div>
 
     <div class="pt-6 flex justify-center">
@@ -80,110 +52,8 @@
   </div>
 
   <style>
-    .oauth-buttons-disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      position: relative;
-    }
-    .oauth-buttons-disabled button, .oauth-buttons-disabled a {
-      pointer-events: none;
-    }
-    /* Simple override for included components if they rely on text-gray-xxx that is invisible */
-    /* Assuming standard tailwind use, the parent text color might not cascade if they have 'text-gray-900' classes. 
-       We rely on component classes. */
+    /* Styles for auth page */
   </style>
-
-  <script>
-    function showError(message) {
-      const errorEl = document.getElementById('error-message');
-      if(errorEl) errorEl.textContent = message;
-      const bannerEl = document.getElementById('error-banner');
-      if(bannerEl) bannerEl.classList.remove('hidden');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    function hideError() {
-      const bannerEl = document.getElementById('error-banner');
-      if(bannerEl) bannerEl.classList.add('hidden');
-    }
-
-    document.getElementById("login-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const form = e.target;
-      const formData = new FormData(form);
-      const username = formData.get("username");
-      const password = formData.get("password");
-
-      // Validate fields
-      if (!username || !password) {
-        showError('Please fill in all fields.');
-        return;
-      }
-
-      hideError();
-
-      const body = {
-        username: username,
-        password: password,
-      };
-
-      // UI: Show spinner, disable button
-      const spinner = document.getElementById("spinner");
-      const btnText = document.getElementById("login-button-text");
-      const submitBtn = document.getElementById("login-submit");
-
-      if(spinner) spinner.classList.remove("hidden");
-      if(btnText) btnText.textContent = "Logging in...";
-      if(submitBtn) submitBtn.disabled = true;
-
-      try {
-        const response = await fetch("/api/v1/accounts/login/", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify(body)
-        });
-
-        const data = await response.json();
-        console.log("Login response:", data);
-
-        if (response.ok) {
-          // ✅ Store token (adjust to your response structure)
-          localStorage.setItem("access_token", data.access_token || data.token);
-          console.log("Token stored in localStorage:", data.access_token || data.token);
-
-          // ✅ Redirect to dashboard or next URL
-          const nextUrl = form.querySelector("input[name='next']").value;
-          console.log("Next URL from form:", nextUrl);
-          if (nextUrl && nextUrl !== "None" && nextUrl !== "/") {
-            console.log("Redirecting to next URL:", nextUrl);
-            window.location.href = nextUrl;
-          } else {
-            console.log("Redirecting to dashboard");
-            window.location.href = "/dashboard/";
-          }
-        } else {
-          // ❌ Show error banner
-          const errorEl = document.getElementById("error-message");
-           if(errorEl) errorEl.textContent = data.detail || "Login failed. Please try again.";
-           const bannerEl = document.getElementById("error-banner");
-           if(bannerEl) bannerEl.classList.remove("hidden");
-        }
-      } catch (error) {
-        const errorEl = document.getElementById("error-message");
-        if(errorEl) errorEl.textContent = "Something went wrong. Please try again.";
-        const bannerEl = document.getElementById("error-banner");
-        if(bannerEl) bannerEl.classList.remove("hidden");
-      } finally {
-        // UI: Restore button state
-        if(spinner) spinner.classList.add("hidden");
-        if(btnText) btnText.textContent = "Login";
-        if(submitBtn) submitBtn.disabled = false;
-      }
-    });
-  </script>
 
 </body>
 

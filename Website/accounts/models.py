@@ -26,6 +26,18 @@ class UserProfile(AbstractUser):
     )
     email_verification_token = models.CharField(max_length=256, null=True, blank=True)
     new_email = models.EmailField(null=True, blank=True)
+    workos_user_id = models.CharField(
+        max_length=256,
+        null=True,
+        blank=True,
+        unique=True,
+        help_text="WorkOS user ID for SSO-authenticated users",
+    )
+    auth_provider = models.CharField(
+        max_length=50,
+        default="local",
+        help_text="Authentication provider: local, workos, google, github",
+    )
 
     def __str__(self):
         return self.username

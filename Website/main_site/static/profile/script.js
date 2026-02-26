@@ -22,10 +22,18 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .then(response => {
                 if (response.ok) {
-                    // Redirect to home page or login page
-                    window.location.href = '/';
+                    return response.json();
                 } else {
                     throw new Error('Logout failed');
+                }
+            })
+            .then(data => {
+                // Redirect to WorkOS logout URL to clear AuthKit session,
+                // or fall back to home page if not available
+                if (data.logout_url) {
+                    window.location.href = data.logout_url;
+                } else {
+                    window.location.href = '/';
                 }
             })
             .catch(error => {
@@ -83,56 +91,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Reset button state
                 submitButton.textContent = originalText;
                 submitButton.disabled = false;
-            });
-        });
-    }
-    
-    // Password reset functionality
-    const resetPasswordButton = document.getElementById('resetPassword');
-    if (resetPasswordButton) {
-        resetPasswordButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const resetEmail = document.getElementById('resetEmail').value;
-            if (!resetEmail) {
-                alert('Please enter your email address.');
-                return;
-            }
-            
-            const originalText = this.textContent;
-            
-            // Show loading state
-            this.textContent = 'Sending...';
-            this.disabled = true;
-            
-            fetch('/api/v1/accounts/password-reset/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({
-                    email: resetEmail
-                }),
-                credentials: 'same-origin'
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Password reset email sent successfully!');
-                    document.getElementById('resetEmail').value = '';
-                } else {
-                    alert('Password reset failed: ' + (data.error || 'Unknown error'));
-                }
-            })
-            .catch(error => {
-                console.error('Password reset error:', error);
-                alert('Password reset failed. Please try again.');
-            })
-            .finally(() => {
-                // Reset button state
-                this.textContent = originalText;
-                this.disabled = false;
             });
         });
     }
@@ -251,16 +209,12 @@ function loadUserData() {
             // Populate form fields with current user data
             const usernameField = document.getElementById('username');
             const emailField = document.getElementById('email');
-            const resetEmailField = document.getElementById('resetEmail');
             
             if (usernameField && data.user.username) {
                 usernameField.value = data.user.username;
             }
             if (emailField && data.user.email) {
                 emailField.value = data.user.email;
-            }
-            if (resetEmailField && data.user.email) {
-                resetEmailField.value = data.user.email;
             }
         }
     })
