@@ -97,6 +97,49 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load current user data
     loadUserData();
+
+    // Unlink GitHub functionality
+    const unlinkGitHubBtn = document.getElementById('unlinkGitHubBtn');
+    if (unlinkGitHubBtn) {
+        unlinkGitHubBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+
+            if (!confirm('Are you sure you want to unlink your GitHub account? This will also disconnect any repositories linked to your stacks.')) {
+                return;
+            }
+
+            const originalText = this.textContent;
+            this.textContent = 'Unlinking...';
+            this.disabled = true;
+            this.style.opacity = '0.7';
+
+            fetch('/api/v1/github/unlink/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                credentials: 'same-origin'
+            })
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Failed to unlink GitHub');
+            })
+            .then(data => {
+                // Reload to reflect the updated state
+                window.location.reload();
+            })
+            .catch(error => {
+                console.error('GitHub unlink error:', error);
+                alert('Failed to unlink GitHub. Please try again.');
+                this.textContent = originalText;
+                this.disabled = false;
+                this.style.opacity = '1';
+            });
+        });
+    }
     
     // Delete account functionality
     const deleteAccountBtn = document.getElementById('deleteAccountBtn');

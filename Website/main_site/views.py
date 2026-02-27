@@ -88,7 +88,21 @@ def pricing(request: HttpRequest) -> HttpResponse:
 
 
 def profile(request: HttpRequest) -> HttpResponse:
-    return render(request, "profile.html", {"show_footer": False})
+    github_linked = False
+    github_username = None
+    if request.user.is_authenticated:
+        from github.models import Token
+        token = Token.objects.filter(user=request.user).first()
+        if token:
+            github_linked = True
+            github_user = request.session.get("github_user")
+            if github_user:
+                github_username = github_user.get("login")
+    return render(request, "profile.html", {
+        "show_footer": False,
+        "github_linked": github_linked,
+        "github_username": github_username,
+    })
 
 
 def maintenance(request: HttpRequest) -> HttpResponse:

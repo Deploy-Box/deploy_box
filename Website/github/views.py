@@ -537,6 +537,56 @@ def disconnect_github_webhook(request: HttpRequest) -> JsonResponse:
 
 
 @oauth_required()
+def unlink_github(request: AuthHttpRequest) -> JsonResponse:
+    """Unlink GitHub account by deleting the stored token and all webhooks."""
+    user = request.auth_user
+    logger.info(f"Starting GitHub unlink process for user {user.username}")
+
+    if request.method != "POST":
+        return JsonResponse({"error": "Method not allowed"}, status=405)
+
+    # Delete all webhooks from GitHub and our database
+    webhooks = Webhook.objects.filter(user=user)
+    token_obj = Token.objects.filter(user=user).first()
+
+    if token_obj:
+        try:
+            github_token = token_obj.get_token()
+            headers = {"Authorization": f"token {github_token}"}
+
+            for webhook in webhooks:
+                try:
+                    owner, repo = webhook.repository.split("/")
+                    webhook_url = f"{GITHUB_API_BASE}/repos/{owner}/{repo}/hooks/{webhook.webhook_id}"
+                    response = requests.delete(webhook_url, headers=headers, timeout=5)
+                    if response.status_code not in (204, 404):
+                        logger.warning(
+                            f"Failed to delete webhook {webhook.webhook_id} from GitHub: {response.status_code}"
+                        )
+                except Exception as e:
+                    logger.warning(f"Error deleting webhook {webhook.webhook_id} from GitHub: {e}")
+        except Exception as e:
+            logger.warning(f"Could not decrypt token to clean up webhooks: {e}")
+
+    # Delete all webhooks and the token from our database
+    deleted_webhooks = webhooks.delete()[0]
+    deleted_token = Token.objects.filter(user=user).delete()[0]
+
+    # Clear GitHub session data
+    request.session.pop("github_user", None)
+    request.session.modified = True
+
+    logger.info(
+        f"GitHub unlinked for user {user.username}: {deleted_webhooks} webhook(s), {deleted_token} token(s) removed"
+    )
+
+    return JsonResponse(
+        {"message": "GitHub account unlinked successfully"},
+        status=200,
+    )
+
+
+@oauth_required()
 def get_webhook_status(request: AuthHttpRequest) -> JsonResponse:
     """Get the webhook status for a stack."""
     user = request.auth_user

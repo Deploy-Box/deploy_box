@@ -14,5 +14,6 @@ urlpatterns = [
     path("webhook/disconnect/", views.disconnect_github_webhook, name="disconnect_webhook"),
     path("webhook/status/", views.get_webhook_status, name="webhook_status"),
     path("webhook/", views.github_webhook, name="webhook_handler"),
-
+    # Account management
+    path("unlink/", views.unlink_github, name="unlink"),
 ]
