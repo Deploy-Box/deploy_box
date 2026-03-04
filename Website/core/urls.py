@@ -58,8 +58,6 @@ urlpatterns = [
             ]
         ),
     ),
-    # OAuth2 provider
-    path("o/", include("oauth2_provider.urls", namespace="oauth2_provider")),
 ]
 
 if settings.DEBUG:

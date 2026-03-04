@@ -1,7 +1,6 @@
 from django.urls import path
 from .views import (
-    SignupAPIView, OAuthClientCredentialsView, 
-    M2MProtectedView, LogoutAPIView, ProfileAPIView, 
+    SignupAPIView, LogoutAPIView, ProfileAPIView, 
     DeleteAccountAPIView,
     WorkOSAuthInitiateView, WorkOSAuthCallbackView,
 )
@@ -9,8 +8,6 @@ from .views import (
 urlpatterns = [
     path("signup/", SignupAPIView.as_view(), name="api-signup"),
     path("logout/", LogoutAPIView.as_view(), name="api-logout"),
-    path("oauth/m2m/", OAuthClientCredentialsView.as_view(), name="oauth-m2m"),
-    path("m2m/protected/", M2MProtectedView.as_view(), name="m2m-protected"),
     path("profile/", ProfileAPIView.as_view(), name="api-profile"),
     path("delete-account/", DeleteAccountAPIView.as_view(), name="api-delete-account"),
 

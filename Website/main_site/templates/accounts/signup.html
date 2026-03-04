@@ -112,6 +112,7 @@
                                 class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300" 
                                 placeholder="Enter username" required />
                         </div>
+                        <p class="field-error hidden mt-1.5 text-xs text-red-400" data-field="username"></p>
                     </div>
 
                     <div class="mb-5">
@@ -126,6 +127,7 @@
                                 placeholder="Enter email address" required />
                             {% endif %}
                         </div>
+                        <p class="field-error hidden mt-1.5 text-xs text-red-400" data-field="email"></p>
                     </div>
 
                     <div class="mb-5">
@@ -135,6 +137,7 @@
                                 class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
                                 placeholder="Create password" required />
                         </div>
+                        <p class="field-error hidden mt-1.5 text-xs text-red-400" data-field="password1"></p>
                     </div>
 
                     <div class="mb-5">
@@ -144,6 +147,7 @@
                                 class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
                                 placeholder="Confirm password" required />
                         </div>
+                        <p class="field-error hidden mt-1.5 text-xs text-red-400" data-field="password2"></p>
                     </div>
 
                     <button type="button" id="next-btn"
@@ -166,6 +170,7 @@
                                 class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
                                 placeholder="Enter first name" required />
                         </div>
+                        <p class="field-error hidden mt-1.5 text-xs text-red-400" data-field="first_name"></p>
                     </div>
 
                     <div class="mb-5">
@@ -175,6 +180,7 @@
                                 class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
                                 placeholder="Enter last name" required />
                         </div>
+                        <p class="field-error hidden mt-1.5 text-xs text-red-400" data-field="last_name"></p>
                     </div>
 
                     <div class="mb-5">
@@ -184,6 +190,7 @@
                                 class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
                                 required />
                         </div>
+                        <p class="field-error hidden mt-1.5 text-xs text-red-400" data-field="birthdate"></p>
                     </div>
 
                     <div class="flex gap-3">
@@ -248,85 +255,321 @@
 let currentStep = 1;
 const totalSteps = 2;
 
+// Fields that belong to step 1 vs step 2
+const step1Fields = ['username', 'email', 'password1', 'password2'];
+const step2Fields = ['first_name', 'last_name', 'birthdate'];
+
+// Friendly labels for field names in error summaries
+const fieldLabels = {
+    username: 'Username',
+    email: 'Email',
+    password1: 'Password',
+    password2: 'Confirm Password',
+    password: 'Password',
+    first_name: 'First Name',
+    last_name: 'Last Name',
+    birthdate: 'Birthdate',
+    non_field_errors: 'Error',
+    general: 'Error',
+    invite: 'Invitation',
+    transfer: 'Transfer',
+};
+
 function updateStep(step) {
     currentStep = step;
-    
+
     // Update visibility
     document.getElementById('step-1').classList.toggle('hidden', step !== 1);
     document.getElementById('step-2').classList.toggle('hidden', step !== 2);
-    
+
     // Update progress bar
     const progress = (step / totalSteps) * 100;
     document.getElementById('progress-bar').style.width = progress + '%';
-    
+
     // Update step indicator
     document.getElementById('step-indicator').textContent = `Step ${step} of ${totalSteps}`;
     document.getElementById('step-title').textContent = step === 1 ? 'Account Details' : 'Personal Information';
 }
 
+// --------------- Error display helpers ---------------
+
+/**
+ * Show a simple one-line message in the error banner.
+ */
 function showError(message) {
     const errorEl = document.getElementById('error-message');
-    if (errorEl) errorEl.textContent = message;
-    
+    if (errorEl) {
+        errorEl.textContent = message;
+    }
+
     const bannerEl = document.getElementById('error-banner');
     if (bannerEl) bannerEl.classList.remove('hidden');
-    
-    // Scroll to top to show error
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * Show a titled error banner with a bullet-point list of individual errors.
+ */
+function showErrorList(title, errorItems) {
+    const errorEl = document.getElementById('error-message');
+    if (errorEl) {
+        let html = '<span class="block mb-1">' + title + '</span>';
+        if (errorItems.length > 0) {
+            html += '<ul class="list-disc list-inside mt-1 space-y-0.5">';
+            errorItems.forEach(function (item) {
+                html += '<li class="text-red-300/80 text-xs font-normal">' + item + '</li>';
+            });
+            html += '</ul>';
+        }
+        errorEl.innerHTML = html;
+    }
+
+    const bannerEl = document.getElementById('error-banner');
+    if (bannerEl) bannerEl.classList.remove('hidden');
+
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function hideError() {
     const bannerEl = document.getElementById('error-banner');
     if (bannerEl) bannerEl.classList.add('hidden');
+
+    const errorEl = document.getElementById('error-message');
+    if (errorEl) {
+        errorEl.textContent = '';
+        errorEl.innerHTML = '';
+    }
 }
+
+/**
+ * Clear all inline field errors and red border highlights.
+ */
+function clearFieldErrors() {
+    document.querySelectorAll('.field-error').forEach(function (el) {
+        el.textContent = '';
+        el.classList.add('hidden');
+    });
+    document.querySelectorAll('#signup-form input').forEach(function (input) {
+        input.classList.remove('border-red-500', 'focus:ring-red-500/50', 'focus:border-red-500');
+    });
+}
+
+/**
+ * Show an inline error message under a specific field and highlight its input.
+ * Returns true if the error was matched to a visible field element, false otherwise.
+ */
+function showFieldError(field, messages) {
+    var messageText = Array.isArray(messages) ? messages.join(', ') : messages;
+
+    var errorEl = document.querySelector('.field-error[data-field="' + field + '"]');
+    if (errorEl) {
+        errorEl.textContent = messageText;
+        errorEl.classList.remove('hidden');
+    }
+
+    // Highlight the input with a red border
+    var inputEl = document.querySelector('[name="' + field + '"]');
+    if (inputEl) {
+        inputEl.classList.add('border-red-500', 'focus:ring-red-500/50', 'focus:border-red-500');
+    }
+
+    return !!errorEl;
+}
+
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// --------------- Client-side validation ---------------
 
 function validateStep1() {
-    const username = document.querySelector('[name="username"]').value;
-    const email = document.querySelector('[name="email"]').value;
-    const password1 = document.querySelector('[name="password1"]').value;
-    const password2 = document.querySelector('[name="password2"]').value;
-    
-    if (!username || !email || !password1 || !password2) {
-        showError('Please fill in all fields before continuing.');
-        return false;
-    }
-    
-    if (password1 !== password2) {
-        showError('Passwords do not match.');
-        return false;
-    }
-    
-    if (password1.length < 8) {
-        showError('Password must be at least 8 characters long.');
-        return false;
-    }
-    
+    clearFieldErrors();
     hideError();
-    return true;
+
+    var username = document.querySelector('[name="username"]').value.trim();
+    var email    = document.querySelector('[name="email"]').value.trim();
+    var password1 = document.querySelector('[name="password1"]').value;
+    var password2 = document.querySelector('[name="password2"]').value;
+
+    var isValid = true;
+    var errorItems = [];
+
+    if (!username) {
+        showFieldError('username', 'Username is required.');
+        errorItems.push('Username is required.');
+        isValid = false;
+    }
+
+    if (!email) {
+        showFieldError('email', 'Email is required.');
+        errorItems.push('Email is required.');
+        isValid = false;
+    } else if (!isValidEmail(email)) {
+        showFieldError('email', 'Please enter a valid email address.');
+        errorItems.push('Please enter a valid email address.');
+        isValid = false;
+    }
+
+    if (!password1) {
+        showFieldError('password1', 'Password is required.');
+        errorItems.push('Password is required.');
+        isValid = false;
+    } else if (password1.length < 8) {
+        showFieldError('password1', 'Password must be at least 8 characters long.');
+        errorItems.push('Password must be at least 8 characters long.');
+        isValid = false;
+    }
+
+    if (!password2) {
+        showFieldError('password2', 'Please confirm your password.');
+        errorItems.push('Please confirm your password.');
+        isValid = false;
+    } else if (password1 && password2 && password1 !== password2) {
+        showFieldError('password2', 'Passwords do not match.');
+        errorItems.push('Passwords do not match.');
+        isValid = false;
+    }
+
+    if (!isValid) {
+        showErrorList('Please fix the following errors:', errorItems);
+    }
+
+    return isValid;
 }
 
-// Next button - Step 1 to Step 2
-document.getElementById('next-btn').addEventListener('click', function() {
+function validateStep2() {
+    // Clear only step 2 field errors
+    step2Fields.forEach(function (field) {
+        var errorEl = document.querySelector('.field-error[data-field="' + field + '"]');
+        if (errorEl) {
+            errorEl.textContent = '';
+            errorEl.classList.add('hidden');
+        }
+        var inputEl = document.querySelector('[name="' + field + '"]');
+        if (inputEl) {
+            inputEl.classList.remove('border-red-500', 'focus:ring-red-500/50', 'focus:border-red-500');
+        }
+    });
+    hideError();
+
+    var firstName  = document.querySelector('[name="first_name"]').value.trim();
+    var lastName   = document.querySelector('[name="last_name"]').value.trim();
+    var birthdate  = document.querySelector('[name="birthdate"]').value;
+
+    var isValid = true;
+    var errorItems = [];
+
+    if (!firstName) {
+        showFieldError('first_name', 'First name is required.');
+        errorItems.push('First name is required.');
+        isValid = false;
+    }
+
+    if (!lastName) {
+        showFieldError('last_name', 'Last name is required.');
+        errorItems.push('Last name is required.');
+        isValid = false;
+    }
+
+    if (!birthdate) {
+        showFieldError('birthdate', 'Birthdate is required.');
+        errorItems.push('Birthdate is required.');
+        isValid = false;
+    }
+
+    if (!isValid) {
+        showErrorList('Please fix the following errors:', errorItems);
+    }
+
+    return isValid;
+}
+
+// --------------- Server error display ---------------
+
+/**
+ * Process the user_errors object returned by the API.
+ * Shows inline errors next to matching fields, navigates to the correct step,
+ * and shows a summary banner listing every error.
+ */
+function displayServerErrors(errors) {
+    clearFieldErrors();
+
+    // Determine which step has errors
+    var hasStep1Errors = Object.keys(errors).some(function (f) { return step1Fields.includes(f); });
+    var hasStep2Errors = Object.keys(errors).some(function (f) { return step2Fields.includes(f); });
+
+    if (hasStep1Errors && currentStep !== 1) {
+        updateStep(1);
+    } else if (!hasStep1Errors && hasStep2Errors && currentStep !== 2) {
+        updateStep(2);
+    }
+
+    // Show inline field errors & build summary list
+    var summaryItems = [];
+
+    Object.keys(errors).forEach(function (field) {
+        var messages = Array.isArray(errors[field]) ? errors[field] : [errors[field]];
+
+        // Try to show inline; showFieldError returns false if no matching element
+        showFieldError(field, messages);
+
+        // Always add to the summary banner
+        var label = fieldLabels[field] || field;
+        messages.forEach(function (msg) {
+            summaryItems.push('<strong>' + label + ':</strong> ' + msg);
+        });
+    });
+
+    showErrorList('Please fix the following errors:', summaryItems);
+}
+
+// --------------- Event listeners ---------------
+
+// Next button — Step 1 → Step 2
+document.getElementById('next-btn').addEventListener('click', function () {
     if (validateStep1()) {
         updateStep(2);
     }
 });
 
-// Back button - Step 2 to Step 1
-document.getElementById('back-btn').addEventListener('click', function() {
+// Back button — Step 2 → Step 1
+document.getElementById('back-btn').addEventListener('click', function () {
+    hideError();
+    clearFieldErrors();
     updateStep(1);
 });
 
-// Form submission
-document.getElementById('signup-form').addEventListener('submit', function(e) {
+// Clear individual field error when user starts typing
+document.querySelectorAll('#signup-form input:not([type="hidden"])').forEach(function (input) {
+    input.addEventListener('input', function () {
+        var fieldName = this.name;
+        var errorEl = document.querySelector('.field-error[data-field="' + fieldName + '"]');
+        if (errorEl) {
+            errorEl.textContent = '';
+            errorEl.classList.add('hidden');
+        }
+        this.classList.remove('border-red-500', 'focus:ring-red-500/50', 'focus:border-red-500');
+    });
+});
+
+// --------------- Form submission ---------------
+
+document.getElementById('signup-form').addEventListener('submit', function (e) {
     e.preventDefault();
-    
-    const formData = new FormData(this);
-    const submitBtn = document.getElementById('submit-btn');
-    const originalText = submitBtn.innerHTML;
-    
+
+    // Client-side validate step 2 before sending to server
+    if (!validateStep2()) {
+        return;
+    }
+
+    var form = this;
+    var formData = new FormData(form);
+    var submitBtn = document.getElementById('submit-btn');
+    var originalText = submitBtn.innerHTML;
+
     // Show loading state
-    submitBtn.innerHTML = '<span class="inline-block mr-2">' + 
+    submitBtn.innerHTML = '<span class="inline-block mr-2">' +
         '{% if transfer_data %}' +
             'Creating Account & Accepting Project...' +
         '{% elif invite_data %}' +
@@ -336,13 +579,9 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
         '{% endif %}' +
         '</span><svg class="animate-spin w-4 h-4 inline-block text-zinc-950" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>';
     submitBtn.disabled = true;
-    
-    // Remove any existing error messages
-    const existingErrors = document.querySelectorAll('.error-message');
-    existingErrors.forEach(error => error.remove());
-    
+
     // Prepare request data
-    const requestData = {
+    var requestData = {
         username: formData.get('username'),
         email: formData.get('email'),
         first_name: formData.get('first_name'),
@@ -351,16 +590,16 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
         password1: formData.get('password1'),
         password2: formData.get('password2')
     };
-    
+
     if (formData.get('invite_id')) {
         requestData.invite_id = formData.get('invite_id');
     }
-    
+
     if (formData.get('transfer_id')) {
         requestData.transfer_id = formData.get('transfer_id');
     }
-    
-    fetch(this.action, {
+
+    fetch(form.action, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -368,34 +607,32 @@ document.getElementById('signup-form').addEventListener('submit', function(e) {
         },
         body: JSON.stringify(requestData)
     })
-    .then(response => response.json())
-    .then(data => {
+    .then(function (response) {
+        // Guard against non-JSON error pages (e.g. 500 HTML)
+        var contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+            throw new Error('Server returned an unexpected response.');
+        }
+        return response.json();
+    })
+    .then(function (data) {
         if (data.message) {
-            // Success - redirect to login
+            // Success — redirect to login
             window.location.href = "{% url 'main_site:login' %}";
+        } else if (data.user_errors) {
+            displayServerErrors(data.user_errors);
+        } else if (data.errors) {
+            // Alternate error shape
+            displayServerErrors(data.errors);
         } else {
-            // Show validation errors
-            let errorMessage = 'Please fix the following errors: ';
-            
-            if (data.user_errors) {
-                const errors = [];
-                Object.keys(data.user_errors).forEach(field => {
-                    errors.push(`${field}: ${data.user_errors[field].join(', ')}`);
-                });
-                errorMessage += errors.join(' | ');
-            } else {
-                errorMessage = 'Please check your input and try again.';
-            }
-            
-            showError(errorMessage);
+            showError('Something went wrong. Please check your input and try again.');
         }
     })
-    .catch(error => {
+    .catch(function (error) {
         console.error('Signup error:', error);
         showError('An error occurred while creating your account. Please try again.');
     })
-    .finally(() => {
-        // Reset button state
+    .finally(function () {
         submitBtn.innerHTML = originalText;
         submitBtn.disabled = false;
     });

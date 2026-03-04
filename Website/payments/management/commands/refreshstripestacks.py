@@ -1,6 +1,5 @@
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from oauth2_provider.models import Application
 from stacks.models import PurchasableStack
 from django.contrib.auth import get_user_model
 import stripe

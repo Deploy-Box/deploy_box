@@ -7,8 +7,7 @@ from accounts.serializers.UserCreationSerializer import UserCreationSerializer
 from organizations.models import PendingInvites, OrganizationMember, Organization
 from django.conf import settings
 from django.db import transaction
-from core.decorators.oauth_required import oauth_required
-import requests
+from core.decorators import oauth_required
 import logging
 from django.utils import timezone
 from workos import WorkOSClient
@@ -262,16 +261,6 @@ class LogoutAPIView(APIView):
         # Capture WorkOS session ID before clearing the Django session
         workos_session_id = request.session.get("workos_session_id")
 
-        # Revoke the OAuth AccessToken stored in the session
-        access_token = request.session.get("access_token")
-        if access_token:
-            try:
-                from oauth2_provider.models import AccessToken
-                AccessToken.objects.filter(token=access_token).delete()
-                logger.info("OAuth AccessToken revoked during logout")
-            except Exception as e:
-                logger.warning(f"Failed to revoke AccessToken on logout: {e}")
-
         logout(request)
 
         # Build a WorkOS logout URL so the frontend can clear the AuthKit session
@@ -296,93 +285,6 @@ class LogoutAPIView(APIView):
 
 
 
-
-
-class OAuthClientCredentialsView(APIView):
-    """
-    Machine-to-Machine authentication endpoint using OAuth2 client credentials flow.
-    This endpoint allows services/applications to authenticate using their client credentials
-    without user interaction.
-    """
-    permission_classes = [permissions.AllowAny]
-
-    def post(self, request):
-        client_id = request.data.get("client_id")
-        client_secret = request.data.get("client_secret")
-        scope = request.data.get("scope", "m2m")
-
-        logger.info(f"M2M authentication attempt for client: {client_id}")
-
-        if not client_id or not client_secret:
-            logger.warning("Missing client_id or client_secret in M2M request")
-            return Response(
-                {"detail": "client_id and client_secret are required"},
-                status=400
-            )
-
-        token_url = settings.OAUTH2_CLIENT_CREDENTIALS["token_url"]
-
-        payload = {
-            "grant_type": "client_credentials",
-            "client_id": client_id,
-            "client_secret": client_secret,
-            "scope": scope,
-        }
-
-        logger.info(f"Requesting M2M OAuth token from: {token_url}")
-        token_response = requests.post(token_url, data=payload)
-
-        if token_response.status_code != 200:
-            logger.error(
-                f"M2M token request failed: {token_response.status_code} - {token_response.text}"
-            )
-            return Response(
-                {"detail": "Client credentials authentication failed"},
-                status=400
-            )
-
-        token_data = token_response.json()
-        logger.info(f"M2M token received successfully for client: {client_id}")
-
-        return Response(token_data)
-
-
-class M2MProtectedView(APIView):
-    """
-    Example view that demonstrates M2M authentication.
-    This view is protected and can only be accessed with valid client credentials.
-    """
-
-    @oauth_required(required_scope="m2m")
-    def get(self, request):
-        """
-        Example GET endpoint that requires M2M authentication.
-        """
-        application = getattr(request, 'auth_application', None)
-        token = getattr(request, 'auth_token', None)
-
-        return Response({
-            "message": "M2M authentication successful",
-            "application": {
-                "name": application.name if application else None,
-                "client_id": application.client_id if application else None,
-            },
-            "token": {
-                "expires": token.expires.isoformat() if token else None,
-                "scope": token.scope if token else None,
-            },
-            "timestamp": timezone.now().isoformat(),
-        })
-
-    @oauth_required(required_scope="m2m")
-    def post(self, request):
-        """
-        Example POST endpoint that requires M2M authentication.
-        """
-        return Response({
-            "message": "M2M POST request successful",
-            "timestamp": timezone.now().isoformat(),
-        })
 
 
 class ProfileAPIView(APIView):
@@ -626,9 +528,6 @@ class WorkOSAuthCallbackView(APIView):
             if workos_session_id:
                 request.session["workos_session_id"] = workos_session_id
 
-            # ── Mint a django-oauth-toolkit AccessToken so oauth_required works ──
-            self._store_dot_token(request, user)
-
             # ── Redirect ──
             from django.shortcuts import redirect
             redirect_url = state if state else "/dashboard/"
@@ -638,51 +537,3 @@ class WorkOSAuthCallbackView(APIView):
             logger.error(f"WorkOS callback error: {e}", exc_info=True)
             from django.shortcuts import redirect
             return redirect("/accounts/login/?error=workos_auth_failed")
-
-    @staticmethod
-    def _store_dot_token(request, user):
-        """
-        Create a django-oauth-toolkit AccessToken + RefreshToken for the user
-        and store them in the session so the existing oauth_required decorator
-        continues to work seamlessly.
-        """
-        from oauth2_provider.models import AccessToken, RefreshToken, Application
-        from oauthlib.common import generate_token
-        from datetime import timedelta
-
-        try:
-            # Use the password-credentials application for consistency
-            client_id = settings.OAUTH2_PASSWORD_CREDENTIALS.get("client_id")
-            application = Application.objects.filter(client_id=client_id).first()
-
-            if not application:
-                logger.warning("No OAuth2 Application found — skipping DOT token creation")
-                return
-
-            expires = timezone.now() + timedelta(
-                seconds=settings.OAUTH2_PROVIDER.get("ACCESS_TOKEN_EXPIRE_SECONDS", 3600)
-            )
-
-            access_token = AccessToken.objects.create(
-                user=user,
-                application=application,
-                token=generate_token(),
-                expires=expires,
-                scope="read write",
-            )
-
-            RefreshToken.objects.create(
-                user=user,
-                application=application,
-                token=generate_token(),
-                access_token=access_token,
-            )
-
-            request.session["access_token"] = access_token.token
-            request.session["refresh_token"] = access_token.refresh_token.token
-            request.session.modified = True
-
-            logger.info(f"DOT token minted and stored in session for user {user.username}")
-
-        except Exception as e:
-            logger.error(f"Failed to mint DOT token for WorkOS user: {e}", exc_info=True)

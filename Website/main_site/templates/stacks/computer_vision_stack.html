@@ -93,12 +93,12 @@
                     <li class="flex items-center gap-2 text-white"><span class="text-orange-500">✔</span> Pre-loaded Models</li>
                     <li class="flex items-center gap-2 text-white"><span class="text-orange-500">✔</span> API Access</li>
                 </ul>
-                <button
-                    class="w-full py-3 rounded-lg border border-orange-500/30 bg-orange-500/10 text-orange-400 font-bold hover:bg-orange-500 hover:text-black transition-all"
-                    type="button"
+                <a
+                    href="{% if user.is_authenticated %}{% url 'main_site:stacks_marketplace' %}{% else %}{% url 'main_site:login' %}{% endif %}"
+                    class="w-full py-3 rounded-lg border border-orange-500/30 bg-orange-500/10 text-orange-400 font-bold hover:bg-orange-500 hover:text-black transition-all block text-center"
                 >
                     Get Started
-                </button>
+                </a>
              </div>
 
              <!-- Premium Plan -->

@@ -9,21 +9,21 @@ output "key_vault_name" {
 }
 
 output "database_name" {
-    value = var.database["name"]
-    description = "The name of the database."
+  value       = var.database["name"]
+  description = "The name of the database."
 }
 
 output "database_port" {
-    value = var.database["port"]
-    description = "The port the database is listening on."
+  value       = var.database["port"]
+  description = "The port the database is listening on."
 }
 
 output "database_host" {
-    value = var.database["host"]
-    description = "The host URL for the database."
+  value       = var.database["host"]
+  description = "The host URL for the database."
 }
 
 output "database_user" {
-    value = var.database["user"]
-    description = "The username for the database."
+  value       = var.database["user"]
+  description = "The username for the database."
 }

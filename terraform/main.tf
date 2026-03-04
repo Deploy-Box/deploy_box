@@ -1,4 +1,13 @@
 terraform {
+  required_version = ">= 1.5"
+
+  required_providers {
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.60"
+    }
+  }
+
   backend "azurerm" {
     use_oidc = true
   }
@@ -60,12 +69,8 @@ data "azurerm_key_vault" "shared_key_vault" {
   resource_group_name = local.names.resource_group
 }
 
-# =============================================================================
-# Resource Group
-# =============================================================================
-
 data "azurerm_resource_group" "main_rg" {
-  name     = local.names.resource_group
+  name = local.names.resource_group
 }
 
 data "azurerm_servicebus_namespace" "service_bus" {
@@ -218,28 +223,16 @@ resource "azurerm_user_assigned_identity" "container_app_identity" {
   location            = data.azurerm_resource_group.main_rg.location
   resource_group_name = data.azurerm_resource_group.main_rg.name
   tags                = local.common_tags
-
-  depends_on = [data.azurerm_resource_group.main_rg]
 }
 
 resource "azurerm_role_assignment" "container_app_acr_pull" {
   scope                = data.azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = azurerm_user_assigned_identity.container_app_identity.principal_id
-
-  depends_on = [
-    azurerm_user_assigned_identity.container_app_identity,
-    data.azurerm_container_registry.acr,
-  ]
 }
 
 resource "azurerm_role_assignment" "container_app_key_vault_secrets_user" {
   scope                = data.azurerm_key_vault.shared_key_vault.id
   role_definition_name = "Key Vault Secrets User"
   principal_id         = azurerm_user_assigned_identity.container_app_identity.principal_id
-
-  depends_on = [
-    azurerm_user_assigned_identity.container_app_identity,
-    data.azurerm_key_vault.shared_key_vault,
-  ]
 }

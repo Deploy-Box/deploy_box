@@ -1,3 +1,8 @@
+"""
+Base settings shared across all environments.
+Environment-specific files (dev.py, prod.py) import from here and override as needed.
+"""
+
 from pathlib import Path
 from dotenv import load_dotenv
 import os
@@ -6,34 +11,38 @@ from core.utils.key_vault_client import KeyVaultClient
 
 load_dotenv()
 
-BASE_DIR = Path(__file__).resolve().parent.parent
+_kv = KeyVaultClient()
+
+# ──────────────────────────────────────────────
+# Paths
+# ──────────────────────────────────────────────
+# BASE_DIR points to the Website/ folder (two levels up because settings is now a package)
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 HOST = os.environ.get("HOST")
 if not HOST:
     HOST = "http://localhost"
-    print("WARTNING: ", HOST)
+    print("WARNING: HOST not set, defaulting to", HOST)
 
-# SECURITY
-SECRET_KEY = KeyVaultClient().get_secret(
+# ──────────────────────────────────────────────
+# Security
+# ──────────────────────────────────────────────
+SECRET_KEY = _kv.get_secret(
     "deploy-box-django-secret-key", os.getenv("DJANGO_SECRET_KEY")
 )
 ENV = os.environ.get("ENV", "LOCAL").upper()
-# DEBUG = ENV == "DEV" or ENV == "LOCAL"
-DEBUG = True  # TODO: remove eventually
 
-ALLOWED_HOSTS = ["deploy-box.com", "dev.deploy-box.com", "host.docker.internal"]
-if DEBUG:
-    ALLOWED_HOSTS.extend(
-        [
-            "127.0.0.1",
-            "localhost",
-            HOST.replace("https://", "").replace("http://", ""),
-        ]
-    )
+ALLOWED_HOSTS: list[str] = [
+    "deploy-box.com",
+    "dev.deploy-box.com",
+    "host.docker.internal",
+]
 
 ROOT_URLCONF = "core.urls"
 
-# Application definition
+# ──────────────────────────────────────────────
+# Installed Apps
+# ──────────────────────────────────────────────
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -42,7 +51,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "whitenoise.runserver_nostatic",
     "django.contrib.staticfiles",
-    "oauth2_provider",
     "tailwind",
     "theme",
     "rest_framework",
@@ -57,82 +65,49 @@ INSTALLED_APPS = [
     "payments",
     "blogs",
     "deploy_box_apis",
-    "taggit",  # for tagging in blogs
-    "django_ckeditor_5",  # for rich text editor in blogs to handle content like images, links, etc.
+    "taggit",
+    "django_ckeditor_5",
 ]
-
-if DEBUG:
-    INSTALLED_APPS.extend(
-        [
-            "django_browser_reload",
-            "django_extensions",
-        ]
-    )
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",  # Or OAuth2
+        "rest_framework.authentication.TokenAuthentication",
     ]
 }
 
-# Authentication
-OAUTH2_PROVIDER = {
-    "ACCESS_TOKEN_EXPIRE_SECONDS": 3600,  # 1 hour
-    "REFRESH_TOKEN_EXPIRE_SECONDS": 86400,  # 1 day
-    "ROTATE_REFRESH_TOKENS": True,
-    "GRANT_TYPES": [
-        "password",
-        "client_credentials",
-    ],
-    "SCOPES": {
-        "read": "Read scope",
-        "write": "Write scope",
-        "m2m": "Machine to machine scope",
-    },
-}
-
-OAUTH2_PASSWORD_CREDENTIALS = {
-    "client_id": os.environ.get("OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID"),
-    "client_secret": os.environ.get("OAUTH2_PASSWORD_CREDENTIALS_CLIENT_SECRET"),
-    "redirect_uri": f"{HOST}/callback/",
-    "token_url": f"{HOST}/o/token/",
-}
-
-OAUTH2_CLIENT_CREDENTIALS = {
-    "client_id": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_ID"),
-    "client_secret": os.environ.get("OAUTH2_CLIENT_CREDENTIALS_CLIENT_SECRET"),
-    "token_url": f"{HOST}/o/token/",
-}
-
-# WorkOS Configuration
+# ──────────────────────────────────────────────
+# WorkOS
+# ──────────────────────────────────────────────
 WORKOS = {
     "CLIENT_ID": os.environ.get("WORKOS_CLIENT_ID"),
     "API_KEY": os.environ.get("WORKOS_API_KEY"),
     "REDIRECT_URI": f"{HOST}/api/v1/accounts/oauth/workos/callback",
 }
 
-# Sessions & Security
+# ──────────────────────────────────────────────
+# Sessions & Security  (safe defaults — overridden per env)
+# ──────────────────────────────────────────────
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
-SESSION_COOKIE_SECURE = not DEBUG
+SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_SAVE_EVERY_REQUEST = True
 
-# Disable CSRF protection
 CSRF_TRUSTED_ORIGINS: list[str] = []
-
 for host in ALLOWED_HOSTS:
     CSRF_TRUSTED_ORIGINS.extend([f"https://{host}", f"http://{host}"])
 
-CSRF_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = True
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 
-SECURE_HSTS_SECONDS = 31536000 if not DEBUG else 0
+SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-SECURE_SSL_REDIRECT = not DEBUG
+SECURE_SSL_REDIRECT = True
 
+# ──────────────────────────────────────────────
 # Email
+# ──────────────────────────────────────────────
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
@@ -141,54 +116,47 @@ EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
-
+# ──────────────────────────────────────────────
 # Tailwind
+# ──────────────────────────────────────────────
 TAILWIND_APP_NAME = "theme"
 INTERNAL_IPS = ["127.0.0.1"]
 NPM_BIN_PATH = os.environ.get("NPM_BIN_PATH", "/usr/bin/npm")
 
+# ──────────────────────────────────────────────
 # Middleware
+# ──────────────────────────────────────────────
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 
-
+# ──────────────────────────────────────────────
+# Database
+# ──────────────────────────────────────────────
 DATABASES = {
-    # "default": {
-    #     "ENGINE": "django.db.backends.sqlite3",
-    #     "NAME": BASE_DIR / 'db.sqlite3',
-    # }
     "default": {
         "ENGINE": "django.db.backends.postgresql",
         "NAME": os.environ.get("DB_NAME"),
         "USER": os.environ.get("DB_USER"),
-        "PASSWORD": "School30332319!!!",
-        # "PASSWORD": KeyVaultClient().get_secret("deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD")),
+        "PASSWORD": _kv.get_secret(
+            "deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD")
+        ),
         "HOST": os.environ.get("DB_HOST"),
         "PORT": os.environ.get("DB_PORT"),
-        # "OPTIONS": {
-        #     "sslrootcert": os.environ.get("DB_SSL_CERT"),
-        # },
         "CONN_MAX_AGE": 600,
-        # "OPTIONS": {"sslmode": "disable"}
     }
 }
 
-# DATABASES = {
-#     "default": {
-#         "ENGINE": "django.db.backends.sqlite3",
-#         "NAME": BASE_DIR / "db.sqlite3",
-#     }
-# }
-
-
+# ──────────────────────────────────────────────
 # Static & Media Files
+# ──────────────────────────────────────────────
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_DIRS = [
@@ -206,52 +174,43 @@ STORAGES = {
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "main_site", "media")
 
-# Authentication Redirects
+# ──────────────────────────────────────────────
+# Authentication
+# ──────────────────────────────────────────────
 LOGIN_REDIRECT_URL = "/"
 LOGOUT_REDIRECT_URL = "/accounts/login/"
+AUTH_USER_MODEL = "accounts.UserProfile"
 
-#  External Services
+# ──────────────────────────────────────────────
+# External Services
+# ──────────────────────────────────────────────
 STRIPE = {
-    "PUBLISHABLE_KEY": KeyVaultClient().get_secret(
+    "PUBLISHABLE_KEY": _kv.get_secret(
         "stripe-publishable-key", os.getenv("STRIPE_PUBLISHABLE_KEY")
     ),
-    "SECRET_KEY": KeyVaultClient().get_secret(
+    "SECRET_KEY": _kv.get_secret(
         "stripe-secret-key", os.getenv("STRIPE_SECRET_KEY")
     ),
-    # Prefer Key Vault, fall back to STRIPE_WEBHOOK_SECRET env var if Key Vault unavailable
-    "WEBHOOK_SECRET": KeyVaultClient().get_secret(
+    "WEBHOOK_SECRET": _kv.get_secret(
         "stripe-webhook-secret", os.environ.get("STRIPE_WEBHOOK_SECRET")
     ),
 }
 
 GITHUB = {
     "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
-    # "CLIENT_SECRET": KeyVaultClient().get_secret('deploy-box-github-client-secret', os.getenv("DEPLOY_BOX_GITHUB_CLIENT_SECRET")),
     "CLIENT_SECRET": os.getenv("DEPLOY_BOX_GITHUB_CLIENT_SECRET"),
-    "TOKEN_KEY": KeyVaultClient().get_secret(
+    "TOKEN_KEY": _kv.get_secret(
         "deploy-box-github-token-key", os.getenv("DEPLOY_BOX_GITHUB_TOKEN_KEY")
     ),
 }
 
 AZURE = {
-    # "CLIENT_ID": KeyVaultClient().get_secret("arm-client-id", os.getenv("ARM_CLIENT_ID")),
-    # "CLIENT_SECRET": KeyVaultClient().get_secret("arm-client-secret", os.getenv("ARM_CLIENT_SECRET")),
-    # "TENANT_ID": KeyVaultClient().get_secret("arm-tenant-id", os.getenv("ARM_TENANT_ID")),
     "STORAGE_CONNECTION_STRING": os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
-    # KeyVaultClient().get_secret(
-    #     "azure-storage-connection-string", os.getenv("AZURE_STORAGE_CONNECTION_STRING")
-    # ),
-    "CONTAINER_NAME": KeyVaultClient().get_secret(
+    "CONTAINER_NAME": _kv.get_secret(
         "container-name", os.getenv("CONTAINER_NAME")
     ),
-    # "RESOURCE_GROUP_NAME": KeyVaultClient().get_secret("resource-group-name"),
-    # "ACR_PASSWORD": KeyVaultClient().get_secret("acr-password", os.getenv("ACR_PASSWORD")),
 }
 
-# DeployBox Stack Endpoint for file downloads
-# This environment variable should point to a base URL where stack source files are hosted
-# The system will append /{stack_id}/source.zip to this URL when downloading files
-# Example: DEPLOY_BOX_STACK_ENDPOINT=https://api.deploybox.com/stacks
 DEPLOY_BOX_STACK_ENDPOINT = os.environ.get("DEPLOY_BOX_STACK_ENDPOINT")
 
 AZURE_SERVICE_BUS = {
@@ -259,7 +218,9 @@ AZURE_SERVICE_BUS = {
     "QUEUE_NAME": "iac",
 }
 
-# Templates Configuration
+# ──────────────────────────────────────────────
+# Templates
+# ──────────────────────────────────────────────
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
@@ -276,30 +237,27 @@ TEMPLATES = [
     },
 ]
 
-# Password validation
+# ──────────────────────────────────────────────
+# Password Validation
+# ──────────────────────────────────────────────
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
-    },
-    {
-        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
-    },
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 
-AUTH_USER_MODEL = "accounts.UserProfile"
-
+# ──────────────────────────────────────────────
 # Internationalization
+# ──────────────────────────────────────────────
 LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+# ──────────────────────────────────────────────
+# CKEditor 5
+# ──────────────────────────────────────────────
 CKEDITOR_5_CONFIGS = {
     "default": {
         "toolbar": {

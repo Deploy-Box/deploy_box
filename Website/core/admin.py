@@ -1,6 +1,5 @@
 from django.contrib.admin import AdminSite
 from django.views.decorators.csrf import csrf_exempt
-from oauth2_provider.models import Application
 from blogs.admin import BlogPostAdmin
 from blogs.models import BlogPost
 from stacks.admin import PurchasableStackAdmin, StackAdmin, MetricDefinitionAdmin
@@ -26,8 +25,7 @@ class NoCSRFAdminSite(AdminSite):
 # Create an instance of our custom admin site
 admin_site = NoCSRFAdminSite()
 
-# Register OAuth2 provider models
-admin_site.register(Application)
+# Register app models
 admin_site.register(PurchasableStack, PurchasableStackAdmin)
 admin_site.register(Stack, StackAdmin)
 admin_site.register(MetricDefinition, MetricDefinitionAdmin)
