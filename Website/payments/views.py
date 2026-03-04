@@ -12,7 +12,6 @@ from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
 from typing import Union
 
-from core.decorators import oauth_required, AuthHttpRequest
 import stacks.services as stack_services
 from stacks.models import PurchasableStack
 from organizations.models import Organization
@@ -35,7 +34,7 @@ def stripe_config(request: HttpRequest) -> JsonResponse:
     return JsonResponse(stripe_config, status=200)
 
 
-def save_stripe_payment_method(request: AuthHttpRequest) -> JsonResponse:
+def save_stripe_payment_method(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse(
             {"error": "Invalid request method. Only POST is allowed."}, status=405
@@ -86,7 +85,7 @@ def save_stripe_payment_method(request: AuthHttpRequest) -> JsonResponse:
             {"error": f"An error occurred while saving the payment method: {e}"}, status=400
         )
 
-def create_payment_intent(request: AuthHttpRequest) -> JsonResponse:
+def create_payment_intent(request: HttpRequest) -> JsonResponse:
     if request.method != "POST":
         return JsonResponse(
             {"error": "Invalid request method. Only POST is allowed."}, status=405
@@ -127,9 +126,8 @@ def create_payment_intent(request: AuthHttpRequest) -> JsonResponse:
         )
 
 
-@oauth_required()
-def create_checkout_session(request: AuthHttpRequest, org_id: str) -> JsonResponse:
-    auth_user = request.auth_user
+def create_checkout_session(request: HttpRequest, org_id: str) -> JsonResponse:
+    auth_user = request.user
 
     if not org_id:
         return JsonResponse({"error": "Organization ID is required"}, status=400)
@@ -421,22 +419,18 @@ def update_invoice_billing(request):
             )
 
 
-# @oauth_required()
 # def create_price_item(request: HttpRequest) -> JsonResponse:
 #     return pricing_services.create_price_item(request)
 
 
-# @oauth_required()
 # def update_price_item(request: HttpRequest) -> JsonResponse:
 #     return pricing_services.update_price_item(request)
 
 
-# @oauth_required()
 # def delete_price_item(request: HttpRequest) -> JsonResponse:
 #     return pricing_services.delete_price_item(request)
 
 
-# @oauth_required()
 # def get_price_item_by_name(request: HttpRequest, name: str) -> JsonResponse:
 #     return pricing_services.get_price_item_by_name(request, name)
 

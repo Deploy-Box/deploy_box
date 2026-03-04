@@ -6,7 +6,6 @@ from organizations.models import Organization
 from stacks.models import PurchasableStack
 from projects.models import Project
 from payments.views import create_checkout_session, check_organization_payment_methods
-from core.decorators import AuthHttpRequest
 from django.urls import reverse
 import json
 from rest_framework.test import APIRequestFactory, force_authenticate, APIClient
@@ -69,7 +68,6 @@ class PaymentViewsTestCase(TestCase):
             format='json'
         )
         force_authenticate(request, user=self.user)
-        request.auth_user = self.user
 
         with patch('payments.views.get_organization', return_value=self.organization):
             # Bypass oauth decorator so we can control rendering

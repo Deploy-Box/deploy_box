@@ -135,6 +135,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "core.middleware.LoginRequiredMiddleware",
 ]
 
 # ──────────────────────────────────────────────
@@ -146,7 +147,7 @@ DATABASES = {
         "NAME": os.environ.get("DB_NAME"),
         "USER": os.environ.get("DB_USER"),
         "PASSWORD": _kv.get_secret(
-            "deploy-box-postgresql-db-password", os.getenv("DB_PASSWORD")
+            "deploy-box-postgresql-db-password"
         ),
         "HOST": os.environ.get("DB_HOST"),
         "PORT": os.environ.get("DB_PORT"),

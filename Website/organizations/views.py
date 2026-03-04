@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import action
@@ -6,11 +6,9 @@ from rest_framework.viewsets import ViewSet
 from rest_framework.response import Response
 
 import organizations.handlers as handlers
-from core.decorators import oauth_required, AuthHttpRequest
 
-@oauth_required()
 def bulk_routing(
-    request: AuthHttpRequest,
+    request: HttpRequest,
 ) -> JsonResponse:
     if request.method == "GET":
         return handlers.get_organizations(request)
@@ -23,9 +21,8 @@ def bulk_routing(
             {"error": "Method not allowed"}, status=405
         )
 
-@oauth_required()
 def specific_routing(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     organization_id: str,
 ) -> JsonResponse:
     if request.method == "GET":
@@ -42,9 +39,8 @@ def specific_routing(
             {"error": "Method not allowed"}, status=405
         )
 
-@oauth_required()
 def update_user(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     organization_id: str,
     user_id: str
 ) -> JsonResponse:
@@ -53,9 +49,8 @@ def update_user(
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
-@oauth_required()
 def remove_org_member(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     organization_id: str,
     user_id: str
 ) -> JsonResponse:
@@ -64,9 +59,8 @@ def remove_org_member(
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
-@oauth_required()
 def invite_new_user_to_org(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     organization_id: str,
 ) -> JsonResponse:
     if request.method == "POST":
@@ -74,9 +68,8 @@ def invite_new_user_to_org(
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
-@oauth_required()
 def leave_organization(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     organization_id: str
 ) -> JsonResponse:
     if request.method == "POST":
@@ -84,9 +77,8 @@ def leave_organization(
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
-@oauth_required()
 def remove_pending_invite(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     organization_id: str,
     invite_id: str
 ) -> JsonResponse:
@@ -96,9 +88,8 @@ def remove_pending_invite(
         return JsonResponse({"success": False, "message": "method not allowed"}, status=405)
 
 # Project transfer views
-@oauth_required()
 def initiate_project_transfer(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     project_id: str,
 ) -> JsonResponse:
     if request.method == "POST":
@@ -106,9 +97,8 @@ def initiate_project_transfer(
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
-@oauth_required()
 def accept_project_transfer(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     transfer_id: str,
 ) -> JsonResponse:
     if request.method == "POST":
@@ -116,9 +106,8 @@ def accept_project_transfer(
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
-@oauth_required()
 def get_project_transfer_status(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     transfer_id: str,
 ) -> JsonResponse:
     if request.method == "GET":
@@ -126,18 +115,16 @@ def get_project_transfer_status(
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
-@oauth_required()
 def get_user_transfer_invitations(
-    request: AuthHttpRequest,
+    request: HttpRequest,
 ) -> JsonResponse:
     if request.method == "GET":
         return handlers.get_user_transfer_invitations(request)
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
-@oauth_required()
 def cancel_project_transfer(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     transfer_id: str,
 ) -> JsonResponse:
     if request.method == "POST":
@@ -145,9 +132,8 @@ def cancel_project_transfer(
     else:
         return JsonResponse({"message": "method not allowed"}, status=405)
 
-@oauth_required()
 def transfer_project_to_organization(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     project_id: str,
 ) -> JsonResponse:
     if request.method == "POST":

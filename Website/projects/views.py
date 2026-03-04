@@ -1,13 +1,11 @@
-from django.http import HttpResponse, JsonResponse, FileResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse, FileResponse
 
-from core.decorators import oauth_required, AuthHttpRequest
 import projects.handlers as handlers
 from typing import Union
 
 
-@oauth_required()
 def base_routing(
-    request: AuthHttpRequest,
+    request: HttpRequest,
 ) -> Union[JsonResponse, HttpResponse]:
     if request.method == "GET":
         return handlers.get_projects(request)
@@ -20,9 +18,8 @@ def base_routing(
             {"error": "Method not allowed"}, status=405
         )
 
-@oauth_required()
 def specific_routing(
-    request: AuthHttpRequest,
+    request: HttpRequest,
     project_id: str,
 ) -> JsonResponse:
     if request.method == "GET":

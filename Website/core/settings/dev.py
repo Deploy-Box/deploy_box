@@ -37,6 +37,7 @@ SECURE_HSTS_SECONDS = 0
 SECURE_SSL_REDIRECT = False
 
 # ──────────────────────────────────────────────
-# Database — override password for local dev
+# Database — override password for local dev (only if explicitly set)
 # ──────────────────────────────────────────────
-DATABASES["default"]["PASSWORD"] = os.environ.get("DB_PASSWORD", "")
+if os.environ.get("DB_PASSWORD"):
+    DATABASES["default"]["PASSWORD"] = os.environ["DB_PASSWORD"]

@@ -1,127 +1,44 @@
-from django.shortcuts import render, redirect
-from django.http import HttpRequest, HttpResponse
+import base64
+import datetime
+import json
+import logging
+
+import qrcode
+import stripe
 from django.conf import settings
 from django.contrib import messages
+from django.http import HttpRequest, HttpResponse
+from django.shortcuts import redirect, render
 from django.views import View
-from typing import cast
-import logging
-import calendar
-import stripe
-import qrcode
 from io import BytesIO
-import base64
+from typing import cast
 
-
-from stacks.stack_managers.get_manager import get_stack_manager
-from stacks.resources.resources_manager import ResourcesManager
 from accounts.models import UserProfile
-from organizations.models import Organization, OrganizationMember, PendingInvites, ProjectTransferInvitation
+from deploy_box_apis.views import get_project_api_info
 from organizations.forms import (
     OrganizationMemberForm,
     NonexistantOrganizationMemberForm,
 )
-from organizations.services import get_organizations
+from organizations.models import (
+    Organization,
+    OrganizationMember,
+    PendingInvites,
+    ProjectTransferInvitation,
+)
 from projects.forms import ProjectCreateFormWithMembers, ProjectSettingsForm
 from projects.models import Project, ProjectMember
 from stacks.forms import EnvFileUploadForm, StackSettingsForm, EnvironmentVariablesForm
 from stacks.models import PurchasableStack, Stack
-from core.decorators import oauth_required
+from stacks.resources.resources_manager import ResourcesManager
+from stacks.stack_managers.get_manager import get_stack_manager
 
 logger = logging.getLogger(__name__)
-
-
-# Basic Routes
-def home(request: HttpRequest) -> HttpResponse:
-    return render(request, "home.html", {"show_footer": False})
-
-
-def stacks(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks.html", {"show_footer": False})
-
-
-def mern_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/mern_stack.html", {"show_footer": False})
-
-
-def django_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/django_stack.html", {"show_footer": False})
-
-
-def mean_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/mean_stack.html", {"show_footer": False})
-
-
-def lamp_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/lamp_stack.html", {"show_footer": False})
-
-
-def mevn_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/mevn_stack.html", {"show_footer": False})
-
-
-def mobile_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/mobile_stack.html", {"show_footer": False})
-
-
-def llm_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/llm_stack.html", {"show_footer": False})
-
-
-def ai_data_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/ai_data_stack.html", {"show_footer": False})
-
-
-def computer_vision_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/computer_vision_stack.html", {"show_footer": False})
-
-
-def image_generation_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/image_generation_stack.html", {"show_footer": False})
-
-
-def ai_agents_stack(request: HttpRequest) -> HttpResponse:
-    return render(request, "stacks/ai_agents_stack.html", {"show_footer": False})
-
-
-def pricing(request: HttpRequest) -> HttpResponse:
-    return render(request, "pricing.html", {"show_footer": False})
-
-
-def profile(request: HttpRequest) -> HttpResponse:
-    github_linked = False
-    github_username = None
-    if request.user.is_authenticated:
-        from github.models import Token
-        token = Token.objects.filter(user=request.user).first()
-        if token:
-            github_linked = True
-            github_user = request.session.get("github_user")
-            if github_user:
-                github_username = github_user.get("login")
-    return render(request, "profile.html", {
-        "show_footer": False,
-        "github_linked": github_linked,
-        "github_username": github_username,
-    })
-
-
-def maintenance(request: HttpRequest) -> HttpResponse:
-    return render(request, "maintenance.html", {})
-
-
-def still_configuring(request: HttpRequest) -> HttpResponse:
-    return render(request, "still_configuring.html", {"show_footer": False})
-
-
-def subdomain_not_found(request: HttpRequest) -> HttpResponse:
-    return render(request, "subdomain_not_found.html")
 
 
 class DashboardView(View):
     """Class-based view for all dashboard-related functionality."""
 
-
-    @oauth_required()
+    
     def get(self, request: HttpRequest) -> HttpResponse:
         """Main dashboard view."""
         user = cast(UserProfile, request.user)
@@ -154,7 +71,7 @@ class DashboardView(View):
                 },
             )
 
-    @oauth_required()
+    
     def organization_select(self, request: HttpRequest) -> HttpResponse:
         """Organization selection view - shows all organizations user has access to."""
         user = cast(UserProfile, request.user)
@@ -179,7 +96,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def organization_dashboard(self, request: HttpRequest, organization_id: str) -> HttpResponse:
         """Organization-specific dashboard."""
         user = cast(UserProfile, request.user)
@@ -207,7 +124,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def organization_billing(self, request: HttpRequest, organization_id: str) -> HttpResponse:
         """Organization billing page."""
         user = cast(UserProfile, request.user)
@@ -268,7 +185,6 @@ class DashboardView(View):
         # Calculate actual monthly cost (usage minus $10 free tier credit)
         actual_monthly_cost = max(0, projected_monthly_usage - 10.0)
 
-        import datetime
         try:
             # Try to use a real month start attribute; default to first of this month
             month_start = getattr(organization, 'month_start', datetime.datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0))
@@ -307,7 +223,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def project_dashboard(self, request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
         """Project-specific dashboard."""
         user = cast(UserProfile, request.user)
@@ -348,7 +264,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def stack_dashboard(self, request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
         """Stack-specific dashboard."""
         user = cast(UserProfile, request.user)
@@ -438,7 +354,6 @@ class DashboardView(View):
         infrastructure_wrappers, infrastructure_nodes, infrastructure_connections = stack_manager.get_infrastructure_diagram_data()
             
         if stack_type == "pong":
-            import json
             pong_infrastructure_wrappers = json.dumps([
                 {
                     "id": "vm",
@@ -517,7 +432,6 @@ class DashboardView(View):
             ])
         
         elif stack_type == "mobile":
-            import json
             infrastructure_wrappers = json.dumps([
                 {
                     "id": "backend_services",
@@ -667,14 +581,13 @@ class DashboardView(View):
     @staticmethod
     def _get_stack_resources_json(stack) -> str:
         """Serialize all resources for a stack to JSON for the frontend."""
-        import json
         resources = ResourcesManager.get_from_stack(stack)
         serialized = ResourcesManager.serialize(resources)
         # Filter out None values from serialization failures
         serialized = [r for r in serialized if r is not None]
         return json.dumps(serialized)
 
-    @oauth_required()
+    
     def add_org_members(self, request: HttpRequest, organization_id: str) -> HttpResponse:
         """Add organization members view."""
         user = cast(UserProfile, request.user)
@@ -697,9 +610,7 @@ class DashboardView(View):
             {"organization": organization, "user": user, "form": form},
         )
 
-
-
-    @oauth_required()
+    
     def create_project_form(self, request: HttpRequest, organization_id: str) -> HttpResponse:
         """Create project form view."""
         form = ProjectCreateFormWithMembers()
@@ -709,7 +620,7 @@ class DashboardView(View):
             {"form": form, "organization_id": organization_id},
         )
 
-    @oauth_required()
+    
     def organization_members(self, request: HttpRequest, organization_id: str) -> HttpResponse:
         """Organization members page."""
         user = cast(UserProfile, request.user)
@@ -739,7 +650,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def organization_settings(self, request: HttpRequest, organization_id: str) -> HttpResponse:
         """Organization settings page."""
         user = cast(UserProfile, request.user)
@@ -756,7 +667,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def project_settings(self, request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
         """Project settings page."""
         user = cast(UserProfile, request.user)
@@ -793,7 +704,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def stack_settings(self, request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
         """Stack settings page."""
         user = cast(UserProfile, request.user)
@@ -833,7 +744,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def environment_variables(self, request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
         """Environment variables configuration page."""
         user = cast(UserProfile, request.user)
@@ -906,7 +817,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def environments(self, request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
         """Environment management page."""
         user = cast(UserProfile, request.user)
@@ -938,7 +849,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def project_transfer_accept(self, request: HttpRequest, transfer_id: str) -> HttpResponse:
         """Project transfer acceptance page."""
         user = cast(UserProfile, request.user)
@@ -1006,7 +917,7 @@ class DashboardView(View):
                 }
             )
 
-    @oauth_required()
+    
     def transfer_invitations(self, request: HttpRequest) -> HttpResponse:
         """View for transfer invitations."""
         user = cast(UserProfile, request.user)
@@ -1044,7 +955,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def stack_marketplace(self, request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
         """View for the stack marketplace where users can purchase stacks."""
         user = cast(UserProfile, request.user)
@@ -1121,7 +1032,7 @@ class DashboardView(View):
             },
         )
 
-    @oauth_required()
+    
     def api_marketplace(self, request: HttpRequest, organization_id: str, project_id: str) -> HttpResponse:
         """View for the API marketplace where users can purchase APIs."""
         user = cast(UserProfile, request.user)
@@ -1145,9 +1056,6 @@ class DashboardView(View):
         user_projects = Project.objects.filter(projectmember__user=user)
         user_stacks = Stack.objects.filter(project__projectmember__user=user)
 
-
-        from deploy_box_apis.views import get_project_api_info
-
         deploy_box_api_render_info = get_project_api_info(project_id=project_id)
 
         render_data = {
@@ -1169,7 +1077,7 @@ class DashboardView(View):
             render_data,
         )
 
-    @oauth_required()
+    
     def stack_details(self, request: HttpRequest, organization_id: str, project_id: str, stack_id: str) -> HttpResponse:
         """View for individual stack details page."""
         user = cast(UserProfile, request.user)
@@ -1227,317 +1135,4 @@ class DashboardView(View):
         )
 
 
-class PaymentView(View):
-    """Class-based view for all payment-related functionality."""
-
-    STRIPE_PUBLISHABLE_KEY = settings.STRIPE.get("PUBLISHABLE_KEY", None)
-
-    @oauth_required()
-    def home_page_view(self, request: HttpRequest, variant: str) -> HttpResponse:
-        """Payment home page view - redirects to new stacks marketplace."""
-        # Redirect to the new stacks marketplace with the variant as a query parameter
-        return redirect(f'/stacks-marketplace/?variant={variant}')
-
-    def _generate_stack_features(self, stack_type: str, variant: str) -> list:
-        """Generate features list based on stack type and variant."""
-        base_features = {
-            'MERN': [
-                'MongoDB Database',
-                'Express.js Backend API',
-                'React Frontend',
-                'Node.js Runtime',
-                'Docker Containerization',
-                'Auto-deployment'
-            ],
-            'DJANGO': [
-                'Django Backend',
-                'PostgreSQL Database',
-                'React Frontend',
-                'Docker Containerization',
-                'Admin Interface',
-                'Auto-deployment'
-            ],
-            'MEAN': [
-                'MongoDB Database',
-                'Express.js Backend API',
-                'Angular Frontend',
-                'Node.js Runtime',
-                'Docker Containerization',
-                'Auto-deployment'
-            ],
-            'LAMP': [
-                'Apache Web Server',
-                'MySQL Database',
-                'PHP Backend',
-                'Docker Containerization',
-                'Basic Security',
-                'Auto-deployment'
-            ]
-        }
-        
-        premium_features = {
-            'MERN': [
-                'Everything in Basic',
-                'Redis Caching',
-                'Advanced Security',
-                'Performance Monitoring',
-                'CI/CD Pipeline',
-                'Priority Support'
-            ],
-            'DJANGO': [
-                'Everything in Basic',
-                'Redis Caching',
-                'Celery Task Queue',
-                'Advanced Security',
-                'Performance Monitoring',
-                'Priority Support'
-            ],
-            'MEAN': [
-                'Everything in Basic',
-                'Redis Caching',
-                'Advanced Security',
-                'Performance Monitoring',
-                'CI/CD Pipeline',
-                'Priority Support'
-            ],
-            'LAMP': [
-                'Everything in Basic',
-                'Redis Caching',
-                'Advanced Security',
-                'Performance Monitoring',
-                'SSL Certificate',
-                'Priority Support'
-            ]
-        }
-        
-        pro_features = {
-            'MERN': [
-                'Everything in Premium',
-                'Microservices Architecture',
-                'Advanced Caching (Redis + Memcached)',
-                'Load Balancing',
-                'Auto-scaling Infrastructure',
-                '24/7 Priority Support',
-                'Custom Domain Setup',
-                'Advanced Analytics'
-            ],
-            'DJANGO': [
-                'Everything in Premium',
-                'Microservices Architecture',
-                'Advanced Caching (Redis + Memcached)',
-                'Load Balancing',
-                'Auto-scaling Infrastructure',
-                '24/7 Priority Support',
-                'Custom Domain Setup',
-                'Advanced Analytics'
-            ],
-            'MEAN': [
-                'Everything in Premium',
-                'Microservices Architecture',
-                'Advanced Caching (Redis + Memcached)',
-                'Load Balancing',
-                'Auto-scaling Infrastructure',
-                '24/7 Priority Support',
-                'Custom Domain Setup',
-                'Advanced Analytics'
-            ],
-            'LAMP': [
-                'Everything in Premium',
-                'Microservices Architecture',
-                'Advanced Caching (Redis + Memcached)',
-                'Load Balancing',
-                'Auto-scaling Infrastructure',
-                '24/7 Priority Support',
-                'Custom Domain Setup',
-                'Advanced Analytics'
-            ]
-        }
-        
-        if variant.upper() == 'BASIC' or variant.upper() == 'FREE':
-            return base_features.get(stack_type, ['Basic features'])
-        elif variant.upper() == 'PREMIUM':
-            return premium_features.get(stack_type, ['Premium features'])
-        elif variant.upper() == 'PRO':
-            return pro_features.get(stack_type, ['Pro features'])
-        else:
-            return base_features.get(stack_type, ['Basic features'])
-
-    def stacks_marketplace_view(self, request: HttpRequest) -> HttpResponse:
-        """Stacks marketplace view with filter options."""
-        is_authenticated = request.user.is_authenticated
-
-        if is_authenticated:
-            user_profile = cast(UserProfile, request.user)
-            organizations = get_organizations(user_profile)
-
-            # Look through orgs until we find one with projects
-            organization = None
-            projects = []
-            project = None
-            for org in organizations:
-                org_projects = org.get_projects()
-                print(org_projects)
-                if org_projects:
-                    organization = org
-                    projects = org_projects
-                    project = projects[0]
-                    break
-
-        else:
-            organization = None
-            project = None
-
-        print(organization)
-        print(project)
-        
-        # Get variant from query parameter, default to 'BASIC'
-        variant = request.GET.get('variant', 'BASIC').upper()
-        
-        # Get stacks with pricing information (same as stack marketplace)
-        import stripe
-        stripe.api_key = settings.STRIPE.get("SECRET_KEY")
-        
-        stack_options = []
-        db_stacks = PurchasableStack.objects.all()  # Get all stacks, filter in template
-        print("here is stacks: ", db_stacks)
-        
-        for stack in db_stacks:
-            try:
-                # Map stack type to icon and color
-                icon_map = {
-                    'MERN': '⚛️',
-                    'DJANGO': '🐍',
-                    'MEAN': '🅰️',
-                    'LAMP': '🐘'
-                }
-                
-                color_map = {
-                    'BASIC': 'emerald',
-                    'PREMIUM': 'amber',
-                    'PRO': 'purple',
-                    'FREE': 'emerald'
-                }
-   
-                stack_options.append({
-                    'id': str(stack.id),
-                    'name': stack.name,
-                    'type': stack.type,
-                    'variant': stack.variant,
-                    'description': stack.description,
-                    'features': stack.features,
-                    'icon': icon_map.get(stack.type, '📦'),
-                    'color': color_map.get(stack.variant, 'emerald'),
-                    'popular': False,
-                    'is_from_database': True
-                })
-            except stripe.error.StripeError as e: # type: ignore[attr-defined]
-                # Log error but continue with other stacks
-                logger.error(f"Error fetching price for stack {stack.id}: {e}")
-                continue
-        
-        return render(
-            request,
-            "payments/stacks_marketplace.html",
-            {
-                "organization_id": organization.id if organization else None,
-                "project_id": project.id if project else None,
-                "stack_options": stack_options,
-                "selected_variant": variant,
-            },
-        )
-
-    @oauth_required()
-    def add_card_view(self, request: HttpRequest) -> HttpResponse:
-        """Add card view."""
-        return render(
-            request,
-            "payments/add-card.html",
-            {"stripe_publishable_key": self.STRIPE_PUBLISHABLE_KEY},
-        )
-
-    @oauth_required()
-    def success_view(self, request: HttpRequest) -> HttpResponse:
-        """Payment success view."""
-        return render(request, "payments/success.html")
-
-    @oauth_required()
-    def cancelled_view(self, request: HttpRequest) -> HttpResponse:
-        """Payment cancelled view."""
-        return render(request, "payments/cancelled.html")
-
-
-class AuthView(View):
-    """Class-based view for all authentication-related functionality.
-    All auth flows go through WorkOS AuthKit."""
-
-    def login(self, request: HttpRequest) -> HttpResponse:
-        """Redirect to WorkOS AuthKit for login."""
-        next_url = request.GET.get('next', '')
-        workos_url = '/api/v1/accounts/oauth/workos/'
-        if next_url:
-            workos_url += f'?state={next_url}'
-        return redirect(workos_url)
-
-    def signup(self, request: HttpRequest) -> HttpResponse:
-        """Redirect to WorkOS AuthKit for signup."""
-        return redirect('/api/v1/accounts/oauth/workos/')
-    
-class ExamplesView(View):
-    def example_organization_members(self, request: HttpRequest) -> HttpResponse:
-        """Example organization members view."""
-
-        # Mock data for example organization members view
-        user = UserProfile(username="example_user", email="user@example.com")
-        organization_id = "example_org_id"
-        organization = Organization(id=organization_id, name="Example Organization", email="org@example.com")
-        members = [
-            OrganizationMember(user=user, organization=organization, role="admin"),
-            OrganizationMember(user=UserProfile(username="member1", email="member1@example.com"), organization=organization, role="member"),
-        ]
-        pending_invites = [
-            PendingInvites(email="invitee@example.com", organization=organization),
-        ]
-        user_organizations = [
-            organization,
-            Organization(id="org2", name="Another Org", email="another@example.com"),
-        ]
-        is_admin = True
-
-        return render(
-            request,
-            "dashboard/organization_members.html",
-            {
-                "user": user,
-                "organization": organization,
-                "members": members,
-                "pending_invites": pending_invites,
-                "user_organizations": user_organizations,
-                "current_organization_id": organization_id,
-                "is_admin": is_admin,
-            },
-        )
-
-class ComponentsView(View):
-    """Class-based view for components."""
-
-    def components(self, request: HttpRequest) -> HttpResponse:
-        """Components view."""
-        return render(request, "components/components.html", {})
-
-def google_verification(request: HttpRequest) -> HttpResponse:
-    """Google verification view."""
-    # This is a static HTML file for Google Search Console verification
-    return render(request, "google_stuff/google0f33857d0e9df9a5.html", content_type="text/html")
-
-def sitemap(request: HttpRequest) -> HttpResponse:
-    """Sitemap view."""
-    # This is a static XML file for sitemap
-    return render(request, "google_stuff/sitemap.xml", content_type="application/xml")
-
-
-# Create instances for URL routing
 dashboard_view = DashboardView()
-payment_view = PaymentView()
-auth_view = AuthView()
-components_view = ComponentsView()
-examples_view = ExamplesView()

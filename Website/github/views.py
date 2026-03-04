@@ -15,7 +15,6 @@ from django.urls import reverse
 from django.template.loader import render_to_string
 
 import stacks.services as stack_services
-from core.decorators import oauth_required, AuthHttpRequest
 from core.helpers import request_helpers
 from github.models import Webhook, Token
 from stacks.models import Stack
@@ -32,8 +31,7 @@ GITHUB_REPOS_URL = "https://api.github.com/user/repos"
 logger = logging.getLogger(__name__)
 
 
-@oauth_required()
-def login(request: AuthHttpRequest) -> HttpResponse:
+def login(request: HttpRequest) -> HttpResponse:
     """Redirects users to GitHub OAuth page."""
     next_url = request.GET.get("next", "")
 
@@ -43,7 +41,7 @@ def login(request: AuthHttpRequest) -> HttpResponse:
     if not ENCRYPTION_KEY:
         raise ValueError("GITHUB_TOKEN_KEY is not set")
 
-    state_data = {"user_id": str(request.auth_user.pk), "next": next_url}
+    state_data = {"user_id": str(request.user.pk), "next": next_url}
     cipher = Fernet(ENCRYPTION_KEY)
     state = cipher.encrypt(json.dumps(state_data).encode())
 
@@ -143,10 +141,9 @@ def logout(request: HttpRequest) -> HttpResponse:
     return redirect(reverse("github:home"))
 
 
-@oauth_required()
-def list_repos(request: AuthHttpRequest) -> HttpResponse:
+def list_repos(request: HttpRequest) -> HttpResponse:
     """Fetch and display user repositories with a deploy button."""
-    user = request.auth_user
+    user = request.user
     github_token = get_object_or_404(Token, user=user).get_token()
 
     repo_response = requests.get(
@@ -201,7 +198,6 @@ def create_iac_webhook(
     }
 
 
-@oauth_required()
 def create_github_webhook(request: HttpRequest) -> JsonResponse:
     """Create and store a GitHub webhook for a user's repository."""
     user = cast(UserProfile, request.user)
@@ -450,10 +446,9 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"status": "success", "event_type": event_type}, status=200)
 
 
-@oauth_required()
-def get_repos_json(request: AuthHttpRequest) -> JsonResponse:
+def get_repos_json(request: HttpRequest) -> JsonResponse:
     """Fetch user repositories and return as JSON."""
-    user = request.auth_user
+    user = request.user
     github_token = get_object_or_404(Token, user=user).get_token()
 
     repo_response = requests.get(
@@ -469,7 +464,6 @@ def get_repos_json(request: AuthHttpRequest) -> JsonResponse:
     return JsonResponse({"repositories": repos})
 
 
-@oauth_required()
 def disconnect_github_webhook(request: HttpRequest) -> JsonResponse:
     """Disconnect a GitHub webhook from a stack."""
     user = cast(UserProfile, request.user)
@@ -536,10 +530,9 @@ def disconnect_github_webhook(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"message": "Webhook disconnected successfully"}, status=200)
 
 
-@oauth_required()
-def unlink_github(request: AuthHttpRequest) -> JsonResponse:
+def unlink_github(request: HttpRequest) -> JsonResponse:
     """Unlink GitHub account by deleting the stored token and all webhooks."""
-    user = request.auth_user
+    user = request.user
     logger.info(f"Starting GitHub unlink process for user {user.username}")
 
     if request.method != "POST":
@@ -586,10 +579,10 @@ def unlink_github(request: AuthHttpRequest) -> JsonResponse:
     )
 
 
-@oauth_required()
-def get_webhook_status(request: AuthHttpRequest) -> JsonResponse:
+
+def get_webhook_status(request: HttpRequest) -> JsonResponse:
     """Get the webhook status for a stack."""
-    user = request.auth_user
+    user = request.user
     
     try:
         stack_id = request_helpers.assertRequestFields(request, ["stack-id"])

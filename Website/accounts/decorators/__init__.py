@@ -1,1 +1,0 @@
-# Decorators package for accounts app 

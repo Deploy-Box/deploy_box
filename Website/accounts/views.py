@@ -7,7 +7,6 @@ from accounts.serializers.UserCreationSerializer import UserCreationSerializer
 from organizations.models import PendingInvites, OrganizationMember, Organization
 from django.conf import settings
 from django.db import transaction
-from core.decorators import oauth_required
 import logging
 from django.utils import timezone
 from workos import WorkOSClient
@@ -290,7 +289,6 @@ class LogoutAPIView(APIView):
 class ProfileAPIView(APIView):
     """API view for user profile operations."""
 
-    @oauth_required()
     def get(self, request):
         """Get current user profile data."""
         if not request.user.is_authenticated:
@@ -308,7 +306,6 @@ class ProfileAPIView(APIView):
             "user": user_data
         })
 
-    @oauth_required()
     def post(self, request):
         """Update user profile data."""
         if not request.user.is_authenticated:
@@ -358,7 +355,6 @@ class ProfileAPIView(APIView):
 class DeleteAccountAPIView(APIView):
     """API view for account deletion functionality."""
     
-    @oauth_required()
     def delete(self, request):
         """Delete the authenticated user's account."""
         if not request.user.is_authenticated:

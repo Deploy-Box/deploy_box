@@ -1,18 +1,17 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpRequest, HttpResponse, JsonResponse
 
-from core.decorators import AuthHttpRequest
 from core.helpers import request_helpers
 import projects.services as services
 from typing import Union
 
 
-def get_projects(request: AuthHttpRequest) -> JsonResponse:
-    user = request.auth_user
+def get_projects(request: HttpRequest) -> JsonResponse:
+    user = request.user
 
     return services.get_projects(user)
 
-def get_project(request: AuthHttpRequest, project_id: str) -> JsonResponse:
-    user = request.auth_user
+def get_project(request: HttpRequest, project_id: str) -> JsonResponse:
+    user = request.user
 
     project = services.get_project(user, project_id)
 
@@ -22,9 +21,9 @@ def get_project(request: AuthHttpRequest, project_id: str) -> JsonResponse:
     return JsonResponse(project, status=200)
 
 
-def create_project(request: AuthHttpRequest) -> Union[JsonResponse, HttpResponse]:
+def create_project(request: HttpRequest) -> Union[JsonResponse, HttpResponse]:
     try:
-        user = request.auth_user
+        user = request.user
 
         try:
             name, description, organization_id = request_helpers.assertRequestFields(request, ["name", "description", "organization"], mimetype="application/json")
@@ -36,7 +35,7 @@ def create_project(request: AuthHttpRequest) -> Union[JsonResponse, HttpResponse
     except Exception as e:
         return JsonResponse({"message": f'An unexpected error occured {e}'}, status=400)
 
-def delete_project(request: AuthHttpRequest, project_id: str) -> JsonResponse:
-    user = request.auth_user
+def delete_project(request: HttpRequest, project_id: str) -> JsonResponse:
+    user = request.user
 
     return services.delete_project(user=user, project_id=project_id)

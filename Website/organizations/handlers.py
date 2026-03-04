@@ -1,5 +1,5 @@
 import json
-from django.http import JsonResponse
+from django.http import HttpRequest, JsonResponse
 from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
@@ -7,7 +7,6 @@ from django.views import View
 import logging
 
 import organizations.services as services
-from core.decorators import AuthHttpRequest
 from core.helpers import request_helpers
 from organizations.forms import OrganizationCreateFormWithMembers
 from organizations.models import OrganizationMember, Organization
@@ -16,8 +15,8 @@ from accounts.models import UserProfile
 
 logger = logging.getLogger(__name__)
 
-def get_organizations(request: AuthHttpRequest) -> JsonResponse:
-    user = request.auth_user
+def get_organizations(request: HttpRequest) -> JsonResponse:
+    user = request.user
     organizations = services.get_organizations(user)
 
     if not organizations:
@@ -25,8 +24,8 @@ def get_organizations(request: AuthHttpRequest) -> JsonResponse:
 
     return JsonResponse(organizations, status=200)
 
-def get_organization(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
-    user = request.auth_user
+def get_organization(request: HttpRequest, organization_id: str) -> JsonResponse:
+    user = request.user
 
     organization = services.get_organization(user, organization_id)
 
@@ -35,8 +34,8 @@ def get_organization(request: AuthHttpRequest, organization_id: str) -> JsonResp
 
     return JsonResponse(organization, status=200)
 
-def create_organization(request: AuthHttpRequest) -> JsonResponse:
-    user = request.auth_user
+def create_organization(request: HttpRequest) -> JsonResponse:
+    user = request.user
     
     # Automatically use the authenticated user's email
     data = {**dict(request.POST), 'email': user.email}
@@ -56,20 +55,20 @@ def create_organization(request: AuthHttpRequest) -> JsonResponse:
     else:
         return JsonResponse({"message": "form is not valid"}, status=400)
 
-def update_organization(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
-    user = request.auth_user
+def update_organization(request: HttpRequest, organization_id: str) -> JsonResponse:
+    user = request.user
     data = json.loads(request.body)
     assert(data != None)
 
     return services.update_organization(user, organization_id, data)
 
-def delete_organization(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
-    user = request.auth_user
+def delete_organization(request: HttpRequest, organization_id: str) -> JsonResponse:
+    user = request.user
 
     return services.delete_organization(user, organization_id)
 
-def update_user(request: AuthHttpRequest, organization_id: str, user_id: str) -> JsonResponse:
-    user = request.auth_user
+def update_user(request: HttpRequest, organization_id: str, user_id: str) -> JsonResponse:
+    user = request.user
     organization = Organization.objects.get(id=organization_id)
     is_admin = OrganizationMember.objects.filter(organization=organization, user=user, role='admin').exists()
 
@@ -78,23 +77,23 @@ def update_user(request: AuthHttpRequest, organization_id: str, user_id: str) ->
     else:
         return JsonResponse({"message": "you must be an org admin to remove members"}, status=400)
 
-def add_org_members(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
+def add_org_members(request: HttpRequest, organization_id: str) -> JsonResponse:
         try:
             member, role = request_helpers.assertRequestFields(request, ["member", "role"], mimetype='application/x-www-form-urlencoded')
         except request_helpers.MissingFieldError as e:
             return JsonResponse({"message": e.message}, status=400)
 
-        user = request.auth_user
+        user = request.user
         organization = Organization.objects.get(id=organization_id)
 
         return services.add_org_members(member, role, organization, user)
 
-def remove_org_member(request: AuthHttpRequest, organization_id: str, user_id: str) -> JsonResponse:
-    user = request.auth_user
+def remove_org_member(request: HttpRequest, organization_id: str, user_id: str) -> JsonResponse:
+    user = request.user
     return services.remove_org_member(user, organization_id, user_id)
 
-def invite_new_user_to_org(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
-    user = request.auth_user
+def invite_new_user_to_org(request: HttpRequest, organization_id: str) -> JsonResponse:
+    user = request.user
 
     try:
         email, = request_helpers.assertRequestFields(request, ["email"], mimetype='application/x-www-form-urlencoded')
@@ -110,23 +109,23 @@ def invite_new_user_to_org(request: AuthHttpRequest, organization_id: str) -> Js
 
     return services.invite_new_user_to_org(user, organization, email)
 
-def leave_organization(request: AuthHttpRequest, organization_id: str) -> JsonResponse:
+def leave_organization(request: HttpRequest, organization_id: str) -> JsonResponse:
     """
     Handler for users to leave an organization themselves.
     """
-    user = request.auth_user
+    user = request.user
     return services.leave_organization(user, organization_id)
 
-def remove_pending_invite(request: AuthHttpRequest, organization_id: str, invite_id: str) -> JsonResponse:
+def remove_pending_invite(request: HttpRequest, organization_id: str, invite_id: str) -> JsonResponse:
     """
     Handler for removing pending invites from an organization.
     """
-    user = request.auth_user
+    user = request.user
     return services.remove_pending_invite(user, organization_id, invite_id)
 
-def initiate_project_transfer(request: AuthHttpRequest, project_id: str) -> JsonResponse:
+def initiate_project_transfer(request: HttpRequest, project_id: str) -> JsonResponse:
     """Initiate a project ownership transfer to a client"""
-    user = request.auth_user
+    user = request.user
 
     try:
         data = json.loads(request.body)
@@ -152,28 +151,28 @@ def initiate_project_transfer(request: AuthHttpRequest, project_id: str) -> Json
         keep_developer=keep_developer
     )
 
-def accept_project_transfer(request: AuthHttpRequest, transfer_id: str) -> JsonResponse:
+def accept_project_transfer(request: HttpRequest, transfer_id: str) -> JsonResponse:
     """Accept a project ownership transfer"""
-    user = request.auth_user
+    user = request.user
     return services.accept_project_transfer(transfer_id, user)
 
-def get_project_transfer_status(request: AuthHttpRequest, transfer_id: str) -> JsonResponse:
+def get_project_transfer_status(request: HttpRequest, transfer_id: str) -> JsonResponse:
     """Get the status of a project transfer invitation"""
     return services.get_project_transfer_status(transfer_id)
 
-def get_user_transfer_invitations(request: AuthHttpRequest) -> JsonResponse:
+def get_user_transfer_invitations(request: HttpRequest) -> JsonResponse:
     """Get all transfer invitations for the current user"""
-    user = request.auth_user
+    user = request.user
     return services.get_user_transfer_invitations(user)
 
-def cancel_project_transfer(request: AuthHttpRequest, transfer_id: str) -> JsonResponse:
+def cancel_project_transfer(request: HttpRequest, transfer_id: str) -> JsonResponse:
     """Cancel a project transfer invitation"""
-    user = request.auth_user
+    user = request.user
     return services.cancel_project_transfer(user, transfer_id)
 
-def transfer_project_to_organization(request: AuthHttpRequest, project_id: str) -> JsonResponse:
+def transfer_project_to_organization(request: HttpRequest, project_id: str) -> JsonResponse:
     """Transfer a project to another organization"""
-    user = request.auth_user
+    user = request.user
 
     try:
         data = json.loads(request.body)
