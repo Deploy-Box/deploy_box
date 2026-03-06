@@ -421,6 +421,7 @@ class MobileDashboard {
                             "Content-Type": "application/json",
                             "X-CSRFToken": this.getCsrfToken(),
                         },
+                        credentials: "include",
                     },
                 );
 
@@ -561,6 +562,7 @@ class MobileDashboard {
                                         "Content-Type": "application/json",
                                         "X-CSRFToken": this.getCsrfToken(),
                                     },
+                                    credentials: "include",
                                 },
                             );
 

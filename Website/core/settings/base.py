@@ -23,6 +23,7 @@ HOST = os.environ.get("HOST")
 if not HOST:
     HOST = "http://localhost"
     print("WARNING: HOST not set, defaulting to", HOST)
+print("HOST set to", HOST)
 
 # ──────────────────────────────────────────────
 # Security
@@ -71,6 +72,7 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.SessionAuthentication",
         "rest_framework.authentication.TokenAuthentication",
     ]
 }
@@ -103,7 +105,7 @@ CSRF_COOKIE_HTTPONLY = False
 SECURE_HSTS_SECONDS = 31536000
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
-SECURE_SSL_REDIRECT = True
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 # ──────────────────────────────────────────────
 # Email

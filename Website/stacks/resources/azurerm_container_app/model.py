@@ -38,6 +38,30 @@ class AzurermContainerApp(BaseResourceModel):
 	template_container_memory = models.CharField(max_length=50, default='0.5Gi')
 	template_container_env = models.JSONField(default=list, blank=True)
 	template_container_build_context = models.CharField(max_length=255, blank=True, default='')
+
+	# Liveness probe
+	liveness_probe_transport = models.CharField(max_length=10, default='TCP')
+	liveness_probe_port = models.IntegerField(default=80)
+	liveness_probe_interval_seconds = models.IntegerField(default=10)
+	liveness_probe_timeout = models.IntegerField(default=5)
+	liveness_probe_failure_count_threshold = models.IntegerField(default=3)
+
+	# Readiness probe
+	readiness_probe_transport = models.CharField(max_length=10, default='TCP')
+	readiness_probe_port = models.IntegerField(default=80)
+	readiness_probe_interval_seconds = models.IntegerField(default=5)
+	readiness_probe_timeout = models.IntegerField(default=5)
+	readiness_probe_failure_count_threshold = models.IntegerField(default=48)
+	readiness_probe_success_count_threshold = models.IntegerField(default=1)
+
+	# Startup probe
+	startup_probe_transport = models.CharField(max_length=10, default='TCP')
+	startup_probe_port = models.IntegerField(default=80)
+	startup_probe_initial_delay = models.IntegerField(default=1)
+	startup_probe_interval_seconds = models.IntegerField(default=1)
+	startup_probe_timeout = models.IntegerField(default=3)
+	startup_probe_failure_count_threshold = models.IntegerField(default=240)
+
 	configuration_active_revision_mode = models.CharField(max_length=50, default='Single')
 	configuration_ingress_external = models.BooleanField(default=True)
 	configuration_ingress_target_port = models.IntegerField(default=80)

@@ -15,6 +15,7 @@ from stacks.resources.deployboxrm_workos_integration.manager import DeployBoxrmW
 from stacks.resources.thenilerm_database.manager import TheNilermDatabaseManager
 from stacks.resources.azurerm_storage_account_static_website.manager import AzurermStorageAccountStaticWebsiteManager
 from stacks.resources.deployboxrm_edge.manager import DeployBoxrmEdgeManager
+from stacks.resources.azurerm_log_analytics_workspace.manager import AzurermLogAnalyticsWorkspaceManager
 
 if TYPE_CHECKING:
     from stacks.models import Stack
@@ -29,6 +30,7 @@ RESOURCE_MANAGER_MAPPING: dict[str, type[ResourceManager]] = {
         "DEPLOYBOXRM_WORKOS_INTEGRATION": DeployBoxrmWorkOSIntegrationManager,
         "AZURERM_STORAGE_ACCOUNT_STATIC_WEBSITE": AzurermStorageAccountStaticWebsiteManager,
         "DEPLOYBOXRM_EDGE": DeployBoxrmEdgeManager,
+        "AZURERM_LOG_ANALYTICS_WORKSPACE": AzurermLogAnalyticsWorkspaceManager,
     }
 
 class ResourcesManager():

@@ -3,7 +3,7 @@ from django.http import JsonResponse, HttpResponse
 from rest_framework import status, filters, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from stacks.models import Stack, PurchasableStack
 from stacks.serializers import StackSerializer
@@ -31,6 +31,21 @@ class StackViewSet(viewsets.ModelViewSet):
     serializer_class = StackSerializer
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
+
+    # Actions that the IAC container-app calls back into without credentials.
+    WEBHOOK_ACTIONS = ("bulk_update_resources_action", "partial_update")
+
+    def get_permissions(self):
+        if getattr(self, 'action', None) in self.WEBHOOK_ACTIONS:
+            return [AllowAny()]
+        return super().get_permissions()
+
+    def get_authenticators(self):
+        # Skip authentication (and CSRF enforcement from SessionAuthentication)
+        # for internal webhook callbacks.
+        if getattr(self, 'action', None) in self.WEBHOOK_ACTIONS:
+            return []
+        return super().get_authenticators()
 
     # ----- CREATE --------------------------------------------------------
     def create(self, request):
@@ -101,13 +116,13 @@ class StackViewSet(viewsets.ModelViewSet):
         )
 
     # ----- TRAEFIK CONFIG ------------------------------------------------
-    @action(detail=False, methods=["get"], url_path="traefik-config", url_name="traefik_config")
+    @action(detail=False, methods=["get"], url_path="traefik-config", url_name="traefik_config", permission_classes=[AllowAny])
     def get_traefik_config_action(self, request):
         config = get_traefik_config()
         return JsonResponse(config)
 
     # ----- BULK UPDATE RESOURCES -----------------------------------------
-    @action(detail=False, methods=["patch"], url_path="bulk-update-resources", url_name="bulk_update_resources")
+    @action(detail=False, methods=["patch"], url_path="bulk-update-resources", url_name="bulk_update_resources", permission_classes=[AllowAny])
     def bulk_update_resources_action(self, request):
         bulk_update_resources(request.data.get("resources", []))
         return Response(

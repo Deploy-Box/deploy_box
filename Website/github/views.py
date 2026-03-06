@@ -13,11 +13,13 @@ from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.conf import settings
 from django.urls import reverse
 from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt
 
 import stacks.services as stack_services
 from core.helpers import request_helpers
 from github.models import Webhook, Token
 from stacks.models import Stack
+from projects.models import ProjectMember
 
 # from stacks.services import get_stack
 from accounts.models import UserProfile
@@ -180,24 +182,7 @@ def list_repos(request: HttpRequest) -> HttpResponse:
     return HttpResponse(repo_list_html)
 
 
-def create_iac_webhook(
-    repo_url: str, stack: Stack, directory: str, github_token: str
-):
-    
-    full_repo_url = f"https://github.com/{repo_url}.git#main"
-
-    return {
-        "task": {
-            "type": "Docker",
-            "dockerFilePath": "Dockerfile",
-            "contextPath": full_repo_url,
-            "contextDirectory": directory,
-            "contextAccessToken": github_token,
-            "imageNames": [f"{stack.id}{directory}:latest"]
-        },
-    }
-
-
+@csrf_exempt
 def create_github_webhook(request: HttpRequest) -> JsonResponse:
     """Create and store a GitHub webhook for a user's repository."""
     user = cast(UserProfile, request.user)
@@ -216,18 +201,27 @@ def create_github_webhook(request: HttpRequest) -> JsonResponse:
 
     stack = Stack.objects.get(pk=stack_id)
     
-    # Check if this stack already has a webhook connected
+    github_token = get_object_or_404(Token, user=user).get_token()
+
+    # If the stack already has a webhook, disconnect it first so the
+    # user can seamlessly switch to a different repository.
     existing_webhook = Webhook.objects.filter(stack=stack).first()
     if existing_webhook:
-        logger.warning(f"Stack {stack_id} already has a webhook connected to repository {existing_webhook.repository}")
-        return JsonResponse(
-            {
-                "error": f"This stack already has a repository connected: {existing_webhook.repository}. Please disconnect the existing repository before connecting a new one."
-            },
-            status=409
+        logger.info(
+            f"Stack {stack_id} already has a webhook for {existing_webhook.repository}; "
+            "disconnecting before creating a new one."
         )
-    
-    github_token = get_object_or_404(Token, user=user).get_token()
+        headers_cleanup = {"Authorization": f"token {github_token}"}
+        try:
+            old_owner, old_repo = existing_webhook.repository.split("/")
+            requests.delete(
+                f"{GITHUB_API_BASE}/repos/{old_owner}/{old_repo}/hooks/{existing_webhook.webhook_id}",
+                headers=headers_cleanup,
+                timeout=5,
+            )
+        except Exception as exc:
+            logger.warning(f"Could not delete old GitHub webhook: {exc}")
+        existing_webhook.delete()
 
     headers = {"Authorization": f"token {github_token}"}
     try:
@@ -337,24 +331,17 @@ def create_github_webhook(request: HttpRequest) -> JsonResponse:
             secret=webhook_secret,
         )
 
-        iac = stack.iac
-
-        if stack.purchased_stack.type == "MERN":
-            iac["azurerm_container_app"][f"mern-backend-{stack.id}"]["template"]["container"][0].update({"image": create_iac_webhook(f"{owner}/{repo}", stack, "backend", github_token)})
-            iac["azurerm_container_app"][f"mern-frontend-{stack.id}"]["template"]["container"][0].update({"image": create_iac_webhook(f"{owner}/{repo}", stack, "frontend", github_token)})
-        elif stack.purchased_stack.type == "Django":
-            iac["azurerm_container_app"][f"django-{stack.id}"]["template"]["container"][0].update({"image": create_iac_webhook(f"{owner}/{repo}", stack, "backend", github_token)})
-        else:
-            pass
-
-        stack.iac = iac
-        print(json.dumps(stack.iac, indent=2))
-        stack.save()
-
         logger.info(
             f"Webhook successfully created and stored for repository {repo_name}"
         )
 
+        # Trigger an IAC update so the container-app picks up the
+        # newly-connected GitHub repository for source code downloads.
+        try:
+            stack_services.trigger_iac_update(stack_id=str(stack.pk))
+            logger.info(f"IAC update triggered for stack {stack_id}")
+        except Exception as exc:
+            logger.warning(f"Webhook created but IAC update failed: {exc}")
 
 
     except requests.RequestException as e:
@@ -388,6 +375,7 @@ def create_github_webhook(request: HttpRequest) -> JsonResponse:
     )
 
 
+@csrf_exempt
 def github_webhook(request: HttpRequest) -> JsonResponse:
     """Handles GitHub webhook events."""
 
@@ -436,12 +424,18 @@ def github_webhook(request: HttpRequest) -> JsonResponse:
             {"message": f"Ignored event type: {event_type}"}, status=200
         )
 
-    # Find user based on webhook repository
-    user = webhook.user
-
-    deploy_box_iac = DeployBoxIAC()
-    print(webhook.stack.iac)
-    deploy_box_iac.deploy(f"{webhook.stack.id}-rg", webhook.stack.iac)
+    # Trigger an IAC update for the stack linked to this webhook.
+    # The container-app will pull the latest source from GitHub automatically
+    # because the webhook/token info is resolved at queue-send time.
+    try:
+        stack_services.trigger_iac_update(stack_id=str(webhook.stack.pk))
+        logger.info(
+            f"IAC update triggered for stack {webhook.stack.pk} "
+            f"(repo: {repository_name}, event: {event_type})"
+        )
+    except Exception as exc:
+        logger.error(f"Failed to trigger IAC update for stack {webhook.stack.pk}: {exc}")
+        return JsonResponse({"error": "Failed to trigger deployment"}, status=500)
 
     return JsonResponse({"status": "success", "event_type": event_type}, status=200)
 
@@ -464,13 +458,14 @@ def get_repos_json(request: HttpRequest) -> JsonResponse:
     return JsonResponse({"repositories": repos})
 
 
+@csrf_exempt
 def disconnect_github_webhook(request: HttpRequest) -> JsonResponse:
     """Disconnect a GitHub webhook from a stack."""
     user = cast(UserProfile, request.user)
     logger.info(f"Starting webhook disconnection process for user {user.username}")
 
     try:
-        stack_id = request_helpers.assertRequestFields(request, ["stack-id"])
+        (stack_id,) = request_helpers.assertRequestFields(request, ["stack-id"])
         logger.info(f"Received webhook disconnection request for stack {stack_id}")
     except request_helpers.MissingFieldError as e:
         logger.error(f"Missing required fields in webhook disconnection request: {str(e)}")
@@ -482,9 +477,9 @@ def disconnect_github_webhook(request: HttpRequest) -> JsonResponse:
         logger.error(f"Stack {stack_id} not found")
         return JsonResponse({"error": "Stack not found"}, status=404)
 
-    # Check if the stack belongs to the user
-    if stack.project.user != user:
-        logger.error(f"User {user.username} attempted to disconnect webhook for stack {stack_id} they don't own")
+    # Check if the user is a member of the stack's project
+    if not ProjectMember.objects.filter(project=stack.project, user=user).exists():
+        logger.error(f"User {user.username} attempted to disconnect webhook for stack {stack_id} they don't have access to")
         return JsonResponse({"error": "You don't have permission to disconnect this webhook"}, status=403)
 
     # Find the webhook for this stack
@@ -584,18 +579,17 @@ def get_webhook_status(request: HttpRequest) -> JsonResponse:
     """Get the webhook status for a stack."""
     user = request.user
     
-    try:
-        stack_id = request_helpers.assertRequestFields(request, ["stack-id"])
-    except request_helpers.MissingFieldError as e:
-        return e.to_response()
+    stack_id = request.GET.get("stack-id")
+    if not stack_id:
+        return JsonResponse({"error": "Missing required field: stack-id"}, status=400)
 
     try:
         stack = Stack.objects.get(pk=stack_id)
     except Stack.DoesNotExist:
         return JsonResponse({"error": "Stack not found"}, status=404)
 
-    # Check if the stack belongs to the user
-    if stack.project.user != user:
+    # Check if the user is a member of the stack's project
+    if not ProjectMember.objects.filter(project=stack.project, user=user).exists():
         return JsonResponse({"error": "You don't have permission to access this stack"}, status=403)
 
     # Check if there's a webhook for this stack

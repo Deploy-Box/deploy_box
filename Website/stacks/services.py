@@ -150,8 +150,49 @@ def trigger_iac_update(stack_id: str) -> dict:
         "resources": ResourcesManager.serialize(resources),
     }
 
+    # If a GitHub webhook is connected, include repo info so the IAC
+    # container-app can pull source code directly from GitHub.
+    github_data = _get_github_info_for_stack(stack)
+    if github_data:
+        data.update(github_data)
+
     send_to_queue("IAC.UPDATE", data)
     return data
+
+
+def _get_github_info_for_stack(stack: Stack) -> dict | None:
+    """Return GitHub repo/token info for *stack*, or ``None``.
+
+    Looks up the most recent ``Webhook`` linked to the stack and resolves
+    the owner's decrypted GitHub token.
+    """
+    from github.models import Webhook, Token
+
+    webhook = (
+        Webhook.objects
+        .filter(stack=stack)
+        .select_related("user")
+        .order_by("-created_at")
+        .first()
+    )
+    if webhook is None:
+        return None
+
+    try:
+        token_obj = Token.objects.get(user=webhook.user)
+        github_token = token_obj.get_token()
+    except Token.DoesNotExist:
+        logger.warning(
+            "GitHub Token not found for user %s (stack %s); skipping GitHub source.",
+            webhook.user_id,
+            stack.pk,
+        )
+        return None
+
+    return {
+        "github_repo": webhook.repository,
+        "github_token": github_token,
+    }
 
 
 # ---------------------------------------------------------------------------

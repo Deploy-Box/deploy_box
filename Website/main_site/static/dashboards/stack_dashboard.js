@@ -193,6 +193,7 @@ function checkGitHubAuth() {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken'),
                             },
                             body: JSON.stringify({
                                 'repo-name': repoName,
@@ -446,6 +447,7 @@ async function saveRootDirectory(stackId, rootDirectory) {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken'),
             },
             body: JSON.stringify({
                 root_directory: formattedRootDirectory

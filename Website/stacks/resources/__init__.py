@@ -31,3 +31,7 @@ from .azurerm_storage_account_static_website.serializer import AzurermStorageAcc
 from .deployboxrm_edge.model import DeployBoxrmEdge
 from .deployboxrm_edge.manager import DeployBoxrmEdgeManager
 from .deployboxrm_edge.serializer import DeployBoxrmEdgeSerializer
+
+from .azurerm_log_analytics_workspace.model import AzurermLogAnalyticsWorkspace
+from .azurerm_log_analytics_workspace.manager import AzurermLogAnalyticsWorkspaceManager
+from .azurerm_log_analytics_workspace.serializer import AzurermLogAnalyticsWorkspaceSerializer

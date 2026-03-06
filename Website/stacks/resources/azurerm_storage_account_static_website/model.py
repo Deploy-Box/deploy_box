@@ -19,6 +19,7 @@ class AzurermStorageAccountStaticWebsite(BaseResourceModel):
 	static_file_directory = models.CharField(max_length=255, default='')
 	static_file_build_command = models.CharField(max_length=255, default='')
 	static_file_build_output_directory = models.CharField(max_length=255, default='')
+	build_env_vars = models.JSONField(default=dict, blank=True)
 
 	def save(self, *args, **kwargs):
 		environment = os.getenv('ENV', 'DEV').lower()
