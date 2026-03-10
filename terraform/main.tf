@@ -99,6 +99,10 @@ resource "azurerm_container_app" "container_app" {
 
       # --- Core ---
       env {
+        name  = "DJANGO_SETTINGS_MODULE"
+        value = var.app.django_settings_module
+      }
+      env {
         name  = "ENV"
         value = upper(local.env)
       }
@@ -133,6 +137,10 @@ resource "azurerm_container_app" "container_app" {
       env {
         name  = "DEPLOY_BOX_GITHUB_CLIENT_ID"
         value = var.auth.github_client_id
+      }
+      env {
+        name  = "WORKOS_CLIENT_ID"
+        value = var.auth.workos_client_id
       }
 
       # --- Database ---

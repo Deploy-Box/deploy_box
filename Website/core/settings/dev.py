@@ -34,7 +34,6 @@ INSTALLED_APPS += [
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
 SECURE_HSTS_SECONDS = 0
-SECURE_SSL_REDIRECT = False
 
 # ──────────────────────────────────────────────
 # Database — override password for local dev (only if explicitly set)

@@ -1,20 +1,6 @@
 # Use the official Python runtime image
 FROM python:3.13
 
-# Install system dependencies
-RUN apt-get update && apt-get install -y \
-    curl \
-    gnupg \
-    unzip \
-    && rm -rf /var/lib/apt/lists/*
-
-# Install Terraform
-ARG TERRAFORM_VERSION=1.8.4
-RUN curl -fsSL https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip -o terraform.zip && \
-    unzip terraform.zip && \
-    mv terraform /usr/local/bin/ && \
-    rm terraform.zip
-
 # Create the app directory
 RUN mkdir /app
 
@@ -24,7 +10,6 @@ WORKDIR /app
 # Set environment variables 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
-ENV DJANGO_SETTINGS_MODULE=core.settings.prod
 
 # Upgrade pip
 RUN pip install --upgrade pip 
