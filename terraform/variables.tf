@@ -5,9 +5,10 @@
 variable "app" {
   description = "Core application settings: environment, region, and public hostname."
   type = object({
-    environment = string
-    location    = string
-    host        = string
+    environment            = string
+    location               = string
+    host                   = string
+    django_settings_module = string
   })
 
   validation {
@@ -32,6 +33,7 @@ variable "auth" {
     oauth2_password_credentials_client_id = string
     oauth2_auth_code_client_id            = string
     github_client_id                      = string
+    workos_client_id                      = string
   })
 }
 

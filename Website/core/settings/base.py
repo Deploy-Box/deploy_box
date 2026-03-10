@@ -82,7 +82,7 @@ REST_FRAMEWORK = {
 # ──────────────────────────────────────────────
 WORKOS = {
     "CLIENT_ID": os.environ.get("WORKOS_CLIENT_ID"),
-    "API_KEY": os.environ.get("WORKOS_API_KEY"),
+    "API_KEY": _kv.get_secret("workos-api-key"),
     "REDIRECT_URI": f"{HOST}/api/v1/accounts/oauth/workos/callback",
 }
 
@@ -93,6 +93,7 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 SESSION_COOKIE_SECURE = True
 SESSION_COOKIE_SAMESITE = "Lax"
 SESSION_SAVE_EVERY_REQUEST = True
+SECURE_SSL_REDIRECT = False # TLS is terminated at the load balancer
 
 CSRF_TRUSTED_ORIGINS: list[str] = []
 for host in ALLOWED_HOSTS:
@@ -204,13 +205,6 @@ GITHUB = {
     "CLIENT_SECRET": os.getenv("DEPLOY_BOX_GITHUB_CLIENT_SECRET"),
     "TOKEN_KEY": _kv.get_secret(
         "deploy-box-github-token-key", os.getenv("DEPLOY_BOX_GITHUB_TOKEN_KEY")
-    ),
-}
-
-AZURE = {
-    "STORAGE_CONNECTION_STRING": os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
-    "CONTAINER_NAME": _kv.get_secret(
-        "container-name", os.getenv("CONTAINER_NAME")
     ),
 }
 

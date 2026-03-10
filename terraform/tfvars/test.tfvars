@@ -1,13 +1,15 @@
 app = {
-  environment = "test"
-  location    = "eastus"
-  host        = "https://test.deploy-box.com"
+  environment            = "test"
+  location               = "eastus"
+  host                   = "https://test.deploy-box.com"
+  django_settings_module = "core.settings.dev"
 }
 
 auth = {
   oauth2_password_credentials_client_id = ""
   oauth2_auth_code_client_id            = ""
   github_client_id                      = ""
+  workos_client_id                      = ""
 }
 
 database = {
