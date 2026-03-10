@@ -175,10 +175,6 @@ resource "azurerm_container_app" "container_app" {
         value = var.services.api_base_url
       }
       env {
-        name  = "AZURE_FUNCTION_URL"
-        value = var.services.azure_function_url
-      }
-      env {
         name  = "NPM_BIN_PATH"
         value = var.services.npm_bin_path
       }

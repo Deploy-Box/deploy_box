@@ -156,7 +156,8 @@ def trigger_iac_update(stack_id: str) -> dict:
     if github_data:
         data.update(github_data)
 
-    send_to_queue("IAC.UPDATE", data)
+    if not send_to_queue("IAC.UPDATE", data):
+        raise ServiceError("Failed to send IAC update to the service bus.")
     return data
 
 
