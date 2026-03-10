@@ -207,13 +207,6 @@ GITHUB = {
     ),
 }
 
-AZURE = {
-    "STORAGE_CONNECTION_STRING": os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
-    "CONTAINER_NAME": _kv.get_secret(
-        "container-name", os.getenv("CONTAINER_NAME")
-    ),
-}
-
 DEPLOY_BOX_STACK_ENDPOINT = os.environ.get("DEPLOY_BOX_STACK_ENDPOINT")
 
 AZURE_SERVICE_BUS = {
