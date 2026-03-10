@@ -183,7 +183,7 @@ resource "azurerm_container_app" "container_app" {
         value = local.names.key_vault
       }
       env {
-        name  = "SERVICE_BUS_CONNECTION_STRING"
+        name  = "AZURE_SERVICE_BUS_CONNECTION_STRING"
         value = data.azurerm_servicebus_namespace.service_bus.default_primary_connection_string
       }
     }
