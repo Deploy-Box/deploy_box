@@ -87,7 +87,8 @@ def still_configuring(request: HttpRequest) -> HttpResponse:
 
 
 def subdomain_not_found(request: HttpRequest) -> HttpResponse:
-    return render(request, "subdomain_not_found.html")
+    subdomain = request.GET.get("subdomain", "")
+    return render(request, "subdomain_not_found.html", {"subdomain": subdomain})
 
 
 def google_verification(request: HttpRequest) -> HttpResponse:
