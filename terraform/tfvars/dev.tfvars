@@ -22,7 +22,6 @@ database = {
 services = {
   stack_endpoint     = "https://deployboxsharedsadev.blob.core.windows.net/stack-source-code-container"
   email_host_user    = "noreplydeploybbox@gmail.com"
-  azure_function_url = "https://deploy-box-iac-contapp-dev.internal.agreeablesky-c9998b70.eastus2.azurecontainerapps.io/iac/v1"
   api_base_url       = "http://deploy-box-apis-func-dev.azurewebsites.net"
   npm_bin_path       = "C:\\Program Files\\nodejs\\npm.cmd"
 }

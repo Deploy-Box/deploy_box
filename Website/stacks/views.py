@@ -169,12 +169,18 @@ class StackViewSet(viewsets.ModelViewSet):
             return _error_response(exc)
 
         # Trigger an IAC update now that the upload succeeded
+        iac_update_queued = True
         try:
             trigger_iac_update(stack_id=pk)
         except ServiceError:
-            pass  # blob was persisted; deploy can be retried
+            iac_update_queued = False  # blob was persisted; deploy can be retried
 
         return Response(
-            {"success": True, "blob_name": result.blob_name, "blob_url": result.blob_url},
+            {
+                "success": True,
+                "blob_name": result.blob_name,
+                "blob_url": result.blob_url,
+                "iac_update_queued": iac_update_queued,
+            },
             status=status.HTTP_200_OK,
         )

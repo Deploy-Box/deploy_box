@@ -22,7 +22,6 @@ database = {
 services = {
   stack_endpoint     = ""
   email_host_user    = "noreplydeploybbox@gmail.com"
-  azure_function_url = ""
   api_base_url       = ""
   npm_bin_path       = "C:\\Program Files\\nodejs\\npm.cmd"
 }

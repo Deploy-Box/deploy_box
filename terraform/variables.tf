@@ -65,7 +65,6 @@ variable "services" {
   type = object({
     stack_endpoint     = string
     email_host_user    = string
-    azure_function_url = string
     api_base_url       = string
     npm_bin_path       = string
   })
