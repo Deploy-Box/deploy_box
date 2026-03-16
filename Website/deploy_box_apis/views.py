@@ -1,8 +1,11 @@
 from django.http import HttpRequest, JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 import requests
 import os
 import json
-from deploy_box_apis.models import APICredential, API, APIUsage
+import hashlib
+import secrets
+from deploy_box_apis.models import APICredential, API, APIUsage, APIKey
 from typing import Any, Dict, List, Optional, TypedDict
 import os
 from django.db.models import OuterRef, Subquery, Sum, Value
@@ -267,3 +270,122 @@ def get_project_api_info(project_id: str) -> APIInfo:
         "base_url": base_url,
         "token_endpoint": base_url + "/oauth2/token" if base_url else None,
     }
+
+
+# --------------- Public API Key management ---------------
+
+def _generate_raw_key() -> str:
+    """Generate a Google-style public API key: dbx_ + 40 URL-safe chars."""
+    return "dbx_" + secrets.token_urlsafe(30)
+
+
+def _hash_key(raw_key: str) -> str:
+    return hashlib.sha256(raw_key.encode()).hexdigest()
+
+
+def _key_hint(raw_key: str) -> str:
+    return raw_key[:8] + "..." + raw_key[-4:]
+
+
+@csrf_exempt
+def generate_api_key(request: HttpRequest):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    try:
+        body = json.loads(request.body)
+    except Exception:
+        body = request.POST
+
+    project_id = body.get("project_id")
+    name = body.get("name", "Default")
+
+    if not project_id:
+        return JsonResponse({"error": "project_id is required"}, status=400)
+
+    raw_key = _generate_raw_key()
+
+    api_key_obj = APIKey(
+        project_id=project_id,
+        name=name,
+        key_hash=_hash_key(raw_key),
+        key_hint=_key_hint(raw_key),
+    )
+    api_key_obj.save()
+
+    return JsonResponse({
+        "id": api_key_obj.id,
+        "name": api_key_obj.name,
+        "api_key": raw_key,
+        "key_hint": api_key_obj.key_hint,
+        "message": "Store this key securely — it will not be shown again.",
+    })
+
+
+@csrf_exempt
+def revoke_api_key(request: HttpRequest):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    try:
+        body = json.loads(request.body)
+    except Exception:
+        body = request.POST
+
+    key_id = body.get("key_id")
+    project_id = body.get("project_id")
+
+    if not key_id or not project_id:
+        return JsonResponse({"error": "key_id and project_id are required"}, status=400)
+
+    api_key_obj = APIKey.objects.filter(id=key_id, project_id=project_id, is_active=True).first()
+    if not api_key_obj:
+        return JsonResponse({"error": "API key not found or already revoked"}, status=404)
+
+    api_key_obj.is_active = False
+    api_key_obj.save()
+
+    return JsonResponse({"status": "API key revoked"})
+
+
+def list_api_keys(request: HttpRequest):
+    if request.method != "GET":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    project_id = request.GET.get("project_id")
+    if not project_id:
+        return JsonResponse({"error": "project_id query param is required"}, status=400)
+
+    keys = APIKey.objects.filter(project_id=project_id).values(
+        "id", "name", "key_hint", "is_active", "created_at"
+    )
+    return JsonResponse({"api_keys": list(keys)})
+
+
+@csrf_exempt
+def validate_api_key(request: HttpRequest):
+    """Internal endpoint called by the Functions app to validate a public API key."""
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    try:
+        body = json.loads(request.body)
+    except Exception:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    raw_key = body.get("api_key", "")
+    if not raw_key:
+        return JsonResponse({"valid": False, "error": "api_key is required"}, status=400)
+
+    key_hash = _hash_key(raw_key)
+    api_key_obj = APIKey.objects.filter(key_hash=key_hash, is_active=True).select_related("project").first()
+
+    if not api_key_obj:
+        return JsonResponse({"valid": False}, status=404)
+
+    return JsonResponse({
+        "valid": True,
+        "project_id": api_key_obj.project_id,
+        "key_id": api_key_obj.id,
+        "key_name": api_key_obj.name,
+    })
