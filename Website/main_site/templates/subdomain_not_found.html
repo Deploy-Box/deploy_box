@@ -6,23 +6,7 @@
 {% endblock %}
 
 {% block content %}
-{% if subdomain %}
-<script>
-    (function() {
-        var subdomain = "{{ subdomain|escapejs }}";
-        var key = "subdomain_retry_" + subdomain;
-        if (!sessionStorage.getItem(key)) {
-            sessionStorage.setItem(key, "1");
-            var host = window.location.host.replace(/^www\./i, "");
-            window.location.replace(window.location.protocol + "//" + subdomain + "." + host);
-            return;
-        }
-        sessionStorage.removeItem(key);
-        document.getElementById('subdomain-not-found').style.display = '';
-    })();
-</script>
-{% endif %}
-<section id="subdomain-not-found" class="min-h-screen bg-zinc-950 flex flex-col items-center justify-center relative overflow-hidden py-24" {% if subdomain %}style="display:none"{% endif %}>
+<section id="subdomain-not-found" class="min-h-screen bg-zinc-950 flex flex-col items-center justify-center relative overflow-hidden py-24">
     <!-- Background Texture -->
     <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
         style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
