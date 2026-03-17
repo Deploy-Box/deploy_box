@@ -19,7 +19,7 @@ _kv = KeyVaultClient()
 # BASE_DIR points to the Website/ folder (two levels up because settings is now a package)
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-HOST = os.environ.get("HOST")
+HOST = os.getenv("HOST")
 if not HOST:
     HOST = "http://localhost"
     print("WARNING: HOST not set, defaulting to", HOST)
@@ -28,10 +28,8 @@ print("HOST set to", HOST)
 # ──────────────────────────────────────────────
 # Security
 # ──────────────────────────────────────────────
-SECRET_KEY = _kv.get_secret(
-    "deploy-box-django-secret-key", os.getenv("DJANGO_SECRET_KEY")
-)
-ENV = os.environ.get("ENV", "LOCAL").upper()
+SECRET_KEY = _kv.get_secret("deploy-box-django-secret-key")
+ENV = os.getenv("ENV", "LOCAL").upper()
 
 ALLOWED_HOSTS: list[str] = [
     "deploy-box.com",
@@ -81,7 +79,7 @@ REST_FRAMEWORK = {
 # WorkOS
 # ──────────────────────────────────────────────
 WORKOS = {
-    "CLIENT_ID": os.environ.get("WORKOS_CLIENT_ID"),
+    "CLIENT_ID": os.getenv("WORKOS_CLIENT_ID"),
     "API_KEY": _kv.get_secret("workos-api-key"),
     "REDIRECT_URI": f"{HOST}/api/v1/accounts/oauth/workos/callback",
 }
@@ -115,8 +113,8 @@ EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get("EMAIL_HOST_USER")
-EMAIL_HOST_PASSWORD = os.environ.get("EMAIL_HOST_PASSWORD")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # ──────────────────────────────────────────────
@@ -124,7 +122,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 # ──────────────────────────────────────────────
 TAILWIND_APP_NAME = "theme"
 INTERNAL_IPS = ["127.0.0.1"]
-NPM_BIN_PATH = os.environ.get("NPM_BIN_PATH", "/usr/bin/npm")
+NPM_BIN_PATH = os.getenv("NPM_BIN_PATH", "/usr/bin/npm")
 
 # ──────────────────────────────────────────────
 # Middleware
@@ -147,13 +145,13 @@ MIDDLEWARE = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
-        "NAME": os.environ.get("DB_NAME"),
-        "USER": os.environ.get("DB_USER"),
+        "NAME": os.getenv("DB_NAME"),
+        "USER": os.getenv("DB_USER"),
         "PASSWORD": _kv.get_secret(
             "deploy-box-postgresql-db-password"
         ),
-        "HOST": os.environ.get("DB_HOST"),
-        "PORT": os.environ.get("DB_PORT"),
+        "HOST": os.getenv("DB_HOST"),
+        "PORT": os.getenv("DB_PORT"),
         "CONN_MAX_AGE": 600,
     }
 }
@@ -190,25 +188,24 @@ AUTH_USER_MODEL = "accounts.UserProfile"
 # ──────────────────────────────────────────────
 STRIPE = {
     "PUBLISHABLE_KEY": _kv.get_secret(
-        "stripe-publishable-key", os.getenv("STRIPE_PUBLISHABLE_KEY")
+        "stripe-publishable-key"
     ),
     "SECRET_KEY": _kv.get_secret(
-        "stripe-secret-key", os.getenv("STRIPE_SECRET_KEY")
+        "stripe-secret-key"
     ),
     "WEBHOOK_SECRET": _kv.get_secret(
-        "stripe-webhook-secret", os.environ.get("STRIPE_WEBHOOK_SECRET")
+        "stripe-webhook-secret"
     ),
 }
 
 GITHUB = {
     "CLIENT_ID": os.environ.get("DEPLOY_BOX_GITHUB_CLIENT_ID"),
-    "CLIENT_SECRET": os.getenv("DEPLOY_BOX_GITHUB_CLIENT_SECRET"),
-    "TOKEN_KEY": _kv.get_secret(
-        "deploy-box-github-token-key", os.getenv("DEPLOY_BOX_GITHUB_TOKEN_KEY")
-    ),
+    "CLIENT_SECRET": _kv.get_secret("deploy-box-github-client-secret"),
+    "TOKEN_KEY": _kv.get_secret("deploy-box-github-token-key"),
 }
 
-DEPLOY_BOX_STACK_ENDPOINT = os.environ.get("DEPLOY_BOX_STACK_ENDPOINT")
+DEPLOY_BOX_STACK_ENDPOINT = os.getenv("DEPLOY_BOX_STACK_ENDPOINT")
+BASE_DOMAIN = os.getenv("BASE_DOMAIN", "dev.deploy-box.com")
 
 AZURE_SERVICE_BUS = {
     "CONNECTION_STRING": os.getenv("AZURE_SERVICE_BUS_CONNECTION_STRING"),
