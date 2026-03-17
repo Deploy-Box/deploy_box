@@ -9,6 +9,7 @@ variable "app" {
     location               = string
     host                   = string
     django_settings_module = string
+    base_domain            = string
   })
 
   validation {

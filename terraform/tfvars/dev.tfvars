@@ -3,6 +3,7 @@ app = {
   location               = "eastus"
   host                   = "https://dev.deploy-box.com"
   django_settings_module = "core.settings.dev"
+  base_domain            = "dev.deploy-box.com"
 }
 
 auth = {

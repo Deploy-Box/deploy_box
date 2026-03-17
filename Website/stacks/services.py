@@ -242,7 +242,7 @@ def get_traefik_config() -> dict:
     """
     from stacks.resources.deployboxrm_edge.model import DeployBoxrmEdge
 
-    base_domain = getattr(settings, "BASE_DOMAIN", "dev.deploy-box.com")
+    base_domain = settings.BASE_DOMAIN
     edges = DeployBoxrmEdge.objects.all()
 
     routers: dict = {}

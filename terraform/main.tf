@@ -110,6 +110,10 @@ resource "azurerm_container_app" "container_app" {
         name  = "HOST"
         value = var.app.host
       }
+      env {
+        name  = "BASE_DOMAIN"
+        value = var.app.base_domain
+      }
 
       # --- Azure identity ---
       env {
