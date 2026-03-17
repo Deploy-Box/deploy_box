@@ -284,13 +284,17 @@ def get_traefik_config() -> dict:
                 "stripPrefix": {"prefixes": ["/api"]},
             }
 
-    return {
+    traefik_config = {
         "http": {
             "routers": routers,
             "services": svc,
-            "middlewares": middlewares,
         }
     }
+
+    if middlewares:
+        traefik_config["http"]["middlewares"] = middlewares
+
+    return traefik_config
 
 
 # ---------------------------------------------------------------------------
