@@ -5,6 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
+from core.utils.webhook_auth import verify_iac_webhook_signature
 from stacks.models import Stack, PurchasableStack
 from stacks.serializers import StackSerializer
 from stacks.services import (
@@ -32,7 +33,8 @@ class StackViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter]
 
-    # Actions that the IAC container-app calls back into without credentials.
+    # Actions that the IAC container-app calls back into, authenticated via
+    # HMAC-SHA256 shared secret (see SEC-2).
     WEBHOOK_ACTIONS = ("bulk_update_resources_action", "partial_update")
 
     def get_permissions(self):
@@ -41,11 +43,16 @@ class StackViewSet(viewsets.ModelViewSet):
         return super().get_permissions()
 
     def get_authenticators(self):
-        # Skip authentication (and CSRF enforcement from SessionAuthentication)
-        # for internal webhook callbacks.
+        # Skip DRF authentication for webhook actions — they are verified via
+        # HMAC signature in initialize_request / initial() instead.
         if getattr(self, 'action', None) in self.WEBHOOK_ACTIONS:
             return []
         return super().get_authenticators()
+
+    def initial(self, request, *args, **kwargs):
+        super().initial(request, *args, **kwargs)
+        if getattr(self, 'action', None) in self.WEBHOOK_ACTIONS:
+            verify_iac_webhook_signature(request)
 
     # ----- CREATE --------------------------------------------------------
     def create(self, request):

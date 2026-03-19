@@ -7,7 +7,6 @@ from organizations.models import PendingInvites, OrganizationMember, Organizatio
 from django.conf import settings
 from django.db import transaction
 import logging
-from django.utils import timezone
 from workos import WorkOSClient
 from core.middleware import WorkOSSessionMiddleware
 
@@ -263,9 +262,11 @@ class LogoutAPIView(APIView):
         # Clear the Django session (removes _workos_user_id and all session data)
         request.session.flush()
 
-        # Build a WorkOS logout URL so the frontend can clear the AuthKit session
+        # Build a WorkOS logout URL so the frontend can clear the AuthKit session.
+        # In dev, skip the WorkOS redirect — localhost isn't whitelisted as a
+        # return URL in WorkOS, which causes a redirect to production.
         workos_logout_url = None
-        if workos_session_id:
+        if workos_session_id and settings.ENV != "DEV":
             try:
                 workos_client = WorkOSClient(
                     api_key=settings.WORKOS["API_KEY"],

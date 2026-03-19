@@ -9,21 +9,64 @@
 
   <div class="relative z-10 w-full min-h-screen pt-48 pb-32 px-4">
     <!-- Header -->
-    <div class="max-w-4xl mx-auto text-center mb-32">
+    <div class="max-w-4xl mx-auto text-center mb-24">
       <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs font-mono mb-6">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        SIMPLE PRICING
+        SIMPLE PLANS
       </div>
       <h1 class="text-5xl md:text-7xl font-bold tracking-tighter text-white mb-6">
-        Pay once. <span class="text-emerald-400">Own it forever.</span>
+        Free to deploy. <span class="text-emerald-400">Simple plans to scale.</span>
       </h1>
       <p class="text-xl text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-        No monthly subscriptions. Choose your stack, pay a one-time fee, and get full access to your containerized environment.
+        All stacks are free to deploy — no setup fees. Choose a plan that grows with you.
       </p>
     </div>
 
-    <!-- Pricing Grid (Uniform Height) -->
-    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch px-4 mb-48">
+    <!-- Free Stacks Callout -->
+    <div class="max-w-4xl mx-auto mb-32">
+      <div class="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-8">
+        <div class="text-center mb-8">
+          <h2 class="text-2xl font-bold text-white mb-2">Every stack is <span class="text-emerald-400">free to deploy</span></h2>
+          <p class="text-zinc-400 text-sm">No setup fees. No per-container charges. Just pick your stack and go.</p>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b border-emerald-500/20">
+                <th class="px-4 py-3 text-emerald-400 font-semibold text-sm">Stack Tier</th>
+                <th class="px-4 py-3 text-emerald-400 font-semibold text-sm">Examples</th>
+                <th class="px-4 py-3 text-emerald-400 font-semibold text-sm text-right">Setup Fee</th>
+              </tr>
+            </thead>
+            <tbody class="text-zinc-300 text-sm">
+              <tr class="border-b border-zinc-800/50">
+                <td class="px-4 py-3 font-semibold text-white">Starter</td>
+                <td class="px-4 py-3">MERN, MEAN, Django, LAMP</td>
+                <td class="px-4 py-3 text-right font-mono text-emerald-400">Free</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="px-4 py-3 font-semibold text-white">Professional</td>
+                <td class="px-4 py-3">Mobile, Full-Stack + CI/CD</td>
+                <td class="px-4 py-3 text-right font-mono text-emerald-400">Free</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="px-4 py-3 font-semibold text-white">AI/ML</td>
+                <td class="px-4 py-3">LLM, AI-Agents, Computer Vision, Image Gen</td>
+                <td class="px-4 py-3 text-right font-mono text-emerald-400">Free</td>
+              </tr>
+              <tr>
+                <td class="px-4 py-3 font-semibold text-white">Pre-Built</td>
+                <td class="px-4 py-3">Instant delivery (limited inventory)</td>
+                <td class="px-4 py-3 text-right font-mono text-emerald-400">Free</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pricing Grid -->
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch px-4 mb-12">
       
       <!-- Free Plan Card -->
       <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col hover:border-emerald-500/30 transition-all duration-300 group relative overflow-hidden h-full">
@@ -33,124 +76,160 @@
         <p class="text-zinc-500 text-sm mb-8">Perfect for hobbyists and students.</p>
         
         <div class="mb-8">
-            <span class="text-5xl font-bold text-white">$<span x-text="basicPrice">0</span></span>
-            <span class="text-zinc-500 text-sm">/ container</span>
+            <span class="text-5xl font-bold text-white">$0</span>
+            <span class="text-zinc-500 text-sm">/ mo</span>
         </div>
 
         <div class="space-y-4 mb-8 flex-grow">
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Frontend Setup
+                1 Stack
              </div>
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Backend Setup
+                1 GB Storage
              </div>
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Pre-Integrated Database
+                10K API Requests / mo
              </div>
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Setup Instructions
-             </div>
-             <!-- Disabled Items -->
-             <div class="flex items-center gap-3 text-sm text-zinc-600">
-                <svg class="w-5 h-5 text-zinc-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                Built-in Auth Support
-             </div>
-              <div class="flex items-center gap-3 text-sm text-zinc-600">
-                <svg class="w-5 h-5 text-zinc-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                Payment Processing
+                1 Team Member
              </div>
         </div>
         
         <a href="{% url 'main_site:payments_home' variant='FREE' %}" class="mt-auto w-full block text-center py-3 rounded-lg border border-zinc-700 text-white font-semibold hover:border-emerald-500 hover:text-emerald-400 transition-colors">
-            Get Starter
+            Get Started
         </a>
       </div>
 
-      <!-- Premium Plan Card -->
+      <!-- Developer Plan Card -->
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col hover:border-emerald-500/30 transition-all duration-300 group relative overflow-hidden h-full">
+        <div class="absolute top-0 right-0 w-24 h-24 bg-emerald-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
+        <p class="text-emerald-400 font-bold mb-2 uppercase text-xs tracking-wider">Solo</p>
+        <h3 class="text-3xl font-bold text-white mb-4">Developer</h3>
+        <p class="text-zinc-500 text-sm mb-8">Everything you need to build and ship.</p>
+        
+        <div class="mb-8">
+            <span class="text-5xl font-bold text-white">$19</span>
+            <span class="text-zinc-500 text-sm">/ mo</span>
+        </div>
+
+        <div class="space-y-4 mb-8 flex-grow">
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                3 Stacks
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                10 GB Storage
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                100K API Requests / mo
+             </div>
+             <div class="flex items-center gap-3 text-sm text-zinc-300">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                1 Team Member
+             </div>
+        </div>
+        
+        <a href="{% url 'main_site:payments_home' variant='PREMIUM' %}" class="mt-auto w-full block text-center py-3 rounded-lg border border-zinc-700 text-white font-semibold hover:border-emerald-500 hover:text-emerald-400 transition-colors">
+            Get Developer
+        </a>
+      </div>
+
+      <!-- Team Plan Card (Most Popular) -->
       <div class="bg-zinc-900 border border-emerald-500/50 rounded-xl p-8 flex flex-col shadow-[0_0_40px_rgba(16,185,129,0.1)] relative overflow-hidden h-full">
         <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
         <div class="absolute top-0 right-4 bg-emerald-500 text-black text-[10px] font-bold px-3 py-1 rounded-b-lg uppercase tracking-wider">Most Popular</div>
         
-        <p class="text-amber-400 font-bold mb-2 uppercase text-xs tracking-wider mt-4">Growth</p>
-        <h3 class="text-3xl font-bold text-white mb-4">Premium</h3>
-        <p class="text-zinc-500 text-sm mb-8">Everything you need to ship a production app.</p>
+        <p class="text-amber-400 font-bold mb-2 uppercase text-xs tracking-wider mt-4">Collaborative</p>
+        <h3 class="text-3xl font-bold text-white mb-4">Team</h3>
+        <p class="text-zinc-500 text-sm mb-8">For teams shipping production apps together.</p>
         
         <div class="mb-8">
-            <span class="text-5xl font-bold text-white">$<span x-text="premiumPrice">2.50</span></span>
-            <span class="text-zinc-500 text-sm">/ container</span>
+            <span class="text-5xl font-bold text-white">$79</span>
+            <span class="text-zinc-500 text-sm">/ mo</span>
         </div>
 
          <div class="space-y-4 mb-8 flex-grow">
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                <span class="font-bold text-white">All Free Features</span>
+                10 Stacks
              </div>
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Premium Stacks Access
+                50 GB Storage
              </div>
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Built-in Authentication
+                500K API Requests / mo
              </div>
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Payment Processing Integration
-             </div>
-             <div class="flex items-center gap-3 text-sm text-zinc-300">
-                <svg class="w-5 h-5 text-amber-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Priority Support
+                5 Team Members
              </div>
         </div>
 
         <a href="{% url 'main_site:payments_home' variant='PREMIUM' %}" class="mt-auto w-full block text-center py-4 rounded-lg bg-emerald-500 text-black font-bold hover:bg-emerald-400 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)]">
-            Get Premium
+            Get Team
         </a>
       </div>
 
-      <!-- Pro Plan Card -->
+      <!-- Business Plan Card -->
       <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col hover:border-purple-500/50 transition-all duration-300 group relative overflow-hidden h-full">
         <div class="absolute top-0 right-0 w-24 h-24 bg-purple-500/5 rounded-full blur-2xl -mr-10 -mt-10 pointer-events-none"></div>
-        <p class="text-purple-400 font-bold mb-2 uppercase text-xs tracking-wider">Enterprise</p>
-        <h3 class="text-3xl font-bold text-white mb-4">Pro</h3>
-        <p class="text-zinc-500 text-sm mb-8">For agencies and heavy scalers.</p>
+        <p class="text-purple-400 font-bold mb-2 uppercase text-xs tracking-wider">Scale</p>
+        <h3 class="text-3xl font-bold text-white mb-4">Business</h3>
+        <p class="text-zinc-500 text-sm mb-8">For agencies and growing companies.</p>
         
         <div class="mb-8">
-            <span class="text-5xl font-bold text-white">$<span x-text="proPrice">5.00</span></span>
-            <span class="text-zinc-500 text-sm">/ container</span>
+            <span class="text-5xl font-bold text-white">$199</span>
+            <span class="text-zinc-500 text-sm">/ mo</span>
         </div>
 
          <div class="space-y-4 mb-8 flex-grow">
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                <span class="font-bold text-white">All Premium Features</span>
+                Unlimited Stacks
              </div>
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Dedicated Account Manager
+                200 GB Storage
              </div>
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Custom Integrations
+                2M API Requests / mo
              </div>
              <div class="flex items-center gap-3 text-sm text-zinc-300">
                 <svg class="w-5 h-5 text-purple-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                Early Access Updates
+                Unlimited Team Members
              </div>
         </div>
         
         <a href="{% url 'main_site:payments_home' variant='PRO' %}" class="mt-auto w-full block text-center py-3 rounded-lg border border-zinc-700 text-white font-semibold hover:border-purple-500 hover:text-purple-400 transition-colors">
-            Get Pro
+            Get Business
         </a>
       </div>
 
     </div>
 
-    <!-- NEW SECTION: Features Breakdown -->
+    <!-- Enterprise CTA Banner -->
+    <div class="max-w-7xl mx-auto px-4 mb-48">
+      <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <h3 class="text-2xl font-bold text-white mb-2">Need more? <span class="text-emerald-400">Enterprise</span></h3>
+          <p class="text-zinc-400 text-sm">Unlimited stacks, custom storage, custom API limits, unlimited members — starting at <span class="text-white font-bold">$999+/mo</span>.</p>
+        </div>
+        <a href="/contact" class="flex-shrink-0 px-8 py-3 rounded-lg border border-emerald-500/50 text-emerald-400 font-semibold hover:bg-emerald-500/10 transition-colors">
+            Contact Sales
+        </a>
+      </div>
+    </div>
+
+    <!-- Features Breakdown -->
     <div class="max-w-6xl mx-auto mb-48">
         <h2 class="text-3xl font-bold text-center mb-16"><span class="text-emerald-400">Everything</span> you need to scale</h2>
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -199,20 +278,97 @@
         </div>
     </div>
 
-    <!-- NEW SECTION: FAQ -->
+    <!-- Overage / Consumption Pricing -->
+    <div class="max-w-4xl mx-auto mb-48 px-4">
+      <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8">
+        <h2 class="text-3xl font-bold text-emerald-300 text-center mb-4">
+          Overage &amp; Consumption Pricing
+        </h2>
+        <p class="text-center text-gray-100 mb-8">
+          Transparent rates when you go beyond your plan limits
+        </p>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left">
+            <thead>
+              <tr class="border-b-2 border-emerald-400">
+                <th class="px-6 py-4 text-emerald-300 font-bold text-lg">Resource</th>
+                <th class="px-6 py-4 text-emerald-300 font-bold text-lg text-right">Rate</th>
+              </tr>
+            </thead>
+            <tbody class="text-zinc-100">
+              <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+                <td class="px-6 py-4">
+                  <div class="font-semibold text-amber-300">Additional Storage</div>
+                  <div class="text-sm text-gray-300">Beyond plan allocation</div>
+                </td>
+                <td class="px-6 py-4 text-right font-mono text-lg">$0.10/GB/mo</td>
+              </tr>
+              <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+                <td class="px-6 py-4">
+                  <div class="font-semibold text-amber-300">Additional API Requests</div>
+                  <div class="text-sm text-gray-300">Beyond plan allocation</div>
+                </td>
+                <td class="px-6 py-4 text-right font-mono text-lg">$0.50 / 10K</td>
+              </tr>
+              <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+                <td class="px-6 py-4">
+                  <div class="font-semibold text-amber-300">Additional Stacks</div>
+                  <div class="text-sm text-gray-300">Over plan limit</div>
+                </td>
+                <td class="px-6 py-4 text-right font-mono text-lg">$15/stack/mo</td>
+              </tr>
+              <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+                <td class="px-6 py-4">
+                  <div class="font-semibold text-amber-300">Database Usage</div>
+                  <div class="text-sm text-gray-300">Nile PostgreSQL</div>
+                </td>
+                <td class="px-6 py-4 text-right font-mono text-lg">$0.05/GB + $0.001/query</td>
+              </tr>
+              <tr class="border-b border-gray-600 hover:bg-white/5 transition">
+                <td class="px-6 py-4">
+                  <div class="font-semibold text-amber-300">Bandwidth Overage</div>
+                  <div class="text-sm text-gray-300">Outbound data transfer</div>
+                </td>
+                <td class="px-6 py-4 text-right font-mono text-lg">$0.08/GB</td>
+              </tr>
+              <tr class="hover:bg-white/5 transition">
+                <td class="px-6 py-4">
+                  <div class="font-semibold text-purple-300">Marketplace Fee</div>
+                  <div class="text-sm text-gray-300">Developer Marketplace transactions</div>
+                </td>
+                <td class="px-6 py-4 text-right font-mono text-lg">15% platform fee</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="mt-6 text-center text-sm text-gray-300">
+          <p>* Prices shown in USD. Overage charges apply automatically at these transparent rates.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
     <div class="max-w-3xl mx-auto mb-40">
         <h2 class="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
         <div class="space-y-6">
             <div class="group">
-                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">What happens after I pay?</h3>
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">What does free to deploy mean?</h3>
                 <p class="text-zinc-400 text-sm leading-relaxed">
-                    You instantly get access to your container dashboard where you can launch your pre-configured stack. The entire environment is provisioned in seconds.
+                    All stacks have zero setup fees. You only pay your monthly plan for hosting and resources.
                 </p>
             </div>
             <div class="border-t border-zinc-800 pt-6 group">
-                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">Can I upgrade later?</h3>
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">Can I upgrade or downgrade?</h3>
                 <p class="text-zinc-400 text-sm leading-relaxed">
-                    Yes! You can upgrade from Basic to Premium or Pro at any time from your dashboard. You'll only pay the difference.
+                    Yes! Change plans anytime from your dashboard. Changes take effect on your next billing cycle.
+                </p>
+            </div>
+            <div class="border-t border-zinc-800 pt-6 group">
+                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">What happens if I exceed my plan limits?</h3>
+                <p class="text-zinc-400 text-sm leading-relaxed">
+                    Overage charges apply automatically at transparent rates. You'll never lose access to your stacks.
                 </p>
             </div>
             <div class="border-t border-zinc-800 pt-6 group">
@@ -221,235 +377,9 @@
                     Absolutely. The stack is deployed for you to use, but the code is yours to modify, export, and deploy elsewhere if you choose.
                 </p>
             </div>
-             <div class="border-t border-zinc-800 pt-6 group">
-                <h3 class="text-lg font-bold text-white mb-2 cursor-pointer group-hover:text-emerald-400 transition-colors">What if I need help?</h3>
-                <p class="text-zinc-400 text-sm leading-relaxed">
-                    We offer community support for all plans. Premium and Pro plans get priority email support and direct access to our engineering team.
-                </p>
-            </div>
         </div>
     </div>
 
-  </div>
-
-  <!-- Pricing Details Table -->
-  <div class="max-w-6xl mx-auto mt-16 px-4">
-    <div class="bg-white/10 backdrop-blur-md rounded-3xl shadow-2xl p-8">
-      <h2 class="text-4xl font-bold text-emerald-300 text-center mb-4">
-        Consumption Pricing Details
-      </h2>
-      <p class="text-center text-gray-100 mb-8">
-        Transparent, usage-based pricing for your infrastructure needs
-      </p>
-      
-      <div class="overflow-x-auto">
-        <table class="w-full text-left">
-          <thead>
-            <tr class="border-b-2 border-emerald-400">
-              <th class="px-6 py-4 text-emerald-300 font-bold text-lg">Resource Type</th>
-              <th class="px-6 py-4 text-emerald-300 font-bold text-lg">Unit</th>
-              <th class="px-6 py-4 text-emerald-300 font-bold text-lg text-right">Price</th>
-            </tr>
-          </thead>
-          <tbody class="text-zinc-100">
-            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
-              <td class="px-6 py-4">
-                <div class="font-semibold text-amber-300">vCPU Time</div>
-                <div class="text-sm text-gray-300">Virtual CPU compute time</div>
-              </td>
-              <td class="px-6 py-4">per vCPU-hour</td>
-              <td class="px-6 py-4 text-right font-mono text-lg">$0.04</td>
-            </tr>
-            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
-              <td class="px-6 py-4">
-                <div class="font-semibold text-amber-300">RAM Time</div>
-                <div class="text-sm text-gray-300">Memory allocation time</div>
-              </td>
-              <td class="px-6 py-4">per GB-hour</td>
-              <td class="px-6 py-4 text-right font-mono text-lg">$0.005</td>
-            </tr>
-            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
-              <td class="px-6 py-4">
-                <div class="font-semibold text-amber-300">Storage</div>
-                <div class="text-sm text-gray-300">Persistent disk storage</div>
-              </td>
-              <td class="px-6 py-4">per GB-month</td>
-              <td class="px-6 py-4 text-right font-mono text-lg">$0.10</td>
-            </tr>
-            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
-              <td class="px-6 py-4">
-                <div class="font-semibold text-amber-300">Network Egress</div>
-                <div class="text-sm text-gray-300">Outbound data transfer</div>
-              </td>
-              <td class="px-6 py-4">per GB</td>
-              <td class="px-6 py-4 text-right font-mono text-lg">$0.12</td>
-            </tr>
-            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
-              <td class="px-6 py-4">
-                <div class="font-semibold text-amber-300">Network Ingress</div>
-                <div class="text-sm text-gray-300">Inbound data transfer</div>
-              </td>
-              <td class="px-6 py-4">per GB</td>
-              <td class="px-6 py-4 text-right font-mono text-lg">Free</td>
-            </tr>
-            <tr class="border-b border-gray-600 hover:bg-white/5 transition">
-              <td class="px-6 py-4">
-                <div class="font-semibold text-amber-300">Database Storage</div>
-                <div class="text-sm text-gray-300">Managed database storage</div>
-              </td>
-              <td class="px-6 py-4">per GB-month</td>
-              <td class="px-6 py-4 text-right font-mono text-lg">$0.15</td>
-            </tr>
-            <tr class="hover:bg-white/5 transition">
-              <td class="px-6 py-4">
-                <div class="font-semibold text-amber-300">Build Minutes</div>
-                <div class="text-sm text-gray-300">Container build time</div>
-              </td>
-              <td class="px-6 py-4">per minute</td>
-              <td class="px-6 py-4 text-right font-mono text-lg">$0.01</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="mt-8 bg-emerald-400/10 rounded-xl p-6 border border-emerald-400/30">
-        <h3 class="text-xl font-bold text-emerald-300 mb-3">General Usage Examples</h3>
-        <div class="grid md:grid-cols-2 gap-6 text-zinc-100">
-          <div>
-            <p class="font-semibold text-amber-300 mb-2">Small Application</p>
-            <ul class="space-y-1 text-sm">
-              <li>• 1 vCPU × 730 hours = <span class="font-mono">$29.20</span></li>
-              <li>• 2 GB RAM × 730 hours = <span class="font-mono">$7.30</span></li>
-              <li>• 10 GB Storage = <span class="font-mono">$1.00</span></li>
-              <li>• 50 GB Egress = <span class="font-mono">$6.00</span></li>
-              <li class="pt-2 font-bold text-emerald-300">Total: ~$43.50/month</li>
-            </ul>
-          </div>
-          <div>
-            <p class="font-semibold text-amber-300 mb-2">Medium Application</p>
-            <ul class="space-y-1 text-sm">
-              <li>• 2 vCPU × 730 hours = <span class="font-mono">$58.40</span></li>
-              <li>• 4 GB RAM × 730 hours = <span class="font-mono">$14.60</span></li>
-              <li>• 50 GB Storage = <span class="font-mono">$5.00</span></li>
-              <li>• 200 GB Egress = <span class="font-mono">$24.00</span></li>
-              <li class="pt-2 font-bold text-emerald-300">Total: ~$102.00/month</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-8 bg-amber-400/10 rounded-xl p-6 border border-amber-400/30">
-        <h3 class="text-xl font-bold text-amber-300 mb-3">Stack-Specific Examples</h3>
-        <p class="text-sm text-gray-300 mb-6">Estimated monthly costs for popular stacks with typical usage patterns</p>
-        
-        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6 text-zinc-100">
-          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
-            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
-              <span class="mr-2">🟢</span> MERN Stack
-            </p>
-            <p class="text-xs text-gray-400 mb-3">MongoDB + Express + React + Node.js</p>
-            <ul class="space-y-1 text-sm">
-              <li>• React Frontend: 0.5 vCPU = <span class="font-mono">$14.60</span></li>
-              <li>• Node.js API: 1 vCPU = <span class="font-mono">$29.20</span></li>
-              <li>• 3 GB RAM total = <span class="font-mono">$10.95</span></li>
-              <li>• MongoDB: 20 GB DB storage = <span class="font-mono">$3.00</span></li>
-              <li>• Storage: 15 GB = <span class="font-mono">$1.50</span></li>
-              <li>• Egress: 100 GB = <span class="font-mono">$12.00</span></li>
-              <li>• Build time: 30 min = <span class="font-mono">$0.30</span></li>
-              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$71.55/month</li>
-            </ul>
-          </div>
-
-          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
-            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
-              <span class="mr-2">🔵</span> MEAN Stack
-            </p>
-            <p class="text-xs text-gray-400 mb-3">MongoDB + Express + Angular + Node.js</p>
-            <ul class="space-y-1 text-sm">
-              <li>• Angular Frontend: 0.5 vCPU = <span class="font-mono">$14.60</span></li>
-              <li>• Node.js API: 1 vCPU = <span class="font-mono">$29.20</span></li>
-              <li>• 3 GB RAM total = <span class="font-mono">$10.95</span></li>
-              <li>• MongoDB: 20 GB DB storage = <span class="font-mono">$3.00</span></li>
-              <li>• Storage: 15 GB = <span class="font-mono">$1.50</span></li>
-              <li>• Egress: 100 GB = <span class="font-mono">$12.00</span></li>
-              <li>• Build time: 35 min = <span class="font-mono">$0.35</span></li>
-              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$71.60/month</li>
-            </ul>
-          </div>
-
-          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
-            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
-              <span class="mr-2">🟣</span> LAMP Stack
-            </p>
-            <p class="text-xs text-gray-400 mb-3">Linux + Apache + MySQL + PHP</p>
-            <ul class="space-y-1 text-sm">
-              <li>• Apache + PHP: 1 vCPU = <span class="font-mono">$29.20</span></li>
-              <li>• 2 GB RAM = <span class="font-mono">$7.30</span></li>
-              <li>• MySQL: 15 GB DB storage = <span class="font-mono">$2.25</span></li>
-              <li>• Storage: 10 GB = <span class="font-mono">$1.00</span></li>
-              <li>• Egress: 75 GB = <span class="font-mono">$9.00</span></li>
-              <li>• Build time: 15 min = <span class="font-mono">$0.15</span></li>
-              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$48.90/month</li>
-            </ul>
-          </div>
-
-          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
-            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
-              <span class="mr-2">⚛️</span> Django Stack
-            </p>
-            <p class="text-xs text-gray-400 mb-3">Django + PostgreSQL + React</p>
-            <ul class="space-y-1 text-sm">
-              <li>• React Frontend: 0.5 vCPU = <span class="font-mono">$14.60</span></li>
-              <li>• Django API: 1.5 vCPU = <span class="font-mono">$43.80</span></li>
-              <li>• 4 GB RAM total = <span class="font-mono">$14.60</span></li>
-              <li>• PostgreSQL: 25 GB DB storage = <span class="font-mono">$3.75</span></li>
-              <li>• Storage: 20 GB = <span class="font-mono">$2.00</span></li>
-              <li>• Egress: 120 GB = <span class="font-mono">$14.40</span></li>
-              <li>• Build time: 25 min = <span class="font-mono">$0.25</span></li>
-              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$93.40/month</li>
-            </ul>
-          </div>
-
-          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
-            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
-              <span class="mr-2">⚡</span> JAMstack
-            </p>
-            <p class="text-xs text-gray-400 mb-3">JavaScript + APIs + Markup (Next.js)</p>
-            <ul class="space-y-1 text-sm">
-              <li>• Next.js SSR: 1 vCPU = <span class="font-mono">$29.20</span></li>
-              <li>• 2 GB RAM = <span class="font-mono">$7.30</span></li>
-              <li>• API Functions: 0.5 vCPU = <span class="font-mono">$14.60</span></li>
-              <li>• Storage: 10 GB = <span class="font-mono">$1.00</span></li>
-              <li>• Egress: 150 GB = <span class="font-mono">$18.00</span></li>
-              <li>• Build time: 20 min = <span class="font-mono">$0.20</span></li>
-              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$70.30/month</li>
-            </ul>
-          </div>
-
-          <div class="bg-white/5 rounded-lg p-4 border border-amber-400/20">
-            <p class="font-semibold text-amber-300 mb-3 text-lg flex items-center">
-              <span class="mr-2">🔷</span> Ruby on Rails
-            </p>
-            <p class="text-xs text-gray-400 mb-3">Rails + PostgreSQL + Redis</p>
-            <ul class="space-y-1 text-sm">
-              <li>• Rails App: 2 vCPU = <span class="font-mono">$58.40</span></li>
-              <li>• 4 GB RAM = <span class="font-mono">$14.60</span></li>
-              <li>• PostgreSQL: 30 GB DB storage = <span class="font-mono">$4.50</span></li>
-              <li>• Redis: 5 GB storage = <span class="font-mono">$0.75</span></li>
-              <li>• Storage: 15 GB = <span class="font-mono">$1.50</span></li>
-              <li>• Egress: 90 GB = <span class="font-mono">$10.80</span></li>
-              <li>• Build time: 40 min = <span class="font-mono">$0.40</span></li>
-              <li class="pt-2 font-bold text-emerald-300 border-t border-gray-600 mt-2">Total: ~$90.95/month</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-6 text-center text-sm text-gray-300">
-        <p>* Prices shown in USD. Actual costs may vary based on usage patterns.</p>
-        <p class="mt-2">Free tier credits can be applied to any of these resources.</p>
-      </div>
-    </div>
   </div>
 
   {% include 'footer.html' %}

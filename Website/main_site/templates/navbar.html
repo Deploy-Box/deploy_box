@@ -66,23 +66,11 @@
         </li>
         <li>
           <a
-            id="login"
+            id="auth-button"
             class="px-6 py-1 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring flex items-center justify-center"
-            href="{% if user.is_authenticated %}{% url 'main_site:profile' %}{% else %}{% url 'main_site:login' %}{% endif %}"
-            id="login-button"
+            href="{% if user.is_authenticated %}/dashboard{% else %}{% url 'main_site:login' %}{% endif %}"
           >
-            {% if user.is_authenticated %} Visit Account {%else%} Login
-            {%endif%}
-          </a>
-        </li>
-        <li>
-          <a
-            id="signup"
-            class="px-6 py-1 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring flex items-center justify-center"
-            href="{% if user.is_authenticated %}/dashboard{% else %}/signup{% endif %}"
-            id="signup-button"
-          >
-            {% if user.is_authenticated %} Visit Dashboard {% else %} Signup
+            {% if user.is_authenticated %} Dashboard {% else %} Get Started
             {%endif%}
           </a>
         </li>
