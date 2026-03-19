@@ -1,7 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status, permissions
-from django.contrib.auth import login, logout
 from accounts.models import UserProfile
 from accounts.serializers.UserCreationSerializer import UserCreationSerializer
 from organizations.models import PendingInvites, OrganizationMember, Organization
@@ -10,6 +9,7 @@ from django.db import transaction
 import logging
 from django.utils import timezone
 from workos import WorkOSClient
+from core.middleware import WorkOSSessionMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -260,7 +260,8 @@ class LogoutAPIView(APIView):
         # Capture WorkOS session ID before clearing the Django session
         workos_session_id = request.session.get("workos_session_id")
 
-        logout(request)
+        # Clear the Django session (removes _workos_user_id and all session data)
+        request.session.flush()
 
         # Build a WorkOS logout URL so the frontend can clear the AuthKit session
         workos_logout_url = None
@@ -365,7 +366,7 @@ class DeleteAccountAPIView(APIView):
             user = request.user
             
             # Log the user out first
-            logout(request)
+            request.session.flush()
             
             # Delete the user account
             user.delete()
@@ -517,8 +518,9 @@ class WorkOSAuthCallbackView(APIView):
                 logger.warning(f"Could not decode WorkOS access_token JWT: {jwt_err}")
                 workos_session_id = None
 
-            # ── Django login ──
-            login(request, user)
+            # ── WorkOS session login (replaces Django's login()) ──
+            request.session.cycle_key()  # prevent session fixation
+            request.session[WorkOSSessionMiddleware.SESSION_KEY] = str(user.pk)
 
             # ── Store WorkOS session ID so we can build a logout URL later ──
             if workos_session_id:

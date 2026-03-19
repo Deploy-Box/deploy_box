@@ -1,11 +1,34 @@
 from django.shortcuts import redirect
-from django.utils.deprecation import MiddlewareMixin
-from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth.models import AnonymousUser
 
 
-# class DisableCSRFMiddleware(MiddlewareMixin):
-#     def process_view(self, request, view_func, view_args, view_kwargs):
-#         setattr(request, '_dont_enforce_csrf_checks', True)
+class WorkOSSessionMiddleware:
+    """
+    Replaces Django's AuthenticationMiddleware.
+
+    Reads the authenticated user's PK from the session (written during the
+    WorkOS OAuth callback) and attaches the UserProfile to ``request.user``.
+    Falls back to AnonymousUser when no valid session exists.
+    """
+
+    SESSION_KEY = "_workos_user_id"
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user_id = request.session.get(self.SESSION_KEY)
+        if user_id:
+            from accounts.models import UserProfile
+
+            try:
+                request.user = UserProfile.objects.get(pk=user_id)
+            except UserProfile.DoesNotExist:
+                request.session.flush()
+                request.user = AnonymousUser()
+        else:
+            request.user = AnonymousUser()
+        return self.get_response(request)
 
 
 class LoginRequiredMiddleware:

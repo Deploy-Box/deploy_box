@@ -31,6 +31,9 @@ print("HOST set to", HOST)
 SECRET_KEY = _kv.get_secret("deploy-box-django-secret-key")
 ENV = os.getenv("ENV", "LOCAL").upper()
 
+# WorkOSSessionMiddleware replaces AuthenticationMiddleware; silence the admin check.
+SILENCED_SYSTEM_CHECKS = ["admin.E408"]
+
 ALLOWED_HOSTS: list[str] = [
     "deploy-box.com",
     "dev.deploy-box.com",
@@ -70,8 +73,7 @@ INSTALLED_APPS = [
 
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
+        "core.authentication.WorkOSSessionAuthentication",
     ]
 }
 
@@ -133,7 +135,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "core.middleware.WorkOSSessionMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "core.middleware.LoginRequiredMiddleware",
@@ -177,10 +179,8 @@ MEDIA_URL = "/media/"
 MEDIA_ROOT = os.path.join(BASE_DIR, "main_site", "media")
 
 # ──────────────────────────────────────────────
-# Authentication
+# Authentication (all auth flows go through WorkOS)
 # ──────────────────────────────────────────────
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/accounts/login/"
 AUTH_USER_MODEL = "accounts.UserProfile"
 
 # ──────────────────────────────────────────────
@@ -231,15 +231,8 @@ TEMPLATES = [
     },
 ]
 
-# ──────────────────────────────────────────────
-# Password Validation
-# ──────────────────────────────────────────────
-AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
-]
+# Password validation is handled by WorkOS — no Django validators needed.
+AUTH_PASSWORD_VALIDATORS = []
 
 # ──────────────────────────────────────────────
 # Internationalization
