@@ -99,7 +99,13 @@ def delete_organization(user: UserProfile, organization_id: str) -> JsonResponse
     if not OrganizationMember.objects.filter(user=user, organization=organization, role="admin").exists():
         return JsonResponse({"error": "You are not authorized to delete this organization"}, status=403)
 
-    # TODO: Check if the organization has any projects
+    # Safety check: block deletion if org has active projects (prevents cascade data loss)
+    project_count = Project.objects.filter(organization=organization).count()
+    if project_count > 0:
+        return JsonResponse({
+            "error": "Cannot delete organization with active projects. Please delete or transfer all projects first.",
+            "project_count": project_count,
+        }, status=400)
 
     organization.delete()
 
