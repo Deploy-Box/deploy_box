@@ -44,48 +44,13 @@ class Stack(models.Model):
 
     @property
     def is_persistent(self):
-        from stacks.stack_managers.get_manager import get_stack_manager
-        stack_manager = get_stack_manager(self)
-        return stack_manager.get_is_persistent()
-
-    # MERN
-    @property
-    def mern_frontend_url(self):
-        return f'https://{self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("fqdn", "")}'
-
-    @property
-    def mern_backend_url(self):
-        return f'https://{self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("fqdn", "")}'
-    
-    @property
-    def mern_mongodb_uri(self):
-        return "Getting there"
-        # user = self.iac.get("mongodbatlas_database_user", {}).get("user-1", {})
-        # return user.get("username", "") + ":" + user.get("password", "") + "@cluster0.yjaoi.mongodb.net/" + user.get("roles", [{}])[0].get("database_name", "")
-    
-
-    # Django
-    @property
-    def django_url(self):
-        return f'https://{self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("fqdn", "")}'
-    
-    @property
-    def django_port(self):
-        return self.get_attributes_from_resource("azurerm_container_app-1").get("ingress", [{}])[0].get("target_port", "")
-
-    @property
-    def django_postgres_host(self):
-        return self.get_attributes_from_resource("neon_project-1").get("database_host", "")
-    
-    @property
-    def django_postgres_database(self):
-        return self.get_attributes_from_resource("neon_project-1").get("database_name", "")
-    
-    # Redis
-    @property
-    def redis_url(self):
-        ip_address = self.get_attributes_from_resource("azurerm_public_ip-1").get("ip_address", "Not Assigned")
-        return f"http://{ip_address}"
+        attribute = StackIACAttribute.objects.filter(
+            stack_id=self.id,
+            attribute_name="azurerm_container_app.azurerm_container_app-1.template.min_replicas"
+        ).first()
+        if attribute is None:
+            return False
+        return attribute.attribute_value == "1"
 
     def get_attributes_from_resource(self, value) -> dict: 
         key = "name"
@@ -125,6 +90,38 @@ class StackIACAttribute(models.Model):
     def __str__(self):
         return f"IAC Attribute {self.attribute_name} in Stack {self.stack.id}"
 
+class DeploymentLog(models.Model):
+    OPERATION_CHOICES = [
+        ('APPLY', 'Apply'),
+        ('DELETE', 'Delete'),
+        ('PAUSE', 'Pause'),
+        ('RESUME', 'Resume'),
+    ]
+    STATUS_CHOICES = [
+        ('RUNNING', 'Running'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+    ]
+
+    id = ShortUUIDField(primary_key=True)
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE, related_name='deployment_logs')
+    operation = models.CharField(max_length=20, choices=OPERATION_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='RUNNING')
+    log_text = models.TextField(default='', blank=True)
+    line_count = models.IntegerField(default=0)
+    started_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-started_at']
+        indexes = [
+            models.Index(fields=['stack', '-started_at']),
+        ]
+
+    def __str__(self):
+        return f"DeploymentLog {self.id} ({self.operation}) for Stack {self.stack_id}"
+
+
 class PrebuiltStack(models.Model):
     id = ShortUUIDField(primary_key=True)
     purchasable_stack = models.ForeignKey(PurchasableStack, on_delete=models.CASCADE, related_name="prebuilt_stacks")
@@ -134,4 +131,68 @@ class PrebuiltStack(models.Model):
 
     def __str__(self):
         return f"PrebuiltStack {self.id} for PurchasableStack {self.purchasable_stack.id}"
+
+
+class Operation(models.Model):
+    """Tracks an IaC operation (apply/destroy/pause/resume) through its lifecycle.
+
+    Created by Django before sending the Service Bus message. Claimed and
+    completed by the IaC job via HMAC-authenticated API calls.
+    """
+
+    OPERATION_CHOICES = [
+        ('APPLY', 'Apply'),
+        ('DELETE', 'Delete'),
+        ('PAUSE', 'Pause'),
+        ('RESUME', 'Resume'),
+        ('DEPLOY', 'Deploy'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('RUNNING', 'Running'),
+        ('SUCCEEDED', 'Succeeded'),
+        ('FAILED', 'Failed'),
+        ('TIMED_OUT', 'Timed Out'),
+    ]
+
+    # Maps operation_type + success → stack status
+    SUCCESS_STATUS_MAP = {
+        'APPLY': 'Ready',
+        'DELETE': 'Deleted',
+        'PAUSE': 'Paused',
+        'RESUME': 'Ready',
+        'DEPLOY': 'Ready',
+    }
+
+    id = ShortUUIDField(primary_key=True)
+    stack = models.ForeignKey(Stack, on_delete=models.CASCADE, related_name='operations')
+    operation_type = models.CharField(max_length=20, choices=OPERATION_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    error_message = models.TextField(default='', blank=True)
+    attempt_id = models.CharField(
+        max_length=64, default='', blank=True,
+        help_text="Unique token set by the claiming worker to prove ownership.",
+    )
+    lease_expires_at = models.DateTimeField(
+        null=True, blank=True,
+        help_text="If RUNNING and this time is passed, the operation is considered stuck.",
+    )
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['stack', '-created_at']),
+            models.Index(fields=['status', 'created_at']),
+        ]
+
+    @property
+    def is_terminal(self) -> bool:
+        return self.status in ('SUCCEEDED', 'FAILED', 'TIMED_OUT')
+
+    def __str__(self):
+        return f"Operation {self.id} ({self.operation_type} / {self.status}) for Stack {self.stack_id}"
 
