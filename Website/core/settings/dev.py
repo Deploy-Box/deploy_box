@@ -11,6 +11,13 @@ from core.settings.base import *  # noqa: F401, F403
 # ──────────────────────────────────────────────
 ssl._create_default_https_context = ssl._create_unverified_context  # noqa: SLF001
 
+# Use OS certificate store for requests/urllib3 (fixes Stripe API behind Cato Networks proxy)
+try:
+    import truststore
+    truststore.inject_into_ssl()
+except ImportError:
+    pass
+
 import httpx  # noqa: E402
 _original_client_init = httpx.Client.__init__
 
