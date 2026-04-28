@@ -40,6 +40,13 @@ ALLOWED_HOSTS: list[str] = [
     "host.docker.internal",
 ]
 
+# Azure injects CONTAINER_APP_HOSTNAME into Container Apps — needed for
+# internal service-to-service calls (e.g. IaC job → Django callbacks)
+_container_app_hostname = os.getenv("CONTAINER_APP_HOSTNAME")
+if _container_app_hostname:
+    ALLOWED_HOSTS.append(_container_app_hostname)
+
+
 ROOT_URLCONF = "core.urls"
 
 # ──────────────────────────────────────────────
@@ -144,17 +151,22 @@ MIDDLEWARE = [
 # ──────────────────────────────────────────────
 # Database
 # ──────────────────────────────────────────────
+# Uses a custom backend that fetches a fresh Entra access token on every
+# new connection.  Locally this works via `az login`; in Azure it uses
+# the app's managed identity.  For local Docker Postgres, dev.py falls
+# back to the standard backend with a static DB_PASSWORD.
 DATABASES = {
     "default": {
-        "ENGINE": "django.db.backends.postgresql",
+        "ENGINE": "core.backends.postgresql_entra",
         "NAME": os.getenv("DB_NAME"),
         "USER": os.getenv("DB_USER"),
-        "PASSWORD": _kv.get_secret(
-            "deploy-box-postgresql-db-password"
-        ),
+        "PASSWORD": "",  # overridden by custom backend at connection time
         "HOST": os.getenv("DB_HOST"),
         "PORT": os.getenv("DB_PORT"),
         "CONN_MAX_AGE": 600,
+        "OPTIONS": {
+            "sslmode": "require",
+        },
     }
 }
 
@@ -206,6 +218,14 @@ GITHUB = {
 
 DEPLOY_BOX_STACK_ENDPOINT = os.getenv("DEPLOY_BOX_STACK_ENDPOINT")
 BASE_DOMAIN = os.getenv("BASE_DOMAIN", "dev.deploy-box.com")
+
+AZURE = {
+    "STORAGE_CONNECTION_STRING": os.getenv("AZURE_STORAGE_CONNECTION_STRING"),
+    "CONTAINER_NAME": os.getenv(
+        "AZURE_SOURCE_CODE_STORAGE_CONTAINER_NAME",
+        "stack-source-code-container",
+    ),
+}
 
 AZURE_SERVICE_BUS = {
     "CONNECTION_STRING": os.getenv("AZURE_SERVICE_BUS_CONNECTION_STRING"),
