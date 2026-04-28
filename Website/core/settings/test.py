@@ -40,6 +40,12 @@ SECURE_HSTS_SECONDS = 0
 
 ALLOWED_HOSTS = ["*"]
 
+STORAGES = {
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
+
 PASSWORD_HASHERS = [
     "django.contrib.auth.hashers.MD5PasswordHasher",
 ]
