@@ -25,6 +25,7 @@ from azure.storage.blob import BlobServiceClient
 from azure.servicebus import ServiceBusClient, ServiceBusMessage
 
 from projects.models import Project
+from organizations.models import OrganizationMember
 
 from stacks.models import Stack, PurchasableStack, DeploymentLog, Operation
 from stacks.resources.resources_manager import ResourcesManager, create_filtered_data
@@ -71,6 +72,13 @@ class NotFoundError(ServiceError):
         super().__init__(message, status_code=404)
 
 
+class ForbiddenError(ServiceError):
+    """Raised when the user does not have permission."""
+
+    def __init__(self, message: str = "Forbidden."):
+        super().__init__(message, status_code=403)
+
+
 # ---------------------------------------------------------------------------
 # Result dataclasses
 # ---------------------------------------------------------------------------
@@ -83,7 +91,26 @@ class UploadResult:
 # ---------------------------------------------------------------------------
 # Stack CRUD
 # ---------------------------------------------------------------------------
-def create_stack(project_id: str, purchasable_stack_id: str) -> dict:
+def verify_project_access(user, project_id: str):
+    """Validate user belongs to the organization that owns this project.
+
+    Raises NotFoundError if project doesn't exist or user has no access.
+    """
+    from projects.models import Project
+    try:
+        project = Project.objects.select_related("organization").get(pk=project_id)
+    except Project.DoesNotExist:
+        raise NotFoundError("Project not found.")
+
+    if not OrganizationMember.objects.filter(
+        user=user, organization_id=project.organization_id
+    ).exists():
+        raise NotFoundError("Project not found.")
+
+    return project
+
+
+def create_stack(project_id: str, purchasable_stack_id: str, user=None) -> dict:
     """Create a new Stack, provision its resources, and enqueue an IAC.APPLY job.
 
     Returns the data dict sent to the queue (includes ``stack_id`` and ``resources``).
@@ -94,10 +121,13 @@ def create_stack(project_id: str, purchasable_stack_id: str) -> dict:
     if not purchasable_stack_id:
         raise ValidationError("Purchasable Stack ID is required.")
 
-    try:
-        project = Project.objects.get(pk=project_id)
-    except Project.DoesNotExist:
-        raise NotFoundError("Project not found.")
+    if user:
+        project = verify_project_access(user, project_id)
+    else:
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            raise NotFoundError("Project not found.")
 
     # Enforce free-tier stack limit
     if project.organization.has_reached_free_stack_limit():
@@ -143,7 +173,7 @@ def create_stack(project_id: str, purchasable_stack_id: str) -> dict:
     return data
 
 
-def create_custom_stack(project_id: str) -> dict:
+def create_custom_stack(project_id: str, user=None) -> dict:
     """Create an empty custom stack that the user can populate resource-by-resource.
 
     Returns the serialized stack data.
@@ -152,10 +182,13 @@ def create_custom_stack(project_id: str) -> dict:
     if not project_id:
         raise ValidationError("Project ID is required.")
 
-    try:
-        project = Project.objects.get(pk=project_id)
-    except Project.DoesNotExist:
-        raise NotFoundError("Project not found.")
+    if user:
+        project = verify_project_access(user, project_id)
+    else:
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            raise NotFoundError("Project not found.")
 
     # Enforce free-tier stack limit
     if project.organization.has_reached_free_stack_limit():

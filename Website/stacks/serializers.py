@@ -4,10 +4,41 @@ from stacks.resources.resources_manager import RESOURCE_MANAGER_MAPPING
 
 
 class StackSerializer(serializers.ModelSerializer):
+    """Full serializer used by HMAC-authenticated webhook actions (IaC system).
+
+    Allows writing to *all* fields so the IaC container-app can update status,
+    iac_state, error_message, instance_usage, etc.
+    """
+
     class Meta:
         model = Stack
         fields = "__all__"
         read_only_fields = ["id", "created_at", "updated_at"]
+
+
+class StackUserSerializer(serializers.ModelSerializer):
+    """Restricted serializer for user-facing endpoints.
+
+    Only exposes fields that an authenticated user is allowed to read/write.
+    System-managed fields (status, iac_state, billing, etc.) are read-only.
+    """
+
+    class Meta:
+        model = Stack
+        fields = "__all__"
+        read_only_fields = [
+            "id",
+            "created_at",
+            "updated_at",
+            "project",
+            "purchased_stack",
+            "parent_stack",
+            "status",
+            "error_message",
+            "iac_state",
+            "instance_usage",
+            "instance_usage_bill_amount",
+        ]
 
 
 class PurchasableStackSerializer(serializers.ModelSerializer):

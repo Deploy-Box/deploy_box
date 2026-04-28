@@ -6,9 +6,11 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from core.utils.webhook_auth import verify_iac_webhook_signature
+from organizations.models import OrganizationMember
 from stacks.models import Stack, PurchasableStack, Operation
 from stacks.serializers import (
     StackSerializer,
+    StackUserSerializer,
     AddResourceSerializer,
     RemoveResourceSerializer,
     ResourceTypeSerializer,
@@ -24,6 +26,8 @@ from stacks.services import (
     ServiceError,
     ValidationError,
     NotFoundError,
+    ForbiddenError,
+    verify_project_access,
     create_stack,
     create_custom_stack,
     delete_stack,
@@ -55,6 +59,37 @@ def _error_response(exc: ServiceError) -> Response:
     return Response({"error": str(exc)}, status=exc.status_code)
 
 
+def _get_user_org_ids(user):
+    """Return the organization IDs the user belongs to."""
+    return OrganizationMember.objects.filter(
+        user=user
+    ).values_list("organization_id", flat=True)
+
+
+def _verify_stack_access(user, stack_id):
+    """Raise NotFoundError if the user has no access to this stack.
+
+    Returns the Stack instance on success so callers can use it directly.
+    """
+    try:
+        stack = Stack.objects.select_related("project__organization").get(
+            pk=stack_id
+        )
+    except Stack.DoesNotExist:
+        raise NotFoundError("Stack not found.")
+
+    if stack.status == "Deleted":
+        raise NotFoundError("Stack not found.")
+
+    org_id = stack.project.organization_id
+    if not OrganizationMember.objects.filter(
+        user=user, organization_id=org_id
+    ).exists():
+        raise NotFoundError("Stack not found.")
+
+    return stack
+
+
 @api_view(["POST"])
 @perm_classes([IsAuthenticated])
 def check_credit_limits_view(request):
@@ -71,7 +106,7 @@ class StackViewSet(viewsets.ModelViewSet):
 
     # Actions that the IAC container-app calls back into, authenticated via
     # HMAC-SHA256 shared secret (see SEC-2).
-    WEBHOOK_ACTIONS = ("bulk_update_resources_action", "partial_update", "update_status_action", "update_iac_action")
+    WEBHOOK_ACTIONS = ("bulk_update_resources_action", "update_status_action", "update_iac_action")
 
     def get_permissions(self):
         if getattr(self, 'action', None) in self.WEBHOOK_ACTIONS:
@@ -85,6 +120,20 @@ class StackViewSet(viewsets.ModelViewSet):
             return []
         return super().get_authenticators()
 
+    def get_serializer_class(self):
+        if getattr(self, 'action', None) in self.WEBHOOK_ACTIONS:
+            return StackSerializer
+        return StackUserSerializer
+
+    def get_queryset(self):
+        if getattr(self, 'action', None) in self.WEBHOOK_ACTIONS:
+            return Stack.objects.exclude(status="Deleted")
+        user = self.request.user
+        user_org_ids = _get_user_org_ids(user)
+        return Stack.objects.filter(
+            project__organization_id__in=user_org_ids,
+        ).exclude(status="Deleted")
+
     def initial(self, request, *args, **kwargs):
         super().initial(request, *args, **kwargs)
         if getattr(self, 'action', None) in self.WEBHOOK_ACTIONS:
@@ -96,6 +145,7 @@ class StackViewSet(viewsets.ModelViewSet):
             data = create_stack(
                 project_id=request.data.get("project_id"),
                 purchasable_stack_id=request.data.get("purchasable_stack_id"),
+                user=request.user,
             )
         except ServiceError as exc:
             return _error_response(exc)
@@ -108,6 +158,7 @@ class StackViewSet(viewsets.ModelViewSet):
         try:
             data = create_custom_stack(
                 project_id=request.data.get("project_id"),
+                user=request.user,
             )
         except ServiceError as exc:
             return _error_response(exc)
@@ -117,13 +168,14 @@ class StackViewSet(viewsets.ModelViewSet):
     # ----- ADD RESOURCE --------------------------------------------------
     @action(detail=True, methods=["post"], url_path="add-resource", url_name="add_resource")
     def add_resource_action(self, request, pk=None):
+        stack = self.get_object()
         serializer = AddResourceSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             resource_data = add_resource_to_stack(
-                stack_id=pk,
+                stack_id=str(stack.pk),
                 resource_type=serializer.validated_data["resource_type"],
                 config=serializer.validated_data.get("config"),
             )
@@ -132,7 +184,7 @@ class StackViewSet(viewsets.ModelViewSet):
 
         if serializer.validated_data.get("auto_deploy"):
             try:
-                trigger_iac_update(stack_id=pk)
+                trigger_iac_update(stack_id=str(stack.pk))
             except ServiceError:
                 pass  # resource was created; deploy can be retried
 
@@ -141,13 +193,14 @@ class StackViewSet(viewsets.ModelViewSet):
     # ----- REMOVE RESOURCE -----------------------------------------------
     @action(detail=True, methods=["post"], url_path="remove-resource", url_name="remove_resource")
     def remove_resource_action(self, request, pk=None):
+        stack = self.get_object()
         serializer = RemoveResourceSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         try:
             remove_resource_from_stack(
-                stack_id=pk,
+                stack_id=str(stack.pk),
                 resource_id=serializer.validated_data["resource_id"],
             )
         except ServiceError as exc:
@@ -155,7 +208,7 @@ class StackViewSet(viewsets.ModelViewSet):
 
         if serializer.validated_data.get("auto_deploy"):
             try:
-                trigger_iac_update(stack_id=pk)
+                trigger_iac_update(stack_id=str(stack.pk))
             except ServiceError:
                 pass
 
@@ -167,8 +220,9 @@ class StackViewSet(viewsets.ModelViewSet):
     # ----- LIST STACK RESOURCES ------------------------------------------
     @action(detail=True, methods=["get"], url_path="resources", url_name="list_resources")
     def list_resources_action(self, request, pk=None):
+        stack = self.get_object()
         try:
-            resources = list_stack_resources(stack_id=pk)
+            resources = list_stack_resources(stack_id=str(stack.pk))
         except ServiceError as exc:
             return _error_response(exc)
 
@@ -183,18 +237,8 @@ class StackViewSet(viewsets.ModelViewSet):
 
     # ----- PARTIAL UPDATE ------------------------------------------------
     def partial_update(self, request, pk=None):
-        if not pk:
-            return Response(
-                {"error": "Stack ID is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            stack = Stack.objects.get(pk=pk)
-        except Stack.DoesNotExist:
-            return Response({"error": "Stack not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        serializer = StackSerializer(stack, data=request.data, partial=True)
+        stack = self.get_object()
+        serializer = self.get_serializer_class()(stack, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -202,14 +246,9 @@ class StackViewSet(viewsets.ModelViewSet):
 
     # ----- DELETE --------------------------------------------------------
     def destroy(self, request, pk=None):
-        if not pk:
-            return Response(
-                {"error": "Stack ID is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        stack = self.get_object()
         try:
-            delete_stack(stack_id=pk)
+            delete_stack(stack_id=str(stack.pk))
         except ServiceError as exc:
             return _error_response(exc)
 
@@ -221,14 +260,9 @@ class StackViewSet(viewsets.ModelViewSet):
     # ----- TRIGGER IAC UPDATE -------------------------------------------
     @action(detail=True, methods=["post"], url_path="trigger-iac-update", url_name="trigger_iac_update")
     def trigger_iac_update_action(self, request, pk=None):
-        if not pk:
-            return Response(
-                {"error": "Stack ID is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        stack = self.get_object()
         try:
-            trigger_iac_update(stack_id=pk)
+            trigger_iac_update(stack_id=str(stack.pk))
         except ServiceError as exc:
             return _error_response(exc)
 
@@ -240,14 +274,9 @@ class StackViewSet(viewsets.ModelViewSet):
     # ----- PAUSE ---------------------------------------------------------
     @action(detail=True, methods=["post"], url_path="pause", url_name="pause")
     def pause_action(self, request, pk=None):
-        if not pk:
-            return Response(
-                {"error": "Stack ID is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        stack = self.get_object()
         try:
-            pause_stack(stack_id=pk)
+            pause_stack(stack_id=str(stack.pk))
         except ServiceError as exc:
             return _error_response(exc)
 
@@ -259,14 +288,9 @@ class StackViewSet(viewsets.ModelViewSet):
     # ----- RESUME --------------------------------------------------------
     @action(detail=True, methods=["post"], url_path="resume", url_name="resume")
     def resume_action(self, request, pk=None):
-        if not pk:
-            return Response(
-                {"error": "Stack ID is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        stack = self.get_object()
         try:
-            resume_stack(stack_id=pk)
+            resume_stack(stack_id=str(stack.pk))
         except ServiceError as exc:
             return _error_response(exc)
 
@@ -293,14 +317,9 @@ class StackViewSet(viewsets.ModelViewSet):
     # ----- DOWNLOAD ------------------------------------------------------
     @action(detail=True, methods=["get"], url_path="download", url_name="download")
     def download(self, request, pk=None):
-        if not pk:
-            return Response(
-                {"error": "Stack ID is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
+        stack = self.get_object()
         try:
-            file_bytes, file_name = download_stack_source(stack_id=pk)
+            file_bytes, file_name = download_stack_source(stack_id=str(stack.pk))
         except ServiceError as exc:
             return _error_response(exc)
 
@@ -311,11 +330,7 @@ class StackViewSet(viewsets.ModelViewSet):
     # ----- UPLOAD --------------------------------------------------------
     @action(detail=True, methods=["post"], url_path="upload", url_name="upload")
     def upload(self, request, pk=None):
-        if not pk:
-            return Response(
-                {"error": "Stack ID is required."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        stack = self.get_object()
 
         if "source_zip" not in request.FILES:
             return Response(
@@ -324,14 +339,14 @@ class StackViewSet(viewsets.ModelViewSet):
             )
 
         try:
-            result = upload_source_code(uploaded_file=request.FILES["source_zip"], stack_id=pk)
+            result = upload_source_code(uploaded_file=request.FILES["source_zip"], stack_id=str(stack.pk))
         except ServiceError as exc:
             return _error_response(exc)
 
         # Trigger an IAC update now that the upload succeeded
         iac_update_queued = True
         try:
-            trigger_iac_update(stack_id=pk)
+            trigger_iac_update(stack_id=str(stack.pk))
         except ServiceError:
             iac_update_queued = False  # blob was persisted; deploy can be retried
 
@@ -507,6 +522,11 @@ def complete_deployment_log_view(request, stack_id, log_id):
 @perm_classes([IsAuthenticated])
 def latest_deployment_log_view(request, stack_id):
     """Frontend fetches the most recent deployment log for a stack."""
+    try:
+        _verify_stack_access(request.user, stack_id)
+    except NotFoundError as exc:
+        return _error_response(exc)
+
     result = get_latest_deployment_log(stack_id)
     if not result:
         return Response(
@@ -521,6 +541,11 @@ def latest_deployment_log_view(request, stack_id):
 @perm_classes([IsAuthenticated])
 def deployment_log_detail_view(request, stack_id, log_id):
     """Frontend polls for deployment log content with ?after_line=N."""
+    try:
+        _verify_stack_access(request.user, stack_id)
+    except NotFoundError as exc:
+        return _error_response(exc)
+
     after_line = int(request.query_params.get("after_line", 0))
     if after_line < 0:
         after_line = 0
@@ -543,8 +568,16 @@ def deployment_log_detail_view(request, stack_id, log_id):
 def operation_detail_view(request, operation_id):
     """Frontend polls for operation status."""
     try:
-        operation = Operation.objects.get(pk=operation_id)
+        operation = Operation.objects.select_related(
+            "stack__project__organization"
+        ).get(pk=operation_id)
     except Operation.DoesNotExist:
+        return Response({"error": "Operation not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    org_id = operation.stack.project.organization_id
+    if not OrganizationMember.objects.filter(
+        user=request.user, organization_id=org_id
+    ).exists():
         return Response({"error": "Operation not found"}, status=status.HTTP_404_NOT_FOUND)
 
     return Response(OperationSerializer(operation).data)
@@ -554,6 +587,11 @@ def operation_detail_view(request, operation_id):
 @perm_classes([IsAuthenticated])
 def stack_operations_view(request, stack_id):
     """List recent operations for a stack."""
+    try:
+        _verify_stack_access(request.user, stack_id)
+    except NotFoundError as exc:
+        return _error_response(exc)
+
     try:
         result = get_stack_operations(stack_id)
     except NotFoundError as exc:
