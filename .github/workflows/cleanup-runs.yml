@@ -11,4 +11,4 @@ permissions:
 
 jobs:
   cleanup:
-    uses: Deploy-Box/deploy-box-platform/.github/workflows/cleanup-runs.yml@793663640997f5ed1f18553ec682deb5c01126fd
+    uses: Deploy-Box/deploy-box-platform/.github/workflows/cleanup-runs.yml@dev
