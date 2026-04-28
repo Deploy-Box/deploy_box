@@ -8,136 +8,51 @@ permissions:
   id-token: write
   contents: read
 
-env:
-  CONTAINER_DIR: "./Website"
-  TF_DIR: "./terraform"
-
 jobs:
-  build-container-app:
+  resolve-env:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
+    outputs:
+      environment: ${{ steps.env.outputs.environment }}
+    steps:
+      - name: Resolve environment from branch
+        id: env
+        run: |
+          REF="${{ github.ref_name }}"
+          case "$REF" in
+            main) echo "environment=prod" >> "$GITHUB_OUTPUT" ;;
+            test) echo "environment=test" >> "$GITHUB_OUTPUT" ;;
+            dev)  echo "environment=dev"  >> "$GITHUB_OUTPUT" ;;
+            *)    echo "::error::Unknown branch '$REF'"; exit 1 ;;
+          esac
+
+  build-container-app:
+    needs: resolve-env
+    uses: Deploy-Box/deploy-box-platform/.github/workflows/azure-docker-build-push.yml@dev
+    with:
+      image_name: deploy-box-container-app
+      docker_context: ./Website
+      environment: ${{ needs.resolve-env.outputs.environment }}
     permissions:
       id-token: write
       contents: read
-
-    outputs:
-      image_name: ${{ steps.build_and_push.outputs.image_name }}
-
-    env:
-      ACR_NAME: ${{ vars.ACR_NAME }}
-      AZURE_CLIENT_ID: ${{ vars.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID: ${{ vars.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id: ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Log in to Azure Container Registry
-        run: az acr login --name $ACR_NAME
-
-      - id: build_and_push
-        name: Build and push container-app image to ACR
-        shell: bash
-        run: |
-          IMAGE_TAG=$(echo $GITHUB_SHA | cut -c1-7)
-          IMAGE_NAME=$ACR_NAME.azurecr.io/deploy-box-container-app:$IMAGE_TAG
-
-          CONTAINER_DIR=$CONTAINER_DIR
-
-          echo "Building image $IMAGE_NAME from $CONTAINER_DIR"
-          docker build -t $IMAGE_NAME $CONTAINER_DIR
-
-          echo "Pushing image $IMAGE_NAME to ACR"
-          docker push $IMAGE_NAME
-
-          # expose image name for downstream jobs
-          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
 
   deploy-infrastructure:
-    runs-on: ubuntu-latest
-    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
-    needs: build-container-app
+    needs: [resolve-env, build-container-app]
+    uses: Deploy-Box/deploy-box-platform/.github/workflows/terraform-deploy.yml@dev
+    with:
+      terraform_dir: ./terraform
+      terraform_version: "1.9.x"
+      extra_var_flags: '-var="image_name=${{ needs.build-container-app.outputs.image_name }}"'
+      terraform_outputs: '["app_host","key_vault_name","database_name","database_port","database_host","database_user"]'
+      environment: ${{ needs.resolve-env.outputs.environment }}
     permissions:
       id-token: write
       contents: read
-
-    outputs:
-      app_host: ${{ steps.tf_outputs.outputs.app_host }}
-      key_vault_name: ${{ steps.tf_outputs.outputs.key_vault_name }}
-      database_name: ${{ steps.tf_outputs.outputs.database_name }}
-      database_port: ${{ steps.tf_outputs.outputs.database_port }}
-      database_host: ${{ steps.tf_outputs.outputs.database_host }}
-      database_user: ${{ steps.tf_outputs.outputs.database_user }}
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Azure Login with OIDC
-        uses: azure/login@v2
-        with:
-          client-id: ${{ vars.AZURE_CLIENT_ID }}
-          tenant-id:  ${{ vars.AZURE_TENANT_ID }}
-          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
-
-      - name: Set up Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.9.x
-
-      - name: Export OIDC env for Terraform
-        run: |
-          echo "ARM_USE_OIDC=true" >> $GITHUB_ENV
-          echo "ARM_CLIENT_ID=${{ vars.AZURE_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "ARM_TENANT_ID=${{ vars.AZURE_TENANT_ID }}" >> $GITHUB_ENV
-          echo "ARM_SUBSCRIPTION_ID=${{ vars.AZURE_SUBSCRIPTION_ID }}" >> $GITHUB_ENV
-
-      - name: Terraform Init
-        working-directory: ${{ env.TF_DIR }}
-        run: |
-          terraform init \
-            -reconfigure \
-            -backend-config="config/backend-${{ github.ref_name == 'main' && 'prod' || github.ref_name }}.conf"
-
-      - name: Terraform Plan
-        working-directory: ${{ env.TF_DIR }}
-        run: |
-          terraform plan \
-            -var-file="tfvars/${{ github.ref_name == 'main' && 'prod' || github.ref_name }}.tfvars" \
-            -var="image_name=${{ needs.build-container-app.outputs.image_name }}" \
-            -out=tfplan
-
-      - id: terraform_apply
-        name: Terraform Apply
-        working-directory: ${{ env.TF_DIR }}
-        run: terraform apply tfplan
-
-      - id: tf_outputs
-        name: Get Terraform Outputs
-        working-directory: ${{ env.TF_DIR }}
-        run: |
-          echo "app_host=$(terraform output -raw app_host)" >> $GITHUB_OUTPUT
-          echo "key_vault_name=$(terraform output -raw key_vault_name)" >> $GITHUB_OUTPUT
-          echo "database_name=$(terraform output -raw database_name)" >> $GITHUB_OUTPUT
-          echo "database_port=$(terraform output -raw database_port)" >> $GITHUB_OUTPUT
-          echo "database_host=$(terraform output -raw database_host)" >> $GITHUB_OUTPUT
-          echo "database_user=$(terraform output -raw database_user)" >> $GITHUB_OUTPUT
 
   migrations:
     runs-on: ubuntu-latest
-    environment: ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
-    needs: deploy-infrastructure
+    environment: ${{ needs.resolve-env.outputs.environment }}
+    needs: [resolve-env, deploy-infrastructure]
     permissions:
       id-token: write
       contents: read
@@ -182,12 +97,12 @@ jobs:
         working-directory: Website
         env:
           ENV: ${{ vars.ENV }}
-          HOST: ${{ needs.deploy-infrastructure.outputs.app_host }}
-          KEY_VAULT_NAME: ${{ needs.deploy-infrastructure.outputs.key_vault_name }}
-          DB_NAME: ${{ needs.deploy-infrastructure.outputs.database_name }}
+          HOST: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).app_host }}
+          KEY_VAULT_NAME: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).key_vault_name }}
+          DB_NAME: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).database_name }}
           DB_USER: deploy_box_cd
-          DB_HOST: ${{ needs.deploy-infrastructure.outputs.database_host }}
-          DB_PORT: ${{ needs.deploy-infrastructure.outputs.database_port }}
+          DB_HOST: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).database_host }}
+          DB_PORT: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).database_port }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{ secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY }}
