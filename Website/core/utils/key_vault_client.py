@@ -37,9 +37,19 @@ class KeyVaultClient:
                 )
             return
 
-        self.vault_url = vault_url or self._vault_url_from_env()
         self._cache: dict[str, Optional[str]] = {}
         self._credential_available = False
+
+        try:
+            self.vault_url = vault_url or self._vault_url_from_env()
+        except ValueError:
+            logger.warning(
+                "KEY_VAULT_NAME not set — Key Vault disabled. "
+                "Secrets will fall back to environment variables."
+            )
+            self.vault_url = ""
+            self._initialized = True
+            return
 
         logger.info("Initializing Key Vault client for %s", self.vault_url)
         logger.debug(

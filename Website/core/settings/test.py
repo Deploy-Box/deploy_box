@@ -3,9 +3,17 @@ Test settings — lightweight SQLite configuration for running tests locally and
 Usage: python manage.py test --settings=core.settings.test
 """
 
-from core.settings.base import *  # noqa: F401, F403
+import os
+
+os.environ.setdefault("DEPLOY_BOX_DJANGO_SECRET_KEY", "ci-test-secret-key-not-for-production")
+
+from core.settings.base import *  # noqa: F401, F403, E402
 
 DEBUG = False
+SECRET_KEY = os.environ.get(
+    "DJANGO_SECRET_KEY",
+    os.environ.get("DEPLOY_BOX_DJANGO_SECRET_KEY", "ci-test-secret-key-not-for-production"),
+)
 
 # Use SQLite for fast, permission-free test runs
 DATABASES = {
