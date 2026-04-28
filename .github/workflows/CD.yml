@@ -185,7 +185,7 @@ jobs:
           HOST: ${{ needs.deploy-infrastructure.outputs.app_host }}
           KEY_VAULT_NAME: ${{ needs.deploy-infrastructure.outputs.key_vault_name }}
           DB_NAME: ${{ needs.deploy-infrastructure.outputs.database_name }}
-          DB_USER: ${{ needs.deploy-infrastructure.outputs.database_user }}
+          DB_USER: deploy_box_cd
           DB_HOST: ${{ needs.deploy-infrastructure.outputs.database_host }}
           DB_PORT: ${{ needs.deploy-infrastructure.outputs.database_port }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
