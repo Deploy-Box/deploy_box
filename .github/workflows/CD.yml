@@ -170,6 +170,14 @@ jobs:
           source venv/bin/activate
           pip install -r requirements.txt
 
+      - name: Check migrations
+        working-directory: Website
+        env:
+          DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
+        run: |
+          source venv/bin/activate
+          python manage.py makemigrations --check --dry-run --settings=core.settings.test
+        
       - name: Run migrations
         working-directory: Website
         env:
@@ -180,9 +188,9 @@ jobs:
           DB_USER: ${{ needs.deploy-infrastructure.outputs.database_user }}
           DB_HOST: ${{ needs.deploy-infrastructure.outputs.database_host }}
           DB_PORT: ${{ needs.deploy-infrastructure.outputs.database_port }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{ secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY }}
         run: |
           source venv/bin/activate
-          python manage.py makemigrations
           python manage.py migrate
