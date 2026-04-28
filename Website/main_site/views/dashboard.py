@@ -1,10 +1,9 @@
 import base64
-import datetime
 import json
 import logging
+import re
 
 import qrcode
-import stripe
 from django.conf import settings
 from django.contrib import messages
 from django.http import HttpRequest, HttpResponse
@@ -30,7 +29,6 @@ from projects.models import Project, ProjectMember
 from stacks.forms import EnvFileUploadForm, StackSettingsForm, EnvironmentVariablesForm
 from stacks.models import PurchasableStack, Stack
 from stacks.resources.resources_manager import ResourcesManager
-from stacks.stack_managers.get_manager import get_stack_manager
 
 logger = logging.getLogger(__name__)
 
@@ -126,83 +124,16 @@ class DashboardView(View):
 
     
     def organization_billing(self, request: HttpRequest, organization_id: str) -> HttpResponse:
-        """Organization billing page."""
+        """Organization billing page.
+        
+        Renders the page shell immediately. Payment methods, usage stats, and
+        billing history are loaded asynchronously via JavaScript after page load.
+        """
         user = cast(UserProfile, request.user)
         organization = Organization.objects.get(id=organization_id)
 
         # Get all organizations for the user for dropdown
         user_organizations = Organization.objects.filter(organizationmember__user=user)
-
-        # Get payment methods for the organization
-        payment_methods = []
-        try:
-            stripe.api_key = settings.STRIPE.get("SECRET_KEY")
-
-            if organization.stripe_customer_id:
-                # Get all payment methods for the customer
-                stripe_payment_methods = stripe.PaymentMethod.list(
-                    customer=organization.stripe_customer_id,
-                    type="card"
-                )
-
-                # Get the customer to find the default payment method
-                customer = stripe.Customer.retrieve(organization.stripe_customer_id)
-                default_payment_method_id = customer.invoice_settings.default_payment_method if customer.invoice_settings else None
-
-                # Format payment methods
-                for pm in stripe_payment_methods.data:
-                    if pm.card:
-                        payment_methods.append({
-                            "id": pm.id,
-                            "brand": pm.card.brand,
-                            "last4": pm.card.last4,
-                            "exp_month": pm.card.exp_month,
-                            "exp_year": pm.card.exp_year,
-                            "is_default": pm.id == default_payment_method_id,
-                        })
-        except Exception as e:
-            # Log the error but don't fail the page
-            logger.error(f"Error fetching payment methods: {e}")
-
-        # --- PLACEHOLDERS BEGIN ---
-
-        # Placeholder values for missing variables (set real logic when available)
-        try:
-            daily_usage = float(getattr(organization, 'daily_usage', 1.23))
-        except Exception:
-            daily_usage = 1.23
-
-        try:
-            current_usage = float(getattr(organization, 'current_usage', 42.42))
-        except Exception:
-            current_usage = 42.42
-
-        try:
-            projected_monthly_usage = float(getattr(organization, 'projected_monthly_usage', 123.45))
-        except Exception:
-            projected_monthly_usage = 123.45
-
-        # Calculate actual monthly cost (usage minus $10 free tier credit)
-        actual_monthly_cost = max(0, projected_monthly_usage - 10.0)
-
-        try:
-            # Try to use a real month start attribute; default to first of this month
-            month_start = getattr(organization, 'month_start', datetime.datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0))
-        except Exception:
-            month_start = datetime.datetime.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-
-        try:
-            billing_history_records = getattr(organization, 'billing_history_records', [
-                # Example placeholder record(s).
-                {"date": "2024-06-01", "amount": "29.99", "status": "Paid"},
-                {"date": "2024-05-01", "amount": "19.99", "status": "Paid"},
-            ])
-        except Exception:
-            billing_history_records = [
-                {"date": "2024-06-01", "amount": "29.99", "status": "Paid"},
-                {"date": "2024-05-01", "amount": "19.99", "status": "Paid"},
-            ]
-        # --- PLACEHOLDERS END ---
 
         return render(
             request,
@@ -212,14 +143,7 @@ class DashboardView(View):
                 "organization": organization,
                 "user_organizations": user_organizations,
                 "current_organization_id": organization_id,
-                "payment_methods": payment_methods,
                 "stripe_publishable_key": settings.STRIPE.get("PUBLISHABLE_KEY", None),
-                "current_daily_usage": f"{daily_usage:.2f}",
-                "current_usage": f"{current_usage:.2f}",
-                "projected_monthly_usage": f"{projected_monthly_usage:.2f}",
-                "actual_monthly_cost": f"{actual_monthly_cost:.2f}",
-                "month_start_formatted": month_start.strftime("%b 1, %Y"),
-                "billing_history_records": billing_history_records,
             },
         )
 
@@ -274,8 +198,6 @@ class DashboardView(View):
             # Redirect to project dashboard if stack doesn't exist
             return redirect('main_site:project_dashboard', organization_id=organization_id, project_id=project_id)
         
-        stack_manager = get_stack_manager(stack)
-
         # Handle stack deletion
         if request.method == 'POST' and request.POST.get('action') == 'delete':
             # Check if user has permission to delete the stack (project admin)
@@ -315,23 +237,14 @@ class DashboardView(View):
 
         # Determine template based on stack type
         stack_type = stack.purchased_stack.type.lower()
-        if stack_type == "mern":
-            template_name = "dashboard/mern_stack_dashboard.html"
-            frontend_url = stack.mern_frontend_url
-        elif stack_type == "django":
-            template_name = "dashboard/django_stack_dashboard.html"
-            frontend_url = stack.django_url
-        elif stack_type == "redis":
-            template_name = "dashboard/redis_stack_dashboard.html"
-            frontend_url = stack.redis_url
-        elif stack_type == "pong":
-            template_name = "dashboard/pong_stack_dashboard.html"
-            frontend_url = stack.redis_url
-        elif stack_type == "mobile":
+        if stack_type == "mobile":
             template_name = "dashboard/mobile_stack_dashboard.html"
             frontend_url = "#"
+        elif stack_type == "custom":
+            template_name = "dashboard/custom_stack_dashboard.html"
+            frontend_url = "#"
         else:
-            template_name = "dashboard/stack_dashboard.html"
+            template_name = "dashboard/generic_stack_dashboard.html"
             frontend_url = "#"
 
         qr = qrcode.QRCode(
@@ -350,88 +263,9 @@ class DashboardView(View):
         img_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
         qr_code = f"data:image/png;base64,{img_str}"
 
-        # Prepare infrastructure data for Pong stack
-        infrastructure_wrappers, infrastructure_nodes, infrastructure_connections = stack_manager.get_infrastructure_diagram_data()
-            
-        if stack_type == "pong":
-            pong_infrastructure_wrappers = json.dumps([
-                {
-                    "id": "vm",
-                    "label": "Virtual Machine",
-                    "x": 280,
-                    "y": 150,
-                    "width": 500,
-                    "height": 200,
-                    "color": "rgba(139, 92, 246, 0.1)",
-                    "borderColor": "#8b5cf6",
-                    "nodeIds": ["frontend", "backend"]
-                }
-            ])
-            pong_infrastructure_nodes = json.dumps([
-                {
-                    "id": "public_ip",
-                    "label": "Public IP",
-                    "sublabel": "Network",
-                    "x": 50,
-                    "y": 225,
-                    "width": 150,
-                    "height": 80,
-                    "color": "#f59e0b",
-                    "icon": "🌍"
-                },
-                {
-                    "id": "proxy",
-                    "label": "Deploy Box Proxy",
-                    "sublabel": "Load Balancer",
-                    "x": 260,
-                    "y": 210,
-                    "width": 140,
-                    "height": 110,
-                    "color": "#ec4899",
-                    "icon": "🔀"
-                },
-                {
-                    "id": "frontend",
-                    "label": "Pong Web App",
-                    "sublabel": "Frontend",
-                    "x": 330,
-                    "y": 200,
-                    "width": 150,
-                    "height": 100,
-                    "color": "#10b981",
-                    "icon": "🌐"
-                },
-                {
-                    "id": "backend",
-                    "label": "PostgreSQL",
-                    "sublabel": "Database",
-                    "x": 580,
-                    "y": 200,
-                    "width": 150,
-                    "height": 100,
-                    "color": "#3b82f6",
-                    "icon": "🗄️"
-                },
-                {
-                    "id": "disk",
-                    "label": "Persistent Disk",
-                    "sublabel": "Storage",
-                    "x": 600,
-                    "y": 500,
-                    "width": 180,
-                    "height": 100,
-                    "color": "#64748b",
-                    "icon": "💾"
-                }
-            ])
-            pong_infrastructure_connections = json.dumps([
-                {"from": "public_ip", "to": "proxy", "label": "Internet"},
-                {"from": "proxy", "to": "vm", "label": "Forwarded"},
-                {"from": "frontend", "to": "backend", "label": "Data Connection"},
-                {"from": "vm", "to": "disk", "label": "Mounted"}
-            ])
-        
-        elif stack_type == "mobile":
+        infrastructure_wrappers, infrastructure_nodes, infrastructure_connections = [], [], []
+
+        if stack_type == "mobile":
             infrastructure_wrappers = json.dumps([
                 {
                     "id": "backend_services",
@@ -552,6 +386,19 @@ class DashboardView(View):
         fqdn = settings.HOST.lstrip('https://').rstrip('/')
         print(f"FQDN: {fqdn}")
 
+        # Build resource data for mobile/custom dashboards (shared query for both JSON and map)
+        if stack_type in ("mobile", "custom"):
+            serialized_resources = DashboardView._get_serialized_resources(stack)
+            stack_resources_json = json.dumps(serialized_resources)
+            resource_map = {}
+            for r in serialized_resources:
+                type_name = re.sub(r"_\d+$", "", r.get("name", ""))
+                if type_name:
+                    resource_map[type_name] = r
+        else:
+            stack_resources_json = "[]"
+            resource_map = {}
+
         return render(
             request,
             template_name,
@@ -573,19 +420,33 @@ class DashboardView(View):
                 "infrastructure_wrappers": infrastructure_wrappers,
                 "infrastructure_nodes": infrastructure_nodes,
                 "infrastructure_connections": infrastructure_connections,
-                "stack_resources_json": DashboardView._get_stack_resources_json(stack) if stack_type == "mobile" else "[]",
+                "stack_resources_json": stack_resources_json,
+                "resource_map": resource_map,
                 "fqdn": fqdn
             },
         )
 
     @staticmethod
-    def _get_stack_resources_json(stack) -> str:
-        """Serialize all resources for a stack to JSON for the frontend."""
+    def _get_serialized_resources(stack) -> list:
+        """Serialize all resources for a stack, returning a list of dicts."""
         resources = ResourcesManager.get_from_stack(stack)
         serialized = ResourcesManager.serialize(resources)
-        # Filter out None values from serialization failures
-        serialized = [r for r in serialized if r is not None]
-        return json.dumps(serialized)
+        return [r for r in serialized if r is not None]
+
+    @staticmethod
+    def _get_stack_resources_json(stack) -> str:
+        """Serialize all resources for a stack to JSON for the frontend."""
+        return json.dumps(DashboardView._get_serialized_resources(stack))
+
+    @staticmethod
+    def _get_stack_resources_map(stack) -> dict:
+        """Build a dict of resources keyed by type name for template access."""
+        resource_map = {}
+        for r in DashboardView._get_serialized_resources(stack):
+            type_name = re.sub(r"_\d+$", "", r.get("name", ""))
+            if type_name:
+                resource_map[type_name] = r
+        return resource_map
 
     
     def add_org_members(self, request: HttpRequest, organization_id: str) -> HttpResponse:
@@ -985,7 +846,9 @@ class DashboardView(View):
                     'MERN': '⚛️',
                     'DJANGO': '🐍',
                     'MEAN': '🅰️',
-                    'LAMP': '🐘'
+                    'LAMP': '🐘',
+                    'STATIC': '🌐',
+                    'SOCIAL': '💬',
                 }
                 
                 color_map = {

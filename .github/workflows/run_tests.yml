@@ -1,23 +1,19 @@
 name: Tests (dev → main PR + manual)
 
 on:
-  # pull_request:
-  #   types: [opened, synchronize, reopened, ready_for_review]
-  #   branches: [main]
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
   workflow_dispatch:
     inputs:
       test_path:
-        description: 'Optional test target (e.g. "payments.tests" or "apps/accounts")'
+        description: 'Optional test target (e.g. "payments.tests" or "accounts.tests")'
         required: false
         default: ''
       python_version:
         description: 'Python version'
         required: false
-        default: '3.11'
-      run_migrate:
-        description: 'Run migrations before tests'
-        required: false
-        default: 'true'   # 'true' or 'false'
+        default: '3.12'
 
 concurrency:
   group: tests-${{ github.event_name }}-${{ github.head_ref || github.ref }}
@@ -25,9 +21,7 @@ concurrency:
 
 jobs:
   run-tests:
-    # Run for manual dispatch OR for PRs where base is main and head is dev
     if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev') }}
-    environment: ${{ github.ref_name == 'main' && 'prod' || github.ref_name }}
     runs-on: ubuntu-latest
 
     defaults:
@@ -35,32 +29,8 @@ jobs:
         working-directory: Website
 
     env:
-      # Use GitHub Secrets for sensitive values. Replace the secret names below in your repo
-      # Settings -> Secrets with the actual secret names/values for your environment.
-      STRIPE_SECRET_KEY: ${{ secrets.STRIPE_SECRET_KEY }}
-      STRIPE_PUBLISHABLE_KEY: ${{secrets.STRIPE_PUBLISHABLE_KEY}}
-      STRIPE_WEBHOOK_SECRET: ${{secrets.STRIPE_WEBHOOK_SECRET}}
-
-      DEPLOY_BOX_GITHUB_CLIENT_SECRET: ${{secrets.DEPLOY_BOX_GITHUB_CLIENT_SECRET}}
-      DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY}}
-
       CI: "true"
-      # Django secret key (placeholder secret name - set in repo Secrets)
-      SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
-      # Database password used by settings.get_db_password fallback in CI
-      DB_PASSWORD: ${{secrets.DB_PASSWORD}}
-      DEPLOY_BOX_POSTGRESQL_DB_PASSWORD: ${{secrets.DEPLOY_BOX_POSTGRESQL_DB_PASSWORD}}
-
-      ARM_CLIENT_ID: ${{secrets.ARM_CLIENT_ID}}
-      ARM_CLIENT_SECRET: ${{secrets.ARM_CLIENT_SECRET}}
-      ARM_TENANT_ID: ${{secrets.ARM_TENANT_ID}}
-      AZURE_STORAGE_CONNECTION_STRING: ${{secrets.AZURE_STORAGE_CONNECTION_STRING}}
-      CONTAINER_NAME: ${{secrets.CONTAINER_APP_NAME}}
-      KEY_VAULT_NAME: ${{secrets.KEY_VAULT_NAME}}
-      ACR_PASSWORD: ${{secrets.ACR_PASSWORD}}
-
-      DJANGO_SECRET_KEY: ${{secrets.DJANGO_SECRET_KEY}}
-
+      DJANGO_SECRET_KEY: "ci-test-secret-key-not-for-production"
 
     steps:
       - name: Checkout
@@ -69,7 +39,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ inputs.python_version || '3.11' }}
+          python-version: ${{ inputs.python_version || '3.12' }}
 
       - name: Cache pip
         uses: actions/cache@v4
@@ -84,15 +54,11 @@ jobs:
           python -m pip install --upgrade pip
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      - name: Migrate (SQLite)
-        if: ${{ inputs.run_migrate != 'false' }}  # run by default; can disable in manual run
-        run: python manage.py migrate --noinput
-
       - name: Run tests
         run: |
           if [ -n "${{ inputs.test_path }}" ]; then
-            python manage.py test --keepdb "${{ inputs.test_path }}"
+            python manage.py test --settings=core.settings.test --verbosity 2 --no-input "${{ inputs.test_path }}"
           else
-            python manage.py test --keepdb
+            python manage.py test --settings=core.settings.test --verbosity 2 --no-input
           fi
 
