@@ -1,4 +1,4 @@
-name: Cleanup old successful workflow runs
+name: Cleanup old workflow runs
 
 on:
   schedule:
@@ -13,22 +13,66 @@ jobs:
   cleanup:
     runs-on: ubuntu-latest
     steps:
-      - name: Keep only the 10 most recent successful runs per workflow
+      - name: Delete runs older than 30 days
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
-          KEEP: 10
+          MAX_AGE_DAYS: 30
+        run: |
+          cutoff=$(date -u -d "$MAX_AGE_DAYS days ago" +%Y-%m-%dT%H:%M:%SZ)
+          echo "Deleting all runs created before $cutoff"
+
+          gh api "repos/$REPO/actions/runs?created=<$cutoff&per_page=100" --paginate \
+            --jq '.workflow_runs[].id' |
+          while read run_id; do
+            echo "Deleting old run $run_id"
+            gh api -X DELETE "repos/$REPO/actions/runs/$run_id" || true
+          done
+
+      - name: Keep only recent runs per workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          KEEP_SUCCESS: 10
+          KEEP_FAILURE: 5
         run: |
           gh api repos/$REPO/actions/workflows --paginate \
             --jq '.workflows[] | select(.state == "active") | .id' |
           while read workflow_id; do
-            echo "Checking workflow $workflow_id"
+            echo "=== Workflow $workflow_id ==="
 
+            # Clean successful runs beyond KEEP_SUCCESS
             gh api "repos/$REPO/actions/workflows/$workflow_id/runs?status=success&per_page=100" --paginate \
               --jq '.workflow_runs | sort_by(.created_at) | reverse | .[].id' |
-            tail -n +$((KEEP + 1)) |
+            tail -n +$((KEEP_SUCCESS + 1)) |
             while read run_id; do
-              echo "Deleting successful run $run_id"
-              gh api -X DELETE "repos/$REPO/actions/runs/$run_id"
+              echo "  Deleting successful run $run_id"
+              gh api -X DELETE "repos/$REPO/actions/runs/$run_id" || true
             done
+
+            # Clean failed/cancelled runs beyond KEEP_FAILURE
+            for status in failure cancelled; do
+              gh api "repos/$REPO/actions/workflows/$workflow_id/runs?status=$status&per_page=100" --paginate \
+                --jq '.workflow_runs | sort_by(.created_at) | reverse | .[].id' |
+              tail -n +$((KEEP_FAILURE + 1)) |
+              while read run_id; do
+                echo "  Deleting $status run $run_id"
+                gh api -X DELETE "repos/$REPO/actions/runs/$run_id" || true
+              done
+            done
+          done
+
+      - name: Cleanup stale caches older than 7 days
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          cutoff=$(date -u -d "7 days ago" +%Y-%m-%dT%H:%M:%SZ)
+          echo "Deleting caches last accessed before $cutoff"
+
+          gh api "repos/$REPO/actions/caches?per_page=100" --paginate \
+            --jq ".actions_caches[] | select(.last_accessed_at < \"$cutoff\") | .id" |
+          while read cache_id; do
+            echo "Deleting cache $cache_id"
+            gh api -X DELETE "repos/$REPO/actions/caches/$cache_id" || true
           done
