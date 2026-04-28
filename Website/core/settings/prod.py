@@ -32,9 +32,11 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 
 # ──────────────────────────────────────────────
-# Database — use Key Vault password (already set in base.py)
+# Database — Entra token auth via custom backend (set in base.py)
 # ──────────────────────────────────────────────
-# Password comes from KeyVaultClient in base.py — no override needed.
+# base.py sets ENGINE = core.backends.postgresql_entra which fetches
+# a fresh Entra access token on every new connection using the app's
+# managed identity.  No static password is stored or needed.
 
 # ──────────────────────────────────────────────
 # Logging (optional — add production logging here)

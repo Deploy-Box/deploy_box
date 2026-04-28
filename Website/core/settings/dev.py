@@ -2,7 +2,23 @@
 Development settings — used when DJANGO_SETTINGS_MODULE=core.settings.dev
 """
 
+import ssl
+
 from core.settings.base import *  # noqa: F401, F403
+
+# ──────────────────────────────────────────────
+# Disable SSL verification for local dev (corporate proxy workaround)
+# ──────────────────────────────────────────────
+ssl._create_default_https_context = ssl._create_unverified_context  # noqa: SLF001
+
+import httpx  # noqa: E402
+_original_client_init = httpx.Client.__init__
+
+def _patched_client_init(self, *args, **kwargs):
+    kwargs.setdefault("verify", False)
+    _original_client_init(self, *args, **kwargs)
+
+httpx.Client.__init__ = _patched_client_init
 
 # ──────────────────────────────────────────────
 # Debug
@@ -36,7 +52,10 @@ CSRF_COOKIE_SECURE = False
 SECURE_HSTS_SECONDS = 0
 
 # ──────────────────────────────────────────────
-# Database — override password for local dev (only if explicitly set)
+# Database — fall back to static password for local Docker Postgres
+# (requires DB_HOST, DB_NAME, DB_USER, DB_PORT pointing at Docker too)
 # ──────────────────────────────────────────────
 if os.environ.get("DB_PASSWORD"):
+    DATABASES["default"]["ENGINE"] = "django.db.backends.postgresql"
     DATABASES["default"]["PASSWORD"] = os.environ["DB_PASSWORD"]
+    DATABASES["default"]["OPTIONS"] = {}  # no SSL for local Docker
