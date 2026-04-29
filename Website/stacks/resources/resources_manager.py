@@ -120,6 +120,9 @@ class ResourcesManager():
                 model = RESOURCE_MANAGER_MAPPING[resource_type.upper()].get_model()
                 created_resource = model.objects.create(**create_filtered_data(resource, model))
                 created_resources.append(created_resource)
+
+                # Dual-write to unified Resource model
+                ResourcesManager._sync_to_unified(created_resource, resource_type, stack)
             else:
                 raise ValueError(f"Unknown resource type: {resource_type}")
         return created_resources
@@ -148,7 +151,12 @@ class ResourcesManager():
         }
 
         model = RESOURCE_MANAGER_MAPPING[key].get_model()
-        return model.objects.create(**create_filtered_data(data, model))
+        created = model.objects.create(**create_filtered_data(data, model))
+
+        # Dual-write to unified Resource model
+        ResourcesManager._sync_to_unified(created, key, stack)
+
+        return created
 
     @staticmethod
     def remove_resource(resource_id: str) -> bool:
@@ -159,6 +167,11 @@ class ResourcesManager():
         resource = ResourcesManager._read_one(resource_id)
         if resource is None:
             return False
+
+        # Also remove from unified model
+        from stacks.resources.resource import Resource
+        Resource.objects.filter(pk=resource_id).delete()
+
         resource.delete()
         return True
 
@@ -214,6 +227,10 @@ class ResourcesManager():
     
     @staticmethod
     def delete(stack: Stack):
+        # Also delete from unified model
+        from stacks.resources.resource import Resource
+        Resource.objects.filter(stack=stack).delete()
+
         for resource_manager in RESOURCE_MANAGER_MAPPING.values():
             managed_model_class = resource_manager.get_model()
             managed_model_class.objects.filter(stack=stack).delete()
@@ -230,6 +247,69 @@ class ResourcesManager():
             return manager_class().serialize(resource)
         print(f"Unknown resource prefix: {prefix}")
         return None
+
+    @staticmethod
+    def _sync_to_unified(old_resource: models.Model, resource_type: str, stack: Stack):
+        """Dual-write: sync an old-style resource to the unified Resource model."""
+        from stacks.resources.resource import Resource
+        from stacks.resources.type_registry import ResourceTypeRegistry
+
+        defn = ResourceTypeRegistry.get_by_type(resource_type.lower())
+        if defn is None:
+            return
+
+        # Extract type-specific fields into attributes dict
+        COMMON_FIELDS = {"id", "index", "name", "type", "stack", "stack_id", "created_at", "updated_at"}
+        PROMOTED_FIELDS = {"azurerm_id", "thenilerm_id", "deploybox_database_id",
+                           "azurerm_name", "thenilerm_name", "location", "status", "tags"}
+        
+        attributes = {}
+        for field in old_resource._meta.get_fields():
+            if not hasattr(field, "column"):
+                continue
+            if field.name in COMMON_FIELDS or field.name in PROMOTED_FIELDS:
+                continue
+            val = getattr(old_resource, field.name, None)
+            if val is not None and val != "" and val != [] and val != {}:
+                attributes[field.name] = val
+
+        # Determine provider_id and provider_name
+        provider_id = (
+            getattr(old_resource, "azurerm_id", "")
+            or getattr(old_resource, "thenilerm_id", "")
+            or getattr(old_resource, "deploybox_database_id", "")
+            or ""
+        )
+        provider_name = (
+            getattr(old_resource, "azurerm_name", "")
+            or getattr(old_resource, "thenilerm_name", "")
+            or ""
+        )
+
+        # Infer parent from existing resources of the parent type
+        parent = None
+        if defn.parent_type:
+            parent = Resource.objects.filter(
+                stack=stack, resource_type=defn.parent_type
+            ).first()
+
+        Resource.objects.update_or_create(
+            pk=old_resource.pk,
+            defaults={
+                "stack": stack,
+                "index": old_resource.index,
+                "name": old_resource.name,
+                "resource_type": defn.resource_type,
+                "prefix": defn.prefix,
+                "parent": parent,
+                "provider_id": provider_id,
+                "provider_name": provider_name,
+                "location": getattr(old_resource, "location", "") or "",
+                "status": getattr(old_resource, "status", "") or "",
+                "tags": getattr(old_resource, "tags", {}) or {},
+                "attributes": attributes,
+            },
+        )
     
 def create_filtered_data(data: dict, model: type[models.Model]) -> dict[str, Any]:
     # Get writable field names from the model (excludes auto fields, reverse relations)

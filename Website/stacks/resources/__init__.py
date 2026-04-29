@@ -63,3 +63,7 @@ from .azurerm_network_interface.serializer import AzurermNetworkInterfaceSeriali
 from .azurerm_linux_virtual_machine.model import AzurermLinuxVirtualMachine
 from .azurerm_linux_virtual_machine.manager import AzurermLinuxVirtualMachineManager
 from .azurerm_linux_virtual_machine.serializer import AzurermLinuxVirtualMachineSerializer
+
+# Unified resource model (Phase 1 — coexists with old models)
+from .resource import Resource, ResourceDependency
+from .type_registry import ResourceTypeRegistry, ResourceTypeDefinition

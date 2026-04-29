@@ -25,4 +25,8 @@ urlpatterns = [
     # Operation endpoints (IaC webhook-authenticated)
     path('operations/<str:operation_id>/claim/', views.operation_claim_view, name='operation-claim'),
     path('operations/<str:operation_id>/complete/', views.operation_complete_view, name='operation-complete'),
+
+    # Unified Resource endpoints (Phase 1)
+    path('<str:stack_id>/resources-v2/', views.resource_tree_view, name='resource-tree'),
+    path('dashboard/<str:project_id>/', views.dashboard_view, name='stack-dashboard'),
 ] + router.urls

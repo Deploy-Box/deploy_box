@@ -512,6 +512,22 @@ def bulk_update_resources(resources_data: list[dict]) -> None:
         existing_resource.save()
         logger.info("Resource %s updated successfully.", resource_id)
 
+        # Dual-write: sync to unified Resource table
+        try:
+            from stacks.resources.type_registry import ResourceTypeRegistry
+
+            prefix = resource_id.split("_")[0]
+            defn = ResourceTypeRegistry.get_by_prefix(prefix)
+            if defn:
+                ResourcesManager._sync_to_unified(
+                    existing_resource, defn.resource_type, existing_resource.stack
+                )
+        except Exception as exc:
+            logger.warning(
+                "Failed to sync resource %s to unified table: %s",
+                resource_id, exc,
+            )
+
 
 # ---------------------------------------------------------------------------
 # Traefik config
