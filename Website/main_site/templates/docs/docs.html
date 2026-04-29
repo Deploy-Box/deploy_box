@@ -1,0 +1,105 @@
+{% extends 'docs/docs_base.html' %}
+{% load static %}
+
+{% block docs_content %}
+<!-- Page header -->
+<div class="mb-12">
+  <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/5 text-emerald-400 text-xs font-mono mb-4">
+    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+    DOCUMENTATION
+  </div>
+  <h1 class="text-4xl md:text-5xl font-bold tracking-tight text-white mb-4">
+    Deploy Box <span class="text-emerald-400">Documentation</span>
+  </h1>
+  <p class="text-lg text-zinc-400 max-w-2xl leading-relaxed">
+    Everything you need to launch, manage, and scale your tech stacks with Deploy Box.
+  </p>
+</div>
+
+<!-- Quick links grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-16">
+  <a href="{% url 'main_site:docs_getting_started' %}" class="group p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/40 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">Quick Start Guide</h3>
+    </div>
+    <p class="text-sm text-zinc-400">Create your account, set up an organization, and deploy your first stack in minutes.</p>
+  </a>
+
+  <a href="{% url 'main_site:docs_stacks' %}" class="group p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/40 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">Stacks</h3>
+    </div>
+    <p class="text-sm text-zinc-400">Explore available tech stacks — MERN, Django, Mobile, AI/ML, and more.</p>
+  </a>
+
+  <a href="{% url 'main_site:docs_organizations' %}" class="group p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/40 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">Organizations</h3>
+    </div>
+    <p class="text-sm text-zinc-400">Manage teams, invite members, and configure organization settings.</p>
+  </a>
+
+  <a href="{% url 'main_site:docs_projects' %}" class="group p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/40 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">Projects</h3>
+    </div>
+    <p class="text-sm text-zinc-400">Create projects, manage stacks within them, and configure environments.</p>
+  </a>
+
+  <a href="{% url 'main_site:docs_billing' %}" class="group p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/40 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">Billing &amp; Payments</h3>
+    </div>
+    <p class="text-sm text-zinc-400">Understand pricing plans, manage payment methods, and view invoices.</p>
+  </a>
+
+  <a href="{% url 'main_site:docs_api' %}" class="group p-6 rounded-2xl border border-zinc-800/60 bg-zinc-900/40 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/>
+        </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-white group-hover:text-emerald-400 transition-colors">API Reference</h3>
+    </div>
+    <p class="text-sm text-zinc-400">Integrate with the Deploy Box API — authentication, endpoints, and examples.</p>
+  </a>
+</div>
+
+<!-- Need help section -->
+<div class="rounded-2xl border border-zinc-800/60 bg-zinc-900/40 p-8 text-center">
+  <h2 class="text-xl font-semibold text-white mb-2">Need help?</h2>
+  <p class="text-zinc-400 mb-4">Can't find what you're looking for? Reach out and we'll point you in the right direction.</p>
+  <a href="{% url 'main_site:contact' %}" class="inline-flex items-center gap-2 px-6 py-2 rounded-lg bg-emerald-500 text-white font-medium hover:bg-emerald-600 transition-colors">
+    Contact Support
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+    </svg>
+  </a>
+</div>
+{% endblock %}

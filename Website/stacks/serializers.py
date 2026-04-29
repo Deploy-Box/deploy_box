@@ -130,3 +130,123 @@ class OperationCompleteSerializer(serializers.Serializer):
     )
     status = serializers.ChoiceField(choices=STATUS_CHOICES)
     error_message = serializers.CharField(required=False, default='', allow_blank=True)
+
+
+# ---------------------------------------------------------------------------
+# Unified Resource (Phase 1)
+# ---------------------------------------------------------------------------
+
+class ResourceDependencySerializer(serializers.Serializer):
+    id = serializers.CharField(source="depends_on.id")
+    name = serializers.CharField(source="depends_on.name")
+    resource_type = serializers.CharField(source="depends_on.resource_type")
+    dependency_type = serializers.CharField()
+
+
+class ResourceNodeSerializer(serializers.Serializer):
+    """Flat serializer for a single resource node."""
+    id = serializers.CharField()
+    name = serializers.CharField()
+    resource_type = serializers.CharField()
+    prefix = serializers.CharField()
+    display_name = serializers.SerializerMethodField()
+    category = serializers.SerializerMethodField()
+    provider_id = serializers.CharField()
+    provider_name = serializers.CharField()
+    location = serializers.CharField()
+    status = serializers.CharField()
+    tags = serializers.JSONField()
+    attributes = serializers.JSONField()
+    parent_id = serializers.CharField(source="parent.id", default=None, allow_null=True)
+    created_at = serializers.DateTimeField()
+    updated_at = serializers.DateTimeField()
+
+    def get_display_name(self, obj):
+        from stacks.resources.type_registry import ResourceTypeRegistry
+        return ResourceTypeRegistry.get_display_name(obj.resource_type)
+
+    def get_category(self, obj):
+        from stacks.resources.type_registry import ResourceTypeRegistry
+        return ResourceTypeRegistry.get_category(obj.resource_type)
+
+
+class ResourceTreeSerializer(serializers.Serializer):
+    """Builds a nested tree from a flat list of Resource instances.
+
+    Returns top-level (parentless) resources with nested `children` arrays.
+    """
+
+    def to_representation(self, resources):
+        from stacks.resources.type_registry import ResourceTypeRegistry
+
+        # Build lookup and dependency map
+        by_id = {}
+        for r in resources:
+            node = {
+                "id": r.id,
+                "name": r.name,
+                "resource_type": r.resource_type,
+                "prefix": r.prefix,
+                "display_name": ResourceTypeRegistry.get_display_name(r.resource_type),
+                "category": ResourceTypeRegistry.get_category(r.resource_type),
+                "provider_name": r.provider_name,
+                "location": r.location,
+                "status": r.status,
+                "attributes": r.attributes,
+                "children": [],
+                "dependencies": [],
+            }
+            by_id[r.id] = (r, node)
+
+        # Wire up parent-child relationships
+        roots = []
+        for r, node in by_id.values():
+            if r.parent_id and r.parent_id in by_id:
+                by_id[r.parent_id][1]["children"].append(node)
+            else:
+                roots.append(node)
+
+        # Wire up dependencies
+        for r, node in by_id.values():
+            if hasattr(r, "_prefetched_objects_cache") and "dependencies" in r._prefetched_objects_cache:
+                for dep in r.dependencies.all():
+                    if dep.depends_on_id in by_id:
+                        node["dependencies"].append({
+                            "id": dep.depends_on_id,
+                            "name": by_id[dep.depends_on_id][1]["name"],
+                            "dependency_type": dep.dependency_type,
+                        })
+
+        return roots
+
+
+class StackDashboardSerializer(serializers.Serializer):
+    """Serializes a stack with its full resource tree for the dashboard."""
+    id = serializers.CharField()
+    name = serializers.CharField()
+    status = serializers.CharField()
+    purchased_stack_name = serializers.SerializerMethodField()
+    created_at = serializers.DateTimeField()
+    resource_tree = serializers.SerializerMethodField()
+    health_summary = serializers.SerializerMethodField()
+
+    def get_purchased_stack_name(self, stack):
+        return stack.purchased_stack.name if stack.purchased_stack else None
+
+    def get_resource_tree(self, stack):
+        resources = stack.unified_resources.all()
+        return ResourceTreeSerializer().to_representation(resources)
+
+    def get_health_summary(self, stack):
+        resources = stack.unified_resources.all()
+        total = len(resources)
+        statuses = [r.status.lower() for r in resources]
+        healthy = sum(1 for s in statuses if s in ("active", "running", "succeeded", ""))
+        failed = sum(1 for s in statuses if s in ("failed", "error"))
+        degraded = total - healthy - failed
+        return {
+            "total_resources": total,
+            "healthy": healthy,
+            "degraded": degraded,
+            "failed": failed,
+        }

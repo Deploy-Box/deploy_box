@@ -256,7 +256,7 @@ Stacks are the heart of Deploy Box. A `PurchasableStack` is a template defining 
 
 - Browse and deploy purchasable stack templates (MERN, Django, Redis, Pong, Mobile, AI/ML)
 - Auto-generated stack names (adjective + noun)
-- Asynchronous infrastructure provisioning via Azure Service Bus (IAC.CREATE, IAC.UPDATE, IAC.DELETE)
+- Asynchronous infrastructure provisioning via Azure Service Bus (IAC.APPLY, IAC.DELETE, IAC.PAUSE, IAC.RESUME)
 - Stack status tracking (STARTING → Ready → Deleted)
 - IAC state stored as JSON (Terraform state)
 - Stack-specific computed URLs (frontend, backend, database, Redis)
@@ -291,7 +291,7 @@ Stacks are the heart of Deploy Box. A `PurchasableStack` is a template defining 
 - The stack receives an auto-generated name (random adjective + noun).
 - The stack status is set to `STARTING`.
 - Cloud resources are created via `ResourcesManager.create()` based on the `stack_infrastructure` JSON template.
-- An `IAC.CREATE` message is sent to the Azure Service Bus queue with the resource definitions.
+- An `IAC.APPLY` message is sent to the Azure Service Bus queue with the resource definitions.
 - The user can monitor the stack status on the dashboard until it reaches `Ready`.
 
 #### US-4.3: Delete a Stack
@@ -311,7 +311,7 @@ Stacks are the heart of Deploy Box. A `PurchasableStack` is a template defining 
 - `POST /api/v1/stacks/<stack_id>/upload/` accepts a ZIP file (validated by magic bytes).
 - The file must be 100MB or smaller.
 - The file is uploaded to Azure Blob Storage at `{stack_id}/user-files.zip`.
-- An `IAC.UPDATE` is automatically triggered after a successful upload.
+- An `IAC.APPLY` is automatically triggered after a successful upload.
 
 #### US-4.5: Download Source Code
 
@@ -325,8 +325,37 @@ Stacks are the heart of Deploy Box. A `PurchasableStack` is a template defining 
 > **As a** developer, **I want to** manually trigger an infrastructure update on my stack, **so that** configuration changes or new code are applied.
 
 **Acceptance Criteria:**
-- `POST /api/v1/stacks/<stack_id>/trigger-iac-update/` serializes the stack's resources and sends an `IAC.UPDATE` message.
+- `POST /api/v1/stacks/<stack_id>/trigger-iac-update/` serializes the stack's resources and sends an `IAC.APPLY` message.
 - If a GitHub webhook is connected, the repository URL and encrypted access token are included in the message.
+
+#### US-4.6b: Pause Stack
+
+> **As a** developer, **I want to** pause my stack to scale services to zero, **so that** I can save costs when the stack is not in active use.
+
+**Acceptance Criteria:**
+- `POST /api/v1/stacks/<stack_id>/pause/` sends an `IAC.PAUSE` message to the queue.
+- Only stacks with status `Ready` can be paused.
+- The stack status is updated to `Paused` when the IAC container-app completes the operation.
+
+#### US-4.6c: Resume Stack
+
+> **As a** developer, **I want to** resume a paused stack, **so that** my services are restored to their original scaling without re-provisioning.
+
+**Acceptance Criteria:**
+- `POST /api/v1/stacks/<stack_id>/resume/` sends an `IAC.RESUME` message to the queue.
+- Only stacks with status `Paused` can be resumed.
+- The stack status is updated to `Ready` when the IAC container-app completes the operation.
+
+#### US-4.6d: Pause / Resume from Dashboard
+
+> **As a** developer, **I want to** pause and resume stacks from the dashboard UI, **so that** I can manage costs without using the API directly.
+
+**Acceptance Criteria:**
+- The project dashboard shows a status badge next to each stack name (Ready=emerald, Paused=amber, STARTING=blue, etc.).
+- Ready stacks show a "Pause" button; Paused stacks show a prominent "Resume" button with an amber info banner.
+- The stack dashboard overview shows a "Paused" banner with a resume button when the stack is paused.
+- The stack actions section shows Pause or Resume as the first action button depending on status.
+- All buttons call the existing REST API (`POST /api/v1/stacks/<id>/pause/` or `/resume/`).
 
 #### US-4.7: Manage Environment Variables
 
@@ -391,6 +420,9 @@ Deploy Box uses Stripe for payment processing. Organizations are Stripe customer
 - Invoice line items auto-calculated from rate cards
 - Stripe invoice sync
 - Free tier support (card setup without immediate charge)
+- Payment method required before first stack creation (blocks both standard and custom stacks)
+- Monthly credit allowance with auto-pause on limit ($10 default for free tier)
+- Configurable spending controls: auto-pause toggle and spending limit per organization
 
 ### User Stories
 
@@ -423,6 +455,16 @@ Deploy Box uses Stripe for payment processing. Organizations are Stripe customer
 - If the stack has a price or the org already has a payment method, the session uses payment mode with `setup_future_usage` for off-session billing.
 - On `checkout.session.completed` webhook, the stack is created via `stack_services.add_stack`.
 
+#### US-5.3b: Payment Method Required Before Stack Creation
+
+> **As the** platform, **I want to** require users to add a payment method before creating their first stack, **so that** billing is always set up before infrastructure is provisioned.
+
+**Acceptance Criteria:**
+- `create_stack()` and `create_custom_stack()` raise a `ValidationError` if the organization has no card on file in Stripe.
+- The marketplace UI detects the "payment method" error and offers to redirect the user to the billing page.
+- The check uses `organization_has_payment_method()` in `payments/services.py` (calls Stripe PaymentMethod API).
+- Both standard marketplace stacks and custom stacks are gated.
+
 #### US-5.4: View Organization Billing
 
 > **As an** organization admin, **I want to** view my organization's billing dashboard, **so that** I can see payment methods, invoices, and usage.
@@ -444,6 +486,27 @@ Deploy Box uses Stripe for payment processing. Organizations are Stripe customer
   - **Per unit:** `price_per_unit × units_used`.
   - **Tiered:** Applies escalating rates based on `tiered_pricing_json` tiers.
 - The invoice is synced to Stripe and finalized.
+
+#### US-5.6: Auto-Pause on Credit Exhaustion
+
+> **As the** platform, **I want to** automatically pause stacks when an organization exceeds its monthly credit allowance, **so that** users don't accumulate unexpected charges.
+
+**Acceptance Criteria:**
+- Each `Organization` has a `monthly_credit_allowance` field (default $10.00 for free tier).
+- Each `Organization` has an `auto_pause_on_limit` boolean (default `True`).
+- `check_and_auto_pause_stacks()` iterates all orgs with `auto_pause_on_limit=True`, compares `instance_usage_bill_amount` against allowance, and pauses all `Ready` stacks when over limit.
+- `POST /api/v1/stacks/admin/check-credit-limits/` exposes this as an API endpoint.
+- The crontainer `credit_check.py` job calls this endpoint on a schedule.
+
+#### US-5.7: Spending Controls
+
+> **As an** organization admin, **I want to** configure spending controls, **so that** I can manage costs and decide whether auto-pause is enabled.
+
+**Acceptance Criteria:**
+- The billing page shows a "Spending Controls" section with the current credit allowance and auto-pause toggle.
+- Consumption-tier orgs can adjust their spending limit via `PATCH /api/v1/organizations/<org_id>/billing-settings/`.
+- Free-tier orgs see their $10.00 allowance but cannot adjust it.
+- Toggling auto-pause on/off takes effect immediately.
 
 ---
 
@@ -497,7 +560,7 @@ Deploy Box integrates with GitHub for continuous deployment. Users connect their
 - List user's GitHub repositories
 - Create webhooks on GitHub repos linked to stacks
 - Automatic repo switching (old webhook disconnected, new one connected)
-- Push-to-deploy: pushes to `main` trigger IAC.UPDATE
+- Push-to-deploy: pushes to `main` trigger IAC.APPLY
 - HMAC-SHA256 webhook signature verification
 - Unlink GitHub account (removes all webhooks and tokens)
 
@@ -541,7 +604,7 @@ Deploy Box integrates with GitHub for continuous deployment. Users connect their
 - `POST /api/v1/github/webhook/` receives GitHub push events.
 - The webhook payload signature is verified using HMAC-SHA256 with the stored secret.
 - Only `push` events on the `main` branch are processed.
-- An `IAC.UPDATE` message is sent to the Azure Service Bus queue to trigger redeployment.
+- An `IAC.APPLY` message is sent to the Azure Service Bus queue to trigger redeployment.
 
 #### US-7.5: Disconnect GitHub Webhook
 
@@ -754,6 +817,7 @@ Scheduled tasks run as standalone Python scripts in a container (crontainer), au
 
 - MongoDB database size monitoring for all stacks
 - Monthly billing history update trigger
+- Credit limit checking with auto-pause enforcement
 
 ### User Stories
 
@@ -774,6 +838,16 @@ Scheduled tasks run as standalone Python scripts in a container (crontainer), au
 - The `update_billing_history` cron job runs on a monthly schedule.
 - It calls `POST /api/v1/payments/update_billing_history/` to generate or update invoices for all organizations.
 - The job authenticates via OAuth2 client credentials.
+
+#### US-11.3: Auto-Pause on Credit Exhaustion (Cron)
+
+> **As the** platform, **I want to** periodically check all organizations against their credit allowance, **so that** stacks are automatically paused when usage exceeds limits.
+
+**Acceptance Criteria:**
+- The `credit_check.py` cron job calls `POST /api/v1/stacks/admin/check-credit-limits/`.
+- The endpoint iterates all orgs with `auto_pause_on_limit=True`, compares monthly spend vs allowance.
+- All `Ready` stacks in over-limit orgs are paused via the existing `pause_stack()` service.
+- The cron job logs how many stacks were paused and any errors.
 
 ---
 

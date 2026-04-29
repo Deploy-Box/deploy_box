@@ -28,7 +28,7 @@ from projects.models import Project
 from organizations.models import OrganizationMember
 
 from stacks.models import Stack, PurchasableStack, DeploymentLog, Operation
-from stacks.resources.resources_manager import ResourcesManager, create_filtered_data
+from stacks.resources.resources_manager import ResourcesManager
 
 logger = logging.getLogger(__name__)
 
@@ -164,7 +164,7 @@ def create_stack(project_id: str, purchasable_stack_id: str, user=None) -> dict:
 
     data = {
         "stack_id": stack.pk,
-        "initial_source_code_zip_blob_name": "mobile.zip",
+        "initial_source_code_zip_blob_name": purchasable_stack.source_code_location or "",
         "resources": ResourcesManager.serialize(created_resources),
     }
 
@@ -276,6 +276,9 @@ def remove_resource_from_stack(stack_id: str, resource_id: str) -> None:
 
 def list_stack_resources(stack_id: str) -> list[dict]:
     """Return all resources belonging to a stack, serialized.
+
+    Uses the unified Resource table when USE_UNIFIED_RESOURCE_READS is True
+    (single query instead of 17). Output format is identical either way.
 
     Raises ``NotFoundError`` if the stack doesn't exist.
     """
@@ -483,8 +486,9 @@ def _get_github_info_for_stack(stack: Stack) -> dict | None:
 def bulk_update_resources(resources_data: list[dict]) -> None:
     """Update a batch of resources in-place.
 
-    Silently skips resources that cannot be found or that resolve to
-    multiple objects.
+    Uses ``ResourcesManager.update_resource()`` which maps flat IaC callback
+    fields to the unified Resource model (promoted columns + attributes).
+    Silently skips resources that cannot be found.
     """
     for resource in resources_data:
         resource_id = resource.get("id")
@@ -494,23 +498,11 @@ def bulk_update_resources(resources_data: list[dict]) -> None:
             logger.warning("Resource entry missing 'id', skipping.")
             continue
 
-        existing_resource = ResourcesManager.read(resource_id)
-        if not existing_resource:
+        updated = ResourcesManager.update_resource(resource_id, resource)
+        if updated:
+            logger.info("Resource %s updated successfully.", resource_id)
+        else:
             logger.warning("Resource with ID %s not found.", resource_id)
-            continue
-
-        if isinstance(existing_resource, list):
-            logger.warning(
-                "Resource ID %s refers to multiple resources; expected a single resource.",
-                resource_id,
-            )
-            continue
-
-        existing_resource.__dict__.update(
-            create_filtered_data(resource, type(existing_resource))
-        )
-        existing_resource.save()
-        logger.info("Resource %s updated successfully.", resource_id)
 
 
 # ---------------------------------------------------------------------------
@@ -521,19 +513,25 @@ def get_traefik_config() -> dict:
 
     Returns a dict suitable for JSON serialisation.
     """
-    from stacks.resources.deployboxrm_edge.model import DeployBoxrmEdge
+    from stacks.resources.resource import Resource
 
     base_domain = settings.BASE_DOMAIN
-    edges = DeployBoxrmEdge.objects.all()
+    edges = Resource.objects.filter(resource_type="deployboxrm_edge")
 
     routers: dict = {}
     svc: dict = {}
     middlewares: dict = {}
 
     for edge in edges:
-        subdomain = edge.subdomain
+        attrs = edge.attributes or {}
+        subdomain = attrs.get("subdomain", "")
+        resolved_root_base_url = attrs.get("resolved_root_base_url", "")
+        resolved_api_base_url = attrs.get("resolved_api_base_url", "")
 
-        if edge.resolved_root_base_url:
+        if not subdomain:
+            continue
+
+        if resolved_root_base_url:
             routers[f"{subdomain}-root"] = {
                 "rule": f"Host(`{subdomain}.{base_domain}`)",
                 "service": f"{subdomain}-root",
@@ -542,12 +540,12 @@ def get_traefik_config() -> dict:
             }
             svc[f"{subdomain}-root"] = {
                 "loadBalancer": {
-                    "servers": [{"url": edge.resolved_root_base_url}],
+                    "servers": [{"url": resolved_root_base_url}],
                     "passHostHeader": False,
                 },
             }
 
-        if edge.resolved_api_base_url:
+        if resolved_api_base_url:
             routers[f"{subdomain}-api"] = {
                 "rule": f"Host(`{subdomain}.{base_domain}`) && PathPrefix(`/api`)",
                 "service": f"{subdomain}-api",
@@ -557,7 +555,7 @@ def get_traefik_config() -> dict:
             }
             svc[f"{subdomain}-api"] = {
                 "loadBalancer": {
-                    "servers": [{"url": edge.resolved_api_base_url}],
+                    "servers": [{"url": resolved_api_base_url}],
                     "passHostHeader": False,
                 },
             }

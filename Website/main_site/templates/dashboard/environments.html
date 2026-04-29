@@ -12,19 +12,7 @@
 </div>
 
 <div class="w-full bg-gray-50">
-  <header class="bg-zinc-950 pt-16 pb-24 text-center">
-    <div class="flex items-center justify-center mb-4">
-      <div class="bg-emerald-500 p-3 rounded-full mr-4">
-        <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
-          <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
-        </svg>
-      </div>
-      <h1 class="text-3xl font-bold text-gray-100">Environment Management</h1>
-    </div>
-    <p class="text-md text-gray-100 max-w-2xl mx-auto">
-      Manage your development, testing, and production environments
-    </p>
-  </header>
+  {% include 'dashboard/components/_page_header.html' with title='Environment Management' subtitle='Manage your development, testing, and production environments' %}
   
   <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
     <div id="metadata" class="hidden" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}" data-stack-id="{{ stack_id }}"></div>
@@ -109,10 +97,7 @@
                 </div>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                  <span class="h-2 w-2 rounded-full bg-emerald-500 mr-1"></span>
-                  Active
-                </span>
+                {% include 'dashboard/components/_status_badge.html' with status='Active' color='emerald' %}
                 <button class="clone-env-btn p-2 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-200 rounded-lg transition-all duration-300" data-env-id="dev" data-env-name="Development">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
@@ -141,10 +126,7 @@
                 </div>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                  <span class="h-2 w-2 rounded-full bg-yellow-500 mr-1"></span>
-                  Active
-                </span>
+                {% include 'dashboard/components/_status_badge.html' with status='Active' color='yellow' %}
                 <button class="clone-env-btn p-2 text-yellow-600 hover:text-yellow-800 hover:bg-yellow-200 rounded-lg transition-all duration-300" data-env-id="staging" data-env-name="Staging">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
@@ -173,10 +155,7 @@
                 </div>
               </div>
               <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                  <span class="h-2 w-2 rounded-full bg-red-500 mr-1"></span>
-                  Active
-                </span>
+                {% include 'dashboard/components/_status_badge.html' with status='Active' color='red' %}
                 <button class="clone-env-btn p-2 text-red-600 hover:text-red-800 hover:bg-red-200 rounded-lg transition-all duration-300" data-env-id="prod" data-env-name="Production">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
@@ -193,15 +172,8 @@
         </div>
 
         <!-- Empty state -->
-        <div id="empty-state" class="hidden text-center py-12">
-          <svg class="w-16 h-16 text-zinc-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-          </svg>
-          <h3 class="text-lg font-medium text-zinc-900 mb-2">No environments yet</h3>
-          <p class="text-zinc-500 mb-4">Create your first environment to get started</p>
-          <button id="create-first-env" class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2 rounded-lg transition-all duration-300">
-            Create Environment
-          </button>
+        <div id="empty-state" class="hidden">
+          {% include 'dashboard/components/_empty_state.html' with message='No environments yet' button_text='Create Environment' button_id='create-first-env' icon_path='M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10' %}
         </div>
       </div>
     </section>

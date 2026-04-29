@@ -15,13 +15,25 @@ class OrganizationPermissionsError(Exception):
         return JsonResponse({"error": self.message}, status=self.status)
 
 def check_permisssion(user: UserProfile, organization_id, requeired_role: Union[str, None]) -> Organization:
-    if requeired_role == None:
+    if requeired_role is None:
         organization = Organization.objects.get(id=organization_id)
         return organization
-    elif requeired_role.lower() == "admin":
-        organization_member = get_object_or_404(OrganizationMember, user=user, organization_id=organization_id, role="admin")
-        return Organization.objects.get(organizationmember=organization_member)
 
-    raise OrganizationPermissionsError("You don't have permission to access this organization.", status=403)
+    organization = get_object_or_404(Organization, id=organization_id)
+    membership = OrganizationMember.objects.filter(
+        user=user, organization=organization
+    ).first()
+
+    if not membership:
+        raise OrganizationPermissionsError(
+            "You don't have permission to access this organization.", status=403
+        )
+
+    if requeired_role.lower() == "admin" and membership.role != "admin":
+        raise OrganizationPermissionsError(
+            "Admin role required for this action.", status=403
+        )
+
+    return organization
 
 

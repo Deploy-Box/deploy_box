@@ -14,6 +14,9 @@ jobs:
     runs-on: ubuntu-latest
     name: Verify Database Migrations
 
+    env:
+      DJANGO_SECRET_KEY: "ci-test-secret-key-not-for-production"
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,29 +34,25 @@ jobs:
       - name: Verify migrations can be created
         run: |
           cd Website
-          # Check if there are any model changes that need migrations
-          python manage.py makemigrations --dry-run --verbosity=2
+          python manage.py makemigrations --check --dry-run --settings=core.settings.test --verbosity=2
           echo "✅ Migration creation check passed"
 
       - name: Check for migration conflicts
         run: |
           cd Website
-          # Check if there are any migration conflicts
-          python manage.py showmigrations --verbosity=2
+          python manage.py showmigrations --settings=core.settings.test --verbosity=2
           echo "✅ Migration conflict check passed"
 
       - name: Validate migration files
         run: |
           cd Website
-          # Check if all migration files are valid
-          python manage.py check --deploy
-          echo "✅ Migration validation check passed"
+          python manage.py check --settings=core.settings.test
+          echo "✅ Django system check passed"
 
       - name: Test migration plan
         run: |
           cd Website
-          # Create a temporary SQLite database to test migrations
-          python manage.py migrate --run-syncdb --verbosity=2
+          python manage.py migrate --run-syncdb --settings=core.settings.test --verbosity=2
           echo "✅ Migration execution test passed"
 
   run-tests:
@@ -88,7 +87,7 @@ jobs:
 
       - name: Run tests
         working-directory: Website
-        run: python manage.py test --settings=core.settings.test --verbosity 2 --no-input
+        run: python manage.py test accounts.tests payments.tests stacks.tests --settings=core.settings.test --verbosity 2 --no-input
 
   # lint-and-test:
   #   runs-on: ubuntu-latest

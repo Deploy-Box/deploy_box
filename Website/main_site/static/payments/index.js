@@ -20,11 +20,11 @@ fetch("/api/v1/payments/config")
 
         // Validate selections
         if (!org_id) {
-          alert("Please select an organization before purchasing");
+          showToast("Please select an organization before purchasing", "warning");
           return;
         }
         if (!project_id) {
-          alert("Please select a project before purchasing");
+          showToast("Please select a project before purchasing", "warning");
           return;
         }
 
@@ -42,7 +42,7 @@ fetch("/api/v1/payments/config")
           .then((data) => {
             if (data.error) {
               // Show error message to user
-              alert(data.error);
+              showToast(data.error, "error");
               return;
             }
             console.log("sessionID", data);
@@ -52,12 +52,12 @@ fetch("/api/v1/payments/config")
           .then((res) => {
             if (res && res.error) {
               console.error("Stripe checkout error:", res.error);
-              alert("Error redirecting to payment page. Please try again.");
+              showToast("Error redirecting to payment page. Please try again.", "error");
             }
           })
           .catch((error) => {
             console.error("Error creating checkout session:", error);
-            alert("Failed to create checkout session. Please try again.");
+            showToast("Failed to create checkout session. Please try again.", "error");
           });
       });
     });

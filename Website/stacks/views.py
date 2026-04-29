@@ -20,6 +20,8 @@ from stacks.serializers import (
     OperationSerializer,
     OperationClaimSerializer,
     OperationCompleteSerializer,
+    ResourceTreeSerializer,
+    StackDashboardSerializer,
 )
 from stacks import services as _svc
 from stacks.services import (
@@ -305,10 +307,39 @@ class StackViewSet(viewsets.ModelViewSet):
         config = get_traefik_config()
         return JsonResponse(config)
 
-    # ----- BULK UPDATE RESOURCES -----------------------------------------
+    # ----- BULK UPDATE RESOURCES (webhook) --------------------------------
     @action(detail=False, methods=["patch"], url_path="bulk-update-resources", url_name="bulk_update_resources", permission_classes=[AllowAny])
     def bulk_update_resources_action(self, request):
         bulk_update_resources(request.data.get("resources", []))
+        return Response(
+            {"success": True, "message": "Resources updated successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+    # ----- UPDATE RESOURCES (user-facing) --------------------------------
+    @action(detail=True, methods=["patch"], url_path="update-resources", url_name="update_resources")
+    def update_resources_action(self, request, pk=None):
+        stack = self.get_object()
+        resources_data = request.data.get("resources", [])
+        if not resources_data:
+            return Response(
+                {"error": "No resources provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate that all resource IDs belong to this stack
+        from stacks.resources.resources_manager import ResourcesManager
+        stack_resources = ResourcesManager.get_from_stack(stack)
+        stack_resource_ids = {str(r.id) for r in stack_resources}
+        for resource in resources_data:
+            rid = resource.get("id")
+            if rid and rid not in stack_resource_ids:
+                return Response(
+                    {"error": f"Resource {rid} does not belong to this stack."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        bulk_update_resources(resources_data)
         return Response(
             {"success": True, "message": "Resources updated successfully."},
             status=status.HTTP_200_OK,
@@ -639,3 +670,102 @@ def operation_complete_view(request, operation_id):
         return _error_response(exc)
 
     return Response(result)
+
+
+# ---------------------------------------------------------------------------
+# Unified Resource (Phase 1 — test endpoints)
+# ---------------------------------------------------------------------------
+
+@api_view(["GET"])
+@perm_classes([IsAuthenticated])
+def resource_tree_view(request, stack_id):
+    """Return the resource tree for a stack using the unified Resource model.
+
+    GET /api/v1/stacks/{stack_id}/resources-v2/
+    """
+    from django.db.models import Prefetch
+    from stacks.resources.resource import Resource, ResourceDependency
+
+    try:
+        stack = Stack.objects.get(pk=stack_id)
+    except Stack.DoesNotExist:
+        return Response({"error": "Stack not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        verify_project_access(request.user, stack.project_id)
+    except (ForbiddenError, NotFoundError) as exc:
+        return _error_response(exc)
+
+    resources = (
+        Resource.objects
+        .filter(stack=stack)
+        .select_related("parent")
+        .prefetch_related(
+            Prefetch(
+                "dependencies",
+                queryset=ResourceDependency.objects.select_related("depends_on"),
+            )
+        )
+        .order_by("index")
+    )
+
+    tree = ResourceTreeSerializer().to_representation(resources)
+    return Response({"stack_id": stack_id, "resource_tree": tree})
+
+
+@api_view(["GET"])
+@perm_classes([IsAuthenticated])
+def dashboard_view(request, project_id):
+    """Unified dashboard: all stacks in a project with resource trees.
+
+    GET /api/v1/stacks/dashboard/{project_id}/
+    """
+    from django.db.models import Prefetch
+    from stacks.resources.resource import Resource, ResourceDependency
+
+    try:
+        verify_project_access(request.user, project_id)
+    except (ForbiddenError, NotFoundError) as exc:
+        return _error_response(exc)
+
+    stacks = (
+        Stack.objects
+        .filter(project_id=project_id)
+        .select_related("purchased_stack")
+        .prefetch_related(
+            Prefetch(
+                "unified_resources",
+                queryset=Resource.objects.select_related("parent")
+                .prefetch_related(
+                    Prefetch(
+                        "dependencies",
+                        queryset=ResourceDependency.objects.select_related("depends_on"),
+                    )
+                )
+                .order_by("index"),
+            )
+        )
+    )
+
+    serializer = StackDashboardSerializer(stacks, many=True)
+
+    # Compute totals across all stacks
+    all_resources = []
+    for stack in stacks:
+        all_resources.extend(stack.unified_resources.all())
+
+    total = len(all_resources)
+    statuses = [r.status.lower() for r in all_resources]
+    healthy = sum(1 for s in statuses if s in ("active", "running", "succeeded", ""))
+    failed = sum(1 for s in statuses if s in ("failed", "error"))
+
+    return Response({
+        "stacks": serializer.data,
+        "totals": {
+            "total_stacks": stacks.count(),
+            "total_resources": total,
+            "healthy": healthy,
+            "degraded": total - healthy - failed,
+            "failed": failed,
+        },
+    })

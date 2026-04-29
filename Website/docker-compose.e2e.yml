@@ -1,0 +1,71 @@
+# ---------------------------------------------------------------------------
+# docker-compose.e2e.yml — Playwright E2E test environment
+#
+# Usage:
+#   docker compose -f docker-compose.e2e.yml up --build -d
+#   # Then run Playwright tests from e2e/ directory
+# ---------------------------------------------------------------------------
+services:
+  postgres-e2e:
+    image: postgres:16
+    container_name: deploy-box-e2e-postgres
+    environment:
+      POSTGRES_USER: deploy_box_website
+      POSTGRES_PASSWORD: localdevpassword
+      POSTGRES_DB: deploy_box_e2e
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U deploy_box_website -d deploy_box_e2e"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
+  django-e2e:
+    build: .
+    container_name: deploy-box-e2e-django
+    environment:
+      DJANGO_SETTINGS_MODULE: core.settings.dev
+      ENV: DEV
+      HOST: "http://localhost:8000"
+      DB_NAME: deploy_box_e2e
+      DB_USER: deploy_box_website
+      DB_PASSWORD: localdevpassword
+      DB_HOST: postgres-e2e
+      DB_PORT: "5432"
+      KEY_VAULT_NAME: dummy
+      # Fallback env-var secrets (KeyVaultClient resolves SECRET_NAME → SECRET_NAME env)
+      DEPLOY_BOX_DJANGO_SECRET_KEY: "e2e-test-secret-key-do-not-use-in-production"
+      WORKOS_CLIENT_ID: "client_e2e_dummy"
+      WORKOS_API_KEY: "sk_test_e2e_dummy"
+      STRIPE_PUBLISHABLE_KEY: "pk_test_e2e_dummy"
+      STRIPE_SECRET_KEY: "sk_test_e2e_dummy"
+      STRIPE_WEBHOOK_SECRET: "whsec_e2e_dummy"
+      DEPLOY_BOX_GITHUB_CLIENT_SECRET: "e2e_dummy"
+      DEPLOY_BOX_GITHUB_TOKEN_KEY: "e2e_dummy"
+      NPM_BIN_PATH: "/usr/local/bin/npm"
+    extra_hosts:
+      # Resolve the dummy vault hostname to localhost so DNS lookups fail fast
+      # instead of timing out (KeyVaultClient falls back to env vars gracefully)
+      - "dummy.vault.azure.net:127.0.0.1"
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres-e2e:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput 2>/dev/null;
+             python manage.py setup_e2e --create-org > /app/e2e_session.txt 2>/dev/null;
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - e2e-data:/app/e2e-data
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 30s
+
+volumes:
+  e2e-data:

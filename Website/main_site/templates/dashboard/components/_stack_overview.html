@@ -1,5 +1,27 @@
 <!-- Stack Overview Component -->
 <!-- Requires: stack_type, stack context variables, and repository_name context variable -->
+
+{% if stack.status == 'Paused' %}
+<!-- Paused Stack Banner -->
+<section class="mb-6">
+  <div class="bg-amber-50 border border-amber-300 rounded-lg p-4 flex items-center justify-between shadow-sm">
+    <div class="flex items-center">
+      <svg class="h-6 w-6 text-amber-500 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+        <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+      </svg>
+      <div>
+        <h3 class="text-sm font-semibold text-amber-800">Stack Paused</h3>
+        <p class="text-sm text-amber-700">This stack's infrastructure has been scaled down. Resume to restore full operation.</p>
+      </div>
+    </div>
+    <button id="banner-resume-btn" class="ml-4 inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-all duration-200 shadow-sm flex-shrink-0">
+      <svg class="h-4 w-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
+      Resume Stack
+    </button>
+  </div>
+</section>
+{% endif %}
+
 <section class="mb-8">
   <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
     <div class="flex items-center justify-between mb-4">
@@ -84,10 +106,7 @@
                   <svg class="h-4 w-4 mr-2 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
                   </svg>
-                  Status: <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500 mr-1"></span>
-                    {{ stack.status }}
-                  </span>
+                  Status: {% include 'dashboard/components/_status_badge.html' with status=stack.status %}
                 </p>
                 <p class="text-sm text-zinc-500 flex items-center">
                   <svg class="h-4 w-4 mr-2 text-emerald-400" fill="currentColor" viewBox="0 0 20 20">

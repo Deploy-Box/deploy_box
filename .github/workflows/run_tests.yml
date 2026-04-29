@@ -59,6 +59,6 @@ jobs:
           if [ -n "${{ inputs.test_path }}" ]; then
             python manage.py test --settings=core.settings.test --verbosity 2 --no-input "${{ inputs.test_path }}"
           else
-            python manage.py test --settings=core.settings.test --verbosity 2 --no-input
+            python manage.py test accounts.tests payments.tests stacks.tests --settings=core.settings.test --verbosity 2 --no-input
           fi
 

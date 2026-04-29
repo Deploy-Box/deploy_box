@@ -3,12 +3,7 @@
 
 {% block content %}
 <div class="w-full bg-gray-50">
-    <header class="bg-zinc-950 pt-16 pb-24 text-center">
-        <h1 class="text-2xl font-bold text-gray-100 mb-2">Organization Members</h1>
-        <p class="text-md text-gray-100 max-w-2xl mx-auto">
-            Manage members for {{ organization.name }}
-        </p>
-    </header>
+    {% include 'dashboard/components/_page_header.html' with title='Organization Members' subtitle='Manage members for '|add:organization.name %}
     <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
         <section class="mb-8">
             <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
@@ -63,12 +58,7 @@
                         </div>
                     </div>
                     {% empty %}
-                    <div class="text-center py-8">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                        </svg>
-                        <p class="text-zinc-500 mb-4">No members in this organization</p>
-                    </div>
+                    {% include 'dashboard/components/_empty_state.html' with message='No members in this organization' icon_path='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' %}
                     {% endfor %}
                 </div>
                 

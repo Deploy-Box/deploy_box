@@ -4,13 +4,8 @@
 
 {% block content %}
 <div class="w-full bg-gray-50">
-    <header class="bg-zinc-950 pt-16 pb-24 text-center">
-        <h1 class="text-2xl font-bold text-gray-100 mb-2">Project Dashboard</h1>
-        <p class="text-md text-gray-100 max-w-2xl mx-auto">
-            Monitor, manage, and optimize your project resources
-        </p>
-    </header>
-    <main class="w-full max-w-4xl mx-auto px-4 -mt-10 pb-12">
+    {% include 'dashboard/components/_page_header.html' with title='Project Dashboard' subtitle='Monitor, manage, and optimize your project resources' %}
+    <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
         <!-- Project Overview -->
         <section class="mb-8">
             <div
@@ -98,26 +93,36 @@
                 <div id="stacksList" class="space-y-4">
                     {% if stacks %}
                     {% for stack in stacks %}
-                    <a href="{% url 'main_site:stack_dashboard' organization_id project.id stack.id %}"
-                        class="block p-4 rounded-lg border border-gray-200 hover:bg-zinc-100 transition-all duration-300 transform hover:scale-[1.02] relative overflow-hidden">
-                        <div class="flex justify-between items-center">
-                            <div class="z-10">
-                                <h3 class="text-lg font-semibold text-zinc-900">{{stack.name}}</h3>
-                                <p class="text-sm text-zinc-500 flex items-center">
-                                    <!-- ...icon and usage... -->
-                                    Usage: {{stack.instance_usage}}
+                    <div class="block p-4 rounded-lg border border-gray-200 hover:bg-zinc-100 transition-all duration-300 relative overflow-hidden {% if stack.status == 'Paused' %}border-amber-300 bg-amber-50{% endif %}">
+                        <a href="{% url 'main_site:stack_dashboard' organization_id project.id stack.id %}"
+                           class="flex justify-between items-center">
+                            <div class="z-10 flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <h3 class="text-lg font-semibold text-zinc-900">{{stack.name}}</h3>
+                                    {% include 'dashboard/components/_status_badge.html' with status=stack.status %}
+                                </div>
+                                <p class="text-sm text-zinc-500 flex items-center mt-1">
+                                    Usage: {{stack.instance_usage}} · ${{stack.instance_usage_bill_amount}}
                                 </p>
                             </div>
                             <!-- Arrow icon -->
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 z-10" viewBox="0 0 20 20" fill="currentColor">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 z-10 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                                 <path fill-rule="evenodd"
                                     d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
                                     clip-rule="evenodd"></path>
                             </svg>
+                        </a>
+                        {% if stack.status == 'Paused' %}
+                        <div class="mt-3 pt-3 border-t border-amber-200 z-10 relative flex items-center">
+                            <span class="text-sm text-amber-700">
+                                <svg class="inline h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                This stack is paused
+                            </span>
                         </div>
+                        {% endif %}
                         <div class="absolute top-0 right-0 h-full w-1/2 {{ stack.purchased_stack.type|lower|stack_bg_color }} pointer-events-none"
                              style="clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 2%);"></div>
-                    </a>
+                    </div>
                     {% endfor %}
                     <div class="text-center py-6 border-t border-gray-200">
                         <button id="addAnotherStackBtn"
@@ -132,25 +137,7 @@
                         </button>
                     </div>
                     {% else %}
-                    <div class="text-center py-8">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none"
-                            viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4">
-                            </path>
-                        </svg>
-                        <p class="text-zinc-500 mb-4">This project has no stacks</p>
-                        <button id="createStackBtn"
-                            class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
-                                fill="currentColor">
-                                <path fill-rule="evenodd"
-                                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                                    clip-rule="evenodd"></path>
-                            </svg>
-                            Create a Stack
-                        </button>
-                    </div>
+                    {% include 'dashboard/components/_empty_state.html' with message='This project has no stacks' button_text='Create a Stack' button_id='createStackBtn' %}
                     {% endif %}
                 </div>
             </div>
@@ -200,5 +187,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+
 </script>
 {% endblock %}

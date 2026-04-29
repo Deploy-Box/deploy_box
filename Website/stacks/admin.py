@@ -53,7 +53,7 @@ class StackAdmin(admin.ModelAdmin):
                 iac_data = json.loads(iac_json)
                 
                 # Update the stack's IAC field
-                stack.iac = iac_data
+                stack.iac_state = iac_data
                 stack.save()
                 
                 messages.success(request, f'IAC configuration for stack "{stack.name}" has been updated successfully.')
@@ -67,7 +67,7 @@ class StackAdmin(admin.ModelAdmin):
                 messages.error(request, f'Error updating IAC: {str(e)}')
         
         # Get current IAC data
-        current_iac = stack.iac or {}
+        current_iac = stack.iac_state or {}
         formatted_iac = json.dumps(current_iac, indent=2, cls=DjangoJSONEncoder)
         
         context = {

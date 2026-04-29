@@ -2,14 +2,7 @@
 <script src="https://js.stripe.com/v3/"></script>
 {% endblock %} {% block content %}
 <div class="w-full bg-gray-50">
-  <header class="bg-zinc-950 pt-16 pb-24 text-center">
-    <h1 class="text-2xl font-bold text-gray-100 mb-2">
-      Organization Dashboard
-    </h1>
-    <p class="text-md text-gray-100 max-w-2xl mx-auto">
-      Manage your organization's projects, members, and settings
-    </p>
-  </header>
+  {% include 'dashboard/components/_page_header.html' with title='Organization Dashboard' subtitle='Manage your organization\'s projects, members, and settings' %}
   <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
     <!-- Organization Details Section -->
     <section class="mb-8">
@@ -135,41 +128,7 @@
             </div>
           </a>
           {% empty %}
-          <div class="text-center py-8">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-12 w-12 mx-auto text-gray-400 mb-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
-              ></path>
-            </svg>
-            <p class="text-zinc-500 mb-4">No projects in this organization</p>
-            <button
-              id="createProjectBtnEmpty"
-              class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5 mr-2"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-              >
-                <path
-                  fill-rule="evenodd"
-                  d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
-                  clip-rule="evenodd"
-                ></path>
-              </svg>
-              Create Project
-            </button>
-          </div>
+          {% include 'dashboard/components/_empty_state.html' with message='No projects in this organization' button_text='Create Project' button_id='createProjectBtnEmpty' %}
           {% endfor %}
         </div>
       </div>
@@ -269,12 +228,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const description = projectDescription.value.trim();
 
         if (!name) {
-            alert('Please enter a project name');
+            showToast('Please enter a project name', 'warning');
             return;
         }
 
         if (!description) {
-            alert('Please enter a project description');
+            showToast('Please enter a project description', 'warning');
             return;
         }
 
@@ -297,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.message) {
-                alert(data.message);
+                showToast(data.message, 'success');
             }
             if (response.ok) {
                 createProjectModal.classList.add('hidden');
@@ -307,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error creating project:', error);
-            alert('Failed to create project. Please try again.');
+            showToast('Failed to create project. Please try again.', 'error');
         })
         .finally(() => {
             submitCreateProject.innerHTML = 'Create Project';
