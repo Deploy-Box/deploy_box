@@ -62,7 +62,8 @@ class ResourcesManagerAddRemoveTestCase(_StackTestMixin, TestCase):
         resource = ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP")
         self.assertIsNotNone(resource)
         self.assertEqual(resource.stack_id, self.stack.pk)
-        self.assertTrue(resource.pk.startswith("res007"))
+        self.assertTrue(resource.pk.startswith("res"))
+        self.assertEqual(resource.prefix, "res007")
 
     def test_add_resource_increments_index(self):
         r1 = ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP")
@@ -89,9 +90,8 @@ class ResourcesManagerAddRemoveTestCase(_StackTestMixin, TestCase):
             "AZURERM_CONTAINER_APP",
             config={"name": "my-backend"},
         )
-        # The model's save() generates the name from resource type + index,
-        # overriding any config-provided name.
-        self.assertEqual(resource.name, "azurerm_container_app_0")
+        # add_resource uses the display name + index (config "name" is ignored)
+        self.assertEqual(resource.name, "Container App 1")
 
     def test_get_available_resource_types(self):
         types = ResourcesManager.get_available_resource_types()
@@ -531,20 +531,16 @@ class ResourceTreeViewTestCase(_StackTestMixin, APITestCase):
 
 
 # ---------------------------------------------------------------------------
-# Phase 2 — Unified read-path tests
+# Phase 2/4 — Unified resource model tests (legacy tables removed)
 # ---------------------------------------------------------------------------
 class UnifiedReadPathTestCase(_StackTestMixin, TestCase):
-    """Tests that the unified read path (USE_UNIFIED_RESOURCE_READS=True)
-    produces correct output matching legacy format."""
+    """Tests that the unified read path works correctly."""
 
     def setUp(self):
         self._create_base_objects()
 
-    @patch("stacks.resources.resources_manager.django_settings")
-    def test_get_from_stack_returns_resource_instances(self, mock_settings):
-        """When flag is on, get_from_stack returns Resource instances."""
-        mock_settings.USE_UNIFIED_RESOURCE_READS = True
-        # Create via legacy path (dual-writes to unified)
+    def test_get_from_stack_returns_resource_instances(self):
+        """get_from_stack returns Resource instances."""
         ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
         ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP")
 
@@ -553,20 +549,8 @@ class UnifiedReadPathTestCase(_StackTestMixin, TestCase):
         for r in resources:
             self.assertIsInstance(r, Resource)
 
-    @patch("stacks.resources.resources_manager.django_settings")
-    def test_get_from_stack_flag_off_returns_legacy_instances(self, mock_settings):
-        """When flag is off, get_from_stack returns old model instances."""
-        mock_settings.USE_UNIFIED_RESOURCE_READS = False
-        ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
-
-        resources = ResourcesManager.get_from_stack(self.stack)
-        self.assertEqual(len(resources), 1)
-        self.assertNotIsInstance(resources[0], Resource)
-
-    @patch("stacks.resources.resources_manager.django_settings")
-    def test_serialize_unified_produces_legacy_format(self, mock_settings):
-        """Serializing via unified path produces the same keys as legacy."""
-        mock_settings.USE_UNIFIED_RESOURCE_READS = True
+    def test_serialize_produces_legacy_format(self):
+        """Serializing produces the same keys as legacy format."""
         ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
 
         resources = ResourcesManager.get_from_stack(self.stack)
@@ -589,10 +573,8 @@ class UnifiedReadPathTestCase(_StackTestMixin, TestCase):
         # Must have tags
         self.assertIn("tags", data)
 
-    @patch("stacks.resources.resources_manager.django_settings")
-    def test_serialize_unified_container_app_has_attributes(self, mock_settings):
+    def test_serialize_container_app_has_attributes(self):
         """Container app attributes are flattened to top-level."""
-        mock_settings.USE_UNIFIED_RESOURCE_READS = True
         ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP")
 
         resources = ResourcesManager.get_from_stack(self.stack)
@@ -604,41 +586,12 @@ class UnifiedReadPathTestCase(_StackTestMixin, TestCase):
         self.assertIn("azurerm_name", data)
         self.assertEqual(data["type"], "RESOURCE")
 
-    @patch("stacks.resources.resources_manager.django_settings")
-    def test_parity_resource_group_legacy_vs_unified(self, mock_settings):
-        """Legacy and unified serialization produce same keys for resource group."""
-        # Create resource (dual-write active)
-        resource = ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
-
-        # Serialize via legacy path
-        mock_settings.USE_UNIFIED_RESOURCE_READS = False
-        legacy_resources = ResourcesManager.get_from_stack(self.stack)
-        legacy_serialized = ResourcesManager.serialize(legacy_resources)
-
-        # Serialize via unified path
-        mock_settings.USE_UNIFIED_RESOURCE_READS = True
-        unified_resources = ResourcesManager.get_from_stack(self.stack)
-        unified_serialized = ResourcesManager.serialize(unified_resources)
-
-        self.assertEqual(len(legacy_serialized), len(unified_serialized))
-        legacy_data = legacy_serialized[0]
-        unified_data = unified_serialized[0]
-
-        # Key fields must match
-        self.assertEqual(legacy_data["id"], unified_data["id"])
-        self.assertEqual(legacy_data["index"], unified_data["index"])
-        self.assertEqual(legacy_data["name"], unified_data["name"])
-        self.assertEqual(legacy_data["type"], unified_data["type"])
-
-    @patch("stacks.resources.resources_manager.django_settings")
-    def test_unified_get_from_stack_single_query(self, mock_settings):
-        """Unified path should use fewer queries than legacy (1 vs 17)."""
-        mock_settings.USE_UNIFIED_RESOURCE_READS = True
+    def test_get_from_stack_single_query(self):
+        """Unified path should use 1-2 queries only."""
         ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
         ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP")
 
-        from django.test.utils import override_settings
-        from django.db import connection, reset_queries
+        from django.db import connection
         from django.test.utils import CaptureQueriesContext
 
         with CaptureQueriesContext(connection) as ctx:
@@ -649,38 +602,48 @@ class UnifiedReadPathTestCase(_StackTestMixin, TestCase):
 
 
 class UnifiedRemoveResourceTestCase(_StackTestMixin, TestCase):
-    """Tests that remove operations delete from both tables atomically."""
+    """Tests that remove operations work correctly."""
 
     def setUp(self):
         self._create_base_objects()
 
-    def test_remove_resource_from_stack_deletes_both(self):
-        """remove_resource_from_stack deletes from legacy AND unified tables."""
+    def test_remove_resource_from_stack_deletes(self):
+        """remove_resource_from_stack deletes from Resource table."""
         from stacks.services import remove_resource_from_stack
         resource = ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
         resource_pk = resource.pk
 
-        # Verify exists in both
+        # Verify exists
         self.assertTrue(Resource.objects.filter(pk=resource_pk).exists())
-        from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
-        self.assertTrue(AzurermResourceGroup.objects.filter(pk=resource_pk).exists())
 
         # Remove
         remove_resource_from_stack(str(self.stack.pk), resource_pk)
 
-        # Verify deleted from both
+        # Verify deleted
         self.assertFalse(Resource.objects.filter(pk=resource_pk).exists())
-        self.assertFalse(AzurermResourceGroup.objects.filter(pk=resource_pk).exists())
+
+    def test_delete_parent_cascades_children(self):
+        """Deleting a parent resource cascades to its children."""
+        rg = ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
+        # Container app env has parent_type = azurerm_resource_group
+        env = ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP_ENVIRONMENT")
+        self.assertEqual(env.parent_id, rg.pk)
+
+        # Delete the parent
+        rg.delete()
+
+        # Child should also be gone (CASCADE)
+        self.assertFalse(Resource.objects.filter(pk=env.pk).exists())
 
 
 class UnifiedBulkUpdateTestCase(_StackTestMixin, TestCase):
-    """Tests that bulk_update_resources writes atomically to both tables."""
+    """Tests that bulk_update_resources updates the unified Resource model."""
 
     def setUp(self):
         self._create_base_objects()
 
-    def test_bulk_update_syncs_to_unified(self):
-        """bulk_update_resources updates both old and unified tables."""
+    def test_bulk_update_updates_location(self):
+        """bulk_update_resources updates promoted fields."""
         from stacks.services import bulk_update_resources
         resource = ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
         resource_pk = resource.pk
@@ -690,12 +653,12 @@ class UnifiedBulkUpdateTestCase(_StackTestMixin, TestCase):
             "location": "westus2",
         }])
 
-        # Verify unified model was updated
-        unified = Resource.objects.get(pk=resource_pk)
-        self.assertEqual(unified.location, "westus2")
+        # Verify model was updated
+        updated = Resource.objects.get(pk=resource_pk)
+        self.assertEqual(updated.location, "westus2")
 
     def test_bulk_update_with_provider_id(self):
-        """bulk_update with azurerm_id updates unified provider_id."""
+        """bulk_update with azurerm_id updates provider_id."""
         from stacks.services import bulk_update_resources
         resource = ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
         resource_pk = resource.pk
@@ -705,11 +668,24 @@ class UnifiedBulkUpdateTestCase(_StackTestMixin, TestCase):
             "azurerm_id": "/subscriptions/123/resourceGroups/my-rg",
         }])
 
-        unified = Resource.objects.get(pk=resource_pk)
-        self.assertEqual(unified.provider_id, "/subscriptions/123/resourceGroups/my-rg")
-        # provider_name is auto-generated by the model's custom save(),
-        # so just verify it's non-empty (sync happened)
-        self.assertTrue(len(unified.provider_name) > 0)
+        updated = Resource.objects.get(pk=resource_pk)
+        self.assertEqual(updated.provider_id, "/subscriptions/123/resourceGroups/my-rg")
+
+    def test_bulk_update_type_specific_goes_to_attributes(self):
+        """Type-specific fields are stored in attributes JSONField."""
+        from stacks.services import bulk_update_resources
+        resource = ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP")
+        resource_pk = resource.pk
+
+        bulk_update_resources([{
+            "id": resource_pk,
+            "revision_mode": "Multiple",
+            "ingress_target_port": 8080,
+        }])
+
+        updated = Resource.objects.get(pk=resource_pk)
+        self.assertEqual(updated.attributes["revision_mode"], "Multiple")
+        self.assertEqual(updated.attributes["ingress_target_port"], 8080)
 
 
 class CompatSerializerTestCase(_StackTestMixin, TestCase):

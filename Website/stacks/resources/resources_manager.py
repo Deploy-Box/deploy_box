@@ -1,190 +1,225 @@
+"""ResourcesManager — unified CRUD for all stack resources.
+
+Phase 4: All resources live in the single ``Resource`` table. The 17 legacy
+per-type tables have been dropped. Type-specific configuration lives in
+``Resource.attributes`` (JSONField). The ``ResourceTypeRegistry`` provides
+per-type defaults, naming logic, and parent mapping.
+"""
+
 from __future__ import annotations
 
-from django.conf import settings as django_settings
-from django.db import models, transaction
+import logging
+import os
 from typing import TYPE_CHECKING, Any, overload
 
-from .resource_manager import ResourceManager
+from django.conf import settings
+from django.db import models
+from django.db.models import Max
 
-from stacks.models import Stack
-from stacks.resources.azurerm_resource_group.manager import AzurermResourceGroupManager
-from stacks.resources.azurerm_container_app.manager import AzurermContainerAppManager
-from stacks.resources.azurerm_storage_account.manager import AzurermStorageAccountManager
-from stacks.resources.azurerm_storage_container.manager import AzurermStorageContainerManager
-from stacks.resources.azurerm_container_app_environment.manager import AzurermContainerAppEnvironmentManager
-from stacks.resources.deployboxrm_workos_integration.manager import DeployBoxrmWorkOSIntegrationManager
-from stacks.resources.thenilerm_database.manager import TheNilermDatabaseManager
-from stacks.resources.azurerm_storage_account_static_website.manager import AzurermStorageAccountStaticWebsiteManager
-from stacks.resources.deployboxrm_edge.manager import DeployBoxrmEdgeManager
-from stacks.resources.azurerm_log_analytics_workspace.manager import AzurermLogAnalyticsWorkspaceManager
-from stacks.resources.azurerm_key_vault.manager import AzurermKeyVaultManager
-from stacks.resources.deployboxrm_postgres_database.manager import DeployBoxrmPostgresDatabaseManager
-from stacks.resources.azurerm_public_ip.manager import AzurermPublicIpManager
-from stacks.resources.azurerm_network_security_group.manager import AzurermNetworkSecurityGroupManager
-from stacks.resources.azurerm_virtual_network.manager import AzurermVirtualNetworkManager
-from stacks.resources.azurerm_network_interface.manager import AzurermNetworkInterfaceManager
-from stacks.resources.azurerm_linux_virtual_machine.manager import AzurermLinuxVirtualMachineManager
+from stacks.resources.resource import Resource
+from stacks.resources.type_registry import ResourceTypeRegistry
 
 if TYPE_CHECKING:
     from stacks.models import Stack
 
-RESOURCE_MANAGER_MAPPING: dict[str, type[ResourceManager]] = {
-        "AZURERM_RESOURCE_GROUP": AzurermResourceGroupManager,
-        "AZURERM_CONTAINER_APP": AzurermContainerAppManager,
-        "AZURERM_STORAGE_ACCOUNT": AzurermStorageAccountManager,
-        "AZURERM_STORAGE_CONTAINER": AzurermStorageContainerManager,
-        "AZURERM_CONTAINER_APP_ENVIRONMENT": AzurermContainerAppEnvironmentManager,
-        "THENILERM_DATABASE": TheNilermDatabaseManager,
-        "DEPLOYBOXRM_WORKOS_INTEGRATION": DeployBoxrmWorkOSIntegrationManager,
-        "AZURERM_STORAGE_ACCOUNT_STATIC_WEBSITE": AzurermStorageAccountStaticWebsiteManager,
-        "DEPLOYBOXRM_EDGE": DeployBoxrmEdgeManager,
-        "AZURERM_LOG_ANALYTICS_WORKSPACE": AzurermLogAnalyticsWorkspaceManager,
-        "AZURERM_KEY_VAULT": AzurermKeyVaultManager,
-        "DEPLOYBOXRM_POSTGRES_DATABASE": DeployBoxrmPostgresDatabaseManager,
-        "AZURERM_PUBLIC_IP": AzurermPublicIpManager,
-        "AZURERM_NETWORK_SECURITY_GROUP": AzurermNetworkSecurityGroupManager,
-        "AZURERM_VIRTUAL_NETWORK": AzurermVirtualNetworkManager,
-        "AZURERM_NETWORK_INTERFACE": AzurermNetworkInterfaceManager,
-        "AZURERM_LINUX_VIRTUAL_MACHINE": AzurermLinuxVirtualMachineManager,
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Supported resource types (derived from the registry)
+# ---------------------------------------------------------------------------
+
+def _build_type_map() -> dict[str, str]:
+    """UPPERCASE key → lowercase resource_type for all registered types."""
+    return {
+        defn.resource_type.upper(): defn.resource_type
+        for defn in ResourceTypeRegistry.all_types()
     }
 
+
+RESOURCE_MANAGER_MAPPING: dict[str, str] = _build_type_map()
+"""Backwards-compatible mapping: UPPERCASE key → lowercase resource_type.
+
+Used by serializers for ChoiceField validation and by views for type listings.
+"""
+
 RESOURCE_TYPE_DISPLAY_NAMES: dict[str, str] = {
-    "AZURERM_RESOURCE_GROUP": "Resource Group",
-    "AZURERM_CONTAINER_APP": "Container App",
-    "AZURERM_STORAGE_ACCOUNT": "Storage Account",
-    "AZURERM_STORAGE_CONTAINER": "Storage Container",
-    "AZURERM_CONTAINER_APP_ENVIRONMENT": "Container App Environment",
-    "THENILERM_DATABASE": "Nile Database",
-    "DEPLOYBOXRM_WORKOS_INTEGRATION": "WorkOS Integration",
-    "AZURERM_STORAGE_ACCOUNT_STATIC_WEBSITE": "Static Website",
-    "DEPLOYBOXRM_EDGE": "Edge Router",
-    "AZURERM_LOG_ANALYTICS_WORKSPACE": "Log Analytics Workspace",
-    "AZURERM_KEY_VAULT": "Key Vault",
-    "DEPLOYBOXRM_POSTGRES_DATABASE": "Postgres Database",
-    "AZURERM_PUBLIC_IP": "Public IP",
-    "AZURERM_NETWORK_SECURITY_GROUP": "Network Security Group",
-    "AZURERM_VIRTUAL_NETWORK": "Virtual Network",
-    "AZURERM_NETWORK_INTERFACE": "Network Interface",
-    "AZURERM_LINUX_VIRTUAL_MACHINE": "Linux Virtual Machine",
+    defn.resource_type.upper(): defn.display_name
+    for defn in ResourceTypeRegistry.all_types()
 }
 
 RESOURCE_TYPE_CATEGORIES: dict[str, str] = {
-    "AZURERM_RESOURCE_GROUP": "Infrastructure",
-    "AZURERM_CONTAINER_APP": "Compute",
-    "AZURERM_CONTAINER_APP_ENVIRONMENT": "Compute",
-    "AZURERM_LINUX_VIRTUAL_MACHINE": "Compute",
-    "AZURERM_STORAGE_ACCOUNT": "Storage",
-    "AZURERM_STORAGE_CONTAINER": "Storage",
-    "AZURERM_STORAGE_ACCOUNT_STATIC_WEBSITE": "Storage",
-    "AZURERM_KEY_VAULT": "Security",
-    "AZURERM_NETWORK_SECURITY_GROUP": "Networking",
-    "AZURERM_VIRTUAL_NETWORK": "Networking",
-    "AZURERM_NETWORK_INTERFACE": "Networking",
-    "AZURERM_PUBLIC_IP": "Networking",
-    "AZURERM_LOG_ANALYTICS_WORKSPACE": "Monitoring",
-    "THENILERM_DATABASE": "Database",
-    "DEPLOYBOXRM_POSTGRES_DATABASE": "Database",
-    "DEPLOYBOXRM_WORKOS_INTEGRATION": "Authentication",
-    "DEPLOYBOXRM_EDGE": "Networking",
+    defn.resource_type.upper(): defn.category
+    for defn in ResourceTypeRegistry.all_types()
 }
 
 
-class ResourcesManager():
-    resource_prefix_mapping = None
+# ---------------------------------------------------------------------------
+# Type-specific creation hooks
+# ---------------------------------------------------------------------------
+
+def _prepare_edge_attributes(stack: "Stack", index: int, attrs: dict) -> dict:
+    """Auto-generate subdomain and resolved_root_base_url for edge resources."""
+    if not attrs.get("subdomain"):
+        attrs["subdomain"] = f"{stack.pk}{index}"
+    if not attrs.get("resolved_root_base_url"):
+        host = getattr(settings, "HOST", os.getenv("HOST", "https://deploybox.io"))
+        attrs["resolved_root_base_url"] = f"{host}/still-configuring/"
+    if "root_base_url" not in attrs:
+        attrs["root_base_url"] = ""
+    if "api_base_url" not in attrs:
+        attrs["api_base_url"] = ""
+    if "resolved_api_base_url" not in attrs:
+        attrs["resolved_api_base_url"] = ""
+    return attrs
+
+
+def _prepare_container_app_attributes(stack: "Stack", index: int, attrs: dict) -> dict:
+    """Auto-generate template_container_name for container apps."""
+    if not attrs.get("template_container_name"):
+        attrs["template_container_name"] = f"container-{stack.pk}"
+    return attrs
+
+
+_CREATION_HOOKS: dict[str, Any] = {
+    "deployboxrm_edge": _prepare_edge_attributes,
+    "azurerm_container_app": _prepare_container_app_attributes,
+}
+
+
+# ---------------------------------------------------------------------------
+# ResourcesManager — public API
+# ---------------------------------------------------------------------------
+
+class ResourcesManager:
 
     @staticmethod
-    def get_resource_prefix_mapping() -> dict[str, type[ResourceManager]]:
-        if ResourcesManager.resource_prefix_mapping is None:
-            ResourcesManager.resource_prefix_mapping = {
-                manager_class.get_resource_prefix(): manager_class
-                for manager_class in RESOURCE_MANAGER_MAPPING.values()
-            }
+    def create(resources: list[dict], stack: "Stack") -> list[Resource]:
+        """Create multiple resources from a stack infrastructure definition.
 
-            if len(ResourcesManager.resource_prefix_mapping) != len(RESOURCE_MANAGER_MAPPING):
-                raise ValueError("Duplicate resource prefixes found in resource managers.")
-            
-        return ResourcesManager.resource_prefix_mapping
+        Each entry in *resources* is a dict with at minimum ``resource_type``
+        and optionally type-specific field overrides.
+        """
+        created_resources: list[Resource] = []
 
-    @staticmethod
-    def create(resources: dict, stack: Stack) -> list[models.Model]:
-        created_resources = []
-        
-        for resource in resources:
-            assert isinstance(resource, dict), f"Expected resource to be a dict, got {type(resource)}"
+        for idx, resource_data in enumerate(resources):
+            assert isinstance(resource_data, dict), (
+                f"Expected resource to be a dict, got {type(resource_data)}"
+            )
 
-            resource.update({"stack": stack})
-            resource_type = resource["resource_type"]
+            resource_type_raw = resource_data.get("resource_type", "")
+            assert isinstance(resource_type_raw, str) and resource_type_raw, (
+                "resource_type must be a non-empty string"
+            )
 
-            assert isinstance(resource_type, str), f"Expected resource_type to be a str, got {type(resource_type)}"
+            key = resource_type_raw.upper()
+            rt = RESOURCE_MANAGER_MAPPING.get(key)
+            if rt is None:
+                raise ValueError(f"Unknown resource type: {resource_type_raw}")
 
-            if resource_type.upper() in RESOURCE_MANAGER_MAPPING:
-                model = RESOURCE_MANAGER_MAPPING[resource_type.upper()].get_model()
-                with transaction.atomic():
-                    created_resource = model.objects.create(**create_filtered_data(resource, model))
-                    # Dual-write to unified Resource model (atomic)
-                    ResourcesManager._sync_to_unified(created_resource, resource_type, stack)
-                created_resources.append(created_resource)
-            else:
-                raise ValueError(f"Unknown resource type: {resource_type}")
+            defn = ResourceTypeRegistry.get_by_type(rt)
+            assert defn is not None
+
+            # Merge: registry defaults → provided overrides
+            attributes = dict(defn.default_attributes)
+            SKIP_KEYS = {"resource_type", "stack", "index", "name"}
+            for k, v in resource_data.items():
+                if k not in SKIP_KEYS:
+                    attributes[k] = v
+
+            # Run type-specific creation hook
+            hook = _CREATION_HOOKS.get(rt)
+            if hook:
+                attributes = hook(stack, idx, attributes)
+
+            # Infer parent
+            parent = None
+            if defn.parent_type:
+                parent = Resource.objects.filter(
+                    stack=stack, resource_type=defn.parent_type
+                ).first()
+
+            resource = Resource(
+                stack=stack,
+                index=idx,
+                resource_type=rt,
+                prefix=defn.prefix,
+                parent=parent,
+                location=attributes.pop("location", "") or "",
+                status=attributes.pop("status", "") or "",
+                tags=attributes.pop("tags", {}) or {},
+                attributes=attributes,
+            )
+            resource.save()  # triggers provider_name + name auto-gen
+            created_resources.append(resource)
+
         return created_resources
 
     @staticmethod
-    def add_resource(stack: Stack, resource_type: str, config: dict | None = None) -> models.Model:
+    def add_resource(stack: "Stack", resource_type: str, config: dict | None = None) -> Resource:
         """Add a single resource to an existing stack.
 
-        Returns the newly created resource instance.
+        Returns the newly created Resource instance.
         Raises ``ValueError`` if *resource_type* is unknown.
         """
         key = resource_type.upper()
-        if key not in RESOURCE_MANAGER_MAPPING:
+        rt = RESOURCE_MANAGER_MAPPING.get(key)
+        if rt is None:
             raise ValueError(f"Unknown resource type: {resource_type}")
 
-        # Count existing resources of the same type to determine next index.
-        # Works regardless of whether reads are unified or legacy.
-        from stacks.resources.resource import Resource
-        if getattr(django_settings, "USE_UNIFIED_RESOURCE_READS", False):
-            same_type_count = Resource.objects.filter(
-                stack=stack, resource_type=key.lower()
-            ).count()
-            next_index = same_type_count
-        else:
-            existing = ResourcesManager.get_from_stack(stack)
-            same_type = [r for r in existing if type(r) == RESOURCE_MANAGER_MAPPING[key].get_model()]
-            next_index = max((r.index for r in same_type), default=-1) + 1
+        defn = ResourceTypeRegistry.get_by_type(rt)
+        assert defn is not None
 
-        data: dict[str, Any] = {
-            "stack": stack,
-            "resource_type": key,
-            "name": f"{RESOURCE_TYPE_DISPLAY_NAMES.get(key, key)} {next_index + 1}",
-            "index": next_index,
-            **(config or {}),
-        }
+        # Use Max(index)+1 to avoid collisions after deletions
+        max_index = Resource.objects.filter(
+            stack=stack, resource_type=rt
+        ).aggregate(mi=Max("index"))["mi"]
+        next_index = (max_index + 1) if max_index is not None else 0
 
-        model = RESOURCE_MANAGER_MAPPING[key].get_model()
-        with transaction.atomic():
-            created = model.objects.create(**create_filtered_data(data, model))
-            # Dual-write to unified Resource model (atomic)
-            ResourcesManager._sync_to_unified(created, key, stack)
+        # Merge defaults + config
+        attributes = dict(defn.default_attributes)
+        if config:
+            for k, v in config.items():
+                if k not in {"resource_type", "stack", "index", "name"}:
+                    attributes[k] = v
 
-        return created
+        # Run type-specific creation hook
+        hook = _CREATION_HOOKS.get(rt)
+        if hook:
+            attributes = hook(stack, next_index, attributes)
+
+        # Infer parent
+        parent = None
+        if defn.parent_type:
+            parent = Resource.objects.filter(
+                stack=stack, resource_type=defn.parent_type
+            ).first()
+
+        resource = Resource(
+            stack=stack,
+            index=next_index,
+            name=f"{defn.display_name} {next_index + 1}",
+            resource_type=rt,
+            prefix=defn.prefix,
+            parent=parent,
+            location=attributes.pop("location", "") or "",
+            status=attributes.pop("status", "") or "",
+            tags=attributes.pop("tags", {}) or {},
+            attributes=attributes,
+        )
+        resource.save()
+        return resource
 
     @staticmethod
     def remove_resource(resource_id: str) -> bool:
-        """Delete a single resource by its prefixed ID.
+        """Delete a single resource by ID.
 
-        Returns ``True`` if the resource was deleted, ``False`` if not found.
+        Returns ``True`` if deleted, ``False`` if not found.
+        Note: if the resource has children (via parent FK), they will also
+        be deleted due to on_delete=CASCADE.
         """
-        resource = ResourcesManager._read_one(resource_id)
-        if resource is None:
-            return False
-
-        with transaction.atomic():
-            # Remove from unified model
-            from stacks.resources.resource import Resource
-            Resource.objects.filter(pk=resource_id).delete()
-            # Remove from legacy table
-            resource.delete()
-        return True
+        deleted_count, _ = Resource.objects.filter(pk=resource_id).delete()
+        return deleted_count > 0
 
     @staticmethod
     def get_available_resource_types() -> list[dict[str, str]]:
@@ -192,169 +227,89 @@ class ResourcesManager():
         return [
             {
                 "resource_type": key,
-                "display_name": RESOURCE_TYPE_DISPLAY_NAMES.get(key, key),
-                "category": RESOURCE_TYPE_CATEGORIES.get(key, "Other"),
+                "display_name": RESOURCE_TYPE_DISPLAY_NAMES[key],
+                "category": RESOURCE_TYPE_CATEGORIES[key],
             }
             for key in RESOURCE_MANAGER_MAPPING
         ]
 
     @staticmethod
-    def get_from_stack(stack: Stack) -> list[models.Model]:
-        """Return all resources for a stack.
+    def get_from_stack(stack: "Stack") -> list[Resource]:
+        """Return all resources for a stack (single query)."""
+        return list(
+            Resource.objects.filter(stack=stack)
+            .select_related("parent")
+            .order_by("index")
+        )
 
-        When USE_UNIFIED_RESOURCE_READS is True, fetches from the single
-        Resource table (1 query). Otherwise, queries all 17 type tables.
-        """
-        if getattr(django_settings, "USE_UNIFIED_RESOURCE_READS", False):
-            from stacks.resources.resource import Resource
-            return list(
-                Resource.objects.filter(stack=stack)
-                .select_related("parent")
-                .order_by("index")
-            )
-
-        resources = []
-        for resource_manager in RESOURCE_MANAGER_MAPPING.values():
-            managed_model_class = resource_manager.get_model()
-            resources.extend(managed_model_class.objects.filter(stack=stack))
-        return resources
-    
     @staticmethod
-    def _read_one(resource_id: str) -> models.Model | None:
-        resource_prefix_mapping = ResourcesManager.get_resource_prefix_mapping()
-        prefix = resource_id.split('_')[0]
-        
-        if prefix in resource_prefix_mapping:
-            manager_class = resource_prefix_mapping[prefix]
-            managed_model_class = manager_class.get_model()
-            try:
-                return managed_model_class.objects.get(pk=resource_id)
-            except Exception as e:
-                print(f"Error retrieving resource {resource_id}: {e}")
-                
-        return None
+    def _read_one(resource_id: str) -> Resource | None:
+        return Resource.objects.filter(pk=resource_id).first()
 
     @overload
     @staticmethod
-    def read(resource_id: str) -> models.Model | None: ...
-    
+    def read(resource_id: str) -> Resource | None: ...
+
     @overload
     @staticmethod
-    def read(resource_id: list[str]) -> list[models.Model | None]: ...
+    def read(resource_id: list[str]) -> list[Resource | None]: ...
 
     @staticmethod
-    def read(resource_id: str | list[str]) -> models.Model | list[models.Model | None] | None:
+    def read(resource_id: str | list[str]) -> Resource | list[Resource | None] | None:
         if isinstance(resource_id, list):
             return [ResourcesManager._read_one(rid) for rid in resource_id]
-        
         return ResourcesManager._read_one(resource_id)
-    
+
     @staticmethod
-    def delete(stack: Stack):
-        # Also delete from unified model
-        from stacks.resources.resource import Resource
+    def delete(stack: "Stack"):
+        """Delete all resources for a stack."""
         Resource.objects.filter(stack=stack).delete()
 
-        for resource_manager in RESOURCE_MANAGER_MAPPING.values():
-            managed_model_class = resource_manager.get_model()
-            managed_model_class.objects.filter(stack=stack).delete()
-
     @staticmethod
-    def serialize(resource: models.Model | list[models.Model]):
-        """Serialize resources to the flat legacy dict format.
-
-        Handles both old per-type model instances and unified Resource instances.
-        """
-        from stacks.resources.resource import Resource
+    def serialize(resource: Resource | list[Resource]):
+        """Serialize resources to the flat legacy dict format."""
+        from stacks.resources.compat_serializer import serialize_resource_compat
 
         if isinstance(resource, list):
-            return [ResourcesManager.serialize(r) for r in resource]
-
-        # Unified Resource instance → use compatibility serializer
-        if isinstance(resource, Resource):
-            from stacks.resources.compat_serializer import serialize_resource_compat
-            return serialize_resource_compat(resource)
-
-        # Legacy per-type model instance → use old serializer dispatch
-        resource_prefix_mapping = ResourcesManager.get_resource_prefix_mapping()
-        prefix = resource.pk.split('_')[0]
-        if prefix in resource_prefix_mapping:
-            manager_class = resource_prefix_mapping[prefix]
-            return manager_class().serialize(resource)
-        print(f"Unknown resource prefix: {prefix}")
-        return None
+            return [serialize_resource_compat(r) for r in resource]
+        return serialize_resource_compat(resource)
 
     @staticmethod
-    def _sync_to_unified(old_resource: models.Model, resource_type: str, stack: Stack):
-        """Dual-write: sync an old-style resource to the unified Resource model.
+    def update_resource(resource_id: str, update_data: dict) -> Resource | None:
+        """Update a resource from a flat dict (e.g. IaC callback payload).
 
-        Wrapped in transaction.atomic — if the sync fails, the whole operation
-        rolls back (preventing stale data in the unified table).
+        Maps promoted fields (provider_id, location, status, etc.) to model
+        columns and stores everything else in attributes.
         """
-        from stacks.resources.resource import Resource
-        from stacks.resources.type_registry import ResourceTypeRegistry
+        resource = ResourcesManager._read_one(resource_id)
+        if resource is None:
+            return None
 
-        defn = ResourceTypeRegistry.get_by_type(resource_type.lower())
-        if defn is None:
-            return
+        from stacks.resources.compat_serializer import _PROVIDER_FIELD_MAP
 
-        # Extract type-specific fields into attributes dict
-        COMMON_FIELDS = {"id", "index", "name", "type", "stack", "stack_id", "created_at", "updated_at"}
-        PROMOTED_FIELDS = {"azurerm_id", "thenilerm_id", "deploybox_database_id",
-                           "azurerm_name", "thenilerm_name", "location", "status", "tags"}
-        
-        attributes = {}
-        for field in old_resource._meta.get_fields():
-            if not hasattr(field, "column"):
+        rt = resource.resource_type
+        provider_id_field, provider_name_field = _PROVIDER_FIELD_MAP.get(rt, (None, None))
+
+        # Promoted fields that map to real columns
+        PROMOTED_COLUMNS = {"location", "status", "tags"}
+        SKIP_KEYS = {"id", "stack", "index", "type", "created_at", "updated_at"}
+
+        attrs = dict(resource.attributes) if resource.attributes else {}
+
+        for k, v in update_data.items():
+            if k in SKIP_KEYS:
                 continue
-            if field.name in COMMON_FIELDS or field.name in PROMOTED_FIELDS:
-                continue
-            val = getattr(old_resource, field.name, None)
-            if val is not None and val != "" and val != [] and val != {}:
-                attributes[field.name] = val
+            elif k == "name":
+                resource.name = v
+            elif k in PROMOTED_COLUMNS:
+                setattr(resource, k, v)
+            elif provider_id_field and k == provider_id_field:
+                resource.provider_id = v or ""
+            elif provider_name_field and k == provider_name_field:
+                resource.provider_name = v or ""
+            else:
+                attrs[k] = v
 
-        # Determine provider_id and provider_name
-        provider_id = (
-            getattr(old_resource, "azurerm_id", "")
-            or getattr(old_resource, "thenilerm_id", "")
-            or getattr(old_resource, "deploybox_database_id", "")
-            or ""
-        )
-        provider_name = (
-            getattr(old_resource, "azurerm_name", "")
-            or getattr(old_resource, "thenilerm_name", "")
-            or ""
-        )
-
-        # Infer parent from existing resources of the parent type
-        parent = None
-        if defn.parent_type:
-            parent = Resource.objects.filter(
-                stack=stack, resource_type=defn.parent_type
-            ).first()
-
-        Resource.objects.update_or_create(
-            pk=old_resource.pk,
-            defaults={
-                "stack": stack,
-                "index": old_resource.index,
-                "name": old_resource.name,
-                "resource_type": defn.resource_type,
-                "prefix": defn.prefix,
-                "parent": parent,
-                "provider_id": provider_id,
-                "provider_name": provider_name,
-                "location": getattr(old_resource, "location", "") or "",
-                "status": getattr(old_resource, "status", "") or "",
-                "tags": getattr(old_resource, "tags", {}) or {},
-                "attributes": attributes,
-            },
-        )
-    
-def create_filtered_data(data: dict, model: type[models.Model]) -> dict[str, Any]:
-    # Get writable field names from the model (excludes auto fields, reverse relations)
-    model_fields = {
-        f.name for f in model._meta.get_fields()
-        if not f.auto_created and not f.many_to_many and not f.one_to_many
-    }
-    return {k: v for k, v in data.items() if k in model_fields}
+        resource.attributes = attrs
+        resource.save()
+        return resource

@@ -50,14 +50,6 @@ if _container_app_hostname:
 ROOT_URLCONF = "core.urls"
 
 # ──────────────────────────────────────────────
-# Feature Flags
-# ──────────────────────────────────────────────
-# When True, resource reads come from the unified Resource table instead of the
-# 17 per-type tables. Dual-write keeps both in sync; this flag controls the
-# read path only. Set to False to roll back to legacy behaviour.
-USE_UNIFIED_RESOURCE_READS = os.getenv("USE_UNIFIED_RESOURCE_READS", "false").lower() == "true"
-
-# ──────────────────────────────────────────────
 # Installed Apps
 # ──────────────────────────────────────────────
 INSTALLED_APPS = [
