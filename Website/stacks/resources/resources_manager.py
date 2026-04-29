@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from django.db import models
+from django.conf import settings as django_settings
+from django.db import models, transaction
 from typing import TYPE_CHECKING, Any, overload
 
 from .resource_manager import ResourceManager
@@ -118,11 +119,11 @@ class ResourcesManager():
 
             if resource_type.upper() in RESOURCE_MANAGER_MAPPING:
                 model = RESOURCE_MANAGER_MAPPING[resource_type.upper()].get_model()
-                created_resource = model.objects.create(**create_filtered_data(resource, model))
+                with transaction.atomic():
+                    created_resource = model.objects.create(**create_filtered_data(resource, model))
+                    # Dual-write to unified Resource model (atomic)
+                    ResourcesManager._sync_to_unified(created_resource, resource_type, stack)
                 created_resources.append(created_resource)
-
-                # Dual-write to unified Resource model
-                ResourcesManager._sync_to_unified(created_resource, resource_type, stack)
             else:
                 raise ValueError(f"Unknown resource type: {resource_type}")
         return created_resources
@@ -138,9 +139,18 @@ class ResourcesManager():
         if key not in RESOURCE_MANAGER_MAPPING:
             raise ValueError(f"Unknown resource type: {resource_type}")
 
-        existing = ResourcesManager.get_from_stack(stack)
-        same_type = [r for r in existing if type(r) == RESOURCE_MANAGER_MAPPING[key].get_model()]
-        next_index = max((r.index for r in same_type), default=-1) + 1
+        # Count existing resources of the same type to determine next index.
+        # Works regardless of whether reads are unified or legacy.
+        from stacks.resources.resource import Resource
+        if getattr(django_settings, "USE_UNIFIED_RESOURCE_READS", False):
+            same_type_count = Resource.objects.filter(
+                stack=stack, resource_type=key.lower()
+            ).count()
+            next_index = same_type_count
+        else:
+            existing = ResourcesManager.get_from_stack(stack)
+            same_type = [r for r in existing if type(r) == RESOURCE_MANAGER_MAPPING[key].get_model()]
+            next_index = max((r.index for r in same_type), default=-1) + 1
 
         data: dict[str, Any] = {
             "stack": stack,
@@ -151,10 +161,10 @@ class ResourcesManager():
         }
 
         model = RESOURCE_MANAGER_MAPPING[key].get_model()
-        created = model.objects.create(**create_filtered_data(data, model))
-
-        # Dual-write to unified Resource model
-        ResourcesManager._sync_to_unified(created, key, stack)
+        with transaction.atomic():
+            created = model.objects.create(**create_filtered_data(data, model))
+            # Dual-write to unified Resource model (atomic)
+            ResourcesManager._sync_to_unified(created, key, stack)
 
         return created
 
@@ -168,11 +178,12 @@ class ResourcesManager():
         if resource is None:
             return False
 
-        # Also remove from unified model
-        from stacks.resources.resource import Resource
-        Resource.objects.filter(pk=resource_id).delete()
-
-        resource.delete()
+        with transaction.atomic():
+            # Remove from unified model
+            from stacks.resources.resource import Resource
+            Resource.objects.filter(pk=resource_id).delete()
+            # Remove from legacy table
+            resource.delete()
         return True
 
     @staticmethod
@@ -189,6 +200,19 @@ class ResourcesManager():
 
     @staticmethod
     def get_from_stack(stack: Stack) -> list[models.Model]:
+        """Return all resources for a stack.
+
+        When USE_UNIFIED_RESOURCE_READS is True, fetches from the single
+        Resource table (1 query). Otherwise, queries all 17 type tables.
+        """
+        if getattr(django_settings, "USE_UNIFIED_RESOURCE_READS", False):
+            from stacks.resources.resource import Resource
+            return list(
+                Resource.objects.filter(stack=stack)
+                .select_related("parent")
+                .order_by("index")
+            )
+
         resources = []
         for resource_manager in RESOURCE_MANAGER_MAPPING.values():
             managed_model_class = resource_manager.get_model()
@@ -237,9 +261,21 @@ class ResourcesManager():
 
     @staticmethod
     def serialize(resource: models.Model | list[models.Model]):
+        """Serialize resources to the flat legacy dict format.
+
+        Handles both old per-type model instances and unified Resource instances.
+        """
+        from stacks.resources.resource import Resource
+
         if isinstance(resource, list):
             return [ResourcesManager.serialize(r) for r in resource]
-        
+
+        # Unified Resource instance → use compatibility serializer
+        if isinstance(resource, Resource):
+            from stacks.resources.compat_serializer import serialize_resource_compat
+            return serialize_resource_compat(resource)
+
+        # Legacy per-type model instance → use old serializer dispatch
         resource_prefix_mapping = ResourcesManager.get_resource_prefix_mapping()
         prefix = resource.pk.split('_')[0]
         if prefix in resource_prefix_mapping:
@@ -250,7 +286,11 @@ class ResourcesManager():
 
     @staticmethod
     def _sync_to_unified(old_resource: models.Model, resource_type: str, stack: Stack):
-        """Dual-write: sync an old-style resource to the unified Resource model."""
+        """Dual-write: sync an old-style resource to the unified Resource model.
+
+        Wrapped in transaction.atomic — if the sync fails, the whole operation
+        rolls back (preventing stale data in the unified table).
+        """
         from stacks.resources.resource import Resource
         from stacks.resources.type_registry import ResourceTypeRegistry
 

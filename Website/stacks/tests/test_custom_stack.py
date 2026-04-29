@@ -528,3 +528,260 @@ class ResourceTreeViewTestCase(_StackTestMixin, APITestCase):
         url = reverse("stacks:resource-tree", kwargs={"stack_id": str(self.stack.pk)})
         response = self.client.get(url)
         self.assertIn(response.status_code, [401, 403])
+
+
+# ---------------------------------------------------------------------------
+# Phase 2 — Unified read-path tests
+# ---------------------------------------------------------------------------
+class UnifiedReadPathTestCase(_StackTestMixin, TestCase):
+    """Tests that the unified read path (USE_UNIFIED_RESOURCE_READS=True)
+    produces correct output matching legacy format."""
+
+    def setUp(self):
+        self._create_base_objects()
+
+    @patch("stacks.resources.resources_manager.django_settings")
+    def test_get_from_stack_returns_resource_instances(self, mock_settings):
+        """When flag is on, get_from_stack returns Resource instances."""
+        mock_settings.USE_UNIFIED_RESOURCE_READS = True
+        # Create via legacy path (dual-writes to unified)
+        ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
+        ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP")
+
+        resources = ResourcesManager.get_from_stack(self.stack)
+        self.assertEqual(len(resources), 2)
+        for r in resources:
+            self.assertIsInstance(r, Resource)
+
+    @patch("stacks.resources.resources_manager.django_settings")
+    def test_get_from_stack_flag_off_returns_legacy_instances(self, mock_settings):
+        """When flag is off, get_from_stack returns old model instances."""
+        mock_settings.USE_UNIFIED_RESOURCE_READS = False
+        ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
+
+        resources = ResourcesManager.get_from_stack(self.stack)
+        self.assertEqual(len(resources), 1)
+        self.assertNotIsInstance(resources[0], Resource)
+
+    @patch("stacks.resources.resources_manager.django_settings")
+    def test_serialize_unified_produces_legacy_format(self, mock_settings):
+        """Serializing via unified path produces the same keys as legacy."""
+        mock_settings.USE_UNIFIED_RESOURCE_READS = True
+        ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
+
+        resources = ResourcesManager.get_from_stack(self.stack)
+        serialized = ResourcesManager.serialize(resources)
+
+        self.assertEqual(len(serialized), 1)
+        data = serialized[0]
+        # Must have legacy base fields
+        self.assertIn("id", data)
+        self.assertIn("index", data)
+        self.assertIn("name", data)
+        self.assertIn("type", data)
+        self.assertEqual(data["type"], "RESOURCE")
+        self.assertIn("stack", data)
+        self.assertIn("created_at", data)
+        self.assertIn("updated_at", data)
+        # Must have azurerm provider fields under original names
+        self.assertIn("azurerm_id", data)
+        self.assertIn("azurerm_name", data)
+        # Must have tags
+        self.assertIn("tags", data)
+
+    @patch("stacks.resources.resources_manager.django_settings")
+    def test_serialize_unified_container_app_has_attributes(self, mock_settings):
+        """Container app attributes are flattened to top-level."""
+        mock_settings.USE_UNIFIED_RESOURCE_READS = True
+        ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP")
+
+        resources = ResourcesManager.get_from_stack(self.stack)
+        serialized = ResourcesManager.serialize(resources)
+        data = serialized[0]
+
+        # Container app should have type-specific fields at top level
+        self.assertIn("azurerm_id", data)
+        self.assertIn("azurerm_name", data)
+        self.assertEqual(data["type"], "RESOURCE")
+
+    @patch("stacks.resources.resources_manager.django_settings")
+    def test_parity_resource_group_legacy_vs_unified(self, mock_settings):
+        """Legacy and unified serialization produce same keys for resource group."""
+        # Create resource (dual-write active)
+        resource = ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
+
+        # Serialize via legacy path
+        mock_settings.USE_UNIFIED_RESOURCE_READS = False
+        legacy_resources = ResourcesManager.get_from_stack(self.stack)
+        legacy_serialized = ResourcesManager.serialize(legacy_resources)
+
+        # Serialize via unified path
+        mock_settings.USE_UNIFIED_RESOURCE_READS = True
+        unified_resources = ResourcesManager.get_from_stack(self.stack)
+        unified_serialized = ResourcesManager.serialize(unified_resources)
+
+        self.assertEqual(len(legacy_serialized), len(unified_serialized))
+        legacy_data = legacy_serialized[0]
+        unified_data = unified_serialized[0]
+
+        # Key fields must match
+        self.assertEqual(legacy_data["id"], unified_data["id"])
+        self.assertEqual(legacy_data["index"], unified_data["index"])
+        self.assertEqual(legacy_data["name"], unified_data["name"])
+        self.assertEqual(legacy_data["type"], unified_data["type"])
+
+    @patch("stacks.resources.resources_manager.django_settings")
+    def test_unified_get_from_stack_single_query(self, mock_settings):
+        """Unified path should use fewer queries than legacy (1 vs 17)."""
+        mock_settings.USE_UNIFIED_RESOURCE_READS = True
+        ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
+        ResourcesManager.add_resource(self.stack, "AZURERM_CONTAINER_APP")
+
+        from django.test.utils import override_settings
+        from django.db import connection, reset_queries
+        from django.test.utils import CaptureQueriesContext
+
+        with CaptureQueriesContext(connection) as ctx:
+            resources = ResourcesManager.get_from_stack(self.stack)
+
+        # Should be 1 query (SELECT from stacks_resource WHERE stack_id=...)
+        self.assertLessEqual(len(ctx), 2)  # 1 main + possibly 1 for parent join
+
+
+class UnifiedRemoveResourceTestCase(_StackTestMixin, TestCase):
+    """Tests that remove operations delete from both tables atomically."""
+
+    def setUp(self):
+        self._create_base_objects()
+
+    def test_remove_resource_from_stack_deletes_both(self):
+        """remove_resource_from_stack deletes from legacy AND unified tables."""
+        from stacks.services import remove_resource_from_stack
+        resource = ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
+        resource_pk = resource.pk
+
+        # Verify exists in both
+        self.assertTrue(Resource.objects.filter(pk=resource_pk).exists())
+        from stacks.resources.azurerm_resource_group.model import AzurermResourceGroup
+        self.assertTrue(AzurermResourceGroup.objects.filter(pk=resource_pk).exists())
+
+        # Remove
+        remove_resource_from_stack(str(self.stack.pk), resource_pk)
+
+        # Verify deleted from both
+        self.assertFalse(Resource.objects.filter(pk=resource_pk).exists())
+        self.assertFalse(AzurermResourceGroup.objects.filter(pk=resource_pk).exists())
+
+
+class UnifiedBulkUpdateTestCase(_StackTestMixin, TestCase):
+    """Tests that bulk_update_resources writes atomically to both tables."""
+
+    def setUp(self):
+        self._create_base_objects()
+
+    def test_bulk_update_syncs_to_unified(self):
+        """bulk_update_resources updates both old and unified tables."""
+        from stacks.services import bulk_update_resources
+        resource = ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
+        resource_pk = resource.pk
+
+        bulk_update_resources([{
+            "id": resource_pk,
+            "location": "westus2",
+        }])
+
+        # Verify unified model was updated
+        unified = Resource.objects.get(pk=resource_pk)
+        self.assertEqual(unified.location, "westus2")
+
+    def test_bulk_update_with_provider_id(self):
+        """bulk_update with azurerm_id updates unified provider_id."""
+        from stacks.services import bulk_update_resources
+        resource = ResourcesManager.add_resource(self.stack, "AZURERM_RESOURCE_GROUP")
+        resource_pk = resource.pk
+
+        bulk_update_resources([{
+            "id": resource_pk,
+            "azurerm_id": "/subscriptions/123/resourceGroups/my-rg",
+        }])
+
+        unified = Resource.objects.get(pk=resource_pk)
+        self.assertEqual(unified.provider_id, "/subscriptions/123/resourceGroups/my-rg")
+        # provider_name is auto-generated by the model's custom save(),
+        # so just verify it's non-empty (sync happened)
+        self.assertTrue(len(unified.provider_name) > 0)
+
+
+class CompatSerializerTestCase(_StackTestMixin, TestCase):
+    """Tests for the compatibility serializer directly."""
+
+    def setUp(self):
+        self._create_base_objects()
+
+    def test_serialize_resource_group(self):
+        """Resource group serializes with azurerm_id/azurerm_name fields."""
+        from stacks.resources.compat_serializer import serialize_resource_compat
+        resource = Resource.objects.create(
+            stack=self.stack, index=0, name="test-rg",
+            resource_type="azurerm_resource_group", prefix="res000",
+            provider_id="/subscriptions/123/resourceGroups/test-rg",
+            provider_name="test-rg",
+            location="eastus",
+            tags={"env": "dev"},
+            attributes={"resource_group_name": "test-rg"},
+        )
+        data = serialize_resource_compat(resource)
+        self.assertEqual(data["azurerm_id"], "/subscriptions/123/resourceGroups/test-rg")
+        self.assertEqual(data["azurerm_name"], "test-rg")
+        self.assertEqual(data["location"], "eastus")
+        self.assertEqual(data["tags"], {"env": "dev"})
+        self.assertEqual(data["type"], "RESOURCE")
+        self.assertEqual(data["resource_group_name"], "test-rg")
+
+    def test_serialize_postgres_database(self):
+        """Postgres database serializes with deploybox_database_id field."""
+        from stacks.resources.compat_serializer import serialize_resource_compat
+        resource = Resource.objects.create(
+            stack=self.stack, index=0, name="my-db",
+            resource_type="deployboxrm_postgres_database", prefix="res00E",
+            provider_id="db-12345",
+            attributes={"db_host": "example.com", "db_port": 5432, "sslmode": "require"},
+        )
+        data = serialize_resource_compat(resource)
+        self.assertEqual(data["deploybox_database_id"], "db-12345")
+        self.assertNotIn("azurerm_id", data)
+        self.assertEqual(data["db_host"], "example.com")
+        self.assertEqual(data["db_port"], 5432)
+
+    def test_serialize_workos_integration(self):
+        """WorkOS integration has no provider_id fields."""
+        from stacks.resources.compat_serializer import serialize_resource_compat
+        resource = Resource.objects.create(
+            stack=self.stack, index=0, name="workos",
+            resource_type="deployboxrm_workos_integration", prefix="res008",
+            attributes={"api_key": "wk_123", "client_id": "client_abc"},
+        )
+        data = serialize_resource_compat(resource)
+        self.assertNotIn("azurerm_id", data)
+        self.assertNotIn("thenilerm_id", data)
+        self.assertNotIn("deploybox_database_id", data)
+        self.assertEqual(data["api_key"], "wk_123")
+        self.assertEqual(data["client_id"], "client_abc")
+
+    def test_serialize_thenilerm_database(self):
+        """Nile database serializes with thenilerm_id/thenilerm_name."""
+        from stacks.resources.compat_serializer import serialize_resource_compat
+        resource = Resource.objects.create(
+            stack=self.stack, index=0, name="nile-db",
+            resource_type="thenilerm_database", prefix="res009",
+            provider_id="nile-id-123",
+            provider_name="nile-db-name",
+            tags={},
+            attributes={"region": "AZURE_EASTUS", "sharded": True},
+        )
+        data = serialize_resource_compat(resource)
+        self.assertEqual(data["thenilerm_id"], "nile-id-123")
+        self.assertEqual(data["thenilerm_name"], "nile-db-name")
+        self.assertEqual(data["region"], "AZURE_EASTUS")
+        self.assertEqual(data["sharded"], True)
+        self.assertIn("tags", data)

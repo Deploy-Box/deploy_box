@@ -271,11 +271,19 @@ def remove_resource_from_stack(stack_id: str, resource_id: str) -> None:
     if str(resource.stack_id) != str(stack.pk):
         raise ValidationError("Resource does not belong to this stack.")
 
-    resource.delete()
+    with transaction.atomic():
+        # Delete from unified table
+        from stacks.resources.resource import Resource
+        Resource.objects.filter(pk=resource_id).delete()
+        # Delete from legacy table
+        resource.delete()
 
 
 def list_stack_resources(stack_id: str) -> list[dict]:
     """Return all resources belonging to a stack, serialized.
+
+    Uses the unified Resource table when USE_UNIFIED_RESOURCE_READS is True
+    (single query instead of 17). Output format is identical either way.
 
     Raises ``NotFoundError`` if the stack doesn't exist.
     """
@@ -483,8 +491,8 @@ def _get_github_info_for_stack(stack: Stack) -> dict | None:
 def bulk_update_resources(resources_data: list[dict]) -> None:
     """Update a batch of resources in-place.
 
-    Silently skips resources that cannot be found or that resolve to
-    multiple objects.
+    Each resource update is atomic (old table + unified table in one transaction).
+    Silently skips resources that cannot be found or that resolve to multiple objects.
     """
     for resource in resources_data:
         resource_id = resource.get("id")
@@ -506,14 +514,14 @@ def bulk_update_resources(resources_data: list[dict]) -> None:
             )
             continue
 
-        existing_resource.__dict__.update(
-            create_filtered_data(resource, type(existing_resource))
-        )
-        existing_resource.save()
-        logger.info("Resource %s updated successfully.", resource_id)
+        with transaction.atomic():
+            existing_resource.__dict__.update(
+                create_filtered_data(resource, type(existing_resource))
+            )
+            existing_resource.save()
+            logger.info("Resource %s updated successfully.", resource_id)
 
-        # Dual-write: sync to unified Resource table
-        try:
+            # Dual-write: sync to unified Resource table (atomic with above)
             from stacks.resources.type_registry import ResourceTypeRegistry
 
             prefix = resource_id.split("_")[0]
@@ -522,11 +530,6 @@ def bulk_update_resources(resources_data: list[dict]) -> None:
                 ResourcesManager._sync_to_unified(
                     existing_resource, defn.resource_type, existing_resource.stack
                 )
-        except Exception as exc:
-            logger.warning(
-                "Failed to sync resource %s to unified table: %s",
-                resource_id, exc,
-            )
 
 
 # ---------------------------------------------------------------------------

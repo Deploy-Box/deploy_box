@@ -67,3 +67,4 @@ from .azurerm_linux_virtual_machine.serializer import AzurermLinuxVirtualMachine
 # Unified resource model (Phase 1 — coexists with old models)
 from .resource import Resource, ResourceDependency
 from .type_registry import ResourceTypeRegistry, ResourceTypeDefinition
+from .compat_serializer import serialize_resource_compat, serialize_resources_compat
