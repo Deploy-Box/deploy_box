@@ -6,6 +6,14 @@ from core.fields import ShortUUIDField
 
 
 class Organization(models.Model):
+    FREE_TIER_LIMITS = {
+        "max_organizations_per_user": 1,
+        "max_projects_per_org": 1,
+        "max_stacks_per_org": 3,
+    }
+
+    DEFAULT_FREE_CREDIT_ALLOWANCE = 10.00
+
     id = ShortUUIDField(primary_key=True)
     name = models.CharField(max_length=255)
     email = models.EmailField()
@@ -17,7 +25,17 @@ class Organization(models.Model):
             ("consumption", "Consumption"),
         ],
     )
-    stripe_customer_id = models.CharField(max_length=255)
+    stripe_customer_id = models.CharField(max_length=255, blank=True, default="")
+    monthly_credit_allowance = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        default=10.00,
+        help_text="Maximum monthly spend before auto-pause kicks in (dollars).",
+    )
+    auto_pause_on_limit = models.BooleanField(
+        default=True,
+        help_text="Automatically pause stacks when monthly usage exceeds the credit allowance.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -28,6 +46,32 @@ class Organization(models.Model):
         from projects.models import Project
 
         return list(Project.objects.filter(organization=self))
+
+    @classmethod
+    def has_reached_free_org_limit(cls, user) -> bool:
+        """True if the user already admins the max number of free-tier orgs."""
+        free_org_count = cls.objects.filter(
+            organizationmember__user=user,
+            organizationmember__role="admin",
+            tier="free",
+        ).count()
+        return free_org_count >= cls.FREE_TIER_LIMITS["max_organizations_per_user"]
+
+    def has_reached_free_project_limit(self) -> bool:
+        """True if this free-tier org has reached its project limit."""
+        if self.tier != "free":
+            return False
+        from projects.models import Project
+        project_count = Project.objects.filter(organization=self).count()
+        return project_count >= self.FREE_TIER_LIMITS["max_projects_per_org"]
+
+    def has_reached_free_stack_limit(self) -> bool:
+        """True if this free-tier org has reached its stack limit."""
+        if self.tier != "free":
+            return False
+        from stacks.models import Stack
+        stack_count = Stack.objects.filter(project__organization=self).count()
+        return stack_count >= self.FREE_TIER_LIMITS["max_stacks_per_org"]
 
 
 class OrganizationMember(models.Model):
@@ -43,6 +87,14 @@ class OrganizationMember(models.Model):
         ],
     )
     joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "organization"],
+                name="unique_org_membership",
+            )
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.organization.name}"

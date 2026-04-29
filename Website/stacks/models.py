@@ -21,19 +21,38 @@ class PurchasableStack(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=["type", "variant", "version"], name="unique_purchasable_stack")
+        ]
+
     def __str__(self):
         return self.type
+
+
+class StackStatus(models.TextChoices):
+    STARTING = "STARTING", "Starting"
+    DRAFT = "DRAFT", "Draft"
+    PROVISIONING = "PROVISIONING", "Provisioning"
+    READY = "READY", "Ready"
+    RUNNING = "RUNNING", "Running"
+    PAUSED = "PAUSED", "Paused"
+    STOPPED = "STOPPED", "Stopped"
+    ERROR = "ERROR", "Error"
+    DELETING = "DELETING", "Deleting"
+    DELETED = "DELETED", "Deleted"
+    FAILED = "FAILED", "Failed"
 
 
 class Stack(models.Model):
     id = ShortUUIDField(primary_key=True)
     name = models.CharField(max_length=100)
     project = models.ForeignKey(Project, on_delete=models.CASCADE)
-    purchased_stack = models.ForeignKey(PurchasableStack, on_delete=models.DO_NOTHING)
+    purchased_stack = models.ForeignKey(PurchasableStack, on_delete=models.PROTECT)
     root_directory = models.CharField(max_length=100, default="", blank=True)
-    instance_usage = models.FloatField(default=0)
-    instance_usage_bill_amount = models.FloatField(default=0)
-    status = models.CharField(max_length=100, default="STARTING")
+    instance_usage = models.DecimalField(max_digits=18, decimal_places=6, default=0)
+    instance_usage_bill_amount = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    status = models.CharField(max_length=20, choices=StackStatus.choices, default=StackStatus.STARTING)
     error_message = models.TextField(default="", blank=True)
     iac_state = models.JSONField(default=dict)
     parent_stack = models.ForeignKey('self', null=True, blank=True, on_delete=models.SET_NULL, related_name='child_stacks')
@@ -157,11 +176,11 @@ class Operation(models.Model):
 
     # Maps operation_type + success → stack status
     SUCCESS_STATUS_MAP = {
-        'APPLY': 'Ready',
-        'DELETE': 'Deleted',
-        'PAUSE': 'Paused',
-        'RESUME': 'Ready',
-        'DEPLOY': 'Ready',
+        'APPLY': StackStatus.READY,
+        'DELETE': StackStatus.DELETED,
+        'PAUSE': StackStatus.PAUSED,
+        'RESUME': StackStatus.READY,
+        'DEPLOY': StackStatus.READY,
     }
 
     id = ShortUUIDField(primary_key=True)
