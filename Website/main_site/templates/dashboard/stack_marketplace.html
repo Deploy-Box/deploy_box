@@ -147,8 +147,13 @@
     </div>
 </div>
 
+<!-- Deploy Confirmation Modal -->
+{% include 'dashboard/components/_modal.html' with modal_id='deployConfirmModal' modal_title='Deploy Stack' modal_message='Are you sure you want to deploy this stack to your project?' icon_color='emerald' confirm_text='Deploy' confirm_color='emerald' cancel_text='Cancel' %}
+
 <script>
 let currentStackDetails = null;
+let pendingDeployStackId = null;
+let pendingDeployStackName = null;
 
 function deployStack(stackId, stackName) {
     // Get current organization and project from context
@@ -160,10 +165,25 @@ function deployStack(stackId, stackName) {
         return;
     }
     
-    // Confirm deployment
-    if (!confirm(`Deploy ${stackName} to your project?`)) {
-        return;
-    }
+    // Store pending deploy info and show confirmation modal
+    pendingDeployStackId = stackId;
+    pendingDeployStackName = stackName;
+    
+    const modal = document.getElementById('deployConfirmModal');
+    const messageEl = document.getElementById('deployConfirmModal_message');
+    messageEl.textContent = `Deploy "${stackName}" to your project?`;
+    modal.classList.remove('hidden');
+}
+
+function executeDeployStack() {
+    const stackId = pendingDeployStackId;
+    const stackName = pendingDeployStackName;
+    const projectId = '{{ project.id }}';
+    const orgId = '{{ organization.id }}';
+    
+    // Hide modal
+    document.getElementById('deployConfirmModal').classList.remove('hidden');
+    document.getElementById('deployConfirmModal').classList.add('hidden');
     
     // Get CSRF token
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
@@ -206,7 +226,37 @@ function deployStack(stackId, stackName) {
         }
         showToast(`Failed to deploy stack: ${error.message}`, 'error');
     });
+    
+    // Clear pending state
+    pendingDeployStackId = null;
+    pendingDeployStackName = null;
 }
+
+// Wire up modal buttons
+document.addEventListener('DOMContentLoaded', function() {
+    const deployModal = document.getElementById('deployConfirmModal');
+    const confirmBtn = document.getElementById('deployConfirmModal_confirm');
+    const cancelBtn = document.getElementById('deployConfirmModal_cancel');
+    
+    confirmBtn.addEventListener('click', function() {
+        executeDeployStack();
+    });
+    
+    cancelBtn.addEventListener('click', function() {
+        deployModal.classList.add('hidden');
+        pendingDeployStackId = null;
+        pendingDeployStackName = null;
+    });
+    
+    // Close on backdrop click
+    deployModal.addEventListener('click', function(e) {
+        if (e.target === deployModal) {
+            deployModal.classList.add('hidden');
+            pendingDeployStackId = null;
+            pendingDeployStackName = null;
+        }
+    });
+});
 
 // Stack Details Modal Functions
 
@@ -274,10 +324,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Close stack details modal with Escape key
+    // Close modals with Escape key
     document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape' && !stackDetailsModal.classList.contains('hidden')) {
-            hideStackDetails();
+        if (e.key === 'Escape') {
+            if (!stackDetailsModal.classList.contains('hidden')) {
+                hideStackDetails();
+            }
+            const deployModal = document.getElementById('deployConfirmModal');
+            if (!deployModal.classList.contains('hidden')) {
+                deployModal.classList.add('hidden');
+                pendingDeployStackId = null;
+                pendingDeployStackName = null;
+            }
         }
     });
     
