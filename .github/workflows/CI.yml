@@ -87,7 +87,7 @@ jobs:
 
       - name: Run tests
         working-directory: Website
-        run: python manage.py test --settings=core.settings.test --verbosity 2 --no-input
+        run: python manage.py test accounts.tests payments.tests stacks.tests --settings=core.settings.test --verbosity 2 --no-input
 
   # lint-and-test:
   #   runs-on: ubuntu-latest

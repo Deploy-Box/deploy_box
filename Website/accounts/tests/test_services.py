@@ -238,5 +238,8 @@ class GetWorkOSLogoutUrlTest(TestCase):
 
     @patch("accounts.services.settings")
     def test_returns_none_in_dev_mode(self, mock_settings):
+        """In dev, WorkOS credentials are None so the client raises and we get None."""
         mock_settings.ENV = "DEV"
+        mock_settings.WORKOS = {"API_KEY": None, "CLIENT_ID": None}
+        mock_settings.HOST = "http://localhost:8000"
         self.assertIsNone(get_workos_logout_url("sess_123"))
