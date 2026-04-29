@@ -1,0 +1,104 @@
+{% extends 'docs/docs_base.html' %}
+{% load static %}
+
+{% block docs_content %}
+<div class="mb-8">
+  <nav class="flex items-center gap-2 text-sm text-zinc-500 mb-6">
+    <a href="{% url 'main_site:docs' %}" class="hover:text-emerald-400 transition-colors">Docs</a>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-zinc-300">Quick Start Guide</span>
+  </nav>
+  <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">Quick Start Guide</h1>
+  <p class="text-lg text-zinc-400">Get from zero to a running stack in just a few minutes.</p>
+</div>
+
+<!-- Steps -->
+<div class="space-y-12">
+  <!-- Step 1 -->
+  <section>
+    <div class="flex items-center gap-3 mb-4">
+      <span class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold">1</span>
+      <h2 class="text-xl font-semibold text-white">Create your account</h2>
+    </div>
+    <div class="ml-11 space-y-3 text-zinc-300 leading-relaxed">
+      <p>
+        Head to the <a href="{% url 'main_site:signup' %}" class="text-emerald-400 hover:underline">sign-up page</a> and create your account.
+        Deploy Box uses <strong class="text-white">WorkOS</strong> for authentication, so you can sign up with your email or an SSO provider.
+      </p>
+    </div>
+  </section>
+
+  <!-- Step 2 -->
+  <section>
+    <div class="flex items-center gap-3 mb-4">
+      <span class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold">2</span>
+      <h2 class="text-xl font-semibold text-white">Create an organization</h2>
+    </div>
+    <div class="ml-11 space-y-3 text-zinc-300 leading-relaxed">
+      <p>
+        After signing in you'll land on the <strong class="text-white">Dashboard</strong>. Create your first organization — this is the top-level container for all your projects and team members.
+      </p>
+      <div class="rounded-xl border border-zinc-800/60 bg-zinc-900/40 p-4 text-sm">
+        <p class="text-zinc-400"><strong class="text-zinc-300">Tip:</strong> You can create multiple organizations to separate personal projects from client work.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Step 3 -->
+  <section>
+    <div class="flex items-center gap-3 mb-4">
+      <span class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold">3</span>
+      <h2 class="text-xl font-semibold text-white">Create a project</h2>
+    </div>
+    <div class="ml-11 space-y-3 text-zinc-300 leading-relaxed">
+      <p>
+        Inside your organization, create a <strong class="text-white">project</strong>. Projects group related stacks together — for example, a "My SaaS App" project might contain a web stack and an AI stack.
+      </p>
+    </div>
+  </section>
+
+  <!-- Step 4 -->
+  <section>
+    <div class="flex items-center gap-3 mb-4">
+      <span class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold">4</span>
+      <h2 class="text-xl font-semibold text-white">Deploy a stack</h2>
+    </div>
+    <div class="ml-11 space-y-3 text-zinc-300 leading-relaxed">
+      <p>
+        Open the <strong class="text-white">Stack Marketplace</strong> from your project dashboard and pick a stack — MERN, Django, Mobile, AI/ML, or any other available option. Click <strong class="text-white">Deploy</strong> and Deploy Box will provision all the cloud infrastructure for you automatically.
+      </p>
+      <p>
+        Deployment typically takes a few minutes. You can monitor progress in real time from the stack dashboard.
+      </p>
+    </div>
+  </section>
+
+  <!-- Step 5 -->
+  <section>
+    <div class="flex items-center gap-3 mb-4">
+      <span class="flex items-center justify-center w-8 h-8 rounded-full bg-emerald-500/10 text-emerald-400 text-sm font-bold">5</span>
+      <h2 class="text-xl font-semibold text-white">Connect your code</h2>
+    </div>
+    <div class="ml-11 space-y-3 text-zinc-300 leading-relaxed">
+      <p>
+        Once your stack is live, link your <strong class="text-white">GitHub</strong> account from your profile settings. Deploy Box will create repositories for your stack and set up CI/CD pipelines automatically.
+      </p>
+    </div>
+  </section>
+</div>
+
+<!-- Next steps -->
+<div class="mt-16 pt-8 border-t border-zinc-800/60">
+  <h3 class="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-4">Next steps</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <a href="{% url 'main_site:docs_stacks' %}" class="flex items-center gap-3 p-4 rounded-xl border border-zinc-800/60 hover:border-emerald-500/30 transition-colors group">
+      <span class="text-sm text-zinc-400 group-hover:text-emerald-400">→</span>
+      <span class="text-sm text-zinc-300 group-hover:text-white">Explore available stacks</span>
+    </a>
+    <a href="{% url 'main_site:docs_organizations' %}" class="flex items-center gap-3 p-4 rounded-xl border border-zinc-800/60 hover:border-emerald-500/30 transition-colors group">
+      <span class="text-sm text-zinc-400 group-hover:text-emerald-400">→</span>
+      <span class="text-sm text-zinc-300 group-hover:text-white">Learn about organizations</span>
+    </a>
+  </div>
+</div>
+{% endblock %}

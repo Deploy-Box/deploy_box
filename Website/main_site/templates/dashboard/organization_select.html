@@ -3,22 +3,11 @@
 
 {% block content %}
 <div class="w-full bg-gray-50">
-    <header class="bg-zinc-950 pt-16 pb-24 text-center">
-        <h1 class="text-2xl font-bold text-gray-100 mb-2">
-            {% if organizations %}
-                Select an Organization
-            {% else %}
-                Welcome to Deploy Box!
-            {% endif %}
-        </h1>
-        <p class="text-md text-gray-100 max-w-2xl mx-auto">
-            {% if organizations %}
-                Choose an organization to continue or create a new one
-            {% else %}
-                Create your first organization to start deploying applications and managing your projects
-            {% endif %}
-        </p>
-    </header>
+    {% if organizations %}
+    {% include 'dashboard/components/_page_header.html' with title='Select an Organization' subtitle='Choose an organization to continue or create a new one' %}
+    {% else %}
+    {% include 'dashboard/components/_page_header.html' with title='Welcome to Deploy Box!' subtitle='Create your first organization to start deploying applications and managing your projects' %}
+    {% endif %}
     
     <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
         <!-- Welcome Info Section -->

@@ -1,4 +1,6 @@
+from decimal import Decimal
 from typing import Iterable
+from django.core.exceptions import ValidationError
 from django.db import models
 from organizations.models import Organization
 from stacks.models import Stack
@@ -26,20 +28,25 @@ class RateCard(models.Model):
     def save(self, *args, **kwargs):
         # Validate fields based on pricing model
         if self.pricing_model == 'flat_rate':
-            assert self.flat_rate_price is not None, "Flat rate price must be set for flat_rate pricing model"
+            if self.flat_rate_price is None:
+                raise ValidationError("Flat rate price must be set for flat_rate pricing model")
             self.price_per_unit = None
             self.tiered_pricing_json = None
         elif self.pricing_model == 'per_unit':
-            assert self.price_per_unit is not None, "Price per unit must be set for per_unit pricing model"
+            if self.price_per_unit is None:
+                raise ValidationError("Price per unit must be set for per_unit pricing model")
             self.flat_rate_price = None
             self.tiered_pricing_json = None
         elif self.pricing_model == 'tiered':
-            assert self.tiered_pricing_json is not None, "Tiered pricing JSON must be set for tiered pricing model"
+            if self.tiered_pricing_json is None:
+                raise ValidationError("Tiered pricing JSON must be set for tiered pricing model")
 
             # Ensure tiered_pricing_json is a list of dicts with 'up_to' and 'price_per_unit'
-            assert isinstance(self.tiered_pricing_json, Iterable), "Tiered pricing JSON must be an iterable"
+            if not isinstance(self.tiered_pricing_json, Iterable):
+                raise ValidationError("Tiered pricing JSON must be an iterable")
             for tier in list(self.tiered_pricing_json or []):
-                assert 'up_to' in tier and 'price_per_unit' in tier, "Each tier must have 'up_to' and 'price_per_unit'"
+                if 'up_to' not in tier or 'price_per_unit' not in tier:
+                    raise ValidationError("Each tier must have 'up_to' and 'price_per_unit'")
 
             self.flat_rate_price = None
             self.price_per_unit = None
@@ -94,21 +101,23 @@ class InvoiceLineItem(models.Model):
                 self.line_amount = self.rate_card.flat_rate_price
 
             elif self.rate_card.pricing_model == 'per_unit':
-                assert self.rate_card.price_per_unit is not None, "Price per unit must be set for per_unit pricing model"
+                if self.rate_card.price_per_unit is None:
+                    raise ValidationError("Price per unit must be set for per_unit pricing model")
                 self.line_amount = self.units_used * self.rate_card.price_per_unit
                 
             elif self.rate_card.pricing_model == 'tiered':
-                assert self.rate_card.tiered_pricing_json is not None, "Tiered pricing JSON must be set for tiered pricing model"
+                if self.rate_card.tiered_pricing_json is None:
+                    raise ValidationError("Tiered pricing JSON must be set for tiered pricing model")
                 total_units = self.units_used
-                amount = 0
+                amount = Decimal("0")
                 for tier in sorted(self.rate_card.tiered_pricing_json, key=lambda x: (x['up_to'] is None, x['up_to'] or float('inf'))):
                     tier_limit = tier['up_to']
-                    tier_price = tier['price_per_unit']
+                    tier_price = Decimal(str(tier['price_per_unit']))
                     if tier_limit is None or total_units <= tier_limit:
                         amount += total_units * tier_price
                         break
                     else:
-                        amount += tier_limit * tier_price
+                        amount += Decimal(str(tier_limit)) * tier_price
                         total_units -= tier_limit
                 self.line_amount = amount
 

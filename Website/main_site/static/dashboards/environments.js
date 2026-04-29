@@ -183,13 +183,13 @@ class EnvironmentManager {
 
         // Validate required fields
         if (!newEnv.name || !newEnv.type) {
-            this.showNotification('Please fill in all required fields', 'error');
+            showToast('Please fill in all required fields', 'error');
             return;
         }
 
         // Prevent creating production environments
         if (newEnv.type === 'production') {
-            this.showNotification('Production environments cannot be created manually', 'error');
+            showToast('Production environments cannot be created manually', 'error');
             return;
         }
 
@@ -205,7 +205,7 @@ class EnvironmentManager {
         // Close modal
         this.closeAddModal();
 
-        this.showNotification(`Environment "${newEnv.name}" created successfully!`, 'success');
+        showToast(`Environment "${newEnv.name}" created successfully!`, 'success');
     }
 
     addEnvironmentToDOM(env) {
@@ -352,13 +352,13 @@ class EnvironmentManager {
     deleteEnvironment(envId) {
         // Don't allow deletion of production environment
         if (envId === 'prod') {
-            this.showNotification('Production environment cannot be deleted', 'error');
+            showToast('Production environment cannot be deleted', 'error');
             return;
         }
 
         // Don't allow deletion of other default environments
         if (['dev', 'staging'].includes(envId)) {
-            this.showNotification('Cannot delete default environments', 'error');
+            showToast('Cannot delete default environments', 'error');
             return;
         }
 
@@ -382,7 +382,7 @@ class EnvironmentManager {
                 emptyState.classList.remove('hidden');
             }
 
-            this.showNotification('Environment deleted successfully!', 'success');
+            showToast('Environment deleted successfully!', 'success');
         }
     }
 
@@ -545,7 +545,7 @@ class EnvironmentManager {
         // Get source environment
         const sourceEnv = this.environments.find(env => env.id === sourceEnvId);
         if (!sourceEnv) {
-            this.showNotification('Source environment not found', 'error');
+            showToast('Source environment not found', 'error');
             return;
         }
 
@@ -557,7 +557,7 @@ class EnvironmentManager {
         } else if (cloneMode === 'overwrite') {
             this.cloneToOverwriteEnvironment(sourceEnv, formData);
         } else {
-            this.showNotification('Please select a clone mode', 'error');
+            showToast('Please select a clone mode', 'error');
         }
     }
 
@@ -568,20 +568,20 @@ class EnvironmentManager {
         const targetDescription = formData.get('target_description');
 
         if (!targetName || !targetType) {
-            this.showNotification('Please fill in all required fields', 'error');
+            showToast('Please fill in all required fields', 'error');
             return;
         }
 
         // Prevent creating production environments
         if (targetType === 'production') {
-            this.showNotification('Production environments cannot be created manually', 'error');
+            showToast('Production environments cannot be created manually', 'error');
             return;
         }
 
         // Check if target name already exists
         const existingEnv = this.environments.find(env => env.name.toLowerCase() === targetName.toLowerCase());
         if (existingEnv) {
-            this.showNotification('An environment with this name already exists', 'error');
+            showToast('An environment with this name already exists', 'error');
             return;
         }
 
@@ -610,7 +610,7 @@ class EnvironmentManager {
         this.closeCloneModal();
 
         // Show success notification
-        this.showNotification(`Environment "${targetName}" cloned successfully from "${sourceEnv.name}"!`, 'success');
+        showToast(`Environment "${targetName}" cloned successfully from "${sourceEnv.name}"!`, 'success');
     }
 
     cloneToOverwriteEnvironment(sourceEnv, formData) {
@@ -618,14 +618,14 @@ class EnvironmentManager {
         const overwriteEnvId = formData.get('overwrite_env_id');
 
         if (!overwriteEnvId) {
-            this.showNotification('Please select an environment to overwrite', 'error');
+            showToast('Please select an environment to overwrite', 'error');
             return;
         }
 
         // Get target environment
         const targetEnvIndex = this.environments.findIndex(env => env.id === overwriteEnvId);
         if (targetEnvIndex === -1) {
-            this.showNotification('Target environment not found', 'error');
+            showToast('Target environment not found', 'error');
             return;
         }
 
@@ -653,48 +653,9 @@ class EnvironmentManager {
         this.closeCloneModal();
 
         // Show success notification
-        this.showNotification(`Environment "${originalName}" overwritten successfully with "${sourceEnv.name}" configuration!`, 'success');
+        showToast(`Environment "${originalName}" overwritten successfully with "${sourceEnv.name}" configuration!`, 'success');
     }
 
-    showNotification(message, type = 'info') {
-        // Remove any existing notifications
-        const existingNotification = document.querySelector('.env-notification');
-        if (existingNotification) {
-            existingNotification.remove();
-        }
-
-        // Create notification element
-        const notification = document.createElement('div');
-        const bgColor = type === 'success' ? 'bg-green-500' : type === 'error' ? 'bg-red-500' : 'bg-blue-500';
-        const iconColor = type === 'success' ? 'text-green-500' : type === 'error' ? 'text-red-500' : 'text-blue-500';
-        
-        notification.className = `env-notification fixed top-4 right-4 bg-white border border-gray-200 rounded-lg shadow-lg p-4 z-50 transform transition-all duration-300 translate-x-full`;
-        notification.innerHTML = `
-            <div class="flex items-center">
-                <svg class="w-5 h-5 mr-2 ${iconColor}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-                <span class="text-sm font-medium">${message}</span>
-            </div>
-        `;
-        
-        document.body.appendChild(notification);
-        
-        // Animate in
-        setTimeout(() => {
-            notification.classList.remove('translate-x-full');
-        }, 100);
-        
-        // Remove after 3 seconds
-        setTimeout(() => {
-            notification.classList.add('translate-x-full');
-            setTimeout(() => {
-                if (notification.parentElement) {
-                    notification.remove();
-                }
-            }, 300);
-        }, 3000);
-    }
 }
 
 // Initialize environment manager when DOM is loaded

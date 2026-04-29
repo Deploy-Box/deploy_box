@@ -8,16 +8,26 @@
 {% block content %}
 {% csrf_token %}
 <div class="w-full bg-gray-50">
-    <header class="bg-zinc-950 pt-16 pb-24 text-center">
-        <div class="max-w-4xl mx-auto px-4">
-            <h1 class="text-3xl font-bold text-gray-100 mb-4">Stack Marketplace</h1>
-            <p class="text-lg text-gray-300 mb-6">
-                Choose from our collection of pre-built, production-ready stacks
-            </p>
-        </div>
-    </header>
+    {% include 'dashboard/components/_page_header.html' with title='Stack Marketplace' subtitle='Choose from our collection of pre-built, production-ready stacks' %}
 
     <main class="w-full max-w-7xl mx-auto px-4 -mt-10 pb-12">
+        <!-- Billing Banner (hidden by default, shown when payment method is missing) -->
+        <div id="billing-banner" class="hidden mb-6 bg-amber-50 border border-amber-300 rounded-xl p-5 flex items-start space-x-4 shadow-sm">
+            <div class="flex-shrink-0 text-amber-500 mt-0.5">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+            </div>
+            <div class="flex-1">
+                <h3 class="text-sm font-semibold text-amber-800">Payment method required</h3>
+                <p class="text-sm text-amber-700 mt-1">You need to add a payment method before deploying a stack. Add a card on the billing page to get started.</p>
+            </div>
+            <a href="/dashboard/organizations/{{ organization.id }}/billing/"
+               class="flex-shrink-0 bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm px-4 py-2 rounded-lg transition-colors duration-200">
+                Go to Billing
+            </a>
+        </div>
+
         <!-- Stacks Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {% for stack in purchasable_stacks %}
@@ -146,7 +156,7 @@ function deployStack(stackId, stackName) {
     const orgId = '{{ organization.id }}';
     
     if (!projectId || !orgId) {
-        alert('Please select an organization and project first');
+        showToast('Please select an organization and project first', 'warning');
         return;
     }
     
@@ -179,13 +189,22 @@ function deployStack(stackId, stackName) {
         return response.json();
     })
     .then((data) => {
-        alert(`${stackName} deployment initiated successfully!`);
+        showToast(`${stackName} deployment initiated successfully!`, 'success');
         // Redirect to project dashboard
         window.location.href = `/dashboard/organizations/${orgId}/projects/${projectId}/`;
     })
     .catch((error) => {
         console.error('Error deploying stack:', error);
-        alert(`Failed to deploy stack: ${error.message}`);
+        // Show prominent billing banner if payment method is required
+        if (error.message && error.message.toLowerCase().includes('payment method')) {
+            const banner = document.getElementById('billing-banner');
+            if (banner) {
+                banner.classList.remove('hidden');
+                banner.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            return;
+        }
+        showToast(`Failed to deploy stack: ${error.message}`, 'error');
     });
 }
 

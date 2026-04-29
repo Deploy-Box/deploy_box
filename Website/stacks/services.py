@@ -164,7 +164,7 @@ def create_stack(project_id: str, purchasable_stack_id: str, user=None) -> dict:
 
     data = {
         "stack_id": stack.pk,
-        "initial_source_code_zip_blob_name": "mobile.zip",
+        "initial_source_code_zip_blob_name": purchasable_stack.source_code_location or "",
         "resources": ResourcesManager.serialize(created_resources),
     }
 

@@ -85,6 +85,23 @@
     </div>
     
     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+      {% if stack.status == 'Ready' %}
+      <button id="pause-stack-btn"
+        class="bg-amber-500 hover:bg-amber-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+        <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"/>
+        </svg>
+        <span class="button-text">Pause Stack</span>
+      </button>
+      {% elif stack.status == 'Paused' %}
+      <button id="resume-stack-btn"
+        class="bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+        <svg class="h-5 w-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/>
+        </svg>
+        <span class="button-text">Resume Stack</span>
+      </button>
+      {% endif %}
       <button data-download-url="{% url 'stacks:stack-download' stack.id %}"
         class="bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
         
@@ -150,6 +167,60 @@
 
 <script>
   (function() {
+    // ---- Pause / Resume ----
+    function getCsrf() {
+      const v = `; ${document.cookie}`;
+      const p = v.split('; csrftoken=');
+      if (p.length === 2) return p.pop().split(';').shift();
+    }
+
+    async function doPauseResume(action) {
+      const stackId = '{{ stack.id }}';
+      const url = `/api/v1/stacks/${stackId}/${action}/`;
+      const resp = await fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': getCsrf(), 'Content-Type': 'application/json' },
+      });
+      if (!resp.ok) {
+        const d = await resp.json().catch(() => ({}));
+        throw new Error(d.error || resp.statusText);
+      }
+      location.reload();
+    }
+
+    const pauseBtn = document.getElementById('pause-stack-btn');
+    if (pauseBtn) {
+      pauseBtn.addEventListener('click', async () => {
+        if (!confirm('Pause this stack? Its resources will be scaled to zero.')) return;
+        pauseBtn.disabled = true;
+        pauseBtn.querySelector('.button-text').textContent = 'Pausing…';
+        try { await doPauseResume('pause'); } catch(e) {
+          alert('Failed to pause: ' + e.message);
+          pauseBtn.disabled = false;
+          pauseBtn.querySelector('.button-text').textContent = 'Pause Stack';
+        }
+      });
+    }
+
+    const resumeBtn = document.getElementById('resume-stack-btn');
+    const bannerResumeBtn = document.getElementById('banner-resume-btn');
+    [resumeBtn, bannerResumeBtn].forEach(btn => {
+      if (!btn) return;
+      btn.addEventListener('click', async () => {
+        btn.disabled = true;
+        const origText = btn.querySelector('.button-text') ? 'Resume Stack' : btn.textContent;
+        if (btn.querySelector('.button-text')) btn.querySelector('.button-text').textContent = 'Resuming…';
+        else btn.textContent = 'Resuming…';
+        try { await doPauseResume('resume'); } catch(e) {
+          alert('Failed to resume: ' + e.message);
+          btn.disabled = false;
+          if (btn.querySelector('.button-text')) btn.querySelector('.button-text').textContent = origText;
+          else btn.textContent = origText;
+        }
+      });
+    });
+
+    // ---- Upload logic ----
     const folderInput = document.getElementById('folder-input');
     const uploadBtn = document.getElementById('upload-folder-btn');
     const buttonText = uploadBtn.querySelector('.button-text');

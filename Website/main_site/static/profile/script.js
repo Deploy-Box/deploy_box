@@ -44,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 this.style.pointerEvents = 'auto';
                 
                 // Show error message
-                alert('Logout failed. Please try again.');
+                showToast('Logout failed. Please try again.', 'error');
             });
         });
     }
@@ -78,14 +78,14 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Profile updated successfully!');
+                    showToast('Profile updated successfully!', 'success');
                 } else {
-                    alert('Profile update failed: ' + (data.error || 'Unknown error'));
+                    showToast('Profile update failed: ' + (data.error || 'Unknown error'), 'error');
                 }
             })
             .catch(error => {
                 console.error('Profile update error:', error);
-                alert('Profile update failed. Please try again.');
+                showToast('Profile update failed. Please try again.', 'error');
             })
             .finally(() => {
                 // Reset button state
@@ -133,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
             })
             .catch(error => {
                 console.error('GitHub unlink error:', error);
-                alert('Failed to unlink GitHub. Please try again.');
+                showToast('Failed to unlink GitHub. Please try again.', 'error');
                 this.textContent = originalText;
                 this.disabled = false;
                 this.style.opacity = '1';
@@ -186,16 +186,16 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert('Account deleted successfully. You will be redirected to the home page.');
+                    showToast('Account deleted successfully. You will be redirected to the home page.', 'success');
                     // Redirect to home page
                     window.location.href = '/';
                 } else {
-                    alert('Account deletion failed: ' + (data.error || 'Unknown error'));
+                    showToast('Account deletion failed: ' + (data.error || 'Unknown error'), 'error');
                 }
             })
             .catch(error => {
                 console.error('Account deletion error:', error);
-                alert('Account deletion failed. Please try again.');
+                showToast('Account deletion failed. Please try again.', 'error');
             })
             .finally(() => {
                 // Reset button state

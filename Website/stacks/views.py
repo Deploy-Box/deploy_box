@@ -305,10 +305,39 @@ class StackViewSet(viewsets.ModelViewSet):
         config = get_traefik_config()
         return JsonResponse(config)
 
-    # ----- BULK UPDATE RESOURCES -----------------------------------------
+    # ----- BULK UPDATE RESOURCES (webhook) --------------------------------
     @action(detail=False, methods=["patch"], url_path="bulk-update-resources", url_name="bulk_update_resources", permission_classes=[AllowAny])
     def bulk_update_resources_action(self, request):
         bulk_update_resources(request.data.get("resources", []))
+        return Response(
+            {"success": True, "message": "Resources updated successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+    # ----- UPDATE RESOURCES (user-facing) --------------------------------
+    @action(detail=True, methods=["patch"], url_path="update-resources", url_name="update_resources")
+    def update_resources_action(self, request, pk=None):
+        stack = self.get_object()
+        resources_data = request.data.get("resources", [])
+        if not resources_data:
+            return Response(
+                {"error": "No resources provided."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validate that all resource IDs belong to this stack
+        from stacks.resources.resources_manager import ResourcesManager
+        stack_resources = ResourcesManager.get_from_stack(stack)
+        stack_resource_ids = {str(r.id) for r in stack_resources}
+        for resource in resources_data:
+            rid = resource.get("id")
+            if rid and rid not in stack_resource_ids:
+                return Response(
+                    {"error": f"Resource {rid} does not belong to this stack."},
+                    status=status.HTTP_403_FORBIDDEN,
+                )
+
+        bulk_update_resources(resources_data)
         return Response(
             {"success": True, "message": "Resources updated successfully."},
             status=status.HTTP_200_OK,

@@ -6,7 +6,7 @@
   "DB_USER": "neondb_owner",
   "DB_HOST": "ep-falling-firefly-a886kane-pooler.eastus2.azure.neon.tech",
   "DB_PORT": "5432",
-  "DEPLOY_BOX_STACK_ENDPOINT": "https://deployboxsharedsadev.blob.core.windows.net/stack-source-code-container",
+  "DEPLOY_BOX_STACK_ENDPOINT": "https://deployboxsadev.blob.core.windows.net/stack-source-code-container",
   "EMAIL_HOST_USER": "noreplydeploybbox@gmail.com",
   "DEPLOY_BOX_GITHUB_CLIENT_ID": "Ov23liehxn12PYLCJG5c",
   "NPM_BIN_PATH": "C:\\Program Files\\nodejs\\npm.cmd",

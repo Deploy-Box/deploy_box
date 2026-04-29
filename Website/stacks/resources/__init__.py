@@ -35,3 +35,31 @@ from .deployboxrm_edge.serializer import DeployBoxrmEdgeSerializer
 from .azurerm_log_analytics_workspace.model import AzurermLogAnalyticsWorkspace
 from .azurerm_log_analytics_workspace.manager import AzurermLogAnalyticsWorkspaceManager
 from .azurerm_log_analytics_workspace.serializer import AzurermLogAnalyticsWorkspaceSerializer
+
+from .azurerm_key_vault.model import AzurermKeyVault
+from .azurerm_key_vault.manager import AzurermKeyVaultManager
+from .azurerm_key_vault.serializer import AzurermKeyVaultSerializer
+
+from .deployboxrm_postgres_database.model import DeployBoxrmPostgresDatabase
+from .deployboxrm_postgres_database.manager import DeployBoxrmPostgresDatabaseManager
+from .deployboxrm_postgres_database.serializer import DeployBoxrmPostgresDatabaseSerializer
+
+from .azurerm_public_ip.model import AzurermPublicIp
+from .azurerm_public_ip.manager import AzurermPublicIpManager
+from .azurerm_public_ip.serializer import AzurermPublicIpSerializer
+
+from .azurerm_network_security_group.model import AzurermNetworkSecurityGroup
+from .azurerm_network_security_group.manager import AzurermNetworkSecurityGroupManager
+from .azurerm_network_security_group.serializer import AzurermNetworkSecurityGroupSerializer
+
+from .azurerm_virtual_network.model import AzurermVirtualNetwork
+from .azurerm_virtual_network.manager import AzurermVirtualNetworkManager
+from .azurerm_virtual_network.serializer import AzurermVirtualNetworkSerializer
+
+from .azurerm_network_interface.model import AzurermNetworkInterface
+from .azurerm_network_interface.manager import AzurermNetworkInterfaceManager
+from .azurerm_network_interface.serializer import AzurermNetworkInterfaceSerializer
+
+from .azurerm_linux_virtual_machine.model import AzurermLinuxVirtualMachine
+from .azurerm_linux_virtual_machine.manager import AzurermLinuxVirtualMachineManager
+from .azurerm_linux_virtual_machine.serializer import AzurermLinuxVirtualMachineSerializer

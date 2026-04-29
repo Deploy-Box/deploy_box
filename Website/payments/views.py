@@ -1,8 +1,7 @@
+import datetime
 import json
-import time
 import stripe
 from stripe import error as stripe_error
-import random
 import logging
 
 logger = logging.getLogger(__name__)
@@ -10,14 +9,23 @@ logger = logging.getLogger(__name__)
 from django.conf import settings
 from django.http import HttpResponse, JsonResponse, HttpRequest
 from django.shortcuts import get_object_or_404
+from django.views.decorators.csrf import csrf_exempt
 from typing import Union
 
+from decimal import Decimal
+from django.db.models import Sum
+from django.utils import timezone
+import calendar
+
 import stacks.services as stack_services
-from stacks.models import PurchasableStack
+from stacks.models import PurchasableStack, Stack
+from stacks.metrics.models import MetricUsageRecord
 from organizations.models import Organization
 from organizations.services import get_organization
 from core.helpers import request_helpers
 from projects.models import Project
+from payments.models import Invoice
+from payments import services as payment_services
 
 stripe.api_key = settings.STRIPE.get("SECRET_KEY")
 
@@ -40,46 +48,29 @@ def save_stripe_payment_method(request: HttpRequest) -> JsonResponse:
             {"error": "Invalid request method. Only POST is allowed."}, status=405
         )
 
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
     try:
         data = json.loads(request.body)
         payment_method_id = data.get("payment_method_id")
-        organization_id = data.get(
-            "organization_id"
-        )  # Assuming organizationId is used as customerId
+        organization_id = data.get("organization_id")
 
-        organization = get_object_or_404(Organization, id=organization_id)
+        organization = get_organization(request.user, organization_id)
+        if not organization:
+            return JsonResponse({"error": "Organization not found or access denied"}, status=403)
         customer_id = organization.stripe_customer_id
-
-        print(
-            f"Payment Method ID: {payment_method_id}, Customer ID: {customer_id}",
-            "Organization ID:",
-            organization_id,
-        )
 
         if not payment_method_id or not customer_id:
             return JsonResponse(
                 {"error": "Missing paymentMethodId or customerId"}, status=400
             )
 
-        # Attach the payment method to the customer
-        stripe.PaymentMethod.attach(
-            payment_method_id,
-            customer=customer_id,
-        )
-
-        # Set the payment method as the default for the customer
-        stripe.Customer.modify(
-            customer_id,
-            invoice_settings={"default_payment_method": payment_method_id},
-        )
-
-        return JsonResponse(
-            {"message": "Payment method saved successfully."}, status=200
-        )
+        result = payment_services.save_payment_method(payment_method_id, customer_id)
+        return JsonResponse(result, status=200)
 
     except stripe_error.StripeError as e:  # type: ignore
         return JsonResponse({"error": str(e)}, status=400)
-
     except Exception as e:
         return JsonResponse(
             {"error": f"An error occurred while saving the payment method: {e}"}, status=400
@@ -91,6 +82,9 @@ def create_payment_intent(request: HttpRequest) -> JsonResponse:
             {"error": "Invalid request method. Only POST is allowed."}, status=405
         )
 
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
     try:
         data = json.loads(request.body)
         organization_id = data.get("organization_id")
@@ -98,7 +92,9 @@ def create_payment_intent(request: HttpRequest) -> JsonResponse:
         if not organization_id:
             return JsonResponse({"error": "organization_id is required"}, status=400)
 
-        organization = get_object_or_404(Organization, id=organization_id)
+        organization = get_organization(request.user, organization_id)
+        if not organization:
+            return JsonResponse({"error": "Organization not found or access denied"}, status=403)
         customer_id = organization.stripe_customer_id
 
         if not customer_id:
@@ -218,18 +214,7 @@ def create_checkout_session(request: HttpRequest, org_id: str) -> JsonResponse:
         return JsonResponse({"error": str(e)})
 
 
-def record_usage(subscription_item_id, quantity):
-    try:
-        stripe.UsageRecord.create(
-            subscription_item=subscription_item_id,
-            quantity=quantity,  # Number of resources consumed
-            timestamp=int(time.time()),  # Current timestamp
-            action="increment",  # Add usage incrementally
-        )
-    except Exception as e:
-        print(f"Error recording usage: {e}")
-
-
+@csrf_exempt
 def stripe_webhook(request: HttpRequest) -> Union[HttpResponse, JsonResponse]:
     # Use `stripe listen --forward-to http://127.0.0.1:8000/api/v1/payments/webhook/` to listen for events
     WEBHOOK_SECRET = settings.STRIPE.get("WEBHOOK_SECRET", None)
@@ -242,11 +227,11 @@ def stripe_webhook(request: HttpRequest) -> Union[HttpResponse, JsonResponse]:
         event = stripe.Webhook.construct_event(payload, sig_header, WEBHOOK_SECRET)
     except ValueError as e:
         # Invalid payload
-        print(f"Error parsing webhook payload: {e}")
+        logger.error("Error parsing webhook payload: %s", e)
         return HttpResponse("Invalid payload", status=400)
     except stripe_error.SignatureVerificationError as e:  # type: ignore
         # Invalid signature
-        print(f"Error verifying signature: {e}")
+        logger.error("Error verifying signature: %s", e)
         return HttpResponse("Invalid signature", status=400)
 
     # Handle the checkout.session.completed event
@@ -266,43 +251,7 @@ def stripe_webhook(request: HttpRequest) -> Union[HttpResponse, JsonResponse]:
 
         purchased_stack = get_object_or_404(PurchasableStack, id=purchasable_stack_id)
 
-        list_of_adjectives = [
-            "Superb",
-            "Incredible",
-            "Fantastic",
-            "Amazing",
-            "Awesome",
-            "Brilliant",
-            "Exceptional",
-            "Outstanding",
-            "Remarkable",
-            "Extraordinary",
-            "Magnificent",
-            "Spectacular",
-            "Stunning",
-            "Impressive",
-        ]
-
-        list_of_nouns = [
-            "Stack",
-            "Project",
-            "Application",
-            "Service",
-            "Solution",
-            "Platform",
-            "System",
-            "Framework",
-            "Architecture",
-            "Design",
-            "Model",
-            "Structure",
-            "Configuration",
-        ]
-
-        # Generate a random name for the stack
-        random_adjective = random.choice(list_of_adjectives)
-        random_noun = random.choice(list_of_nouns)
-        random_name = f"{random_adjective} {random_noun}"
+        random_name = payment_services.generate_random_stack_name()
 
         # Create a stack entry for the user
         stack_services.add_stack(
@@ -311,128 +260,56 @@ def stripe_webhook(request: HttpRequest) -> Union[HttpResponse, JsonResponse]:
             purchasable_stack_id=purchased_stack.id,
         )
 
+    elif event["type"] == "invoice.paid":
+        invoice_data = event["data"]["object"]
+        stripe_invoice_id = invoice_data["id"]
+        try:
+            invoice = Invoice.objects.get(stripe_invoice_id=stripe_invoice_id)
+            invoice.status = "paid"
+            invoice.save()
+            logger.info(f"Invoice {stripe_invoice_id} marked as paid")
+        except Invoice.DoesNotExist:
+            logger.warning(f"Received invoice.paid for unknown invoice: {stripe_invoice_id}")
+
+    elif event["type"] == "invoice.payment_failed":
+        invoice_data = event["data"]["object"]
+        stripe_invoice_id = invoice_data["id"]
+        customer_id = invoice_data.get("customer", "unknown")
+        logger.error(f"Payment failed for invoice {stripe_invoice_id}, customer {customer_id}")
+        try:
+            invoice = Invoice.objects.get(stripe_invoice_id=stripe_invoice_id)
+            invoice.status = "open"  # Keep as open so retry can happen
+            invoice.save()
+        except Invoice.DoesNotExist:
+            pass
+
+    elif event["type"] == "payment_method.detached":
+        pm_data = event["data"]["object"]
+        pm_id = pm_data["id"]
+        logger.info(f"Payment method {pm_id} detached from Stripe")
+
     return HttpResponse(status=200)
 
 
-def create_invoice(customer_id, dollar_amount, description) -> str:
-    try:
-        # Step 1: Create an invoice item
-        stripe.InvoiceItem.create(
-            customer=customer_id,
-            amount=int(100 * dollar_amount),
-            currency="usd",  # You can change the currency if needed
-            description=description,
-        )
-
-        # Step 2: Create the invoice for the customer
-        invoice = stripe.Invoice.create(
-            customer=customer_id,
-            auto_advance=False,  # Automatically finalizes and sends the invoice
-        )
-
-        # Step 3: Finalize the invoice (send to customer)
-        invoice.finalize_invoice()
-
-        return invoice.id, invoice.hosted_invoice_url
-
-    except stripe_error.StripeError as e:  # type: ignore
-        print(f"Error creating invoice: {e}")
-        return None
-
-    except Exception as e:
-        print(f"Error creating invoice: {e}")
-        return None
+def create_invoice(customer_id, dollar_amount, description) -> tuple[str, str] | None:
+    return payment_services.create_invoice(customer_id, dollar_amount, description)
 
 
 def get_customer_id(org_id):
-    # Query the Organization by the provided org_id
     try:
         org = Organization.objects.get(id=org_id)
-        customer_id = org.stripe_customer_id
-
-        return customer_id
-
+        return org.stripe_customer_id
     except Organization.DoesNotExist:
         return None
 
 
 def check_organization_payment_methods(organization):
-    """
-    Check if an organization has payment methods set up.
-    Returns a tuple: (has_payment_methods, error_message)
-    """
-    if not organization.stripe_customer_id:
-        # Create a new Stripe customer for the organization
-        try:
-            customer = stripe.Customer.create(
-                email=organization.email,
-                name=organization.name,
-                metadata={
-                    "organization_id": organization.id,
-                }
-            )
-            organization.stripe_customer_id = customer.id
-            organization.save()
-            return False, "No payment methods found for this organization. Please add a payment method before making purchases."
-        except Exception as e:
-            return False, f"Error creating payment account: {str(e)}"
-    
-    try:
-        payment_methods = stripe.PaymentMethod.list(
-            customer=organization.stripe_customer_id,
-            type="card"
-        )
-        
-        if not payment_methods.data:
-            return False, "No payment methods found for this organization. Please add a payment method before making purchases."
-            
-        return True, None
-        
-    except stripe_error.StripeError as e:
-        return False, f"Error checking payment methods: {str(e)}"
-    except Exception as e:
-        return False, "An error occurred while checking payment methods."
-
-
-def update_invoice_billing(request):
-    if request.method == "POST":
-        data = json.loads(request.body)
-        stack_id = data.get("stack_id")
-        cost = data.get("cost")
-        updated_count = StackDatabase.objects.filter(stack_id=stack_id).update(
-            current_usage=0
-        )
-        # billing = StackDatabase.objects.filter(stack_id=stack_id).update(
-        #     pending_billed=F("pending_billed") + cost
-        # )
-
-        # Check if any rows were updated
-        if updated_count > 0:
-            # Successfully updated
-            return JsonResponse(
-                {"message": "Invoice billing updated successfully."}, status=200
-            )
-        else:
-            # Failed to update (either no such stack_id or no change made)
-            return JsonResponse(
-                {"error": "Stack ID not found or already updated."}, status=400
-            )
-
-
-# def create_price_item(request: HttpRequest) -> JsonResponse:
-#     return pricing_services.create_price_item(request)
-
-
-# def update_price_item(request: HttpRequest) -> JsonResponse:
-#     return pricing_services.update_price_item(request)
-
-
-# def delete_price_item(request: HttpRequest) -> JsonResponse:
-#     return pricing_services.delete_price_item(request)
-
-
-# def get_price_item_by_name(request: HttpRequest, name: str) -> JsonResponse:
-#     return pricing_services.get_price_item_by_name(request, name)
+    """Check if an organization has payment methods set up."""
+    payment_services.ensure_stripe_customer(organization)
+    has_methods = payment_services.organization_has_payment_method(organization)
+    if not has_methods:
+        return False, "No payment methods found for this organization. Please add a payment method before making purchases."
+    return True, None
 
 
 def get_payment_method(request: HttpRequest, org_id: str) -> JsonResponse:
@@ -499,7 +376,12 @@ def get_all_payment_methods(request: HttpRequest, org_id: str) -> JsonResponse:
         if not org_id:
             return JsonResponse({"error": "organization_id is required"}, status=400)
 
-        organization = get_object_or_404(Organization, id=org_id)
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "Authentication required"}, status=401)
+
+        organization = get_organization(request.user, org_id)
+        if not organization:
+            return JsonResponse({"error": "Organization not found or access denied"}, status=403)
         customer_id = organization.stripe_customer_id
 
         if not customer_id:
@@ -507,26 +389,7 @@ def get_all_payment_methods(request: HttpRequest, org_id: str) -> JsonResponse:
                 {"error": "No Stripe customer found for this organization"}, status=404
             )
 
-        # Get all payment methods for the customer
-        payment_methods = stripe.PaymentMethod.list(customer=customer_id, type="card")
-
-        # Get the customer to find the default payment method
-        customer = stripe.Customer.retrieve(customer_id)
-        default_payment_method_id = customer.invoice_settings.default_payment_method if customer.invoice_settings else None
-
-        # Format all payment methods
-        formatted_methods = []
-        for pm in payment_methods.data:
-            if pm.card:  # Check if card exists
-                formatted_methods.append({
-                    "id": pm.id,
-                    "brand": pm.card.brand,
-                    "last4": pm.card.last4,
-                    "exp_month": pm.card.exp_month,
-                    "exp_year": pm.card.exp_year,
-                    "is_default": pm.id == default_payment_method_id,
-                })
-
+        formatted_methods = payment_services.get_all_payment_methods(customer_id)
         return JsonResponse({"payment_methods": formatted_methods}, status=200)
 
     except stripe_error.StripeError as e:  # type: ignore
@@ -544,12 +407,17 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
             {"error": "Invalid request method. Only DELETE is allowed."}, status=405
         )
 
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
     try:
         organization_id = request.GET.get("organization_id")
         if not organization_id:
             return JsonResponse({"error": "organization_id is required"}, status=400)
 
-        organization = get_object_or_404(Organization, id=organization_id)
+        organization = get_organization(request.user, organization_id)
+        if not organization:
+            return JsonResponse({"error": "Organization not found or access denied"}, status=403)
         customer_id = organization.stripe_customer_id
 
         if not customer_id:
@@ -577,33 +445,25 @@ def delete_payment_method(request: HttpRequest) -> JsonResponse:
             return JsonResponse({"error": "Payment method not found"}, status=404)
 
         customer = stripe.Customer.retrieve(customer_id)
-        print(customer)
+        logger.debug("Customer: %s", customer)
         default_payment_method_id = customer.invoice_settings.default_payment_method if customer.invoice_settings else None
 
-        if default_payment_method_id:
-            # Detach the payment method
-            stripe.PaymentMethod.detach(default_payment_method_id)
+        # Always detach the user-requested payment method
+        stripe.PaymentMethod.detach(payment_method_id)
 
-            # Set the next available payment method as default
-            if payment_methods.data:
-                next_payment_method = next(
-                    (
-                        pm
-                        for pm in payment_methods.data
-                        if pm.id != default_payment_method_id
-                    ),
-                    None,
+        # If the deleted card was the default, promote the next available card
+        if default_payment_method_id and payment_method_id == default_payment_method_id:
+            next_payment_method = next(
+                (pm for pm in payment_methods.data if pm.id != payment_method_id),
+                None,
+            )
+            if next_payment_method:
+                stripe.Customer.modify(
+                    customer_id,
+                    invoice_settings={
+                        "default_payment_method": next_payment_method.id
+                    },
                 )
-                if next_payment_method:
-                    stripe.Customer.modify(
-                        customer_id,
-                        invoice_settings={
-                            "default_payment_method": next_payment_method.id
-                        },
-                    )
-
-        else:
-            stripe.PaymentMethod.detach(payment_method_id)
 
         return JsonResponse(
             {"message": "Payment method removed successfully."}, status=200
@@ -624,12 +484,17 @@ def set_default_payment_method(request: HttpRequest) -> JsonResponse:
             {"error": "Invalid request method. Only POST is allowed."}, status=405
         )
 
+    if not request.user.is_authenticated:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
     try:
         organization_id = request.GET.get("organization_id")
         if not organization_id:
             return JsonResponse({"error": "organization_id is required"}, status=400)
 
-        organization = get_object_or_404(Organization, id=organization_id)
+        organization = get_organization(request.user, organization_id)
+        if not organization:
+            return JsonResponse({"error": "Organization not found or access denied"}, status=403)
         customer_id = organization.stripe_customer_id
 
         if not customer_id:
@@ -663,3 +528,71 @@ def set_default_payment_method(request: HttpRequest) -> JsonResponse:
             {"error": "An error occurred while setting the default payment method."},
             status=400,
         )
+
+
+def get_usage_data(request: HttpRequest, org_id: str) -> JsonResponse:
+    """Get usage statistics for an organization."""
+    if request.method != "GET":
+        return JsonResponse(
+            {"error": "Invalid request method. Only GET is allowed."}, status=405
+        )
+
+    try:
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "Authentication required"}, status=401)
+
+        organization = get_organization(request.user, org_id)
+        if not organization:
+            return JsonResponse({"error": "Organization not found or access denied"}, status=403)
+
+        data = payment_services.get_usage_data(organization)
+        return JsonResponse(data)
+
+    except Exception as e:
+        logger.error(f"Error fetching usage data: {e}")
+        return JsonResponse(
+            {"error": "An error occurred while retrieving usage data."},
+            status=400,
+        )
+
+
+def get_billing_history(request: HttpRequest, org_id: str) -> JsonResponse:
+    """Get billing history for an organization."""
+    if request.method != "GET":
+        return JsonResponse(
+            {"error": "Invalid request method. Only GET is allowed."}, status=405
+        )
+
+    try:
+        if not request.user.is_authenticated:
+            return JsonResponse({"error": "Authentication required"}, status=401)
+
+        organization = get_organization(request.user, org_id)
+        if not organization:
+            return JsonResponse({"error": "Organization not found or access denied"}, status=403)
+
+        records = payment_services.get_billing_history(organization)
+        return JsonResponse({"billing_history": records})
+
+    except Exception as e:
+        logger.error(f"Error fetching billing history: {e}")
+        return JsonResponse(
+            {"error": "An error occurred while retrieving billing history."},
+            status=400,
+        )
+
+
+@csrf_exempt  # Called by crontainer (machine-to-machine)
+def update_billing_history(request: HttpRequest) -> JsonResponse:
+    """Trigger monthly invoice generation. Called by crontainer cron job."""
+    if request.method != "POST":
+        return JsonResponse({"error": "Only POST allowed"}, status=405)
+
+    # TODO: Add authentication (e.g., shared secret or OAuth token check)
+
+    try:
+        results = payment_services.generate_monthly_invoices()
+        return JsonResponse({"results": results, "count": len(results)})
+    except Exception as e:
+        logger.error(f"Error generating invoices: {e}")
+        return JsonResponse({"error": "Invoice generation failed"}, status=500)

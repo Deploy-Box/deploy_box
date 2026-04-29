@@ -47,6 +47,7 @@ class LoginRequiredMiddleware:
         "/contact",
         "/still-configuring",
         "/subdomain-not-found",
+        "/docs",
         "/marketplace",
         "/stacks-marketplace",
         "/components",

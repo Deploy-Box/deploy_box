@@ -18,6 +18,9 @@ urlpatterns = [
     path("transfers/<str:transfer_id>/cancel", views.cancel_project_transfer, name="cancel_project_transfer"),
     path("transfers/<str:transfer_id>/status", views.get_project_transfer_status, name="get_project_transfer_status"),
     path("transfers", views.get_user_transfer_invitations, name="get_user_transfer_invitations"),
+
+    # Billing settings
+    path("<str:organization_id>/billing-settings/", views.update_billing_settings, name="update_billing_settings"),
 ]
 
 router = DefaultRouter()

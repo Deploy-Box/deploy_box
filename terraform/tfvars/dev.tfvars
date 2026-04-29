@@ -21,7 +21,7 @@ database = {
 }
 
 services = {
-  stack_endpoint     = "https://deployboxsharedsadev.blob.core.windows.net/stack-source-code-container"
+  stack_endpoint     = "https://deployboxsadev.blob.core.windows.net/stack-source-code-container"
   email_host_user    = "noreplydeploybbox@gmail.com"
   api_base_url       = "http://deploy-box-apis-func-dev.azurewebsites.net"
   npm_bin_path       = "C:\\Program Files\\nodejs\\npm.cmd"

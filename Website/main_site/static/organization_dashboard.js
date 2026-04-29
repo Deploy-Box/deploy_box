@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", function () {
               .then((response) => response.json())
               .then((result) => {
                 if (result.message) {
-                  alert(result.message);
+                  showToast(result.message, "success");
                   fetchCurrentCard(); // Refresh card information
                 } else if (result.error) {
                   document.getElementById("cardErrors").textContent =
@@ -90,7 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
           })
           .catch((error) => {
             console.error("Error deleting organization:", error);
-            alert("Failed to delete organization. Please try again.");
+            showToast("Failed to delete organization. Please try again.", "error");
           });
       }
     });
@@ -151,8 +151,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 .classList.add("hidden");
             } else {
               if (data.error && data.error.includes("only payment method")) {
-                alert(
-                  "You cannot remove your only payment method. Please add another payment method first."
+                showToast(
+                  "You cannot remove your only payment method. Please add another payment method first.",
+                  "warning"
                 );
               } else {
                 throw new Error(data.error || "Failed to remove card");
@@ -161,7 +162,7 @@ document.addEventListener("DOMContentLoaded", function () {
           })
           .catch((error) => {
             console.error("Error removing card:", error);
-            alert("Failed to remove card. Please try again.");
+            showToast("Failed to remove card. Please try again.", "error");
           });
       }
     });
@@ -172,7 +173,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   viewPlanBtn.addEventListener("click", function () {
     if (!isCostRevealed) {
-      viewPlanBtn.textContent = "$10 / month";
+      viewPlanBtn.textContent = "View Pricing";
       isCostRevealed = true;
     } else {
       viewPlanBtn.textContent = "View Plan";
@@ -203,7 +204,7 @@ document.getElementById("deleteProjBtn").addEventListener("click", function () {
       })
       .catch((error) => {
         console.error("Error deleting project:", error);
-        alert("Failed to delete project. Please try again.");
+        showToast("Failed to delete project. Please try again.", "error");
       });
   }
 });
@@ -236,7 +237,7 @@ memberRoleButtons.forEach((button) => {
         })
         .catch((error) => {
           console.error("Error updating user:", error);
-          alert("Failed to update user");
+          showToast("Failed to update user", "error");
         });
     }
   });
@@ -271,7 +272,7 @@ removeUserButtons.forEach((button) => {
         })
         .catch((error) => {
           console.error("Error removing user:", error);
-          alert("Failed to remove user");
+          showToast("Failed to remove user", "error");
         });
     }
   });
@@ -299,10 +300,10 @@ function saveName() {
     .then((response) => response.json())
     .then((data) => {
       if (data.success) {
-        alert("Name saved successfully");
+        showToast("Name saved successfully", "success");
         window.location.href = `/dashboard/organizations/${organizationId}/`;
       } else {
-        alert("Error saving name");
+        showToast("Error saving name", "error");
       }
     });
 }
