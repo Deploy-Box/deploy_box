@@ -6,6 +6,7 @@ lives in the `attributes` JSONField. Relationships are captured via
 """
 
 import os
+import uuid
 
 from django.db import models
 
@@ -66,6 +67,12 @@ class Resource(models.Model):
         return f"{self.resource_type}:{self.name}" if self.name else self.resource_type
 
     def save(self, *args, **kwargs):
+        # Generate ID using the resource-type prefix (e.g. res000, res002) so
+        # that id.split('_')[0] gives the IaC ResourceManager prefix.
+        if not self.pk and self.prefix:
+            suffix = uuid.uuid4().hex[:16 - len(self.prefix) - 1]
+            self.pk = f"{self.prefix}_{suffix}"
+
         # Auto-generate provider_name if not set (mirrors old save() logic)
         if not self.provider_name and self.stack_id:
             from .type_registry import ResourceTypeRegistry

@@ -79,6 +79,7 @@ AZURERM_STORAGE_ACCOUNT = ResourceTypeDefinition(
     category="Storage",
     parent_type="azurerm_resource_group",
     default_attributes={
+        "location": "eastus",
         "account_tier": "Standard",
         "account_replication_type": "LRS",
         "account_kind": "StorageV2",

@@ -81,9 +81,38 @@ def _prepare_container_app_attributes(stack: "Stack", index: int, attrs: dict) -
     return attrs
 
 
+def _prepare_storage_account_attributes(stack: "Stack", index: int, attrs: dict) -> dict:
+    """Inject resource_group_name Terraform reference for the parent resource group."""
+    if not attrs.get("resource_group_name"):
+        # Find the parent resource group's name to build the reference
+        rg = Resource.objects.filter(
+            stack=stack, resource_type="azurerm_resource_group"
+        ).first()
+        if rg:
+            attrs["resource_group_name"] = (
+                f"${{azurerm_resource_group.{rg.name}.azurerm_name}}"
+            )
+    return attrs
+
+
+def _prepare_static_website_attributes(stack: "Stack", index: int, attrs: dict) -> dict:
+    """Inject storage_account_id Terraform reference for the parent storage account."""
+    if not attrs.get("storage_account_id"):
+        sa = Resource.objects.filter(
+            stack=stack, resource_type="azurerm_storage_account"
+        ).first()
+        if sa:
+            attrs["storage_account_id"] = (
+                f"${{azurerm_storage_account.{sa.name}.azurerm_id}}"
+            )
+    return attrs
+
+
 _CREATION_HOOKS: dict[str, Any] = {
     "deployboxrm_edge": _prepare_edge_attributes,
     "azurerm_container_app": _prepare_container_app_attributes,
+    "azurerm_storage_account": _prepare_storage_account_attributes,
+    "azurerm_storage_account_static_website": _prepare_static_website_attributes,
 }
 
 
