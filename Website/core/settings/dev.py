@@ -59,10 +59,12 @@ CSRF_COOKIE_SECURE = False
 SECURE_HSTS_SECONDS = 0
 
 # ──────────────────────────────────────────────
-# Database — fall back to static password for local Docker Postgres
-# (requires DB_HOST, DB_NAME, DB_USER, DB_PORT pointing at Docker too)
+# Database — fall back to static password for Docker or Azure PostgreSQL
+# (requires DB_HOST, DB_NAME, DB_USER, DB_PORT set appropriately)
 # ──────────────────────────────────────────────
 if os.environ.get("DB_PASSWORD"):
     DATABASES["default"]["ENGINE"] = "django.db.backends.postgresql"
     DATABASES["default"]["PASSWORD"] = os.environ["DB_PASSWORD"]
-    DATABASES["default"]["OPTIONS"] = {}  # no SSL for local Docker
+    # Keep SSL for Azure PostgreSQL; disable for local Docker
+    if "database.azure.com" not in os.environ.get("DB_HOST", ""):
+        DATABASES["default"]["OPTIONS"] = {}  # no SSL for local Docker

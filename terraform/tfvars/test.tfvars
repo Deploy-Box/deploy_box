@@ -15,7 +15,7 @@ auth = {
 
 database = {
   name = "deploy_box_test"
-  user = "kalebwbishop"
+  user = "deploy_box_website"
   host = "deploy-box-postgres.postgres.database.azure.com"
   port = "5432"
 }

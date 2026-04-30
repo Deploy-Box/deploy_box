@@ -14,10 +14,10 @@ auth = {
 }
 
 database = {
-  name = "deploy_box_dev"
-  user = "kalebwbishop"
-  host = "deploy-box-postgres.postgres.database.azure.com"
-  port = "5432"
+  name     = "deploy_box_dev"
+  user     = "deploy_box_website"
+  host     = "deploy-box-postgres.postgres.database.azure.com"
+  port     = "5432"
 }
 
 services = {
