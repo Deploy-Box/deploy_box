@@ -30,14 +30,19 @@ locals {
   prefix_compact = "deploybox" # resources that forbid hyphens (ACR, etc.)
 
   names = {
-    resource_group = "${local.prefix}-rg-${local.env}"
-    container_app  = "${local.prefix}-website-contapp-${local.env}"
-    identity       = "${local.prefix}-website-contapp-identity-${local.env}"
-    acr            = "${local.prefix_compact}cr${local.env}"
-    cae            = "${local.prefix}-cae-${local.env}"
-    key_vault      = "${local.prefix}-kv-${local.env}"
-    sbns           = "${local.prefix}-sbns-${local.env}"
+    resource_group   = "${local.prefix}-rg-${local.env}"
+    container_app    = "${local.prefix}-website-contapp-${local.env}"
+    app_service_plan = "${local.prefix}-website-asp-${local.env}"
+    web_app          = "${local.prefix}-website-app-${local.env}"
+    identity         = "${local.prefix}-website-contapp-identity-${local.env}"
+    acr              = "${local.prefix_compact}cr${local.env}"
+    cae              = "${local.prefix}-cae-${local.env}"
+    key_vault        = "${local.prefix}-kv-${local.env}"
+    sbns             = "${local.prefix}-sbns-${local.env}"
   }
+
+  web_app_port            = "8000"
+  web_app_startup_command = "python manage.py collectstatic --noinput && gunicorn --bind=0.0.0.0:${local.web_app_port} --timeout 600 core.wsgi:application"
 
   common_tags = merge(
     {
@@ -227,6 +232,86 @@ resource "azurerm_container_app" "container_app" {
 
   depends_on = [
     azurerm_role_assignment.container_app_acr_pull,
+    azurerm_role_assignment.container_app_key_vault_secrets_user,
+  ]
+}
+
+# =============================================================================
+# App Service Web App (parallel migration target)
+# =============================================================================
+
+resource "azurerm_service_plan" "website" {
+  name                = local.names.app_service_plan
+  location            = data.azurerm_resource_group.main_rg.location
+  resource_group_name = data.azurerm_resource_group.main_rg.name
+  os_type             = "Linux"
+  sku_name            = var.app_service_plan_sku
+  tags                = local.common_tags
+}
+
+resource "azurerm_linux_web_app" "website" {
+  name                = local.names.web_app
+  location            = data.azurerm_resource_group.main_rg.location
+  resource_group_name = data.azurerm_resource_group.main_rg.name
+  service_plan_id     = azurerm_service_plan.website.id
+  https_only          = true
+  tags                = local.common_tags
+
+  app_settings = {
+    # --- App Service build/runtime ---
+    SCM_DO_BUILD_DURING_DEPLOYMENT = "true"
+    ENABLE_ORYX_BUILD              = "true"
+    PORT                           = local.web_app_port
+
+    # --- Core ---
+    DJANGO_SETTINGS_MODULE = var.app.django_settings_module
+    ENV                    = upper(local.env)
+    HOST                   = var.app.host
+    BASE_DOMAIN            = var.app.base_domain
+
+    # --- Azure identity ---
+    AZURE_CLIENT_ID       = azurerm_user_assigned_identity.container_app_identity.client_id
+    AZURE_TENANT_ID       = data.azurerm_client_config.current.tenant_id
+    AZURE_SUBSCRIPTION_ID = data.azurerm_client_config.current.subscription_id
+
+    # --- Auth / OAuth2 ---
+    OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID = var.auth.oauth2_password_credentials_client_id
+    OAUTH2_AUTH_CODE_CLIENT_ID            = var.auth.oauth2_auth_code_client_id
+    DEPLOY_BOX_GITHUB_CLIENT_ID           = var.auth.github_client_id
+    WORKOS_CLIENT_ID                      = var.auth.workos_client_id
+
+    # --- Database ---
+    DB_NAME     = var.database.name
+    DB_USER     = var.database.user
+    DB_HOST     = var.database.host
+    DB_PORT     = var.database.port
+    DB_PASSWORD = data.azurerm_key_vault_secret.db_password.value
+
+    # --- External services ---
+    DEPLOY_BOX_STACK_ENDPOINT           = var.services.stack_endpoint
+    EMAIL_HOST_USER                     = var.services.email_host_user
+    DEPLOY_BOX_API_BASE_URL             = var.services.api_base_url
+    NPM_BIN_PATH                        = var.services.npm_bin_path
+    KEY_VAULT_NAME                      = local.names.key_vault
+    AZURE_SERVICE_BUS_CONNECTION_STRING = data.azurerm_servicebus_namespace.service_bus.default_primary_connection_string
+  }
+
+  identity {
+    type         = "UserAssigned"
+    identity_ids = [azurerm_user_assigned_identity.container_app_identity.id]
+  }
+
+  site_config {
+    always_on        = true
+    app_command_line = local.web_app_startup_command
+    ftps_state       = "Disabled"
+
+    application_stack {
+      python_version = var.app_service_python_version
+    }
+  }
+
+  depends_on = [
     azurerm_role_assignment.container_app_key_vault_secrets_user,
   ]
 }

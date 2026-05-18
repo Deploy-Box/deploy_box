@@ -6,6 +6,8 @@ app = {
   base_domain            = "deploy-box.com"
 }
 
+app_service_plan_sku = "B1"
+
 auth = {
   oauth2_password_credentials_client_id = "G5uGZZZnMojr0pRo4MiZDr6FLjkRxk2PrkuR3Ymd"
   oauth2_auth_code_client_id            = "R5nrUKC0JQnAhoaM5jExJb5USgftZahkeitEXOsV"

@@ -40,11 +40,17 @@ ALLOWED_HOSTS: list[str] = [
     "host.docker.internal",
 ]
 
-# Azure injects CONTAINER_APP_HOSTNAME into Container Apps — needed for
-# internal service-to-service calls (e.g. IaC job → Django callbacks)
-_container_app_hostname = os.getenv("CONTAINER_APP_HOSTNAME")
-if _container_app_hostname:
-    ALLOWED_HOSTS.append(_container_app_hostname)
+
+def _append_env_host(allowed_hosts: list[str], env_var: str) -> None:
+    hostname = os.getenv(env_var)
+    if hostname and hostname not in allowed_hosts:
+        allowed_hosts.append(hostname)
+
+
+# Azure injects platform hostnames that are needed for pre-DNS validation and
+# internal service-to-service calls (e.g. IaC job -> Django callbacks).
+for _platform_hostname_env in ("CONTAINER_APP_HOSTNAME", "WEBSITE_HOSTNAME"):
+    _append_env_host(ALLOWED_HOSTS, _platform_hostname_env)
 
 
 ROOT_URLCONF = "core.urls"

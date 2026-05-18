@@ -1,10 +1,25 @@
 output "app_host" {
-  value = var.app["host"]
+  value       = var.app["host"]
   description = "The host URL for the app environment."
 }
 
+output "resource_group_name" {
+  value       = data.azurerm_resource_group.main_rg.name
+  description = "The resource group that contains the app resources."
+}
+
+output "web_app_name" {
+  value       = azurerm_linux_web_app.website.name
+  description = "The code-based Azure Linux Web App name."
+}
+
+output "web_app_default_hostname" {
+  value       = azurerm_linux_web_app.website.default_hostname
+  description = "The default azurewebsites.net hostname for validating the Web App before DNS cutover."
+}
+
 output "key_vault_name" {
-  value = local.names.key_vault
+  value       = local.names.key_vault
   description = "The name of the Key Vault for the app environment."
 }
 
