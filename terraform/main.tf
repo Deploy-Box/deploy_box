@@ -78,11 +78,6 @@ data "azurerm_servicebus_namespace" "service_bus" {
   resource_group_name = data.azurerm_resource_group.main_rg.name
 }
 
-data "azurerm_key_vault_secret" "db_password" {
-  name         = "deploy-box-website-db-password"
-  key_vault_id = data.azurerm_key_vault.shared_key_vault.id
-}
-
 # =============================================================================
 # Container App
 # =============================================================================
@@ -168,10 +163,6 @@ resource "azurerm_container_app" "container_app" {
       env {
         name  = "DB_PORT"
         value = var.database.port
-      }
-      env {
-        name  = "DB_PASSWORD"
-        value = data.azurerm_key_vault_secret.db_password.value
       }
 
       # --- External services ---
