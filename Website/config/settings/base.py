@@ -158,13 +158,9 @@ MIDDLEWARE = [
 # ──────────────────────────────────────────────
 # Database
 # ──────────────────────────────────────────────
-# Uses a custom backend that fetches a fresh Entra access token on every
-# new connection.  Locally this works via `az login`; in Azure it uses
-# the app's managed identity.  For local Docker Postgres, dev.py falls
-# back to the standard backend with a static DB_PASSWORD.
 DATABASES = {
     "default": {
-        "ENGINE": "core.backends.postgresql_entra",
+        "ENGINE": "django.db.backends.postgresql",
         "NAME": os.getenv("DB_NAME"),
         "USER": _kv.get_secret(f"{os.getenv('DB_USER')}-name"),
         "PASSWORD": _kv.get_secret(f"{os.getenv('DB_USER')}-password"),
