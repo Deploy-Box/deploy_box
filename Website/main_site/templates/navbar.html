@@ -50,6 +50,14 @@
         </li>
         <li>
           <a
+            id="docs"
+            href="/docs/"
+            class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if '/docs/' in request.path %} text-emerald-400 {% else %} text-white {% endif %}"
+            >Docs</a
+          >
+        </li>
+        <li>
+          <a
             id="marketplace"
             href="/marketplace"
             class="block py-2 px-3 rounded-sm bg-transparent hover:text-emerald-400 {% if request.path == '/marketplace/' %} text-emerald-400 {% else %} text-white {% endif %}"
@@ -66,23 +74,11 @@
         </li>
         <li>
           <a
-            id="login"
+            id="auth-button"
             class="px-6 py-1 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring flex items-center justify-center"
-            href="{% if user.is_authenticated %}{% url 'main_site:profile' %}{% else %}{% url 'main_site:login' %}{% endif %}"
-            id="login-button"
+            href="{% if user.is_authenticated %}/dashboard{% else %}{% url 'main_site:login' %}{% endif %}"
           >
-            {% if user.is_authenticated %} Visit Account {%else%} Login
-            {%endif%}
-          </a>
-        </li>
-        <li>
-          <a
-            id="signup"
-            class="px-6 py-1 min-w-[120px] text-center text-white border border-white rounded hover:bg-emerald-400 hover:text-white active:bg-emerald-400 focus:outline-none focus:ring flex items-center justify-center"
-            href="{% if user.is_authenticated %}/dashboard{% else %}/signup{% endif %}"
-            id="signup-button"
-          >
-            {% if user.is_authenticated %} Visit Dashboard {% else %} Signup
+            {% if user.is_authenticated %} Dashboard {% else %} Get Started
             {%endif%}
           </a>
         </li>

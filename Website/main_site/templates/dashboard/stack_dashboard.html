@@ -14,15 +14,35 @@
 </div>
 
 <div class="w-full bg-gray-50">
-  <header class="bg-zinc-950 pt-16 pb-24 text-center">
-    <h1 class="text-2xl font-bold text-gray-100 mb-2">Stack Dashboard</h1>
-    <p class="text-md text-gray-100 max-w-2xl mx-auto">
-      Monitor, manage, and optimize your deployment stack resources
-    </p>
-  </header>
-  <main class="w-full max-w-4xl mx-auto px-4 -mt-10 pb-12">
+  {% include 'dashboard/components/_page_header.html' with title='Stack Dashboard' subtitle='Monitor, manage, and optimize your deployment stack resources' %}
+  <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
     <div id="metadata" class="hidden" data-organization-id="{{ organization_id }}" data-project-id="{{ project_id }}"
       data-stack-id="{{ stack.id }}"></div>
+
+    <!-- Paused Banner -->
+    {% if stack.status == 'Paused' %}
+    <section class="mb-6">
+      <div class="bg-amber-50 border border-amber-300 rounded-lg p-4 flex items-center justify-between">
+        <div class="flex items-center">
+          <svg class="h-5 w-5 text-amber-600 mr-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/>
+          </svg>
+          <div>
+            <h3 class="text-sm font-semibold text-amber-800">Stack Paused</h3>
+            <p class="text-sm text-amber-700">This stack's infrastructure has been scaled down. Resume to restore full operation.</p>
+          </div>
+        </div>
+        <button id="banner-resume-btn"
+          class="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-emerald-500 hover:bg-emerald-600 rounded-lg transition-all duration-200 flex-shrink-0 ml-4">
+          <svg class="h-4 w-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
+          Resume Stack
+        </button>
+      </div>
+    </section>
+    {% endif %}
+
+    <!-- Deployment Log Viewer -->
+    {% include 'dashboard/components/_deployment_log.html' %}
 
     <!-- Stack Overview -->
     <section class="mb-8">
@@ -130,10 +150,7 @@
                       clip-rule="evenodd"
                     ></path>
                   </svg>
-                  Status: <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                    <span class="h-2 w-2 rounded-full bg-emerald-500 mr-1"></span>
-                    {{stack_google_cloud_run.state}}
-                  </span>
+                  Status: {% include 'dashboard/components/_status_badge.html' with status=stack_google_cloud_run.state %}
                 </p>
                 {% endfor %}
               </div>
@@ -353,6 +370,23 @@
               </path>
             </svg>
           </button>
+          {% if stack.status == 'Ready' %}
+          <button id="pause-stack-btn" data-stack-id="{{ stack.id }}"
+            class="bg-amber-500 hover:bg-amber-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="button-text">Pause Stack</span>
+          </button>
+          {% elif stack.status == 'Paused' %}
+          <button id="resume-stack-btn" data-stack-id="{{ stack.id }}"
+            class="bg-emerald-500 hover:bg-emerald-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+            </svg>
+            <span class="button-text">Resume Stack</span>
+          </button>
+          {% endif %}
           <button id="delete-stack-btn" data-stack-id="{{ stack.id }}"
             class="bg-red-500 hover:bg-red-600 text-white py-3 px-4 rounded flex items-center justify-center transition-all duration-300 transform hover:scale-105">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">

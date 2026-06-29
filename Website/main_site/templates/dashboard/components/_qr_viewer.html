@@ -112,7 +112,7 @@
             flashText(copyBtn, 'Copied!');
           } catch (err) {
             console.error('Copy failed', err);
-            alert('Unable to copy to clipboard.');
+            showToast('Unable to copy to clipboard.', 'error');
           }
         });
       }
@@ -156,7 +156,7 @@
             flashText(downloadBtn, 'Downloading...');
           } catch (err) {
             console.error('Download QR failed', err);
-            alert('Unable to generate or download QR.');
+            showToast('Unable to generate or download QR.', 'error');
           }
         });
       }

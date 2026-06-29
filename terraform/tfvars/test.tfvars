@@ -2,9 +2,11 @@ app = {
   environment            = "test"
   location               = "eastus"
   host                   = "https://test.deploy-box.com"
-  django_settings_module = "core.settings.dev"
+  django_settings_module = "config.settings.dev"
   base_domain            = "test.deploy-box.com"
 }
+
+app_service_plan_sku = "B1"
 
 auth = {
   oauth2_password_credentials_client_id = ""
@@ -15,7 +17,7 @@ auth = {
 
 database = {
   name = "deploy_box_test"
-  user = "kalebwbishop"
+  user = "deploy_box_website"
   host = "deploy-box-postgres.postgres.database.azure.com"
   port = "5432"
 }

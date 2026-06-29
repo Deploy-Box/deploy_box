@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-zinc-950 text-white min-h-screen">
+  <section class="container mx-auto px-4 py-24">
+    <div class="max-w-4xl">
+      <p class="text-emerald-400 font-mono text-sm uppercase tracking-[0.3em] mb-4">Developer profile</p>
+      <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-4">@{{ username }}</h1>
+      <p class="text-zinc-400 text-lg max-w-2xl mb-10">
+        Developer profile details, expertise, and contact options will appear here.
+      </p>
+
+      <div class="grid gap-6 md:grid-cols-2">
+        <div class="p-6 rounded-xl border border-zinc-800 bg-zinc-900">
+          <h2 class="text-xl font-bold mb-3">Overview</h2>
+          <p class="text-zinc-400">Summary, location, availability, and current focus.</p>
+        </div>
+        <div class="p-6 rounded-xl border border-zinc-800 bg-zinc-900">
+          <h2 class="text-xl font-bold mb-3">Specialties</h2>
+          <p class="text-zinc-400">Stacks, services, and project types this developer works with.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

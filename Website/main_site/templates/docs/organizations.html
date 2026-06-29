@@ -1,0 +1,65 @@
+{% extends 'docs/docs_base.html' %}
+{% load static %}
+
+{% block docs_content %}
+<div class="mb-8">
+  <nav class="flex items-center gap-2 text-sm text-zinc-500 mb-6">
+    <a href="{% url 'main_site:docs' %}" class="hover:text-emerald-400 transition-colors">Docs</a>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-zinc-300">Organizations</span>
+  </nav>
+  <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">Organizations</h1>
+  <p class="text-lg text-zinc-400">The top-level container for your team, projects, and billing.</p>
+</div>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">What is an organization?</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>An <strong class="text-white">organization</strong> is the highest-level grouping in Deploy Box. It owns projects, manages team members, and handles billing. Think of it like a company or team workspace.</p>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Creating an organization</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>From your dashboard, click <strong class="text-white">Create Organization</strong> and give it a name. You'll be set as the owner automatically.</p>
+    <div class="rounded-xl border border-zinc-800/60 bg-zinc-900/40 p-4 text-sm">
+      <p class="text-zinc-400"><strong class="text-zinc-300">Tip:</strong> You can create multiple organizations to keep personal work separate from client or team projects.</p>
+    </div>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Team members</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>Invite team members to collaborate on projects within your organization. From the <strong class="text-white">Members</strong> tab in your organization dashboard you can:</p>
+    <ul class="list-disc list-inside space-y-2 ml-2">
+      <li>Invite existing Deploy Box users by email</li>
+      <li>Invite new users who don't have an account yet</li>
+      <li>Manage member roles and permissions</li>
+      <li>Remove members from the organization</li>
+    </ul>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Organization settings</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>The <strong class="text-white">Settings</strong> page lets you update your organization name and manage general configuration. The <strong class="text-white">Billing</strong> page shows your current plan, usage, and payment methods.</p>
+  </div>
+</section>
+
+<div class="mt-16 pt-8 border-t border-zinc-800/60">
+  <h3 class="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-4">Next steps</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <a href="{% url 'main_site:docs_projects' %}" class="flex items-center gap-3 p-4 rounded-xl border border-zinc-800/60 hover:border-emerald-500/30 transition-colors group">
+      <span class="text-sm text-zinc-400 group-hover:text-emerald-400">→</span>
+      <span class="text-sm text-zinc-300 group-hover:text-white">Create your first project</span>
+    </a>
+    <a href="{% url 'main_site:docs_billing' %}" class="flex items-center gap-3 p-4 rounded-xl border border-zinc-800/60 hover:border-emerald-500/30 transition-colors group">
+      <span class="text-sm text-zinc-400 group-hover:text-emerald-400">→</span>
+      <span class="text-sm text-zinc-300 group-hover:text-white">Manage billing &amp; payments</span>
+    </a>
+  </div>
+</div>
+{% endblock %}

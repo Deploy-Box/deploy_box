@@ -1,6 +1,4 @@
 from django.test import TestCase
-from django.urls import reverse
-from django.contrib.auth.models import User
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from unittest.mock import patch, MagicMock
@@ -14,168 +12,8 @@ from django.contrib.auth import get_user_model
 UserProfile = get_user_model()
 
 
-class StackIACOverwriteTestCase(APITestCase):
-    """Test cases for the IAC overwrite functionality"""
-    
-    def setUp(self):
-        """Set up test data"""
-        # Create test user
-        self.user_profile = UserProfile.objects.create_user(
-            username='testuser',
-            email='test@example.com',
-            password='testpass123'
-        )
-        
-        # # Create user profile
-        # self.user_profile = UserProfile.objects.create(
-        #     user=self.user,
-        #     email_verified=True
-        # )
-        
-        # Create organization
-        self.organization = Organization.objects.create(
-            name='Test Organization',
-        )
-        
-        # Create project
-        self.project = Project.objects.create(
-            name='Test Project',
-            organization=self.organization
-        )
-        
-        # Create purchasable stack
-        self.purchasable_stack = PurchasableStack.objects.create(
-            type='MERN',
-            variant='basic',
-            version='1.0',
-            price_id='price_test123'
-        )
-        
-        # Create stack
-        self.stack = Stack.objects.create(
-            name='Test Stack',
-            project=self.project,
-            purchased_stack=self.purchasable_stack,
-            iac={'existing': 'configuration'}
-        )
-        
-        # Set up API client
-        self.client = APIClient()
-        
-    @patch('stacks.services.DeployBoxIAC')
-    def test_overwrite_iac_success(self, mock_deploy_box_iac):
-        """Test successful IAC overwrite"""
-        # Mock the DeployBoxIAC class
-        mock_instance = MagicMock()
-        mock_deploy_box_iac.return_value = mock_instance
-        
-        # New IAC configuration
-        new_iac = {
-            'azure': {
-                'resource_group': 'test-rg',
-                'location': 'eastus'
-            },
-            'container_apps': {
-                'frontend': {
-                    'name': 'frontend-app',
-                    'image': 'nginx:latest'
-                },
-                'backend': {
-                    'name': 'backend-app',
-                    'image': 'node:16'
-                }
-            }
-        }
-        
-        # Make the API request
-        url = reverse('overwrite_iac', kwargs={'stack_id': str(self.stack.id)})
-        response = self.client.post(
-            url,
-            data={'iac': new_iac},
-            format='json'
-        )
-        
-        # Assert response
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertTrue(response.data['success'])
-        self.assertIn('IAC configuration overwritten successfully', response.data['message'])
-        
-        # Verify the stack was updated
-        self.stack.refresh_from_db()
-        self.assertEqual(self.stack.iac, new_iac)
-        
-        # Verify DeployBoxIAC was called
-        mock_instance.deploy.assert_called_once_with(f"{self.stack.id}-rg", new_iac)
-    
-    def test_overwrite_iac_stack_not_found(self):
-        """Test IAC overwrite with non-existent stack"""
-        non_existent_id = '00000000-0000-0000-0000-000000000000'
-        url = reverse('overwrite_iac', kwargs={'stack_id': non_existent_id})
-        
-        response = self.client.post(
-            url,
-            data={'iac': {'test': 'config'}},
-            format='json'
-        )
-        
-        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertIn('Stack not found', response.data['error'])
-    
-    def test_overwrite_iac_invalid_data(self):
-        """Test IAC overwrite with invalid data"""
-        url = reverse('overwrite_iac', kwargs={'stack_id': str(self.stack.id)})
-        
-        # Test with missing iac field
-        response = self.client.post(
-            url,
-            data={},
-            format='json'
-        )
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-        self.assertIn('iac', response.data)
-        
-        # Test with non-dict iac
-        response = self.client.post(
-            url,
-            data={'iac': 'not_a_dict'},
-            format='json'
-        )
-        
-        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
-    
-    @patch('stacks.services.DeployBoxIAC')
-    def test_overwrite_iac_deployment_failure(self, mock_deploy_box_iac):
-        """Test IAC overwrite when deployment fails"""
-        # Mock DeployBoxIAC to raise an exception
-        mock_instance = MagicMock()
-        mock_instance.deploy.side_effect = Exception("Deployment failed")
-        mock_deploy_box_iac.return_value = mock_instance
-        
-        new_iac = {'test': 'configuration'}
-        url = reverse('stacks:overwrite_iac', kwargs={'stack_id': str(self.stack.id)})
-        
-        response = self.client.post(
-            url,
-            data={'iac': new_iac},
-            format='json'
-        )
-        
-        self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
-        self.assertIn('Failed to overwrite IAC configuration', response.data['error'])
-    
-    def test_overwrite_iac_viewset_action(self):
-        """Test the ViewSet action for overwriting IAC"""
-        # This would require authentication setup, but we can test the structure
-        url = f'/api/stacks/{self.stack.id}/overwrite_iac/'
-        
-        # Note: This test would need proper authentication setup
-        # For now, we're just testing that the endpoint exists
-        self.assertTrue(url.endswith('/overwrite_iac/'))
-
-
 class StackIACOverwriteIntegrationTestCase(TestCase):
-    """Integration tests for IAC overwrite functionality"""
+    """Integration tests for IAC model-level operations"""
     
     def setUp(self):
         """Set up test data for integration tests"""
@@ -223,7 +61,7 @@ class StackIACOverwriteIntegrationTestCase(TestCase):
             name='Integration Stack',
             project=self.project,
             purchased_stack=self.purchasable_stack,
-            iac=self.initial_iac
+            iac_state=self.initial_iac
         )
     
     def test_iac_overwrite_preserves_other_fields(self):
@@ -245,14 +83,14 @@ class StackIACOverwriteIntegrationTestCase(TestCase):
         original_created_at = self.stack.created_at
         
         # Overwrite IAC
-        self.stack.iac = new_iac
+        self.stack.iac_state = new_iac
         self.stack.save()
         
         # Refresh from database
         self.stack.refresh_from_db()
         
         # Verify IAC was updated
-        self.assertEqual(self.stack.iac, new_iac)
+        self.assertEqual(self.stack.iac_state, new_iac)
         
         # Verify other fields remain unchanged
         self.assertEqual(self.stack.name, original_name)
@@ -310,19 +148,20 @@ class StackIACOverwriteIntegrationTestCase(TestCase):
         }
         
         # Overwrite IAC
-        self.stack.iac = complex_iac
+        self.stack.iac_state = complex_iac
         self.stack.save()
         
         # Refresh and verify
         self.stack.refresh_from_db()
-        self.assertEqual(self.stack.iac, complex_iac)
+        self.assertEqual(self.stack.iac_state, complex_iac)
         
         # Verify nested structure is preserved
-        self.assertEqual(self.stack.iac['azure']['tags']['environment'], 'production')
-        self.assertEqual(self.stack.iac['container_apps']['frontend']['replicas'], 3)
-        self.assertTrue(self.stack.iac['databases']['mongodb']['enabled'])
+        self.assertEqual(self.stack.iac_state['azure']['tags']['environment'], 'production')
+        self.assertEqual(self.stack.iac_state['container_apps']['frontend']['replicas'], 3)
+        self.assertTrue(self.stack.iac_state['databases']['mongodb']['enabled'])
 
 
+@patch('stacks.views.verify_iac_webhook_signature')
 class StackStatusUpdateTestCase(APITestCase):
     """Test cases for the stack status update functionality"""
     
@@ -334,12 +173,6 @@ class StackStatusUpdateTestCase(APITestCase):
             email='status@example.com',
             password='testpass123'
         )
-        
-        # # Create user profile
-        # self.user_profile = UserProfile.objects.create(
-        #     user=self.user,
-        #     email_verified=True
-        # )
         
         # Create organization
         self.organization = Organization.objects.create(
@@ -371,19 +204,17 @@ class StackStatusUpdateTestCase(APITestCase):
         # Set up API client
         self.client = APIClient()
     
-    def test_update_status_success(self):
+    def test_update_status_success(self, mock_verify):
         """Test successful status update"""
         new_status = 'RUNNING'
         
-        # Make the API request
-        url = f'/api/stacks/{self.stack.id}/update_status/'
+        url = f'/api/v1/stacks/{self.stack.id}/update_status/'
         response = self.client.post(
             url,
             data={'status': new_status},
             format='json'
         )
         
-        # Assert response
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['success'])
         self.assertIn('Stack status updated successfully', response.data['message'])
@@ -391,14 +222,13 @@ class StackStatusUpdateTestCase(APITestCase):
         self.assertEqual(response.data['old_status'], 'STARTING')
         self.assertEqual(response.data['new_status'], new_status)
         
-        # Verify the stack was updated in the database
         self.stack.refresh_from_db()
         self.assertEqual(self.stack.status, new_status)
     
-    def test_update_status_stack_not_found(self):
+    def test_update_status_stack_not_found(self, mock_verify):
         """Test status update with non-existent stack"""
         non_existent_id = '00000000-0000-0000-0000-000000000000'
-        url = f'/api/stacks/{non_existent_id}/update_status/'
+        url = f'/api/v1/stacks/{non_existent_id}/update_status/'
         
         response = self.client.post(
             url,
@@ -408,9 +238,9 @@ class StackStatusUpdateTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
     
-    def test_update_status_invalid_data(self):
+    def test_update_status_invalid_data(self, mock_verify):
         """Test status update with invalid data"""
-        url = f'/api/stacks/{self.stack.id}/update_status/'
+        url = f'/api/v1/stacks/{self.stack.id}/update_status/'
         
         # Test with missing status field
         response = self.client.post(
@@ -432,11 +262,10 @@ class StackStatusUpdateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('Status is required', response.data['error'])
     
-    def test_update_status_service_failure(self):
+    def test_update_status_service_failure(self, mock_verify):
         """Test status update when service fails"""
-        # Mock the service to return False
         with patch('stacks.services.update_stack_status', return_value=False):
-            url = f'/api/stacks/{self.stack.id}/update_status/'
+            url = f'/api/v1/stacks/{self.stack.id}/update_status/'
             response = self.client.post(
                 url,
                 data={'status': 'RUNNING'},
@@ -447,12 +276,12 @@ class StackStatusUpdateTestCase(APITestCase):
             self.assertFalse(response.data['success'])
             self.assertIn('Failed to update stack status', response.data['error'])
     
-    def test_update_status_to_various_states(self):
+    def test_update_status_to_various_states(self, mock_verify):
         """Test updating status to various common states"""
         test_states = ['PROVISIONING', 'RUNNING', 'STOPPED', 'ERROR', 'DELETING']
         
         for test_state in test_states:
-            url = f'/api/stacks/{self.stack.id}/update_status/'
+            url = f'/api/v1/stacks/{self.stack.id}/update_status/'
             response = self.client.post(
                 url,
                 data={'status': test_state},
@@ -463,11 +292,11 @@ class StackStatusUpdateTestCase(APITestCase):
             self.assertTrue(response.data['success'])
             self.assertEqual(response.data['new_status'], test_state)
             
-            # Verify the stack was updated
             self.stack.refresh_from_db()
             self.assertEqual(self.stack.status, test_state)
 
 
+@patch('stacks.views.verify_iac_webhook_signature')
 class StackIACUpdateTestCase(APITestCase):
     """Test cases for the stack IAC update functionality"""
     
@@ -480,16 +309,9 @@ class StackIACUpdateTestCase(APITestCase):
             password='testpass123'
         )
         
-        # # Create user profile
-        # self.user_profile = UserProfile.objects.create(
-        #     user=self.user,
-        #     email_verified=True
-        # )
-        
         # Create organization
         self.organization = Organization.objects.create(
             name='IAC Test Organization',
-
         )
         
         # Create project
@@ -511,16 +333,15 @@ class StackIACUpdateTestCase(APITestCase):
             name='IAC Test Stack',
             project=self.project,
             purchased_stack=self.purchasable_stack,
-            iac={'existing': 'configuration'}
+            iac_state={'existing': 'configuration'}
         )
         
         # Set up API client
         self.client = APIClient()
     
-    def test_update_iac_success(self):
+    def test_update_iac_success(self, mock_verify):
         """Test successful IAC update (database only, no deployment)"""
         
-        # New IAC configuration
         new_iac = {
             'azure': {
                 'resource_group': 'test-rg',
@@ -538,15 +359,13 @@ class StackIACUpdateTestCase(APITestCase):
             }
         }
         
-        # Make the API request
-        url = f'/api/stacks/{self.stack.id}/update_iac/'
+        url = f'/api/v1/stacks/{self.stack.id}/update_iac/'
         response = self.client.post(
             url,
             data={'data': new_iac},
             format='json'
         )
         
-        # Assert response
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['success'])
         self.assertIn('IAC configuration updated successfully (no deployment)', response.data['message'])
@@ -554,14 +373,13 @@ class StackIACUpdateTestCase(APITestCase):
         self.assertEqual(response.data['old_iac'], {'existing': 'configuration'})
         self.assertEqual(response.data['new_iac'], new_iac)
         
-        # Verify the stack was updated
         self.stack.refresh_from_db()
-        self.assertEqual(self.stack.iac, new_iac)
+        self.assertEqual(self.stack.iac_state, new_iac)
     
-    def test_update_iac_stack_not_found(self):
+    def test_update_iac_stack_not_found(self, mock_verify):
         """Test IAC update with non-existent stack"""
         non_existent_id = '00000000-0000-0000-0000-000000000000'
-        url = f'/api/stacks/{non_existent_id}/update_iac/'
+        url = f'/api/v1/stacks/{non_existent_id}/update_iac/'
         
         response = self.client.post(
             url,
@@ -571,9 +389,9 @@ class StackIACUpdateTestCase(APITestCase):
         
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
     
-    def test_update_iac_invalid_data(self):
+    def test_update_iac_invalid_data(self, mock_verify):
         """Test IAC update with invalid data"""
-        url = f'/api/stacks/{self.stack.id}/update_iac/'
+        url = f'/api/v1/stacks/{self.stack.id}/update_iac/'
         
         # Test with missing data field
         response = self.client.post(
@@ -605,12 +423,11 @@ class StackIACUpdateTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
         self.assertIn('IAC configuration must be a valid JSON object', response.data['error'])
     
-    def test_update_iac_service_failure(self):
+    def test_update_iac_service_failure(self, mock_verify):
         """Test IAC update when service fails"""
-        # Mock the service to return False
         with patch('stacks.services.update_stack_iac_only', return_value=False):
             new_iac = {'test': 'configuration'}
-            url = f'/api/stacks/{self.stack.id}/update_iac/'
+            url = f'/api/v1/stacks/{self.stack.id}/update_iac/'
             
             response = self.client.post(
                 url,
@@ -621,7 +438,7 @@ class StackIACUpdateTestCase(APITestCase):
             self.assertEqual(response.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
             self.assertIn('Failed to update IAC configuration', response.data['error'])
     
-    def test_update_iac_with_section_parameter(self):
+    def test_update_iac_with_section_parameter(self, mock_verify):
         """Test IAC update with section parameter (should be ignored for full overwrite)"""
         new_iac = {
             'azure': {
@@ -629,7 +446,7 @@ class StackIACUpdateTestCase(APITestCase):
             }
         }
         
-        url = f'/api/stacks/{self.stack.id}/update_iac/'
+        url = f'/api/v1/stacks/{self.stack.id}/update_iac/'
         response = self.client.post(
             url,
             data={
@@ -639,10 +456,8 @@ class StackIACUpdateTestCase(APITestCase):
             format='json'
         )
         
-        # Should still work as it's a full overwrite
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertTrue(response.data['success'])
         
-        # Verify the stack was updated with the full new IAC
         self.stack.refresh_from_db()
-        self.assertEqual(self.stack.iac, new_iac)
+        self.assertEqual(self.stack.iac_state, new_iac)

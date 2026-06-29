@@ -26,6 +26,9 @@
   </div>
 
   {% if show_footer is not False %} {% include 'footer.html' %} {% endif %}
+
+  <script src="{% static 'toast.js' %}"></script>
+  {% block extra_js %}{% endblock %}
 </body>
 
 </html>

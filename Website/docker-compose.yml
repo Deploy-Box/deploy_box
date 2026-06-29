@@ -3,11 +3,11 @@ services:
     image: postgres:16
     container_name: postgres-db
     environment:
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-      POSTGRES_DB: mydatabase
+      POSTGRES_USER: deploy_box_website
+      POSTGRES_PASSWORD: localdevpassword
+      POSTGRES_DB: deploy_box_dev
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
 

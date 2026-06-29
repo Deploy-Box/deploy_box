@@ -1,0 +1,12 @@
+{% comment %}
+Detail Stat Card Component
+Usage: include 'dashboard/components/_detail_stat.html' with label='Stack ID' value=stack.id
+
+Parameters:
+  - label: The stat label text (required)
+  - value: The stat value to display (required)
+{% endcomment %}
+<div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+    <span class="text-sm text-gray-500">{{ label }}</span>
+    <p class="font-semibold text-lg">{{ value }}</p>
+</div>

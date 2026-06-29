@@ -1,34 +1,58 @@
-from django.http import HttpRequest, HttpResponse, JsonResponse, FileResponse
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.viewsets import ViewSet
+from rest_framework.permissions import IsAuthenticated
 
-import projects.handlers as handlers
-from typing import Union
+from projects import services
+from projects.services import ServiceError
 
 
-def base_routing(
-    request: HttpRequest,
-) -> Union[JsonResponse, HttpResponse]:
-    if request.method == "GET":
-        return handlers.get_projects(request)
+def _error_response(exc: ServiceError) -> Response:
+    """Convert a service-layer exception into a DRF Response."""
+    return Response({"error": str(exc)}, status=exc.status_code)
 
-    elif request.method == "POST":
-        return handlers.create_project(request)
 
-    else:
-        return JsonResponse(
-            {"error": "Method not allowed"}, status=405
-        )
+class ProjectViewSet(ViewSet):
+    """DRF ViewSet for project CRUD — delegates to service layer."""
+    permission_classes = [IsAuthenticated]
 
-def specific_routing(
-    request: HttpRequest,
-    project_id: str,
-) -> JsonResponse:
-    if request.method == "GET":
-        return handlers.get_project(request, project_id)
+    def list(self, request):
+        data = services.get_projects(request.user)
+        return Response({"data": data})
 
-    elif request.method == "DELETE":
-        return handlers.delete_project(request, project_id)
+    def retrieve(self, request, pk=None):
+        project = services.get_project(request.user, pk)
+        if project is None:
+            return Response({"message": "Project not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(project, status=status.HTTP_200_OK)
 
-    else:
-        return JsonResponse(
-            {"error": "Method not allowed"}, status=405
-        )
+    def create(self, request):
+        name = request.data.get("name")
+        description = request.data.get("description", "")
+        organization_id = request.data.get("organization")
+
+        if not name or not organization_id:
+            return Response(
+                {"error": "name and organization are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            data = services.create_project(
+                user=request.user,
+                name=name,
+                description=description,
+                organization_id=organization_id,
+            )
+        except ServiceError as exc:
+            return _error_response(exc)
+
+        return Response(data, status=status.HTTP_201_CREATED)
+
+    def destroy(self, request, pk=None):
+        try:
+            data = services.delete_project(project_id=pk, user=request.user)
+        except ServiceError as exc:
+            return _error_response(exc)
+
+        return Response(data, status=status.HTTP_200_OK)

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="bg-zinc-950 text-white min-h-screen">
+  <section class="container mx-auto px-4 py-20">
+    <div class="max-w-5xl">
+      <p class="text-emerald-400 font-mono text-sm uppercase tracking-[0.3em] mb-4">Featured showcase</p>
+      <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div class="max-w-3xl">
+          <h1 class="text-4xl md:text-6xl font-bold tracking-tight mb-4">@{{ username }}'s work</h1>
+          <p class="text-zinc-400 text-lg leading-relaxed">
+            A curated set of launches and production sites showing clean delivery, strong messaging, and practical
+            business value.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="border-t border-zinc-900">
+    <div class="container mx-auto px-4 py-16">
+      <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {% for project in projects %}
+          <article class="rounded-2xl border border-zinc-800 bg-zinc-900 p-6 flex flex-col gap-4">
+            <a
+              href="{{ project.url }}"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="group overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950 block focus:outline-none focus:ring-2 focus:ring-emerald-400/70 focus:ring-offset-2 focus:ring-offset-zinc-950"
+              aria-label="Open {{ project.name }}"
+            >
+              {% if project.image %}
+                <img
+                  src="{{ project.image }}"
+                  alt="{{ project.image_alt }}"
+                  class="h-56 w-full object-cover object-top transition-transform duration-500 ease-out group-hover:scale-[1.03]"
+                  loading="lazy"
+                />
+              {% else %}
+                <div class="flex h-56 items-center justify-center bg-[linear-gradient(135deg,rgba(39,39,42,0.95),rgba(24,24,27,1))] px-6 text-center transition-transform duration-500 ease-out group-hover:scale-[1.03]">
+                  <div>
+                    <p class="text-sm uppercase tracking-[0.3em] text-zinc-500 mb-2">Image placeholder</p>
+                    <p class="text-zinc-400 text-sm">Reserve a screenshot for {{ project.name }}</p>
+                  </div>
+                </div>
+              {% endif %}
+            </a>
+
+            <div class="flex items-start justify-between gap-4">
+              <div>
+                <h2 class="text-xl font-bold text-white">{{ project.name }}</h2>
+              </div>
+              <span class="text-zinc-500 text-sm">0{{ forloop.counter }}</span>
+            </div>
+
+            <p class="text-zinc-400 leading-relaxed">{{ project.summary }}</p>
+
+            <div class="mt-auto pt-2">
+              <a
+                href="{{ project.url }}"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="inline-flex items-center gap-2 text-emerald-400 font-semibold hover:text-emerald-300 transition-colors"
+                aria-label="Open {{ project.name }}"
+              >
+                Visit site
+                <span aria-hidden="true">→</span>
+              </a>
+              <p class="mt-2 text-sm text-zinc-500 break-all">{{ project.url }}</p>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+</div>
+{% endblock %}

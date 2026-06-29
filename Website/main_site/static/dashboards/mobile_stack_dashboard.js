@@ -29,10 +29,10 @@ class MobileDashboard {
         this.populateFields();
         this.setupEditButtons();
         this.setupEnvVars();
+        this.setupBuildEnvVars();
         this.setupInfraToggle();
         this.setupSaveBar();
         this.setupVisibilityToggles();
-        this.setupDevSection();
     }
 
     // ──────────────────────────────────────────────
@@ -175,6 +175,7 @@ class MobileDashboard {
     setupEnvVars() {
         const container = document.getElementById("container-app-env-vars");
         const addBtn = document.getElementById("add-env-var-btn");
+        const addSecretBtn = document.getElementById("add-secret-var-btn");
         if (!container) return;
 
         const ca = this.resources["azurerm_container_app"];
@@ -185,30 +186,49 @@ class MobileDashboard {
 
         envVars.forEach((env, idx) => {
             container.appendChild(
-                this.createEnvVarRow(env.name, env.value, idx),
+                this.createEnvVarRow(env.name, env.value, idx, false, env.is_secret || false),
             );
         });
 
         if (addBtn) {
             addBtn.addEventListener("click", () => {
                 const idx = container.children.length;
-                container.appendChild(this.createEnvVarRow("", "", idx, true));
+                container.appendChild(this.createEnvVarRow("", "", idx, true, false));
+                this.syncEnvVarsChange();
+            });
+        }
+
+        if (addSecretBtn) {
+            addSecretBtn.addEventListener("click", () => {
+                const idx = container.children.length;
+                container.appendChild(this.createEnvVarRow("", "", idx, true, true));
                 this.syncEnvVarsChange();
             });
         }
     }
 
-    createEnvVarRow(name, value, index, isNew = false) {
+    createEnvVarRow(name, value, index, isNew = false, isSecret = false) {
         const row = document.createElement("div");
         row.className = "env-var-row flex items-center gap-2";
         row.dataset.index = index;
+        row.dataset.isSecret = isSecret ? "true" : "false";
+
+        const secretBtnClasses = isSecret
+            ? "text-amber-500 hover:text-amber-700"
+            : "text-slate-300 hover:text-amber-500";
+        const secretTitle = isSecret ? "Secret (click to make plain)" : "Plain (click to make secret)";
+        const valueType = isSecret ? "password" : "text";
 
         row.innerHTML = `
             <input type="text" class="env-name flex-[2] bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition" 
                    value="${this.escapeHtml(name)}" placeholder="KEY" ${isNew ? "" : "readonly"} />
             <span class="text-slate-400 text-xs">=</span>
-            <input type="text" class="env-value flex-[3] bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition"
+            <input type="${valueType}" class="env-value flex-[3] bg-white border border-slate-300 rounded-md px-2.5 py-1.5 text-xs font-mono text-slate-800 focus:ring-2 focus:ring-emerald-400 focus:border-emerald-400 transition"
                    value="${this.escapeHtml(value)}" placeholder="value" ${isNew ? "" : "readonly"} />
+            <button class="env-secret-btn p-1 ${secretBtnClasses} rounded transition" title="${secretTitle}">
+                <svg class="w-3.5 h-3.5 lock-closed ${isSecret ? '' : 'hidden'}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                <svg class="w-3.5 h-3.5 lock-open ${isSecret ? 'hidden' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+            </button>
             <button class="env-edit-btn p-1 text-slate-400 hover:text-emerald-600 rounded transition" title="Edit">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
             </button>
@@ -217,10 +237,38 @@ class MobileDashboard {
             </button>
         `;
 
+        const secretBtn = row.querySelector(".env-secret-btn");
         const editBtn = row.querySelector(".env-edit-btn");
         const deleteBtn = row.querySelector(".env-delete-btn");
         const nameInput = row.querySelector(".env-name");
         const valueInput = row.querySelector(".env-value");
+
+        secretBtn.addEventListener("click", () => {
+            const currentlySecret = row.dataset.isSecret === "true";
+            const newIsSecret = !currentlySecret;
+            row.dataset.isSecret = newIsSecret ? "true" : "false";
+
+            const lockClosed = secretBtn.querySelector(".lock-closed");
+            const lockOpen = secretBtn.querySelector(".lock-open");
+
+            if (newIsSecret) {
+                secretBtn.classList.remove("text-slate-300");
+                secretBtn.classList.add("text-amber-500");
+                secretBtn.title = "Secret (click to make plain)";
+                lockClosed.classList.remove("hidden");
+                lockOpen.classList.add("hidden");
+                valueInput.type = "password";
+            } else {
+                secretBtn.classList.remove("text-amber-500");
+                secretBtn.classList.add("text-slate-300");
+                secretBtn.title = "Plain (click to make secret)";
+                lockClosed.classList.add("hidden");
+                lockOpen.classList.remove("hidden");
+                valueInput.type = "text";
+            }
+
+            this.syncEnvVarsChange();
+        });
 
         editBtn.addEventListener("click", () => {
             if (nameInput.readOnly) {
@@ -256,8 +304,9 @@ class MobileDashboard {
         container.querySelectorAll(".env-var-row").forEach((row) => {
             const name = row.querySelector(".env-name").value.trim();
             const value = row.querySelector(".env-value").value.trim();
+            const isSecret = row.dataset.isSecret === "true";
             if (name) {
-                envVars.push({ name, value });
+                envVars.push({ name, value, is_secret: isSecret });
             }
         });
 
@@ -274,6 +323,115 @@ class MobileDashboard {
             this.untrackChange(
                 "azurerm_container_app",
                 "template_container_env",
+            );
+        }
+    }
+
+    // ──────────────────────────────────────────────
+    //  Build Environment Variables (static website)
+    // ──────────────────────────────────────────────
+    setupBuildEnvVars() {
+        const container = document.getElementById("build-env-vars");
+        const addBtn = document.getElementById("add-build-env-var-btn");
+        if (!container) return;
+
+        const sw = this.resources["azurerm_storage_account_static_website"];
+        const buildVars = sw ? sw.build_env_vars || {} : {};
+
+        // Store original for comparison
+        this.originalBuildEnvVars = JSON.parse(JSON.stringify(buildVars));
+
+        let idx = 0;
+        for (const [key, val] of Object.entries(buildVars)) {
+            container.appendChild(this.createBuildEnvVarRow(key, String(val), idx));
+            idx++;
+        }
+
+        if (addBtn) {
+            addBtn.addEventListener("click", () => {
+                const newIdx = container.children.length;
+                container.appendChild(this.createBuildEnvVarRow("", "", newIdx, true));
+                this.syncBuildEnvVarsChange();
+            });
+        }
+    }
+
+    createBuildEnvVarRow(name, value, index, isNew = false) {
+        const row = document.createElement("div");
+        row.className = "build-env-var-row flex items-center gap-2";
+        row.dataset.index = index;
+
+        row.innerHTML = `
+            <input type="text" class="build-env-name flex-[2] bg-white border border-violet-300 rounded-md px-2.5 py-1.5 text-xs font-mono text-violet-800 focus:ring-2 focus:ring-violet-400 focus:border-violet-400 transition"
+                   value="${this.escapeHtml(name)}" placeholder="REACT_APP_KEY" ${isNew ? "" : "readonly"} />
+            <span class="text-violet-400 text-xs">=</span>
+            <input type="text" class="build-env-value flex-[3] bg-white border border-violet-300 rounded-md px-2.5 py-1.5 text-xs font-mono text-violet-800 focus:ring-2 focus:ring-violet-400 focus:border-violet-400 transition"
+                   value="${this.escapeHtml(value)}" placeholder="value" ${isNew ? "" : "readonly"} />
+            <button class="build-env-edit-btn p-1 text-violet-400 hover:text-violet-600 rounded transition" title="Edit">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+            </button>
+            <button class="build-env-delete-btn p-1 text-violet-400 hover:text-red-500 rounded transition" title="Remove">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+        `;
+
+        const editBtn = row.querySelector(".build-env-edit-btn");
+        const deleteBtn = row.querySelector(".build-env-delete-btn");
+        const nameInput = row.querySelector(".build-env-name");
+        const valueInput = row.querySelector(".build-env-value");
+
+        editBtn.addEventListener("click", () => {
+            if (nameInput.readOnly) {
+                nameInput.readOnly = false;
+                valueInput.readOnly = false;
+                nameInput.classList.add("ring-1", "ring-violet-300");
+                valueInput.classList.add("ring-1", "ring-violet-300");
+                nameInput.focus();
+                editBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>`;
+            } else {
+                nameInput.readOnly = true;
+                valueInput.readOnly = true;
+                nameInput.classList.remove("ring-1", "ring-violet-300");
+                valueInput.classList.remove("ring-1", "ring-violet-300");
+                editBtn.innerHTML = `<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>`;
+                this.syncBuildEnvVarsChange();
+            }
+        });
+
+        deleteBtn.addEventListener("click", () => {
+            row.remove();
+            this.syncBuildEnvVarsChange();
+        });
+
+        return row;
+    }
+
+    syncBuildEnvVarsChange() {
+        const container = document.getElementById("build-env-vars");
+        if (!container) return;
+
+        const buildVars = {};
+        container.querySelectorAll(".build-env-var-row").forEach((row) => {
+            const name = row.querySelector(".build-env-name").value.trim();
+            const value = row.querySelector(".build-env-value").value.trim();
+            if (name) {
+                buildVars[name] = value;
+            }
+        });
+
+        // Compare with original
+        const changed =
+            JSON.stringify(buildVars) !== JSON.stringify(this.originalBuildEnvVars);
+        if (changed) {
+            this.trackChange(
+                "azurerm_storage_account_static_website",
+                "build_env_vars",
+                buildVars,
+            );
+        } else {
+            this.untrackChange(
+                "azurerm_storage_account_static_website",
+                "build_env_vars",
             );
         }
     }
@@ -381,13 +539,13 @@ class MobileDashboard {
     // ──────────────────────────────────────────────
     async saveChanges() {
         if (Object.keys(this.pendingChanges).length === 0) {
-            this.showToast("No changes to save.", "info");
+            showToast("No changes to save.", "info");
             return;
         }
 
         const stackId = this.stackId;
         if (!stackId) {
-            this.showToast(
+            showToast(
                 "Stack ID is missing. Cannot save changes.",
                 "error",
             );
@@ -396,19 +554,54 @@ class MobileDashboard {
 
         try {
             const response = await fetch(
-                `/api/v1/stacks/bulk-update-resources/`,
+                `/api/v1/stacks/${stackId}/update-resources/`,
                 {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
                         "X-CSRFToken": this.getCsrfToken(),
                     },
-                    body: JSON.stringify(this.pendingChanges),
+                    body: JSON.stringify({
+                        resources: Object.values(this.pendingChanges),
+                    }),
                 },
             );
 
             if (response.ok) {
-                this.showToast("Changes saved successfully.", "success");
+                showToast("Changes saved successfully.", "success");
+
+                // Update original values so change tracking resets
+                for (const change of Object.values(this.pendingChanges)) {
+                    const resourceId = change.id;
+                    const resourceType = Object.keys(this.resources).find(
+                        (key) => this.resources[key].id === resourceId,
+                    );
+                    if (resourceType) {
+                        for (const [field, value] of Object.entries(change)) {
+                            if (field === "id") continue;
+                            this.resources[resourceType][field] = value;
+                            this.originalValues[`${resourceType}.${field}`] = 
+                                typeof value === "string" ? value : JSON.stringify(value);
+                        }
+                    }
+                }
+
+                // Update original env vars if they were changed
+                const ca = this.resources["azurerm_container_app"];
+                if (ca && ca.template_container_env) {
+                    this.originalEnvVars = JSON.parse(
+                        JSON.stringify(ca.template_container_env),
+                    );
+                }
+
+                // Update original build env vars if they were changed
+                const sw = this.resources["azurerm_storage_account_static_website"];
+                if (sw && sw.build_env_vars) {
+                    this.originalBuildEnvVars = JSON.parse(
+                        JSON.stringify(sw.build_env_vars),
+                    );
+                }
+
                 this.pendingChanges = {};
                 this.updateSaveBar();
 
@@ -426,22 +619,22 @@ class MobileDashboard {
                 );
 
                 if (iacResponse.ok) {
-                    this.showToast(
+                    showToast(
                         "IAC update triggered successfully.",
                         "success",
                     );
                 } else {
-                    this.showToast("Failed to trigger IAC update.", "error");
+                    showToast("Failed to trigger IAC update.", "error");
                 }
             } else {
                 const errorData = await response.json();
-                this.showToast(
+                showToast(
                     `Failed to save changes: ${errorData.error || "Unknown error"}`,
                     "error",
                 );
             }
         } catch (error) {
-            this.showToast(`Error saving changes: ${error.message}`, "error");
+            showToast(`Error saving changes: ${error.message}`, "error");
         }
     }
 
@@ -455,9 +648,20 @@ class MobileDashboard {
             container.innerHTML = "";
             this.originalEnvVars.forEach((env, idx) => {
                 container.appendChild(
-                    this.createEnvVarRow(env.name, env.value, idx),
+                    this.createEnvVarRow(env.name, env.value, idx, false, env.is_secret || false),
                 );
             });
+        }
+
+        // Reset build env vars
+        const buildContainer = document.getElementById("build-env-vars");
+        if (buildContainer) {
+            buildContainer.innerHTML = "";
+            let idx = 0;
+            for (const [key, val] of Object.entries(this.originalBuildEnvVars || {})) {
+                buildContainer.appendChild(this.createBuildEnvVarRow(key, String(val), idx));
+                idx++;
+            }
         }
 
         // Reset all inputs to readonly
@@ -481,128 +685,6 @@ class MobileDashboard {
     }
 
     // ──────────────────────────────────────────────
-    //  Development Section for JSON Editing
-    // ──────────────────────────────────────────────
-    setupDevSection() {
-        const devSection = document.createElement("div");
-        devSection.className =
-            "dev-section bg-gray-100 p-4 rounded-lg shadow-md";
-        devSection.innerHTML = `
-            <h3 class="text-lg font-bold mb-2">Development JSON Editor</h3>
-            <textarea id="dev-json-editor" class="w-full h-64 p-2 border border-gray-300 rounded-md font-mono text-sm"></textarea>
-            <div class="mt-3 flex justify-end gap-2">
-                <button id="dev-json-save" class="px-4 py-2 bg-emerald-600 text-white rounded-md hover:bg-emerald-500">Save</button>
-                <button id="dev-json-cancel" class="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400">Cancel</button>
-            </div>
-        `;
-
-        const dashboard = document.getElementById("devSection");
-        if (dashboard) {
-            dashboard.appendChild(devSection);
-
-            const editor = document.getElementById("dev-json-editor");
-            const saveBtn = document.getElementById("dev-json-save");
-            const cancelBtn = document.getElementById("dev-json-cancel");
-
-            // Populate editor with current JSON
-            editor.value = JSON.stringify(this.resources, null, 2);
-
-            // Save changes
-            const stackId = this.stackId;
-            if (!stackId) {
-                this.showToast(
-                    "Stack ID is missing. Cannot save changes.",
-                    "error",
-                );
-                return;
-            }
-            saveBtn.addEventListener("click", async () => {
-                try {
-                    const updatedResources = JSON.parse(editor.value);
-                    this.resources = updatedResources;
-                    this.showToast(
-                        "Resources updated successfully!",
-                        "success",
-                    );
-                    this.populateFields(); // Re-populate fields with updated data
-                    console.log(this.resources)
-
-                    const formattedRequest = {
-                        resources: Object.values(this.resources),
-                    };
-
-                    // Save
-                    try {
-                        const response = await fetch(
-                            `/api/v1/stacks/bulk-update-resources/`,
-                            {
-                                method: "PATCH",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRFToken": this.getCsrfToken(),
-                                },
-                                body: JSON.stringify(formattedRequest),
-                            },
-                        );
-
-                        if (response.ok) {
-                            this.showToast(
-                                "Changes saved successfully.",
-                                "success",
-                            );
-                            this.pendingChanges = {};
-                            this.updateSaveBar();
-
-                            // Trigger IAC update
-                            const iacResponse = await fetch(
-                                `/api/v1/stacks/${stackId}/trigger-iac-update/`,
-                                {
-                                    method: "POST",
-                                    headers: {
-                                        "Content-Type": "application/json",
-                                        "X-CSRFToken": this.getCsrfToken(),
-                                    },
-                                    credentials: "include",
-                                },
-                            );
-
-                            if (iacResponse.ok) {
-                                this.showToast(
-                                    "IAC update triggered successfully.",
-                                    "success",
-                                );
-                            } else {
-                                this.showToast(
-                                    "Failed to trigger IAC update.",
-                                    "error",
-                                );
-                            }
-                        } else {
-                            const errorData = await response.json();
-                            this.showToast(
-                                `Failed to save changes: ${errorData.error || "Unknown error"}`,
-                                "error",
-                            );
-                        }
-                    } catch (error) {
-                        this.showToast(
-                            `Error saving changes: ${error.message}`,
-                            "error",
-                        );
-                    }
-                } catch (e) {
-                    this.showToast("Invalid JSON format!", "error");
-                }
-            });
-
-            // Cancel changes
-            cancelBtn.addEventListener("click", () => {
-                editor.value = JSON.stringify(this.resources, null, 2); // Reset to original
-            });
-        }
-    }
-
-    // ──────────────────────────────────────────────
     //  Utilities
     // ──────────────────────────────────────────────
     getCsrfToken() {
@@ -617,21 +699,6 @@ class MobileDashboard {
         const div = document.createElement("div");
         div.textContent = str;
         return div.innerHTML;
-    }
-
-    showToast(message, type = "success") {
-        const toast = document.createElement("div");
-        toast.className = `fixed top-6 right-6 z-[100] px-5 py-3 rounded-lg shadow-xl text-sm font-medium transition-all duration-300 transform translate-x-0 ${
-            type === "success"
-                ? "bg-emerald-600 text-white"
-                : "bg-red-600 text-white"
-        }`;
-        toast.textContent = message;
-        document.body.appendChild(toast);
-        setTimeout(() => {
-            toast.classList.add("opacity-0", "translate-x-4");
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
     }
 }
 

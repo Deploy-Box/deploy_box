@@ -40,13 +40,21 @@ class APIUsage(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["project", "api"],
+                name="unique_api_usage",
+            )
+        ]
+
 
 class APIKey(models.Model):
     """Public API key (Google-style) that can be passed via x-api-key header or ?api_key= query param."""
     id = ShortUUIDField(primary_key=True)
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name='api_keys')
     name = models.CharField(max_length=255, help_text="A label for this API key")
-    key_hash = models.CharField(max_length=64, unique=True, db_index=True)
+    key_hash = models.CharField(max_length=64, unique=True)
     key_hint = models.CharField(max_length=20, help_text="Masked key for display, e.g. dbx_Ab3...xY9z")
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1,0 +1,62 @@
+{% extends 'docs/docs_base.html' %}
+{% load static %}
+
+{% block docs_content %}
+<div class="mb-8">
+  <nav class="flex items-center gap-2 text-sm text-zinc-500 mb-6">
+    <a href="{% url 'main_site:docs' %}" class="hover:text-emerald-400 transition-colors">Docs</a>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-zinc-300">Billing &amp; Payments</span>
+  </nav>
+  <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">Billing &amp; Payments</h1>
+  <p class="text-lg text-zinc-400">Understand how pricing works and manage your payment methods.</p>
+</div>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Free to deploy</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>Every stack on Deploy Box is <strong class="text-white">free to deploy</strong> — no setup fees or per-container charges. You only pay for the plan you choose as your usage grows.</p>
+    <p>Visit the <a href="{% url 'main_site:pricing' %}" class="text-emerald-400 hover:underline">pricing page</a> for a full breakdown of plans and what's included.</p>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Payment methods</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>Deploy Box uses <strong class="text-white">Stripe</strong> for secure payment processing. You can add and manage credit or debit cards from your organization's billing page.</p>
+    <ul class="list-disc list-inside space-y-2 ml-2">
+      <li>Navigate to your <strong class="text-white">Organization Dashboard → Billing</strong></li>
+      <li>Click <strong class="text-white">Add Payment Method</strong> to add a card</li>
+      <li>Your card details are securely handled by Stripe — Deploy Box never stores them directly</li>
+    </ul>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Billing cycle</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>Billing is handled at the <strong class="text-white">organization level</strong> on a monthly cycle. At the end of each billing period, usage is calculated and charged to the payment method on file.</p>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Usage tracking</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>Deploy Box automatically tracks resource usage across all stacks in your organization. You can view current usage from the billing dashboard at any time.</p>
+  </div>
+</section>
+
+<div class="mt-16 pt-8 border-t border-zinc-800/60">
+  <h3 class="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-4">Next steps</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <a href="{% url 'main_site:docs_organizations' %}" class="flex items-center gap-3 p-4 rounded-xl border border-zinc-800/60 hover:border-emerald-500/30 transition-colors group">
+      <span class="text-sm text-zinc-400 group-hover:text-emerald-400">→</span>
+      <span class="text-sm text-zinc-300 group-hover:text-white">Manage your organization</span>
+    </a>
+    <a href="{% url 'main_site:docs_api' %}" class="flex items-center gap-3 p-4 rounded-xl border border-zinc-800/60 hover:border-emerald-500/30 transition-colors group">
+      <span class="text-sm text-zinc-400 group-hover:text-emerald-400">→</span>
+      <span class="text-sm text-zinc-300 group-hover:text-white">API reference</span>
+    </a>
+  </div>
+</div>
+{% endblock %}

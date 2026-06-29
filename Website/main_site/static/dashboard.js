@@ -20,7 +20,7 @@ document.getElementById("deleteOrgBtn").addEventListener("click", function () {
       })
       .catch((error) => {
         console.error("Error deleting organization:", error);
-        alert("Failed to delete organization. Please try again.");
+        showToast("Failed to delete organization. Please try again.", "error");
       });
   }
 });

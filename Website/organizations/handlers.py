@@ -7,6 +7,7 @@ from django.views import View
 import logging
 
 import organizations.services as services
+from organizations.services import ServiceError
 from core.helpers import request_helpers
 from organizations.forms import OrganizationCreateFormWithMembers
 from organizations.models import OrganizationMember, Organization
@@ -14,6 +15,12 @@ from organizations.helpers import check_permission
 from accounts.models import UserProfile
 
 logger = logging.getLogger(__name__)
+
+
+def _json_error(exc: ServiceError) -> JsonResponse:
+    """Convert a ServiceError into a JsonResponse."""
+    return JsonResponse({"message": str(exc)}, status=exc.status_code)
+
 
 def get_organizations(request: HttpRequest) -> JsonResponse:
     user = request.user
@@ -60,22 +67,30 @@ def update_organization(request: HttpRequest, organization_id: str) -> JsonRespo
     data = json.loads(request.body)
     assert(data != None)
 
-    return services.update_organization(user, organization_id, data)
+    try:
+        result = services.update_organization(user, organization_id, data)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def delete_organization(request: HttpRequest, organization_id: str) -> JsonResponse:
     user = request.user
 
-    return services.delete_organization(user, organization_id)
+    try:
+        result = services.delete_organization(user, organization_id)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def update_user(request: HttpRequest, organization_id: str, user_id: str) -> JsonResponse:
     user = request.user
     organization = Organization.objects.get(id=organization_id)
-    is_admin = OrganizationMember.objects.filter(organization=organization, user=user, role='admin').exists()
 
-    if is_admin:
-        return services.update_user(user, organization, user_id)
-    else:
-        return JsonResponse({"message": "you must be an org admin to remove members"}, status=400)
+    try:
+        result = services.update_user(user, organization, user_id)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def add_org_members(request: HttpRequest, organization_id: str) -> JsonResponse:
         try:
@@ -86,11 +101,19 @@ def add_org_members(request: HttpRequest, organization_id: str) -> JsonResponse:
         user = request.user
         organization = Organization.objects.get(id=organization_id)
 
-        return services.add_org_members(member, role, organization, user)
+        try:
+            result = services.add_org_member(user, str(organization.id), member, role)
+        except ServiceError as exc:
+            return _json_error(exc)
+        return JsonResponse(result, status=200)
 
 def remove_org_member(request: HttpRequest, organization_id: str, user_id: str) -> JsonResponse:
     user = request.user
-    return services.remove_org_member(user, organization_id, user_id)
+    try:
+        result = services.remove_org_member(user, organization_id, user_id)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def invite_new_user_to_org(request: HttpRequest, organization_id: str) -> JsonResponse:
     user = request.user
@@ -101,27 +124,33 @@ def invite_new_user_to_org(request: HttpRequest, organization_id: str) -> JsonRe
         return JsonResponse({"message": e.message}, status=400)
 
     try:
-
         organization = check_permission.check_permisssion(user, organization_id, requeired_role="admin")
-
     except check_permission.OrganizationPermissionsError as e:
         return e.to_response()
 
-    return services.invite_new_user_to_org(user, organization, email)
+    try:
+        result = services.invite_new_user_to_org(user, organization, email)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def leave_organization(request: HttpRequest, organization_id: str) -> JsonResponse:
-    """
-    Handler for users to leave an organization themselves.
-    """
+    """Handler for users to leave an organization themselves."""
     user = request.user
-    return services.leave_organization(user, organization_id)
+    try:
+        result = services.leave_organization(user, organization_id)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def remove_pending_invite(request: HttpRequest, organization_id: str, invite_id: str) -> JsonResponse:
-    """
-    Handler for removing pending invites from an organization.
-    """
+    """Handler for removing pending invites from an organization."""
     user = request.user
-    return services.remove_pending_invite(user, organization_id, invite_id)
+    try:
+        result = services.remove_pending_invite(user, organization_id, invite_id)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def initiate_project_transfer(request: HttpRequest, project_id: str) -> JsonResponse:
     """Initiate a project ownership transfer to a client"""
@@ -139,36 +168,54 @@ def initiate_project_transfer(request: HttpRequest, project_id: str) -> JsonResp
             
     except json.JSONDecodeError:
         return JsonResponse({"message": "Invalid JSON data"}, status=400)
-    except Exception as e:
-        return JsonResponse({"message": f"Error parsing request data: {e}"}, status=400)
 
-    return services.initiate_project_transfer(
-        user=user,
-        project_id=project_id,
-        client_email=client_email,
-        client_name=client_name,
-        client_company=client_company,
-        keep_developer=keep_developer
-    )
+    try:
+        result = services.initiate_project_transfer(
+            user=user,
+            project_id=project_id,
+            client_email=client_email,
+            client_name=client_name,
+            client_company=client_company,
+            keep_developer=keep_developer,
+        )
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def accept_project_transfer(request: HttpRequest, transfer_id: str) -> JsonResponse:
     """Accept a project ownership transfer"""
     user = request.user
-    return services.accept_project_transfer(transfer_id, user)
+    try:
+        result = services.accept_project_transfer(transfer_id, user)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def get_project_transfer_status(request: HttpRequest, transfer_id: str) -> JsonResponse:
     """Get the status of a project transfer invitation"""
-    return services.get_project_transfer_status(transfer_id)
+    try:
+        result = services.get_project_transfer_status(transfer_id)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def get_user_transfer_invitations(request: HttpRequest) -> JsonResponse:
     """Get all transfer invitations for the current user"""
     user = request.user
-    return services.get_user_transfer_invitations(user)
+    try:
+        result = services.get_user_transfer_invitations(user)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def cancel_project_transfer(request: HttpRequest, transfer_id: str) -> JsonResponse:
     """Cancel a project transfer invitation"""
     user = request.user
-    return services.cancel_project_transfer(user, transfer_id)
+    try:
+        result = services.cancel_project_transfer(user, transfer_id)
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)
 
 def transfer_project_to_organization(request: HttpRequest, project_id: str) -> JsonResponse:
     """Transfer a project to another organization"""
@@ -184,16 +231,14 @@ def transfer_project_to_organization(request: HttpRequest, project_id: str) -> J
             
     except json.JSONDecodeError:
         return JsonResponse({"message": "Invalid JSON data"}, status=400)
-    except Exception as e:
-        return JsonResponse({"message": f"Error parsing request data: {e}"}, status=400)
 
-    return services.transfer_project_to_organization(
-        user=user,
-        project_id=project_id,
-        target_organization_id=target_organization_id,
-        keep_developer=keep_developer
-    )
-
-
-
-
+    try:
+        result = services.transfer_project_to_organization(
+            user=user,
+            project_id=project_id,
+            target_organization_id=target_organization_id,
+            keep_developer=keep_developer,
+        )
+    except ServiceError as exc:
+        return _json_error(exc)
+    return JsonResponse(result, status=200)

@@ -71,7 +71,7 @@ document
     const email = document.getElementById("resetEmail").value;
 
     if (!email) {
-      alert("Please enter your email.");
+      showToast("Please enter your email.", "warning");
       return;
     }
 
@@ -82,11 +82,11 @@ document
     })
       .then((response) => response.json())
       .then((data) => {
-        alert(data.message || "Check your email for the reset link.");
+        showToast(data.message || "Check your email for the reset link.", "success");
       })
       .catch((error) => {
         console.error("Error:", error);
-        alert("An error occurred. Please try again.");
+        showToast("An error occurred. Please try again.", "error");
       });
   });
 
@@ -106,7 +106,7 @@ document
     })
       .then((response) => response.json())
       .then((data) => {
-        alert(data.message || data.error);
+        showToast(data.message || data.error, data.error ? "error" : "success");
       })
       .catch((error) => console.error("Error updating user:", error));
   });

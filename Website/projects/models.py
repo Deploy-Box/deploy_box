@@ -7,7 +7,7 @@ from core.fields import ShortUUIDField
 class Project(models.Model):
     id = ShortUUIDField(primary_key=True)
     name = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.TextField(blank=True, default="")
     organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -29,6 +29,14 @@ class ProjectMember(models.Model):
         ],
     )
     joined_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "project"],
+                name="unique_project_membership",
+            )
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.project.name}"

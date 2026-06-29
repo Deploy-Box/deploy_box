@@ -208,7 +208,7 @@ function checkGitHubAuth() {
                             })
                             .then(data => {
                                 // Show success message
-                                alert('Successfully connected repository!');
+                                showToast('Successfully connected repository!', 'success');
                                 // Update UI to show connected status
                                 updateRepoButtonText(repo.full_name);
                                 repoDropdown.classList.add('hidden');
@@ -219,7 +219,7 @@ function checkGitHubAuth() {
                             })
                             .catch(error => {
                                 console.error('Error creating webhook:', error);
-                                alert('Failed to connect repository. Please try again.');
+                                showToast('Failed to connect repository. Please try again.', 'error');
                             });
                     });
                     repoList.appendChild(repoItem);
@@ -282,7 +282,7 @@ function removeRepositoryConnection() {
             return response.json();
         })
         .then(data => {
-            alert('Repository connection removed successfully!');
+            showToast('Repository connection removed successfully!', 'success');
             // Update UI to show repository dropdown again
             document.getElementById('github-repos').classList.remove('hidden');
             document.getElementById('github-remove').classList.add('hidden');
@@ -304,7 +304,7 @@ function removeRepositoryConnection() {
         })
         .catch(error => {
             console.error('Error removing repository connection:', error);
-            alert('Failed to remove repository connection. Please try again.');
+            showToast('Failed to remove repository connection. Please try again.', 'error');
         });
     }
 }
@@ -433,7 +433,7 @@ function deleteStack(stackId) {
             })
             .catch(error => {
                 console.error('Error deleting stack:', error);
-                alert('An error occurred while deleting the stack');
+                showToast('An error occurred while deleting the stack', 'error');
             });
     }
 }
@@ -483,7 +483,7 @@ async function saveRootDirectory(stackId, rootDirectory) {
 
     } catch (error) {
         console.error('Error saving root directory:', error);
-        alert('Failed to update root directory. Please try again.');
+        showToast('Failed to update root directory. Please try again.', 'error');
     }
 }
 
@@ -568,4 +568,223 @@ function getCookie(name) {
     return cookieValue;
 }
 
+// Pause / Resume stack functionality
+(function () {
+    const pauseBtn = document.getElementById('pause-stack-btn');
+    const resumeBtn = document.getElementById('resume-stack-btn');
+    const bannerResumeBtn = document.getElementById('banner-resume-btn');
 
+    function getCsrfToken() {
+        const value = `; ${document.cookie}`;
+        const parts = value.split('; csrftoken=');
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    async function pauseStack(btn) {
+        const stackId = btn.dataset.stackId || document.getElementById('metadata')?.dataset.stackId;
+        if (!stackId) return;
+        if (!confirm('Pause this stack? Its resources will be scaled to zero.')) return;
+        const textEl = btn.querySelector('.button-text');
+        btn.disabled = true;
+        if (textEl) textEl.textContent = 'Pausing…';
+        try {
+            const resp = await fetch(`/api/v1/stacks/${stackId}/pause/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken(), 'Content-Type': 'application/json' },
+            });
+            if (!resp.ok) {
+                const d = await resp.json().catch(() => ({}));
+                throw new Error(d.error || resp.statusText);
+            }
+            location.reload();
+        } catch (e) {
+            alert('Failed to pause stack: ' + e.message);
+            btn.disabled = false;
+            if (textEl) textEl.textContent = 'Pause Stack';
+        }
+    }
+
+    async function resumeStack(btn) {
+        const stackId = btn.dataset?.stackId || document.getElementById('metadata')?.dataset.stackId;
+        if (!stackId) return;
+        const textEl = btn.querySelector('.button-text') || btn;
+        btn.disabled = true;
+        if (textEl === btn) btn.textContent = 'Resuming…';
+        else textEl.textContent = 'Resuming…';
+        try {
+            const resp = await fetch(`/api/v1/stacks/${stackId}/resume/`, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': getCsrfToken(), 'Content-Type': 'application/json' },
+            });
+            if (!resp.ok) {
+                const d = await resp.json().catch(() => ({}));
+                throw new Error(d.error || resp.statusText);
+            }
+            location.reload();
+        } catch (e) {
+            alert('Failed to resume stack: ' + e.message);
+            btn.disabled = false;
+            if (textEl === btn) btn.textContent = 'Resume Stack';
+            else textEl.textContent = 'Resume Stack';
+        }
+    }
+
+    if (pauseBtn) pauseBtn.addEventListener('click', () => pauseStack(pauseBtn));
+    if (resumeBtn) resumeBtn.addEventListener('click', () => resumeStack(resumeBtn));
+    if (bannerResumeBtn) bannerResumeBtn.addEventListener('click', () => resumeStack(bannerResumeBtn));
+})();
+
+
+// Deployment Log Viewer
+(function () {
+    const section = document.getElementById('deployment-log-section');
+    if (!section) return;
+
+    const stackId = document.getElementById('metadata')?.dataset.stackId;
+    if (!stackId) return;
+
+    const logOutput = document.getElementById('log-output');
+    const logTitle = document.getElementById('log-title');
+    const statusBadge = document.getElementById('log-status-badge');
+    const toggleBtn = document.getElementById('log-toggle-btn');
+    const contentWrapper = document.getElementById('log-content-wrapper');
+    const scrollHint = document.getElementById('log-scroll-hint');
+    const scrollBtn = document.getElementById('log-scroll-btn');
+
+    let currentLogId = null;
+    let afterLine = 0;
+    let pollInterval = null;
+    let collapsed = false;
+    const POLL_MS = 3000;
+
+    const OP_LABELS = { APPLY: 'Deploying', DELETE: 'Destroying', PAUSE: 'Pausing', RESUME: 'Resuming' };
+    const STATUS_STYLES = {
+        RUNNING: { bg: 'bg-blue-900', text: 'text-blue-300', dot: 'bg-blue-400', label: 'Running' },
+        COMPLETED: { bg: 'bg-emerald-900', text: 'text-emerald-300', dot: 'bg-emerald-400', label: 'Completed' },
+        FAILED: { bg: 'bg-red-900', text: 'text-red-300', dot: 'bg-red-400', label: 'Failed' },
+    };
+
+    function updateStatusBadge(status) {
+        const s = STATUS_STYLES[status] || STATUS_STYLES.RUNNING;
+        statusBadge.className = `inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${s.bg} ${s.text}`;
+        statusBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${s.dot} mr-1.5 ${status === 'RUNNING' ? 'animate-pulse' : ''}"></span>${s.label}`;
+    }
+
+    function isNearBottom() {
+        return logOutput.scrollHeight - logOutput.scrollTop - logOutput.clientHeight < 60;
+    }
+
+    function scrollToBottom() {
+        logOutput.scrollTop = logOutput.scrollHeight;
+        scrollHint.classList.add('hidden');
+    }
+
+    function appendLines(lines) {
+        if (!lines.length) return;
+        const wasNearBottom = isNearBottom();
+        const fragment = document.createDocumentFragment();
+
+        for (const line of lines) {
+            const div = document.createElement('div');
+            div.className = 'log-line';
+            div.textContent = line;
+            fragment.appendChild(div);
+        }
+
+        logOutput.appendChild(fragment);
+
+        if (wasNearBottom) {
+            scrollToBottom();
+        } else {
+            scrollHint.classList.remove('hidden');
+        }
+    }
+
+    async function fetchLatestLog() {
+        try {
+            const resp = await fetch(`/api/v1/stacks/${stackId}/deployment-logs/latest/`, {
+                credentials: 'same-origin',
+            });
+            if (!resp.ok) return null;
+            return await resp.json();
+        } catch { return null; }
+    }
+
+    async function fetchLogContent(logId, afterLineNum) {
+        try {
+            const resp = await fetch(
+                `/api/v1/stacks/${stackId}/deployment-logs/${logId}/?after_line=${afterLineNum}`,
+                { credentials: 'same-origin' }
+            );
+            if (!resp.ok) return null;
+            return await resp.json();
+        } catch { return null; }
+    }
+
+    async function poll() {
+        if (!currentLogId) return;
+
+        const data = await fetchLogContent(currentLogId, afterLine);
+        if (!data) return;
+
+        if (data.lines && data.lines.length > 0) {
+            appendLines(data.lines);
+            afterLine = data.line_count;
+        }
+
+        updateStatusBadge(data.status);
+
+        if (data.status !== 'RUNNING') {
+            stopPolling();
+        }
+    }
+
+    function startPolling() {
+        if (pollInterval) return;
+        pollInterval = setInterval(poll, POLL_MS);
+        poll(); // immediate first poll
+    }
+
+    function stopPolling() {
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
+    }
+
+    async function init() {
+        const log = await fetchLatestLog();
+        if (!log) return; // no logs yet
+
+        currentLogId = log.id;
+        afterLine = 0;
+        const opLabel = OP_LABELS[log.operation] || log.operation;
+        logTitle.textContent = `${opLabel} — Deployment Log`;
+        updateStatusBadge(log.status);
+        section.style.display = '';
+
+        // Fetch full content
+        const data = await fetchLogContent(currentLogId, 0);
+        if (data && data.lines && data.lines.length > 0) {
+            appendLines(data.lines);
+            afterLine = data.line_count;
+        }
+
+        if (log.status === 'RUNNING') {
+            startPolling();
+        }
+    }
+
+    // Toggle collapse
+    toggleBtn.addEventListener('click', function () {
+        collapsed = !collapsed;
+        contentWrapper.style.display = collapsed ? 'none' : '';
+        toggleBtn.querySelector('svg').style.transform = collapsed ? 'rotate(-90deg)' : '';
+    });
+
+    // Scroll-to-bottom button
+    scrollBtn.addEventListener('click', scrollToBottom);
+
+    // Initialize
+    init();
+})();

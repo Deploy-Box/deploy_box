@@ -122,6 +122,35 @@ class Command(BaseCommand):
                 'description': 'Django Stack Basic Plan - Django, PostgreSQL',
                 'name': 'Django Stack Basic',
             },
+            {
+                'type': 'STATIC',
+                'variant': 'BASIC',
+                'version': '1.0',
+                'price_id': 'price_static_basic',
+                'description': 'Static Website - React SPA on Azure Storage with custom subdomain',
+                'name': 'Static Website (React)',
+                'features': [
+                    'React SPA',
+                    'Automatic npm build',
+                    'Azure Storage static hosting',
+                    'Custom subdomain',
+                    'SPA routing (404 → index.html)',
+                    'CDN-ready',
+                ],
+                'stack_infrastructure': [
+                    {'resource_type': 'AZURERM_RESOURCE_GROUP'},
+                    {'resource_type': 'AZURERM_STORAGE_ACCOUNT'},
+                    {
+                        'resource_type': 'AZURERM_STORAGE_ACCOUNT_STATIC_WEBSITE',
+                        'static_file_directory': '.',
+                        'static_file_build_command': 'npm install && npm run build',
+                        'static_file_build_output_directory': 'build',
+                        'index_document': 'index.html',
+                        'error_404_document': 'index.html',
+                    },
+                    {'resource_type': 'DEPLOYBOXRM_EDGE'},
+                ],
+            },
         ]
 
         purchasable_stacks = []
@@ -158,6 +187,11 @@ class Command(BaseCommand):
                 'name': 'Test Django Basic Stack',
                 'purchasable_stack': purchasable_stacks[2],
                 'status': 'STOPPED',
+            },
+            {
+                'name': 'Test Static Website Stack',
+                'purchasable_stack': purchasable_stacks[3],
+                'status': 'STARTING',
             },
         ]
 

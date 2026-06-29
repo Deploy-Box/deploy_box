@@ -1,37 +1,4 @@
-from .azurerm_container_app.model import AzurermContainerApp
-from .azurerm_container_app.manager import AzurermContainerAppManager
-from .azurerm_container_app.serializer import AzurermContainerAppSerializer
-
-from .azurerm_resource_group.model import AzurermResourceGroup
-from .azurerm_resource_group.serializer import AzurermResourceGroupSerializer
-
-from .azurerm_storage_account.model import AzurermStorageAccount
-from .azurerm_storage_account.manager import AzurermStorageAccountManager
-from .azurerm_storage_account.serializer import AzurermStorageAccountSerializer
-
-from .azurerm_storage_container.model import AzurermStorageContainer
-from .azurerm_storage_container.manager import AzurermStorageContainerManager
-from .azurerm_storage_container.serializer import AzurermStorageContainerSerializer
-
-from .azurerm_dns_cname_record.model import AzurermDnsCnameRecord
-from .azurerm_dns_cname_record.serializer import AzurermDnsCnameRecordSerializer
-
-from .azurerm_container_app_environment.model import AzurermContainerAppEnvironment
-from .azurerm_container_app_environment.manager import AzurermContainerAppEnvironmentManager
-from .azurerm_container_app_environment.serializer import AzurermContainerAppEnvironmentSerializer
-
-from .deployboxrm_workos_integration.model import DeployBoxrmWorkOSIntegration
-from .deployboxrm_workos_integration.manager import DeployBoxrmWorkOSIntegrationManager
-from .deployboxrm_workos_integration.serializer import DeployBoxrmWorkosIntegrationSerializer
-
-from .azurerm_storage_account_static_website.model import AzurermStorageAccountStaticWebsite
-from .azurerm_storage_account_static_website.manager import AzurermStorageAccountStaticWebsite
-from .azurerm_storage_account_static_website.serializer import AzurermStorageAccountStaticWebsiteSerializer
-
-from .deployboxrm_edge.model import DeployBoxrmEdge
-from .deployboxrm_edge.manager import DeployBoxrmEdgeManager
-from .deployboxrm_edge.serializer import DeployBoxrmEdgeSerializer
-
-from .azurerm_log_analytics_workspace.model import AzurermLogAnalyticsWorkspace
-from .azurerm_log_analytics_workspace.manager import AzurermLogAnalyticsWorkspaceManager
-from .azurerm_log_analytics_workspace.serializer import AzurermLogAnalyticsWorkspaceSerializer
+# Unified resource model
+from .resource import Resource, ResourceDependency
+from .type_registry import ResourceTypeRegistry, ResourceTypeDefinition
+from .compat_serializer import serialize_resource_compat, serialize_resources_compat

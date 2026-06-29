@@ -2,9 +2,11 @@ app = {
   environment            = "prod"
   location               = "eastus"
   host                   = "https://www.deploy-box.com"
-  django_settings_module = "core.settings.dev" # Override to use dev settings for prod deployment
+  django_settings_module = "config.settings.dev" # Override to use dev settings for prod deployment
   base_domain            = "deploy-box.com"
 }
+
+app_service_plan_sku = "B1"
 
 auth = {
   oauth2_password_credentials_client_id = "G5uGZZZnMojr0pRo4MiZDr6FLjkRxk2PrkuR3Ymd"
@@ -15,13 +17,13 @@ auth = {
 
 database = {
   name = "deploy_box_prod"
-  user = "kalebwbishop"
+  user = "deploy_box_website"
   host = "deploy-box-postgres.postgres.database.azure.com"
   port = "5432"
 }
 
 services = {
-  stack_endpoint     = "https://deployboxsharedsadev.blob.core.windows.net/stack-source-code-container"
+  stack_endpoint     = "https://deployboxsadev.blob.core.windows.net/stack-source-code-container"
   email_host_user    = "noreplydeploybbox@gmail.com"
   api_base_url       = "http://deploy-box-apis-func-dev.azurewebsites.net"
   npm_bin_path       = "C:\\Program Files\\nodejs\\npm.cmd"

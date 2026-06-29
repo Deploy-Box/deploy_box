@@ -346,11 +346,11 @@ document.getElementById('confirmPurchase').addEventListener('click', function() 
     
     // Validate selections
     if (!orgId) {
-        alert("Please select an organization before purchasing");
+        showToast("Please select an organization before purchasing", "warning");
         return;
     }
     if (!projectId) {
-        alert("Please select a project before purchasing");
+        showToast("Please select a project before purchasing", "warning");
         return;
     }
     
@@ -364,7 +364,7 @@ document.getElementById('confirmPurchase').addEventListener('click', function() 
         // For database stacks, use the same Stripe flow as payments home page
         // Ensure stripe is initialized
         if (!stripe) {
-            alert('Payment system is still loading. Please wait a moment and try again.');
+            showToast('Payment system is still loading. Please wait a moment and try again.', 'warning');
             return;
         }
         
@@ -382,7 +382,7 @@ document.getElementById('confirmPurchase').addEventListener('click', function() 
         .then((result) => result.json())
         .then((data) => {
             if (data.error) {
-                alert(data.error);
+                showToast(data.error, "error");
                 return;
             }
             console.log("sessionID", data);
@@ -392,12 +392,12 @@ document.getElementById('confirmPurchase').addEventListener('click', function() 
         .then((res) => {
             if (res && res.error) {
                 console.error("Stripe checkout error:", res.error);
-                alert("Error redirecting to payment page. Please try again.");
+                showToast("Error redirecting to payment page. Please try again.", "error");
             }
         })
         .catch((error) => {
             console.error("Error creating checkout session:", error);
-            alert("Failed to create checkout session. Please try again.");
+            showToast("Failed to create checkout session. Please try again.", "error");
         });
     } else {
         // For mock stacks, simulate purchase process (replace with actual API call)

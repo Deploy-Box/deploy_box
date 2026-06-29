@@ -75,10 +75,19 @@
         </div>
     </div>
 
-    <script>
-        // Main content is now always positioned to the right of the sidebar
-        // No dynamic adjustment needed since sidebar is always expanded
+    <script src="{% static 'toast.js' %}"></script>
 
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            {% for message in messages %}
+            showToast("{{ message|escapejs }}", "{{ message.tags|default:'info' }}");
+            {% endfor %}
+        });
+    </script>
+    {% endif %}
+
+    <script>
         // Organization creation modal functionality
         document.addEventListener('DOMContentLoaded', function () {
             const createOrgModal = document.getElementById('createOrgModal');
@@ -101,17 +110,17 @@
                     const email = orgEmail.value.trim();
 
                     if (!name) {
-                        alert('Please enter an organization name');
+                        showToast('Please enter an organization name', 'warning');
                         return;
                     }
 
                     if (!email) {
-                        alert('Please enter an organization email');
+                        showToast('Please enter an organization email', 'warning');
                         return;
                     }
 
                     if (!isValidEmail(email)) {
-                        alert('Please enter a valid email address');
+                        showToast('Please enter a valid email address', 'warning');
                         return;
                     }
 
@@ -131,7 +140,7 @@
                         if (response.ok) {
                             return response.json().then(data => {
                                 if (data.message) {
-                                    alert(data.message);
+                                    showToast(data.message, 'success');
                                 }
                                 createOrgModal.classList.add('hidden');
                                 createOrgForm.reset();
@@ -145,7 +154,7 @@
                     })
                     .catch(error => {
                         console.error('Error creating organization:', error);
-                        alert('Failed to create organization. Please try again.');
+                        showToast('Failed to create organization. Please try again.', 'error');
                     })
                     .finally(() => {
                         submitCreateOrg.innerHTML = 'Create Organization';

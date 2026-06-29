@@ -10,4 +10,6 @@ def stack_bg_color(stack_type):
         "mean": "bg-pink-300",
         "lamp": "bg-yellow-200",
         "mevn": "bg-purple-200",
+        "static": "bg-cyan-200",
+        "social": "bg-rose-200",
     }.get(stack_type, "bg-zinc-50")
