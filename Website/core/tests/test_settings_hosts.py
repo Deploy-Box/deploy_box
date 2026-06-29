@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 from django.test import SimpleTestCase
 
-from core.settings.base import _append_env_host
+from config.settings.base import _append_env_host
 
 
 class AppendEnvHostTest(SimpleTestCase):

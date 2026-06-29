@@ -25,7 +25,7 @@ services:
     build: .
     container_name: deploy-box-e2e-django
     environment:
-      DJANGO_SETTINGS_MODULE: core.settings.dev
+      DJANGO_SETTINGS_MODULE: config.settings.dev
       ENV: DEV
       HOST: "http://localhost:8000"
       DB_NAME: deploy_box_e2e

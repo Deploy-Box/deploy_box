@@ -1,5 +1,5 @@
 """
-Development settings — used when DJANGO_SETTINGS_MODULE=core.settings.dev
+Development settings — used when DJANGO_SETTINGS_MODULE=config.settings.dev
 """
 
 import ssl

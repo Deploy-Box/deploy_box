@@ -2,7 +2,7 @@ app = {
   environment            = "prod"
   location               = "eastus"
   host                   = "https://www.deploy-box.com"
-  django_settings_module = "core.settings.dev" # Override to use dev settings for prod deployment
+  django_settings_module = "config.settings.dev" # Override to use dev settings for prod deployment
   base_domain            = "deploy-box.com"
 }
 

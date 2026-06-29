@@ -34,25 +34,25 @@ jobs:
       - name: Verify migrations can be created
         run: |
           cd Website
-          python manage.py makemigrations --check --dry-run --settings=core.settings.test --verbosity=2
+          python manage.py makemigrations --check --dry-run --settings=config.settings.test --verbosity=2
           echo "✅ Migration creation check passed"
 
       - name: Check for migration conflicts
         run: |
           cd Website
-          python manage.py showmigrations --settings=core.settings.test --verbosity=2
+          python manage.py showmigrations --settings=config.settings.test --verbosity=2
           echo "✅ Migration conflict check passed"
 
       - name: Validate migration files
         run: |
           cd Website
-          python manage.py check --settings=core.settings.test
+          python manage.py check --settings=config.settings.test
           echo "✅ Django system check passed"
 
       - name: Test migration plan
         run: |
           cd Website
-          python manage.py migrate --run-syncdb --settings=core.settings.test --verbosity=2
+          python manage.py migrate --run-syncdb --settings=config.settings.test --verbosity=2
           echo "✅ Migration execution test passed"
 
   run-tests:
@@ -87,7 +87,7 @@ jobs:
 
       - name: Run tests
         working-directory: Website
-        run: python manage.py test accounts.tests payments.tests stacks.tests --settings=core.settings.test --verbosity 2 --no-input
+        run: python manage.py test accounts.tests payments.tests stacks.tests --settings=config.settings.test --verbosity 2 --no-input
 
   # lint-and-test:
   #   runs-on: ubuntu-latest

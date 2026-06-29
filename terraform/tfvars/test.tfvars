@@ -2,7 +2,7 @@ app = {
   environment            = "test"
   location               = "eastus"
   host                   = "https://test.deploy-box.com"
-  django_settings_module = "core.settings.dev"
+  django_settings_module = "config.settings.dev"
   base_domain            = "test.deploy-box.com"
 }
 

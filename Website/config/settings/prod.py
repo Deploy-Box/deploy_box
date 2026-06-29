@@ -1,8 +1,8 @@
 """
-Production settings — used when DJANGO_SETTINGS_MODULE=core.settings.prod
+Production settings — used when DJANGO_SETTINGS_MODULE=config.settings.prod
 """
 
-from core.settings.base import *  # noqa: F401, F403
+from config.settings.base import *  # noqa: F401, F403
 
 # ──────────────────────────────────────────────
 # Debug
