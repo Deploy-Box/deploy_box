@@ -53,7 +53,7 @@ for _platform_hostname_env in ("CONTAINER_APP_HOSTNAME", "WEBSITE_HOSTNAME"):
     _append_env_host(ALLOWED_HOSTS, _platform_hostname_env)
 
 
-ROOT_URLCONF = "core.urls"
+ROOT_URLCONF = "config.urls"
 
 # ──────────────────────────────────────────────
 # Installed Apps
@@ -72,6 +72,7 @@ INSTALLED_APPS = [
     # Custom Apps
     "main_site",
     "accounts",
+    "apps.developer",
     "github",
     "stacks",
     "projects",
@@ -194,7 +195,7 @@ STORAGES = {
 }
 
 MEDIA_URL = "/media/"
-MEDIA_ROOT = os.path.join(BASE_DIR, "main_site", "media")
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # ──────────────────────────────────────────────
 # Authentication (all auth flows go through WorkOS)

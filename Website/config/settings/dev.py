@@ -4,7 +4,7 @@ Development settings — used when DJANGO_SETTINGS_MODULE=core.settings.dev
 
 import ssl
 
-from core.settings.base import *  # noqa: F401, F403
+from config.settings.base import *  # noqa: F401, F403
 
 # ──────────────────────────────────────────────
 # Disable SSL verification for local dev (corporate proxy workaround)

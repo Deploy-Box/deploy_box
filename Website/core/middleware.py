@@ -40,6 +40,7 @@ class LoginRequiredMiddleware:
     # URL prefixes that do NOT require authentication.
     PUBLIC_PREFIXES = (
         "/",             # exact home page (handled by exact match below)
+        "/developer",
         "/login",
         "/signup",
         "/stacks",

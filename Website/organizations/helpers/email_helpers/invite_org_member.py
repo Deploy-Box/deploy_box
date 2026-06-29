@@ -1,6 +1,6 @@
 from django.core.mail import send_mail
 from django.core.mail import EmailMessage
-from core import settings
+from config import settings
 from django.contrib.sites.shortcuts import get_current_site
 from organizations.models import Organization
 from accounts.models import UserProfile
