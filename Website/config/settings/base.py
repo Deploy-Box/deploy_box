@@ -167,7 +167,7 @@ DATABASES = {
         "ENGINE": "core.backends.postgresql_entra",
         "NAME": os.getenv("DB_NAME"),
         "USER": os.getenv("DB_USER"),
-        "PASSWORD": "",  # overridden by custom backend at connection time
+        "PASSWORD": _kv.get_secret("deploy-box-postgresql-db-password"),
         "HOST": os.getenv("DB_HOST"),
         "PORT": os.getenv("DB_PORT"),
         "CONN_MAX_AGE": 600,
