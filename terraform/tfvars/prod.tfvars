@@ -17,7 +17,7 @@ auth = {
 
 database = {
   name = "deploy_box_prod"
-  user = "deploy_box_website"
+  user = "deploy-box-migration-user"
   host = "deploy-box-postgres.postgres.database.azure.com"
   port = "5432"
 }

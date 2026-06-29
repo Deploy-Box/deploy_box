@@ -102,10 +102,9 @@ jobs:
           HOST: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).app_host }}
           KEY_VAULT_NAME: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).key_vault_name }}
           DB_NAME: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).database_name }}
-          DB_USER: deploy_box_cd
+          DB_USER: deploy-box-migration-user
           DB_HOST: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).database_host }}
           DB_PORT: ${{ fromJson(needs.deploy-infrastructure.outputs.tf_outputs).database_port }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
           DJANGO_SECRET_KEY: ${{ secrets.DJANGO_SECRET_KEY }}
           DEPLOY_BOX_GITHUB_TOKEN_KEY: ${{ secrets.DEPLOY_BOX_GITHUB_TOKEN_KEY }}
         run: |
