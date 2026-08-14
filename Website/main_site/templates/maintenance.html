@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<section class="min-h-screen bg-zinc-950 flex flex-col items-center justify-center relative overflow-hidden py-24">
+    <!-- Background Texture -->
+    <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-teal-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="z-10 w-full max-w-3xl px-6 text-center">
+        <div class="flex flex-col items-center gap-8">
+            <h1 class="text-6xl md:text-8xl font-white text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-100 to-white font-manrope tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                Coming Soon
+            </h1>
+            
+            <p class="text-lg md:text-xl text-zinc-300 max-w-xl mx-auto leading-relaxed font-light">
+                We're crafting something special. We are working hard to get this page ready for you and will have it up very soon.
+            </p>
+
+            <div class="w-full max-w-md mx-auto mt-4">
+                <div class="flex flex-col sm:flex-row gap-3">
+                    <input type="text" 
+                           class="w-full px-5 py-3.5 bg-zinc-900/80 border border-zinc-700 text-zinc-100 placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300 backdrop-blur-sm" 
+                           placeholder="Enter your email for updates...">
+                    <button class="sm:w-auto w-full px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] border border-transparent whitespace-nowrap">
+                        Notify Me
+                    </button>
+                </div>
+                <p class="mt-4 text-xs text-zinc-500 font-medium">
+                    We'll notify you when it's live. No spam.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+<!--Javascript-->
+<script>
+    const contactElement = document.getElementById('contact')
+    const pricingElement = document.getElementById('pricing')
+    const currentURL = window.location.href;
+
+    if(currentURL.includes('contact')){
+        if(contactElement) {
+            contactElement.classList.add('text-emerald-400')
+            contactElement.classList.remove('text-white')
+        }
+        if(pricingElement) {
+            pricingElement.classList.add('text-white')
+            pricingElement.classList.remove('text-emerald-400')
+        }
+    }
+</script>

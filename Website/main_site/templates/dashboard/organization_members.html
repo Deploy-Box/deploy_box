@@ -1,0 +1,503 @@
+{% extends 'dashboard_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="w-full bg-gray-50">
+    {% include 'dashboard/components/_page_header.html' with title='Organization Members' subtitle='Manage members for '|add:organization.name %}
+    <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
+        <section class="mb-8">
+            <div class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-emerald-400 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z" />
+                        </svg>
+                        Members
+                    </h2>
+                    <div class="flex space-x-3">
+                        <button id="inviteNewMemberBtn" 
+                                class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" />
+                            </svg>
+                            Invite New Member
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="membersList" class="space-y-4">
+                    {% for member in members %}
+                    <div class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <h3 class="text-lg font-semibold text-zinc-900">{{ member.user.username }}</h3>
+                                    {% if member.user == user %}
+                                    <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">You</span>
+                                    {% endif %}
+                                </div>
+                                <p class="text-sm text-zinc-500">Role: {{ member.role }}</p>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                {% if member.user == user %}
+                                <button id="leaveOrgBtn" 
+                                        class="inline-flex items-center bg-amber-500 hover:bg-amber-600 px-3 py-1.5 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1.5" viewBox="0 0 20 20" fill="currentColor">
+                                        <path fill-rule="evenodd" d="M3 3a1 1 0 00-1 1v12a1 1 0 102 0V4a1 1 0 00-1-1zm10.293 9.293a1 1 0 001.414 1.414l3-3a1 1 0 000-1.414l-3-3a1 1 0 10-1.414 1.414L14.586 9H7a1 1 0 100 2h7.586l-1.293 1.293z" clip-rule="evenodd" />
+                                    </svg>
+                                    Leave
+                                </button>
+                                {% elif is_admin and member.user != user %}
+                                <button class="remove-member-btn text-red-500 hover:text-red-600 transition-colors duration-300"
+                                        data-member-id="{{ member.id }}"
+                                        data-member-name="{{ member.user.username }}">
+                                    Remove
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    {% include 'dashboard/components/_empty_state.html' with message='No members in this organization' icon_path='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4' %}
+                    {% endfor %}
+                </div>
+                
+                <!-- Pending Invites Section -->
+                {% if pending_invites %}
+                <div class="mt-8">
+                    <h3 class="text-lg font-semibold text-zinc-900 mb-4 flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-amber-500" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd" />
+                        </svg>
+                        Pending Invites
+                    </h3>
+                    <div class="space-y-3">
+                        {% for invite in pending_invites %}
+                        <div class="bg-amber-50 p-4 rounded-lg border border-amber-200 transition-all duration-300 hover:bg-amber-100">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h4 class="text-md font-semibold text-amber-900">{{ invite.email }}</h4>
+                                    <p class="text-sm text-amber-600">Pending invitation</p>
+                                </div>
+                                <div class="flex items-center space-x-3">
+                                    {% if is_admin %}
+                                    <button class="remove-invite-btn text-red-500 hover:text-red-600 transition-colors duration-300"
+                                            data-invite-id="{{ invite.id }}"
+                                            data-invite-email="{{ invite.email }}">
+                                        Cancel Invite
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Hidden organization ID for JavaScript -->
+<input type="hidden" id="organizationId" value="{{ organization.id }}">
+
+<!-- Modals -->
+{% include 'dashboard/components/_modal.html' with modal_id='inviteModal' modal_title='Invite New Member' modal_message='Enter the email address of the person you want to invite to this organization. They will receive an invitation to join.' icon_color='emerald' confirm_text='Send Invitation' confirm_color='emerald' cancel_text='Cancel' has_input=True input_label='Email Address' input_placeholder='Enter email address' %}
+
+{% include 'dashboard/components/_modal.html' with modal_id='leaveOrgModal' modal_title='Leave Organization' modal_message='Are you sure you want to leave this organization? This action cannot be undone.' icon_color='amber' confirm_text='Leave Organization' confirm_color='amber' cancel_text='Cancel' %}
+
+{% include 'dashboard/components/_modal.html' with modal_id='removeMemberModal' modal_title='Remove Member' modal_message='Are you sure you want to remove this member from the organization?' icon_color='red' confirm_text='Remove Member' confirm_color='red' cancel_text='Cancel' %}
+
+{% include 'dashboard/components/_modal.html' with modal_id='cancelInviteModal' modal_title='Cancel Invitation' modal_message='Are you sure you want to cancel this invitation?' icon_color='red' confirm_text='Cancel Invitation' confirm_color='red' cancel_text='Cancel' %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Invite new member modal functionality
+    const inviteBtn = document.getElementById('inviteNewMemberBtn');
+    const inviteModal = document.getElementById('inviteModal');
+    const cancelInvite = document.getElementById('inviteModal_cancel');
+    const sendInvite = document.getElementById('inviteModal_confirm');
+    const inviteForm = document.getElementById('inviteModal_form');
+    const inviteEmail = document.getElementById('inviteModal_input');
+
+    inviteBtn.addEventListener('click', function() {
+        inviteModal.classList.remove('hidden');
+        hideInviteError();
+    });
+
+    cancelInvite.addEventListener('click', function() {
+        inviteModal.classList.add('hidden');
+        inviteForm.reset();
+        hideInviteError();
+    });
+
+    sendInvite.addEventListener('click', function() {
+        const email = inviteEmail.value.trim();
+        
+        // Clear any previous error
+        hideInviteError();
+        
+        if (!email) {
+            showInviteError('Please enter an email address');
+            return;
+        }
+
+        if (!isValidEmail(email)) {
+            showInviteError('Please enter a valid email address');
+            return;
+        }
+
+        // Show loading state
+        sendInvite.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Sending...';
+        sendInvite.disabled = true;
+
+        const organizationId = document.getElementById('organizationId').value;
+        
+        fetch(`/api/v1/organizations/organizations/${organizationId}/invite/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: `email=${encodeURIComponent(email)}`
+        })
+        .then(response => {
+            return response.json().then(data => ({
+                ok: response.ok,
+                data: data
+            }));
+        })
+        .then(({ok, data}) => {
+            if (ok) {
+                inviteModal.classList.add('hidden');
+                inviteForm.reset();
+                hideInviteError();
+                location.reload();
+            } else {
+                showInviteError(data.message || 'Failed to send invitation. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error sending invite:', error);
+            showInviteError('Failed to send invitation. Please try again.');
+        })
+        .finally(() => {
+            sendInvite.innerHTML = 'Send Invitation';
+            sendInvite.disabled = false;
+        });
+    });
+
+    // Close modal when clicking outside
+    inviteModal.addEventListener('click', function(e) {
+        if (e.target === inviteModal) {
+            inviteModal.classList.add('hidden');
+            inviteForm.reset();
+            hideInviteError();
+        }
+    });
+
+    // Close modals with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            if (!inviteModal.classList.contains('hidden')) {
+                inviteModal.classList.add('hidden');
+                inviteForm.reset();
+                hideInviteError();
+            }
+            if (!leaveOrgModal.classList.contains('hidden')) {
+                leaveOrgModal.classList.add('hidden');
+                hideModalError('leaveOrgModal');
+                hideModalSuccess('leaveOrgModal');
+            }
+            if (!removeMemberModal.classList.contains('hidden')) {
+                removeMemberModal.classList.add('hidden');
+                currentMemberId = null;
+                hideModalError('removeMemberModal');
+                hideModalSuccess('removeMemberModal');
+            }
+            if (!cancelInviteModal.classList.contains('hidden')) {
+                cancelInviteModal.classList.add('hidden');
+                currentInviteId = null;
+                hideModalError('cancelInviteModal');
+                hideModalSuccess('cancelInviteModal');
+            }
+        }
+    });
+
+    // Helper functions for modal messages
+    function showModalError(modalId, message) {
+        const errorContainer = document.getElementById(`${modalId}_error`);
+        const errorText = document.getElementById(`${modalId}_error_text`);
+        const successContainer = document.getElementById(`${modalId}_success`);
+        
+        if (successContainer) successContainer.classList.add('hidden');
+        if (errorText) errorText.textContent = message;
+        if (errorContainer) errorContainer.classList.remove('hidden');
+    }
+    
+    function hideModalError(modalId) {
+        const errorContainer = document.getElementById(`${modalId}_error`);
+        if (errorContainer) errorContainer.classList.add('hidden');
+    }
+    
+    function showModalSuccess(modalId, message) {
+        const successContainer = document.getElementById(`${modalId}_success`);
+        const successText = document.getElementById(`${modalId}_success_text`);
+        const errorContainer = document.getElementById(`${modalId}_error`);
+        
+        if (errorContainer) errorContainer.classList.add('hidden');
+        if (successText) successText.textContent = message;
+        if (successContainer) successContainer.classList.remove('hidden');
+    }
+    
+    function hideModalSuccess(modalId) {
+        const successContainer = document.getElementById(`${modalId}_success`);
+        if (successContainer) successContainer.classList.add('hidden');
+    }
+    
+    function hideAllModalMessages(modalId) {
+        hideModalError(modalId);
+        hideModalSuccess(modalId);
+    }
+    
+    // Email validation function
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+    
+    // Show error message in modal (legacy wrapper)
+    function showInviteError(message) {
+        showModalError('inviteModal', message);
+    }
+    
+    // Hide error message in modal (legacy wrapper)
+    function hideInviteError() {
+        hideModalError('inviteModal');
+    }
+
+    // Leave organization functionality
+    const leaveOrgBtn = document.getElementById('leaveOrgBtn');
+    const leaveOrgModal = document.getElementById('leaveOrgModal');
+    const cancelLeaveOrg = document.getElementById('leaveOrgModal_cancel');
+    const confirmLeaveOrg = document.getElementById('leaveOrgModal_confirm');
+    
+    if (leaveOrgBtn) {
+        leaveOrgBtn.addEventListener('click', function() {
+            leaveOrgModal.classList.remove('hidden');
+        });
+        
+    cancelLeaveOrg.addEventListener('click', function() {
+        leaveOrgModal.classList.add('hidden');
+        hideModalError('leaveOrgModal');
+        hideModalSuccess('leaveOrgModal');
+    });        confirmLeaveOrg.addEventListener('click', function() {
+            const organizationId = document.getElementById('organizationId').value;
+            
+            hideModalError('leaveOrgModal');
+            hideModalSuccess('leaveOrgModal');
+            
+            fetch(`/api/v1/organizations/${organizationId}/leave_organization`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                }
+            })
+            .then(response => {
+                return response.json().then(data => ({
+                    ok: response.ok,
+                    data: data
+                }));
+            })
+            .then(({ok, data}) => {
+                if (ok) {
+                    showModalSuccess('leaveOrgModal', data.message || 'Successfully left the organization');
+                    setTimeout(() => {
+                        window.location.href = '/dashboard/';
+                    }, 1500);
+                } else {
+                    showModalError('leaveOrgModal', data.message || 'Failed to leave organization. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error leaving organization:', error);
+                showModalError('leaveOrgModal', 'Failed to leave organization. Please try again.');
+            });
+        });
+        
+        // Close modal when clicking outside
+        leaveOrgModal.addEventListener('click', function(e) {
+            if (e.target === leaveOrgModal) {
+                leaveOrgModal.classList.add('hidden');
+                hideModalError('leaveOrgModal');
+                hideModalSuccess('leaveOrgModal');
+            }
+        });
+    }
+    
+    // Remove member functionality
+    const removeMemberBtns = document.querySelectorAll('.remove-member-btn');
+    const removeMemberModal = document.getElementById('removeMemberModal');
+    const cancelRemoveMember = document.getElementById('removeMemberModal_cancel');
+    const confirmRemoveMember = document.getElementById('removeMemberModal_confirm');
+    const removeMemberText = document.getElementById('removeMemberModal_message');
+    let currentMemberId = null;
+    
+    removeMemberBtns.forEach(button => {
+        button.addEventListener('click', function() {
+            const memberId = this.getAttribute('data-member-id');
+            const memberName = this.getAttribute('data-member-name');
+            
+            currentMemberId = memberId;
+            removeMemberText.textContent = `Are you sure you want to remove ${memberName} from this organization?`;
+            removeMemberModal.classList.remove('hidden');
+        });
+    });
+    
+    cancelRemoveMember.addEventListener('click', function() {
+        removeMemberModal.classList.add('hidden');
+        currentMemberId = null;
+        hideModalError('removeMemberModal');
+        hideModalSuccess('removeMemberModal');
+    });
+    
+    confirmRemoveMember.addEventListener('click', function() {
+        if (!currentMemberId) return;
+        
+        const organizationId = document.getElementById('organizationId').value;
+        
+        hideModalError('removeMemberModal');
+        hideModalSuccess('removeMemberModal');
+        
+        fetch(`/api/v1/organizations/${organizationId}/remove_org_member/${currentMemberId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            return response.json().then(data => ({
+                ok: response.ok,
+                data: data
+            }));
+        })
+        .then(({ok, data}) => {
+            if (ok) {
+                showModalSuccess('removeMemberModal', data.message || 'Member removed successfully');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showModalError('removeMemberModal', data.message || 'Failed to remove member. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error removing member:', error);
+            showModalError('removeMemberModal', 'Failed to remove member. Please try again.');
+        });
+    });
+    
+    // Close modal when clicking outside
+    removeMemberModal.addEventListener('click', function(e) {
+        if (e.target === removeMemberModal) {
+            removeMemberModal.classList.add('hidden');
+            currentMemberId = null;
+            hideModalError('removeMemberModal');
+            hideModalSuccess('removeMemberModal');
+        }
+    });
+    
+    // Remove pending invite functionality
+    const removeInviteBtns = document.querySelectorAll('.remove-invite-btn');
+    const cancelInviteModal = document.getElementById('cancelInviteModal');
+    const cancelCancelInvite = document.getElementById('cancelInviteModal_cancel');
+    const confirmCancelInvite = document.getElementById('cancelInviteModal_confirm');
+    const cancelInviteText = document.getElementById('cancelInviteModal_message');
+    let currentInviteId = null;
+    
+    removeInviteBtns.forEach(button => {
+        button.addEventListener('click', function() {
+            const inviteId = this.getAttribute('data-invite-id');
+            const inviteEmail = this.getAttribute('data-invite-email');
+            
+            currentInviteId = inviteId;
+            cancelInviteText.textContent = `Are you sure you want to cancel the invitation for ${inviteEmail}?`;
+            cancelInviteModal.classList.remove('hidden');
+        });
+    });
+    
+    cancelCancelInvite.addEventListener('click', function() {
+        cancelInviteModal.classList.add('hidden');
+        currentInviteId = null;
+        hideModalError('cancelInviteModal');
+        hideModalSuccess('cancelInviteModal');
+    });
+    
+    confirmCancelInvite.addEventListener('click', function() {
+        if (!currentInviteId) return;
+        
+        const organizationId = document.getElementById('organizationId').value;
+        
+        hideModalError('cancelInviteModal');
+        hideModalSuccess('cancelInviteModal');
+        
+        fetch(`/api/v1/organizations/${organizationId}/remove_pending_invite/${currentInviteId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            return response.json().then(data => ({
+                ok: response.ok,
+                data: data
+            }));
+        })
+        .then(({ok, data}) => {
+            if (ok || data.success) {
+                showModalSuccess('cancelInviteModal', data.message || 'Pending invite removed successfully');
+                setTimeout(() => {
+                    location.reload();
+                }, 1500);
+            } else {
+                showModalError('cancelInviteModal', data.message || 'Failed to cancel invite. Please try again.');
+            }
+        })
+        .catch(error => {
+            console.error('Error canceling invite:', error);
+            showModalError('cancelInviteModal', 'Failed to cancel invite. Please try again.');
+        });
+    });
+    
+    // Close modal when clicking outside
+    cancelInviteModal.addEventListener('click', function(e) {
+        if (e.target === cancelInviteModal) {
+            cancelInviteModal.classList.add('hidden');
+            currentInviteId = null;
+            hideModalError('cancelInviteModal');
+            hideModalSuccess('cancelInviteModal');
+        }
+    });
+    
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,97 @@
+{% extends 'welcome_base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<title>Deploy Box - Subdomain Not Found</title>
+{% endblock %}
+
+{% block content %}
+<section id="subdomain-not-found" class="min-h-screen bg-zinc-950 flex flex-col items-center justify-center relative overflow-hidden py-24">
+    <!-- Background Texture -->
+    <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
+        style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-red-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-yellow-500/10 rounded-full blur-3xl">
+        </div>
+    </div>
+
+    <div class="z-10 w-full max-w-3xl px-6 text-center">
+        <div class="flex flex-col items-center gap-8">
+            <!-- Animated Warning Icon -->
+            <div class="relative">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-20 w-20 text-red-400 animate-spin-slow" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v2m0 4h.01M4.93 19.07a10 10 0 1114.14 0 10 10 0 01-14.14 0z" />
+                </svg>
+            </div>
+
+            <h1
+                class="text-5xl md:text-7xl font-white text-transparent bg-clip-text bg-gradient-to-r from-white via-red-100 to-white font-manrope tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                Subdomain Not Found
+            </h1>
+
+            <p class="text-lg md:text-xl text-zinc-300 max-w-xl mx-auto leading-relaxed font-light">
+                {% if subdomain %}
+                    The subdomain <span class="font-semibold text-red-400">{{ subdomain }}</span> does not exist. Please check the URL or return to the homepage.
+                {% else %}
+                    The subdomain you are trying to access does not exist. Please check the URL or return to the homepage.
+                {% endif %}
+            </p>
+
+            <!-- Refresh / Home Actions -->
+            <div class="flex flex-col sm:flex-row gap-3 mt-4">
+                {% if subdomain %}
+                <a href="javascript:void(0)" id="retry-btn"
+                    class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-bold rounded-xl transition-all duration-300 border border-indigo-500">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    Retry
+                </a>
+                {% endif %}
+                <a href="/"
+                    class="inline-flex items-center justify-center gap-2 px-8 py-3.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-sm font-bold rounded-xl transition-all duration-300 border border-zinc-700">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1" />
+                    </svg>
+                    Go Home
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    @keyframes spin-slow {
+        from {
+            transform: rotate(0deg);
+        }
+
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    .animate-spin-slow {
+        animation: spin-slow 6s linear infinite;
+    }
+</style>
+
+{% if subdomain %}
+<script>
+    document.getElementById('retry-btn').addEventListener('click', function () {
+        var subdomain = "{{ subdomain|escapejs }}";
+        var host = window.location.host.replace(/^www\./i, "");
+        window.location.href = window.location.protocol + "//" + subdomain + "." + host;
+    });
+</script>
+{% endif %}
+{% endblock %}

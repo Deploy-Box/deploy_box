@@ -1,0 +1,64 @@
+name: Tests (dev → main PR + manual)
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      test_path:
+        description: 'Optional test target (e.g. "payments.tests" or "accounts.tests")'
+        required: false
+        default: ''
+      python_version:
+        description: 'Python version'
+        required: false
+        default: '3.12'
+
+concurrency:
+  group: tests-${{ github.event_name }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  run-tests:
+    if: ${{ github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && github.event.pull_request.base.ref == 'main' && github.event.pull_request.head.ref == 'dev') }}
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: Website
+
+    env:
+      CI: "true"
+      DJANGO_SECRET_KEY: "ci-test-secret-key-not-for-production"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ inputs.python_version || '3.12' }}
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ runner.os }}-${{ hashFiles('Website/requirements*.txt') }}
+          restore-keys: |
+            pip-${{ runner.os }}-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Run tests
+        run: |
+          if [ -n "${{ inputs.test_path }}" ]; then
+            python manage.py test --settings=config.settings.test --verbosity 2 --no-input "${{ inputs.test_path }}"
+          else
+            python manage.py test accounts.tests payments.tests stacks.tests --settings=config.settings.test --verbosity 2 --no-input
+          fi
+

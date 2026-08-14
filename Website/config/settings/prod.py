@@ -1,0 +1,44 @@
+"""
+Production settings — used when DJANGO_SETTINGS_MODULE=config.settings.prod
+"""
+
+from config.settings.base import *  # noqa: F401, F403
+
+# ──────────────────────────────────────────────
+# Debug
+# ──────────────────────────────────────────────
+DEBUG = False
+
+# ──────────────────────────────────────────────
+# Hosts
+# ──────────────────────────────────────────────
+_host_bare = HOST.replace("https://", "").replace("http://", "")
+if _host_bare not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_host_bare)
+
+# Refresh trusted origins with the expanded host list
+CSRF_TRUSTED_ORIGINS = []
+for host in ALLOWED_HOSTS:
+    CSRF_TRUSTED_ORIGINS.extend([f"https://{host}", f"http://{host}"])
+
+# ──────────────────────────────────────────────
+# Security  (base.py already sets secure defaults;
+#             explicitly confirm them here for clarity)
+# ──────────────────────────────────────────────
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+
+# ──────────────────────────────────────────────
+# Database — Entra token auth via custom backend (set in base.py)
+# ──────────────────────────────────────────────
+# base.py sets ENGINE = core.backends.postgresql_entra which fetches
+# a fresh Entra access token on every new connection using the app's
+# managed identity.  No static password is stored or needed.
+
+# ──────────────────────────────────────────────
+# Logging (optional — add production logging here)
+# ──────────────────────────────────────────────
+# LOGGING = { ... }
