@@ -1,0 +1,25 @@
+{% extends 'base.html' %} {% block content %}
+<div class="pt-16 p-4 mb-16">
+  <form method="POST" action="{% url 'organizations:add_org_member' organization_id=organization.id %}">
+
+    <!-- Members Selection -->
+    <div class="mb-4">
+      <label for="member" class="block text-sm font-medium text-gray-700"
+        >Member</label
+      >
+      {{ form.member }}
+      <!-- Render the user field as a text input -->
+
+      <label for="role" class="block text-sm font-medium text-gray-700 mt-2"
+        >Role</label
+      >
+      {{ form.role }}
+      <!-- Render the role field as a dropdown -->
+    </div>
+
+    <button type="submit" class="bg-emerald-400 text-white py-2 px-4 rounded">
+      Add Member
+    </button>
+  </form>
+</div>
+{% endblock %}

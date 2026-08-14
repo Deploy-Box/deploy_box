@@ -1,0 +1,68 @@
+{% extends 'docs/docs_base.html' %}
+{% load static %}
+
+{% block docs_content %}
+<div class="mb-8">
+  <nav class="flex items-center gap-2 text-sm text-zinc-500 mb-6">
+    <a href="{% url 'main_site:docs' %}" class="hover:text-emerald-400 transition-colors">Docs</a>
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+    <span class="text-zinc-300">Projects</span>
+  </nav>
+  <h1 class="text-3xl md:text-4xl font-bold tracking-tight text-white mb-4">Projects</h1>
+  <p class="text-lg text-zinc-400">Group related stacks together under a single project.</p>
+</div>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">What is a project?</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>A <strong class="text-white">project</strong> lives inside an organization and groups one or more stacks together. For example, you might have a project called "My SaaS App" containing a MERN web stack and an LLM stack.</p>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Creating a project</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>From your organization dashboard, click <strong class="text-white">Create Project</strong>. Give it a descriptive name — you can always rename it later from the project settings page.</p>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Adding stacks</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>Inside your project, open the <strong class="text-white">Stack Marketplace</strong> to browse and deploy stacks. Each stack is deployed as independent cloud infrastructure but managed together within your project.</p>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Project transfers</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>Need to move a project to a different organization? Deploy Box supports <strong class="text-white">project transfers</strong> — the receiving organization's owner will get an invitation to accept the transfer.</p>
+  </div>
+</section>
+
+<section class="mb-12">
+  <h2 class="text-xl font-semibold text-white mb-4">Project settings</h2>
+  <div class="text-zinc-300 leading-relaxed space-y-3">
+    <p>From the project settings page you can:</p>
+    <ul class="list-disc list-inside space-y-2 ml-2">
+      <li>Rename your project</li>
+      <li>Transfer the project to another organization</li>
+      <li>View and manage all stacks within the project</li>
+    </ul>
+  </div>
+</section>
+
+<div class="mt-16 pt-8 border-t border-zinc-800/60">
+  <h3 class="text-sm font-semibold text-zinc-500 uppercase tracking-wider mb-4">Next steps</h3>
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <a href="{% url 'main_site:docs_stacks' %}" class="flex items-center gap-3 p-4 rounded-xl border border-zinc-800/60 hover:border-emerald-500/30 transition-colors group">
+      <span class="text-sm text-zinc-400 group-hover:text-emerald-400">→</span>
+      <span class="text-sm text-zinc-300 group-hover:text-white">Learn about stacks</span>
+    </a>
+    <a href="{% url 'main_site:docs_api' %}" class="flex items-center gap-3 p-4 rounded-xl border border-zinc-800/60 hover:border-emerald-500/30 transition-colors group">
+      <span class="text-sm text-zinc-400 group-hover:text-emerald-400">→</span>
+      <span class="text-sm text-zinc-300 group-hover:text-white">API reference</span>
+    </a>
+  </div>
+</div>
+{% endblock %}

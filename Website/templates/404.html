@@ -1,0 +1,57 @@
+{% load static tailwind_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Deploy Box - Page Not Found</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="icon" href="https://avatars.githubusercontent.com/u/205388835?s=200&v=4">
+    {% tailwind_css %}
+</head>
+
+<body class="bg-zinc-950 min-h-screen flex flex-col items-center justify-center relative overflow-hidden">
+    <!-- Background Texture -->
+    <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none"
+        style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-red-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-orange-500/10 rounded-full blur-3xl">
+        </div>
+    </div>
+
+    <div class="z-10 w-full max-w-3xl px-6 text-center">
+        <div class="flex flex-col items-center gap-6">
+            <!-- 404 Number -->
+            <h1
+                class="text-[10rem] md:text-[14rem] font-extrabold leading-none text-transparent bg-clip-text bg-gradient-to-b from-zinc-300 to-zinc-700 font-manrope tracking-tighter select-none">
+                404
+            </h1>
+
+            <!-- Message -->
+            <h2
+                class="text-2xl md:text-4xl font-semibold text-transparent bg-clip-text bg-gradient-to-r from-white via-zinc-200 to-white font-manrope tracking-tight">
+                Page Not Found
+            </h2>
+
+            <p class="text-base md:text-lg text-zinc-400 max-w-md mx-auto leading-relaxed font-light">
+                Sorry, the page you're looking for doesn't exist or has been moved.
+            </p>
+
+            <!-- Back to Home Button -->
+            <a href="/"
+                class="mt-4 inline-flex items-center gap-2 px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                Back to Home
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

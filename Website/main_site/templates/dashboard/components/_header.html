@@ -1,0 +1,20 @@
+<!-- Dashboard Header Component -->
+<header class="bg-zinc-950 pt-16 pb-24 text-center">
+  <div class="flex items-center justify-center mb-4">
+    <div class="bg-emerald-500 p-3 rounded-full mr-4">
+      <svg class="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+      </svg>
+    </div>
+    <h1 class="text-3xl font-bold text-gray-100">{{ stack_type }} Stack Dashboard</h1>
+  </div>
+  <p class="text-md text-gray-100 max-w-2xl mx-auto">
+    {% if stack_type == "Django" %}
+      Monitor and manage your Django web application deployment
+    {% elif stack_type == "MERN" %}
+      Monitor and manage your MongoDB, Express.js, React, and Node.js deployment
+    {% else %}
+      Monitor and manage your {{ stack_type }} deployment
+    {% endif %}
+  </p>
+</header>

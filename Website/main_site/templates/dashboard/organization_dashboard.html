@@ -1,0 +1,316 @@
+{% extends 'dashboard_base.html' %} {%load static%} {% block extra_head %}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %} {% block content %}
+<div class="w-full bg-gray-50">
+  {% include 'dashboard/components/_page_header.html' with title='Organization Dashboard' subtitle='Manage your organization\'s projects, members, and settings' %}
+  <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
+    <!-- Organization Details Section -->
+    <section class="mb-8">
+      <div
+        class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl"
+      >
+        <h2 class="text-xl font-bold text-emerald-400 mb-4">
+          Organization Overview
+        </h2>
+        <div id="organizationDetails" class="space-y-4">
+          <div
+            class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100"
+          >
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-semibold text-zinc-900">
+                  {{organization.name}}
+                </h3>
+                <p class="text-sm text-zinc-500 flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 mr-1 text-emerald-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                  Created: {{organization.created_at|date:"M d, Y"}}
+                </p>
+                <p class="text-sm text-zinc-500 flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 mr-1 text-emerald-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                  ID: {{organization.id}}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects Section -->
+    <section class="mb-8">
+      <div
+        class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl"
+      >
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-xl font-bold text-emerald-400 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            Projects
+          </h2>
+          <button
+            id="createProjectBtn"
+            class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-4 py-2 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 mr-2"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clip-rule="evenodd"
+              ></path>
+            </svg>
+            Create Project
+          </button>
+        </div>
+        <div id="projectsList" class="space-y-4">
+          {% for project in projects %}
+          <a
+            href="{% url 'main_site:project_dashboard' project.organization_id project.id %}"
+            class="block bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100 transform hover:scale-[1.02] cursor-pointer"
+          >
+            <div class="flex justify-between items-center">
+              <div>
+                <h3 class="text-lg font-semibold text-zinc-900">
+                  {{ project.name }}
+                </h3>
+                <p class="text-sm text-zinc-500 flex items-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4 mr-1 text-emerald-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fill-rule="evenodd"
+                      d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                      clip-rule="evenodd"
+                    ></path>
+                  </svg>
+                  Created: {{ project.created_at }}
+                </p>
+              </div>
+            </div>
+          </a>
+          {% empty %}
+          {% include 'dashboard/components/_empty_state.html' with message='No projects in this organization' button_text='Create Project' button_id='createProjectBtnEmpty' %}
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <!-- Organization Members Section -->
+    <!-- Removed: now on its own page -->
+
+    <!-- Organization Settings -->
+    <!-- Removed: now on its own page -->
+  </main>
+</div>
+
+<!-- Create Project Modal -->
+<div id="createProjectModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <div class="flex items-center mb-4">
+            <div class="flex-shrink-0">
+                <svg class="h-6 w-6 text-emerald-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                </svg>
+            </div>
+            <div class="ml-3">
+                <h3 class="text-lg font-medium text-gray-900">Create New Project</h3>
+            </div>
+        </div>
+        <div class="mb-4">
+            <p class="text-sm text-gray-500 mb-4">
+                Create a new project within {{ organization.name }} to organize your applications and deployments.
+            </p>
+            <form id="createProjectForm" class="space-y-4">
+                <div>
+                    <label for="projectName" class="block text-sm font-medium text-gray-700 mb-2">
+                        Project Name
+                    </label>
+                    <input type="text" id="projectName" name="name" required
+                           class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                           placeholder="Enter project name">
+                </div>
+                <div>
+                    <label for="projectDescription" class="block text-sm font-medium text-gray-700 mb-2">
+                        Project Description
+                    </label>
+                    <textarea id="projectDescription" name="description" required rows="3"
+                              class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-emerald-500 focus:border-emerald-500"
+                              placeholder="Enter project description"></textarea>
+                </div>
+            </form>
+        </div>
+        <div class="flex justify-end space-x-3">
+            <button id="cancelCreateProject" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-md transition-colors duration-200">
+                Cancel
+            </button>
+            <button id="submitCreateProject" class="px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-md transition-colors duration-200">
+                Create Project
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden input for organization ID -->
+<input type="hidden" id="organizationId" value="{{ organization.id }}" />
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Project creation modal functionality
+    const createProjectBtn = document.getElementById('createProjectBtn');
+    const createProjectBtnEmpty = document.getElementById('createProjectBtnEmpty');
+    const createProjectModal = document.getElementById('createProjectModal');
+    const cancelCreateProject = document.getElementById('cancelCreateProject');
+    const submitCreateProject = document.getElementById('submitCreateProject');
+    const createProjectForm = document.getElementById('createProjectForm');
+    const projectName = document.getElementById('projectName');
+    const projectDescription = document.getElementById('projectDescription');
+    const organizationId = document.getElementById('organizationId').value;
+
+    // Function to open modal
+    function openProjectModal() {
+        createProjectModal.classList.remove('hidden');
+    }
+
+    // Add event listeners to both buttons
+    if (createProjectBtn) {
+        createProjectBtn.addEventListener('click', openProjectModal);
+    }
+    if (createProjectBtnEmpty) {
+        createProjectBtnEmpty.addEventListener('click', openProjectModal);
+    }
+
+    cancelCreateProject.addEventListener('click', function() {
+        createProjectModal.classList.add('hidden');
+        createProjectForm.reset();
+    });
+
+    submitCreateProject.addEventListener('click', function() {
+        const name = projectName.value.trim();
+        const description = projectDescription.value.trim();
+
+        if (!name) {
+            showToast('Please enter a project name', 'warning');
+            return;
+        }
+
+        if (!description) {
+            showToast('Please enter a project description', 'warning');
+            return;
+        }
+
+        // Show loading state
+        submitCreateProject.innerHTML = '<svg class="animate-spin h-4 w-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Creating...';
+        submitCreateProject.disabled = true;
+
+        fetch('/api/v1/projects/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                name: name,
+                description: description,
+                organization: organizationId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                showToast(data.message, 'success');
+            }
+            if (response.ok) {
+                createProjectModal.classList.add('hidden');
+                createProjectForm.reset();
+                location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error creating project:', error);
+            showToast('Failed to create project. Please try again.', 'error');
+        })
+        .finally(() => {
+            submitCreateProject.innerHTML = 'Create Project';
+            submitCreateProject.disabled = false;
+        });
+    });
+
+    // Close project modal when clicking outside
+    createProjectModal.addEventListener('click', function(e) {
+        if (e.target === createProjectModal) {
+            createProjectModal.classList.add('hidden');
+            createProjectForm.reset();
+        }
+    });
+
+    // Close project modal with Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !createProjectModal.classList.contains('hidden')) {
+            createProjectModal.classList.add('hidden');
+            createProjectForm.reset();
+        }
+    });
+
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+
+{% comment %}
+<script src="https://js.stripe.com/v3/"></script>
+{% endcomment %}
+<script src="{% static 'organization_dashboard.js' %}"></script>
+<script src="https://cdn.tailwindcss.com"></script>
+{% endblock %}

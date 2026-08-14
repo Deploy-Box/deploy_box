@@ -1,0 +1,14 @@
+{
+  "HOST": "https://www.deploy-box.com",
+  "OAUTH2_PASSWORD_CREDENTIALS_CLIENT_ID": "G5uGZZZnMojr0pRo4MiZDr6FLjkRxk2PrkuR3Ymd",
+  "OAUTH2_AUTH_CODE_CLIENT_ID": "R5nrUKC0JQnAhoaM5jExJb5USgftZahkeitEXOsV",
+  "DB_NAME": "neondb",
+  "DB_USER": "neondb_owner",
+  "DB_HOST": "ep-falling-firefly-a886kane-pooler.eastus2.azure.neon.tech",
+  "DB_PORT": "5432",
+  "DEPLOY_BOX_STACK_ENDPOINT": "https://deployboxsadev.blob.core.windows.net/stack-source-code-container",
+  "EMAIL_HOST_USER": "noreplydeploybbox@gmail.com",
+  "DEPLOY_BOX_GITHUB_CLIENT_ID": "Ov23liehxn12PYLCJG5c",
+  "NPM_BIN_PATH": "C:\\Program Files\\nodejs\\npm.cmd",
+  "KEY_VAULT_NAME": "deploy-box-kv-prod"
+}

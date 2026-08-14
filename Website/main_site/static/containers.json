@@ -1,0 +1,30 @@
+[
+  {
+    "title": "MERN",
+    "feature": "Most Popular Stack",
+    "description": "MERN stands for MongoDB, Express.js, React, and Node.js. It is a modern stack that uses a combination of modern frameworks and a no sql database to ensure you spin up your webapp as quickly as possible.",
+    "button1Text": "Download Container",
+    "button2Text": "Find MERN Devs"
+  },
+  {
+    "title": "MEAN",
+    "feature": "For Angular Fans",
+    "description": "MEAN stands for MongoDB, Express.js, Angular, and Node.js. It is one of the most used tech stacks but requires a slightly higher learning curve than our MERN stack.",
+    "button1Text": "Download Container",
+    "button2Text": "Find MEAN Devs"
+  },
+  {
+    "title": "LAMP",
+    "feature": "Web Legacy Stack",
+    "description": "LAMP stands for Linux, Apache, MySQL, and PHP. It is a classic open-source web development stack that provides a robust environment for deploying dynamic websites and web applications.",
+    "button1Text": "Download Container",
+    "button2Text": "Find LAMP Devs"
+  },
+  {
+    "title": "MEVN",
+    "feature": "For Vue Fans",
+    "description": "MEVN stands for MongoDB, Express.js, Vue.js, and Node.js. It is a full-stack JavaScript solution with the Vue.js frontend framework, making it easier to create modern web applications with JavaScript on both the client and server.",
+    "button1Text": "Download Container",
+    "button2Text": "Find MEVN Devs"
+  }
+]

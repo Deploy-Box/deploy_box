@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="min-h-screen bg-zinc-950 relative overflow-hidden font-sans pb-24">
+    <!-- Background Texture -->
+    <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-teal-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <!-- Content -->
+    <div class="relative z-10 w-full max-w-4xl mx-auto px-4 md:px-8 pt-32 pb-12">
+        
+        <!-- Header -->
+        <div class="text-center mb-16">
+            <h1 class="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-200 via-white to-emerald-200 font-manrope tracking-tight mb-6 pb-2 drop-shadow-sm">
+                Manage Your Profile
+            </h1>
+            <p class="text-lg text-zinc-300 max-w-xl mx-auto font-light leading-relaxed">
+                Update your account information and manage your security settings
+            </p>
+        </div>
+
+        <div class="bg-zinc-900/80 backdrop-blur-xl border border-zinc-700/50 shadow-2xl rounded-3xl overflow-hidden p-8 md:p-12">
+            
+            <!-- Account Info -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 border border-emerald-500/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-user"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    </span>
+                    Account Information
+                </h2>
+                
+                <form id="userForm" class="space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="username" class="block text-sm font-semibold text-zinc-300 mb-2">Username</label>
+                            <input type="text" id="username" name="username"
+                                class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300" 
+                                placeholder="Update username" />
+                        </div>
+
+                        <div>
+                            <label for="email" class="block text-sm font-semibold text-zinc-300 mb-2">Email</label>
+                            <input type="email" id="email" name="email"
+                                class="w-full px-4 py-3 bg-black/40 border border-zinc-700 text-white placeholder-zinc-500 text-sm rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:border-emerald-500 transition-all duration-300"
+                                placeholder="Update email" />
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end pt-4">
+                        <button type="submit"
+                            class="px-8 py-3 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.3)] border border-transparent">
+                            Update Profile
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Divider -->
+            <div class="w-full h-px bg-zinc-800 my-10"></div>
+
+            <!-- Connected Accounts -->
+            <div class="mb-12">
+                <h2 class="text-2xl font-bold text-white mb-8 flex items-center gap-3">
+                    <span class="w-10 h-10 rounded-xl bg-zinc-500/20 flex items-center justify-center text-zinc-400 border border-zinc-500/20">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                    </span>
+                    Connected Accounts
+                </h2>
+
+                <div class="flex items-center justify-between p-5 bg-black/40 border border-zinc-700 rounded-xl">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-white" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-semibold text-white">GitHub</p>
+                            {% if github_linked %}
+                            <p class="text-xs text-emerald-400" id="github-status-text">
+                                Connected{% if github_username %} as <span class="font-medium">{{ github_username }}</span>{% endif %}
+                            </p>
+                            {% else %}
+                            <p class="text-xs text-zinc-500" id="github-status-text">Not connected</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div>
+                        {% if github_linked %}
+                        <button type="button" id="unlinkGitHubBtn"
+                            class="px-5 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400 text-sm font-bold rounded-xl transition-all duration-300 border border-red-500/20">
+                            Unlink
+                        </button>
+                        {% else %}
+                        <a href="{% url 'github:login' %}?next=/profile/"
+                            class="px-5 py-2.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 hover:text-emerald-300 text-sm font-bold rounded-xl transition-all duration-300 border border-emerald-500/20">
+                            Connect
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Divider -->
+            <div class="w-full h-px bg-zinc-800 my-10"></div>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-red-500 mb-1">Danger Zone</h2>
+                        <p class="text-sm text-zinc-500">Irreversible actions. Please proceed with caution.</p>
+                    </div>
+                    
+                    <div class="flex gap-4">
+                        <a href="{% url 'accounts:api-logout' %}"
+                           class="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm font-bold rounded-xl transition-all duration-300 border border-zinc-700">
+                            Logout
+                        </a>
+                        <button type="button" id="deleteAccountBtn"
+                            class="px-6 py-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-500 hover:text-red-400 text-sm font-bold rounded-xl transition-all duration-300 border border-red-500/20">
+                            Delete Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Delete Account Confirmation Modal -->
+<div id="deleteModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+  <div class="bg-zinc-900 border border-zinc-800 rounded-2xl p-8 max-w-md w-full shadow-2xl relative overflow-hidden">
+     <!-- Background Texture in Modal -->
+     <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+    <div class="relative z-10">
+        <h3 class="text-xl font-bold text-red-500 mb-4 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-alert-triangle"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+            Delete Account
+        </h3>
+        <p class="text-zinc-400 mb-8 leading-relaxed">
+        Are you sure you want to delete your account? This action cannot be undone and will permanently remove all your data.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3">
+        <button id="cancelDelete"
+            class="flex-1 px-4 py-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-xl font-bold transition duration-300 border border-zinc-700">
+            Cancel
+        </button>
+        <button id="confirmDelete"
+            class="flex-1 px-4 py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition duration-300 shadow-[0_0_15px_rgba(220,38,38,0.3)]">
+            Yes, Delete
+        </button>
+        </div>
+    </div>
+  </div>
+</div>
+
+<script src="{% static 'profile/script.js' %}"></script>
+{% endblock %}

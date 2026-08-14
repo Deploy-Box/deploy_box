@@ -1,0 +1,31 @@
+{% comment %}
+Empty State Component
+Usage: include 'dashboard/components/_empty_state.html' with message='No items found' icon_path='M20 13V6a2...'
+
+Parameters:
+  - message: The text message to display (required)
+  - icon_path: SVG path data for the icon (optional, defaults to inbox icon)
+  - button_text: Text for the CTA button (optional, omit to hide button)
+  - button_id: HTML id for the CTA button (optional)
+{% endcomment %}
+<div class="text-center py-8">
+    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-400 mb-4" fill="none"
+        viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="{{ icon_path|default:'M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4' }}">
+        </path>
+    </svg>
+    <p class="text-zinc-500 mb-4">{{ message }}</p>
+    {% if button_text %}
+    <button {% if button_id %}id="{{ button_id }}"{% endif %}
+        class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+            fill="currentColor">
+            <path fill-rule="evenodd"
+                d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                clip-rule="evenodd"></path>
+        </svg>
+        {{ button_text }}
+    </button>
+    {% endif %}
+</div>

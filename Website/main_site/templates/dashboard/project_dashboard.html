@@ -1,0 +1,193 @@
+{% extends 'dashboard_base.html' %}
+{%load static%}
+{% load stack_colors %}
+
+{% block content %}
+<div class="w-full bg-gray-50">
+    {% include 'dashboard/components/_page_header.html' with title='Project Dashboard' subtitle='Monitor, manage, and optimize your project resources' %}
+    <main class="w-full max-w-6xl mx-auto px-4 -mt-10 pb-12">
+        <!-- Project Overview -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-2xl rounded-lg p-6 border border-gray-200 transition-all duration-300 hover:shadow-xl">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-emerald-400">
+                        Project Overview
+                    </h2>
+                </div>
+                <div id="projectDetails" class="space-y-4">
+                    <div
+                        class="bg-zinc-50 p-4 rounded-lg border border-gray-200 transition-all duration-300 hover:bg-zinc-100">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h3 class="text-lg font-semibold text-zinc-900">
+                                    {{project.name}}
+                                </h3>
+                                <p class="text-sm text-zinc-500 flex items-center">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="h-4 w-4 mr-1 text-emerald-400"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                                            clip-rule="evenodd"
+                                        ></path>
+                                    </svg>
+                                    Created: {{project.created_at|date:"M d, Y"}}
+                                </p>
+                                <p class="text-sm text-zinc-500 flex items-center">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="h-4 w-4 mr-1 text-emerald-400"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z"
+                                            clip-rule="evenodd"
+                                        ></path>
+                                    </svg>
+                                    ID: {{project.id}}
+                                </p>
+                                <p class="text-sm text-zinc-500 flex items-center">
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        class="h-4 w-4 mr-1 text-emerald-400"
+                                        viewBox="0 0 20 20"
+                                        fill="currentColor"
+                                    >
+                                        <path
+                                            fill-rule="evenodd"
+                                            d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                                            clip-rule="evenodd"
+                                        ></path>
+                                    </svg>
+                                    Description: {{project.description}}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- Stacks Section -->
+        <section class="mb-8">
+            <div
+                class="bg-white shadow-lg rounded-lg p-6 border border-gray-200 hover:shadow-xl transition-all duration-300">
+                <h2 class="text-xl font-bold mb-4 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-emerald-400" viewBox="0 0 20 20"
+                        fill="currentColor">
+                        <path fill-rule="evenodd"
+                            d="M2 5a2 2 0 012-2h12a2 2 0 012 2v10a2 2 0 01-2 2H4a2 2 0 01-2-2V5zm3.293 1.293a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 01-1.414-1.414L7.586 10 5.293 7.707a1 1 0 010-1.414zM11 12a1 1 0 100 2h3a1 1 0 100-2h-3z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    Project Stacks
+                </h2>
+                <div id="stacksList" class="space-y-4">
+                    {% if stacks %}
+                    {% for stack in stacks %}
+                    <div class="block p-4 rounded-lg border border-gray-200 hover:bg-zinc-100 transition-all duration-300 relative overflow-hidden {% if stack.status == 'Paused' %}border-amber-300 bg-amber-50{% endif %}">
+                        <a href="{% url 'main_site:stack_dashboard' organization_id project.id stack.id %}"
+                           class="flex justify-between items-center">
+                            <div class="z-10 flex-1">
+                                <div class="flex items-center space-x-2">
+                                    <h3 class="text-lg font-semibold text-zinc-900">{{stack.name}}</h3>
+                                    {% include 'dashboard/components/_status_badge.html' with status=stack.status %}
+                                </div>
+                                <p class="text-sm text-zinc-500 flex items-center mt-1">
+                                    Usage: {{stack.instance_usage}} · ${{stack.instance_usage_bill_amount}}
+                                </p>
+                            </div>
+                            <!-- Arrow icon -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-400 z-10 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                        </a>
+                        {% if stack.status == 'Paused' %}
+                        <div class="mt-3 pt-3 border-t border-amber-200 z-10 relative flex items-center">
+                            <span class="text-sm text-amber-700">
+                                <svg class="inline h-4 w-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+                                This stack is paused
+                            </span>
+                        </div>
+                        {% endif %}
+                        <div class="absolute top-0 right-0 h-full w-1/2 {{ stack.purchased_stack.type|lower|stack_bg_color }} pointer-events-none"
+                             style="clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 2%);"></div>
+                    </div>
+                    {% endfor %}
+                    <div class="text-center py-6 border-t border-gray-200">
+                        <button id="addAnotherStackBtn"
+                            class="inline-flex items-center bg-emerald-500 hover:bg-emerald-600 px-6 py-3 text-sm text-white rounded-lg font-medium transition-all duration-300 transform hover:scale-105">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20"
+                                fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z"
+                                    clip-rule="evenodd"></path>
+                            </svg>
+                            Add Another Stack
+                        </button>
+                    </div>
+                    {% else %}
+                    {% include 'dashboard/components/_empty_state.html' with message='This project has no stacks' button_text='Create a Stack' button_id='createStackBtn' %}
+                    {% endif %}
+                </div>
+            </div>
+        </section>
+    </main>
+</div>
+
+<!-- Hidden project ID for JavaScript -->
+<input type="hidden" id="projectId" value="{{ project.id }}">
+
+
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Helper function to get CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+
+
+    // Create Stack functionality
+    const createStackBtn = document.getElementById('createStackBtn');
+    if (createStackBtn) {
+        createStackBtn.addEventListener('click', function() {
+            window.location.href = "{% url 'main_site:stack_marketplace' organization_id project.id %}";
+        });
+    }
+
+    // Add Another Stack functionality
+    const addAnotherStackBtn = document.getElementById('addAnotherStackBtn');
+    if (addAnotherStackBtn) {
+        addAnotherStackBtn.addEventListener('click', function() {
+            window.location.href = "{% url 'main_site:stack_marketplace' organization_id project.id %}";
+        });
+    }
+});
+
+
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="min-h-screen bg-zinc-950 flex flex-col items-center justify-center relative overflow-hidden py-24">
+    <!-- Background Texture -->
+    <div class="absolute inset-0 z-0 opacity-[0.03] pointer-events-none" style="background-image: radial-gradient(#ffffff 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+    <!-- Decorative background elements -->
+    <div class="absolute top-0 left-0 w-full h-full overflow-hidden z-0 pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40rem] h-[40rem] bg-emerald-500/10 rounded-full blur-3xl"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40rem] h-[40rem] bg-teal-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="z-10 w-full max-w-2xl px-6">
+        <div class="text-center mb-12">
+            <h1 class="text-5xl md:text-6xl font-white text-transparent bg-clip-text bg-gradient-to-r from-white via-emerald-100 to-white font-manrope tracking-tight drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+                Get in Touch
+            </h1>
+            <p class="mt-4 text-lg text-zinc-300 max-w-xl mx-auto leading-relaxed font-light">
+                Have a question, feedback, or just want to say hello? We'd love to hear from you.
+            </p>
+        </div>
+
+        <!-- Flash messages -->
+        {% if messages %}
+        <div class="mb-6">
+            {% for message in messages %}
+            <div class="{% if message.tags == 'success' %}bg-emerald-500/10 border border-emerald-500/30 text-emerald-300{% else %}bg-red-500/10 border border-red-500/30 text-red-300{% endif %} px-5 py-4 rounded-xl mb-4 text-sm">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <form method="post" class="space-y-6 bg-zinc-900/40 border border-zinc-800 rounded-2xl p-8 backdrop-blur-sm">
+            {% csrf_token %}
+
+            {% for field in form %}
+            <div>
+                <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-zinc-300 mb-2">
+                    {{ field.label }}
+                </label>
+                {{ field }}
+                {% if field.errors %}
+                <p class="mt-1 text-sm text-red-400">{{ field.errors.0 }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+
+            <button type="submit"
+                    class="w-full px-8 py-3.5 bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] border border-transparent">
+                Send Message
+            </button>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+<script>
+    const contactElement = document.getElementById('contact')
+    const pricingElement = document.getElementById('pricing')
+    const currentURL = window.location.href;
+
+    if(currentURL.includes('contact')){
+        if(contactElement) {
+            contactElement.classList.add('text-emerald-400')
+            contactElement.classList.remove('text-white')
+        }
+        if(pricingElement) {
+            pricingElement.classList.add('text-white')
+            pricingElement.classList.remove('text-emerald-400')
+        }
+    }
+</script>
